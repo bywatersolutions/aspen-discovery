@@ -93,9 +93,19 @@ fi
 dataDir="/data/aspen-discovery/$SITE_NAME"
 localDir="/usr/local/aspen-discovery/code/web"
 
-ln -s "$dataDir/images" "$localDir/images"
-ln -s "$dataDir/files" "$localDir/files"
-ln -s "$dataDir/fonts" "$localDir/fonts"
+directories=(images files fonts)
+for dir in "${directories[@]}"; do
+
+	if [ -L "$localDir/$dir" ] ; then
+		break
+	fi
+
+    if [ -d "$localDir/$dir" ] ; then
+		rm -rf "$localDir/$dir"
+        ln -s "$dataDir/$dir" "$localDir/$dir"
+		echo "%   * Created symlink: $dataDir/$dir -> $localDir/$dir"
+    fi 
+done
 
 echo "%   * Starting Apache"
 # Start apache

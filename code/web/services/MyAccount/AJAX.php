@@ -729,6 +729,7 @@ class MyAccount_AJAX extends JSON_Action {
 							'message' => translate(['text' => 'Sorry, it looks like you don\'t have access to that patron.', 'isPublicFacing' => true]),
 						];
 					} else {
+						$holdType = 'unknown';
 						foreach ($allUnavailableHolds as $key) {
 							if ($key->sourceId == $recordId) {
 								$holdType = $key->source;
@@ -737,28 +738,28 @@ class MyAccount_AJAX extends JSON_Action {
 						}
 						if ($holdType == 'ils') {
 							$tmpResult = $user->cancelHold($recordId, $cancelId, $key->isIll);
-							if ($tmpResult['success']) {
+							if (!empty($tmpResult['success'])) {
 								$success++;
 							}
 						} elseif ($holdType == 'axis360') {
 							require_once ROOT_DIR . '/Drivers/Axis360Driver.php';
 							$driver = new Axis360Driver();
 							$tmpResult = $driver->cancelHold($user, $recordId);
-							if ($tmpResult['success']) {
+							if (!empty($tmpResult['success'])) {
 								$success++;
 							}
 						} elseif ($holdType == 'overdrive') {
 							require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
 							$driver = new OverDriveDriver();
 							$tmpResult = $driver->cancelHold($user, $recordId);
-							if ($tmpResult['success']) {
+							if (!empty($tmpResult['success'])) {
 								$success++;
 							}
 						} elseif ($holdType == 'cloud_library') {
 							require_once ROOT_DIR . '/Drivers/CloudLibraryDriver.php';
 							$driver = new CloudLibraryDriver();
 							$tmpResult = $driver->cancelHold($user, $recordId);
-							if ($tmpResult['success']) {
+							if (!empty($tmpResult['success'])) {
 								$success++;
 							}
 						}
@@ -865,37 +866,40 @@ class MyAccount_AJAX extends JSON_Action {
 			$total = count($allUnavailableHolds);
 			$success = 0;
 
+			/** Hold $hold **/
 			foreach ($allUnavailableHolds as $hold) {
 				// cancel each hold
 				$recordId = $hold->sourceId;
 				$cancelId = $hold->cancelId;
 				$holdType = $hold->source;
 				$isIll = $hold->isIll;
-				if ($holdType == 'ils') {
-					$tmpResult = $user->cancelHold($recordId, $cancelId, $isIll);
-					if ($tmpResult['success']) {
-						$success++;
-					}
-				} elseif ($holdType == 'axis360') {
-					require_once ROOT_DIR . '/Drivers/Axis360Driver.php';
-					$driver = new Axis360Driver();
-					$tmpResult = $driver->cancelHold($user, $recordId);
-					if ($tmpResult['success']) {
-						$success++;
-					}
-				} elseif ($holdType == 'overdrive') {
-					require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
-					$driver = new OverDriveDriver();
-					$tmpResult = $driver->cancelHold($user, $recordId);
-					if ($tmpResult['success']) {
-						$success++;
-					}
-				} elseif ($holdType == 'cloud_library') {
-					require_once ROOT_DIR . '/Drivers/CloudLibraryDriver.php';
-					$driver = new CloudLibraryDriver();
-					$tmpResult = $driver->cancelHold($user, $recordId);
-					if ($tmpResult['success']) {
-						$success++;
+				if ($hold->cancelable) {
+					if ($holdType == 'ils') {
+						$tmpResult = $user->cancelHold($recordId, $cancelId, $isIll);
+						if ($tmpResult['success']) {
+							$success++;
+						}
+					} elseif ($holdType == 'axis360') {
+						require_once ROOT_DIR . '/Drivers/Axis360Driver.php';
+						$driver = new Axis360Driver();
+						$tmpResult = $driver->cancelHold($user, $recordId);
+						if ($tmpResult['success']) {
+							$success++;
+						}
+					} elseif ($holdType == 'overdrive') {
+						require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
+						$driver = new OverDriveDriver();
+						$tmpResult = $driver->cancelHold($user, $recordId);
+						if ($tmpResult['success']) {
+							$success++;
+						}
+					} elseif ($holdType == 'cloud_library') {
+						require_once ROOT_DIR . '/Drivers/CloudLibraryDriver.php';
+						$driver = new CloudLibraryDriver();
+						$tmpResult = $driver->cancelHold($user, $recordId);
+						if ($tmpResult['success']) {
+							$success++;
+						}
 					}
 				}
 

@@ -1237,7 +1237,57 @@ class CatalogConnection {
 	}
 
 	function cancelHold($patron, $recordId, $cancelId = null, $isIll = false): array {
-		return $this->driver->cancelHold($patron, $recordId, $cancelId, $isIll);
+
+		$holdToCancel =
+		//Make sure the hold should be cancelable
+		$holds = $this->getHolds($patron);
+		$okToCancel = false;
+		$foundHold = false;
+		/** @var Hold $hold */
+		foreach ($holds['available'] as $hold) {
+			if (is_null($cancelId)) {
+				if ($hold->recordId == $recordId) {
+					$foundHold = true;
+				}
+			}else{
+				if ($hold->cancelId == $cancelId) {
+					$foundHold = true;
+				}
+			}
+			if ($foundHold) {
+				if ($hold->cancelable){
+					$okToCancel = true;
+				}
+				break;
+			}
+		}
+		if (!$foundHold) {
+			foreach ($holds['unavailable'] as $hold) {
+				if (is_null($cancelId)) {
+					if ($hold->recordId == $recordId) {
+						$foundHold = true;
+					}
+				}else{
+					if ($hold->cancelId == $cancelId) {
+						$foundHold = true;
+					}
+				}
+				if ($foundHold) {
+					if ($hold->cancelable){
+						$okToCancel = true;
+					}
+					break;
+				}
+			}
+		}
+		if ($okToCancel){
+			return $this->driver->cancelHold($patron, $recordId, $cancelId, $isIll);
+		}else{
+			return [
+				'success' => false,
+				'message' => translate(['text' => 'This hold cannot be canceled', 'isPublicFacing' => true]),
+			];
+		}
 	}
 
 	function freezeHold($patron, $recordId, $itemToFreezeId, $dateToReactivate): array {

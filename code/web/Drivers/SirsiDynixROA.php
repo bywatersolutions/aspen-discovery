@@ -1236,11 +1236,14 @@ class SirsiDynixROA extends HorizonAPI {
 				}
 
 				$holdAvailable = false;
-				if (!isset($curHold->status)){
-					$holdAvailable = true;
-				}elseif (strcasecmp($curHold->status, "being_held") === 0) {
-					$holdAvailable = true;
+				if (empty($hold->fields->mailFlag)) {
+					if (!isset($curHold->status)) {
+						$holdAvailable = true;
+					} elseif (strcasecmp($curHold->status, "being_held") === 0) {
+						$holdAvailable = true;
+					}
 				}
+
 				if (!$holdAvailable) {
 					$curHold->available = false;
 					$holds['unavailable'][] = $curHold;

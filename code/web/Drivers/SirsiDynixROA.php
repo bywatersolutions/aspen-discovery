@@ -3655,7 +3655,7 @@ class SirsiDynixROA extends HorizonAPI {
 	}
 
 	public function showWaitListInCheckouts(): bool {
-		return true;
+		return false;
 	}
 
 	public function showHoldPlacedDate(): bool {

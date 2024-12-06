@@ -188,7 +188,21 @@ function getUpdates24_12_00(): array {
 				'ALTER TABLE library ADD COLUMN enableAddToReadingHistory TINYINT DEFAULT 1',
 				'ALTER TABLE user_reading_history_work ADD COLUMN isManuallyAdded TINYINT DEFAULT 0'
 			]
-		],
+		], //enable_add_to_reading_history
+		'add_checkout_out_of_hold_group_message' => [
+			'title' => 'Add checkout out of hold group message',
+			'description' => 'Add checkout out of hold group message',
+			'sql' => [
+				'ALTER TABLE user_checkout ADD COLUMN outOfHoldGroupMessage TINYTEXT'
+			]
+		], //add_checkout_out_of_hold_group_message
+		'library_allow_renewing_out_of_hold_group_checkouts' => [
+			'title' => 'Library - Allow Renewing Out of Hold Group Checkouts',
+			'description' => 'Library - Allow Renewing Out of Hold Group Checkouts',
+			'sql' => [
+				'ALTER TABLE library ADD COLUMN allowRenewingOutOfHoldGroupCheckouts TINYINT DEFAULT 1',
+			]
+		], //library_allow_renewing_out_of_hold_group_checkouts
 
 		//katherine
 

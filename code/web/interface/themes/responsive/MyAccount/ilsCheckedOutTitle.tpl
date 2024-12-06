@@ -164,6 +164,15 @@
 						</div>
 					{/if}
 
+					{if !empty($record->outOfHoldGroupMessage) && !$record->available}
+						<div class="row">
+							<div class="result-label col-sm-12 col-md-5">{translate text='Interlibrary Loan' isPublicFacing=true}</div>
+							<div class="col-sm-12 col-md-7 result-value">
+								{$record->outOfHoldGroupMessage}
+							</div>
+						</div>
+					{/if}
+
 					{if !empty($record->fine)}
 						<div class="row">
 							<div class="result-label col-sm-12 col-md-5">{translate text='Fine' isPublicFacing=true}</div>

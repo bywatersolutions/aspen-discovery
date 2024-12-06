@@ -190,6 +190,7 @@ class Library extends DataObject {
 	public $displayHoldsOnCheckout;
 
 	public $alwaysDisplayRenewalCount;
+	public $allowRenewingOutOfHoldGroupCheckouts;
 	public $enableSelfRegistration;
 	public $selfRegistrationPasswordNotes;
 	public $selfRegistrationUrl;
@@ -1299,31 +1300,6 @@ class Library extends DataObject {
 						'default' => true,
 						'permissions' => ['Library ILS Options'],
 					],
-					'displayItemBarcode' => [
-						'property' => 'displayItemBarcode',
-						'type' => 'checkbox',
-						'label' => 'Display item barcodes in patron checkouts',
-						'description' => 'Whether or not patrons can see item barcodes for materials they have checked out.',
-						'hideInLists' => true,
-						'permissions' => ['Library ILS Connection'],
-					],
-					'displayHoldsOnCheckout' => [
-						'property' => 'displayHoldsOnCheckout',
-						'type' => 'checkbox',
-						'label' => 'Display if patron checkouts have holds on them',
-						'note' => 'Applies to Koha Only',
-						'description' => 'Whether or not patrons can see if checked out items have holds on them.',
-						'hideInLists' => true,
-						'permissions' => ['Library ILS Connection'],
-					],
-					'alwaysDisplayRenewalCount' => [
-						'property' => 'alwaysDisplayRenewalCount',
-						'type' => 'checkbox',
-						'label' => 'Always display the number of renewals on a checkout',
-						'description' => 'Whether or not patrons always see the number of renewals on a checkout.',
-						'hideInLists' => true,
-						'permissions' => ['Library ILS Connection'],
-					],
 					'enableReadingHistory' => [
 						'property' => 'enableReadingHistory',
 						'type' => 'checkbox',
@@ -2058,6 +2034,52 @@ class Library extends DataObject {
 								'hideInLists' => true,
 								'maxLength' => 50,
 								'default' => '',
+							],
+						],
+					],
+					'checkoutsSection' => [
+						'property' => 'checkoutsSection',
+						'type' => 'section',
+						'label' => 'Checkouts',
+						'hideInLists' => true,
+						'helpLink' => '',
+						'permissions' => [
+							'Library ILS Connection',
+						],
+						'properties' => [
+							'displayItemBarcode' => [
+								'property' => 'displayItemBarcode',
+								'type' => 'checkbox',
+								'label' => 'Display item barcodes in patron checkouts',
+								'description' => 'Whether or not patrons can see item barcodes for materials they have checked out.',
+								'hideInLists' => true,
+								'permissions' => ['Library ILS Connection'],
+							],
+							'displayHoldsOnCheckout' => [
+								'property' => 'displayHoldsOnCheckout',
+								'type' => 'checkbox',
+								'label' => 'Display if patron checkouts have holds on them',
+								'note' => 'Applies to Koha Only',
+								'description' => 'Whether or not patrons can see if checked out items have holds on them.',
+								'hideInLists' => true,
+								'permissions' => ['Library ILS Connection'],
+							],
+							'alwaysDisplayRenewalCount' => [
+								'property' => 'alwaysDisplayRenewalCount',
+								'type' => 'checkbox',
+								'label' => 'Always display the number of renewals on a checkout',
+								'description' => 'Whether or not patrons always see the number of renewals on a checkout.',
+								'hideInLists' => true,
+								'permissions' => ['Library ILS Connection'],
+							],
+							'allowRenewingOutOfHoldGroupCheckouts' => [
+								'property' => 'allowRenewingOutOfHoldGroupCheckouts',
+								'type' => 'checkbox',
+								'label' => 'Allow Renewing Out of Hold Group Checkouts',
+								'note' => 'Applies to Symphony Only',
+								'description' => 'Whether or not patrons can renew titles that were checked out from another hold group.',
+								'hideInLists' => true,
+								'permissions' => ['Library ILS Connection'],
 							],
 						],
 					],

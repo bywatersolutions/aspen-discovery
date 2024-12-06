@@ -225,7 +225,7 @@ class OverDriveScope extends DataObject {
 
 	/** @return LibraryOverDriveScope[] */
 	public function getLibraries() : array {
-		if (!isset($this->_libraries) && $this->id) {
+		if (!isset($this->_libraries)) {
 			$this->_libraries = [];
 			if ($this->id > 0) {
 				require_once ROOT_DIR . '/sys/OverDrive/LibraryOverDriveScope.php';

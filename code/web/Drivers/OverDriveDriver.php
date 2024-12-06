@@ -166,7 +166,7 @@ class OverDriveDriver extends AbstractEContentDriver {
 			return (bool) $librarySettings->circulationEnabled;
 		}
 	}
-	public function getTokenData(Library $activeLibrary, OverDriveSetting $settings) : false|stdClass {
+	public function getTokenData(Library $activeLibrary, OverDriveSetting $settings) : false|stdClass|null {
 		return $this->_connectToAPI($activeLibrary, $settings, true, "getTokenData");
 	}
 
@@ -300,19 +300,24 @@ class OverDriveDriver extends AbstractEContentDriver {
 						if ($patronTokenData->error == 'unauthorized_client') { // login failure
 							// patrons with too high a fine amount will get this result.
 							$logger->log("Patron is not valid for OverDrive, patronTokenData returned unauthorized_client", Logger::LOG_ERROR);
-							return false;
 						} else {
 							if (IPAddress::showDebuggingInformation()) {
 								$logger->log("Patron $patronBarcode is not valid for OverDrive, { $patronTokenData->error}", Logger::LOG_ERROR);
 							}
 						}
+						return false;
 					} else {
 						if (property_exists($patronTokenData, 'expires_in')) {
 							$memCache->set("overdrive_patron_token_{$settings->id}_{$homeLibrary->libraryId}_$patronBarcode", $patronTokenData, $patronTokenData->expires_in - 10);
 						} else {
 							$this->incrementStat('numConnectionFailures');
+							return false;
 						}
 					}
+				}else{
+					$logger->log("Did not get a valid response from OverDrive while connecting to the Patron API", Logger::LOG_ERROR);
+					$this->incrementStat('numConnectionFailures');
+					return false;
 				}
 			} else {
 				$logger->log("Could not connect to OverDrive", Logger::LOG_ERROR);
@@ -1482,7 +1487,7 @@ class OverDriveDriver extends AbstractEContentDriver {
 		if (!isset(OverDriveDriver::$validUsersOverDrive[$setting->id .  ':' . $userBarcode])) {
 			$tokenData = $this->getPatronTokenData($setting, $user);
 			$timer->logTime("Checked to see if the user $userBarcode is valid for OverDrive");
-			$isValid = ($tokenData !== false) && !isset($tokenData->error);
+			$isValid = !empty($tokenData) && !isset($tokenData->error);
 			OverDriveDriver::$validUsersOverDrive[$setting->id .  ':' . $userBarcode] = $isValid;
 		}
 		return OverDriveDriver::$validUsersOverDrive[$setting->id .  ':' . $userBarcode];
@@ -1550,6 +1555,9 @@ class OverDriveDriver extends AbstractEContentDriver {
 				return null;
 			}
 			$tokenData = $this->getPatronTokenData($settings, $user, true);
+			if (empty($tokenData)) {
+				return null;
+			}
 			$authorizationData = $tokenData->token_type . ' ' . $tokenData->access_token;
 
 			$apiHost = $this->getPatronApiHost($settings);

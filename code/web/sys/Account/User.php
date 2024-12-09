@@ -4927,6 +4927,35 @@ class User extends DataObject {
 		}
 	}
 
+	public function hasRemainingLocalIllRequests() : bool {
+		$homeLibrary = $this->getHomeLibrary();
+		if ($homeLibrary != null) {
+			if ($homeLibrary->maximumLocalIllRequests > 0) {
+				//Figure out the number of Local ILL requests, we just care about ILS holds and checkouts, so we can get from the driver.
+				$numLocalIllRequests = 0;
+				$holds = $this->getCatalogDriver()->getHolds($this);
+				foreach ($holds as $holdSection) {
+					/** @var Hold $hold */
+					foreach ($holdSection as $hold) {
+						if (!empty($hold->outOfHoldGroupMessage)) {
+							$numLocalIllRequests++;
+						}
+					}
+				}
+				$checkouts = $this->getCatalogDriver()->getCheckouts($this);
+				foreach ($checkouts as $checkout) {
+					if (!empty($checkout->outOfHoldGroupMessage)){
+						$numLocalIllRequests++;
+					}
+				}
+				if ($numLocalIllRequests >= $homeLibrary->maximumLocalIllRequests) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	protected function clearRuntimeDataVariables() {
 		if ($this->_accountProfile != null) {
 			$this->_accountProfile->__destruct();

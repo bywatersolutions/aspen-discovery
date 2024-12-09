@@ -203,6 +203,13 @@ function getUpdates24_12_00(): array {
 				'ALTER TABLE library ADD COLUMN allowRenewingOutOfHoldGroupCheckouts TINYINT DEFAULT 1',
 			]
 		], //library_allow_renewing_out_of_hold_group_checkouts
+		'library_maximum_local_ill_requests' => [
+			'title' => 'Library - Maximum Local ILL Requests',
+			'description' => 'Add the ability to set a maximum number of Local ILL requests per library',
+			'sql' => [
+				'ALTER TABLE library ADD COLUMN maximumLocalIllRequests INT DEFAULT 0',
+			]
+		], //library_maximum_local_ill_requests
 
 		//katherine
 

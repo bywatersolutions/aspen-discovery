@@ -1880,6 +1880,21 @@ class CatalogConnection {
 
 	public function submitLocalIllRequest(User $patron, LocalIllForm $localIllForm) : array {
 		if ($this->driver->supportsLocalIllRequests()) {
+			//Check to be sure the user has remaining requests
+			if (!$patron->hasRemainingLocalIllRequests()) {
+				return [
+					'success' => false,
+					'message' => translate([
+						'text' => 'You have reached the maximum number of requests that your library allows. You may request additional titles once the titles you have requested are returned.',
+						'isPublicFacing' => true,
+					]),
+					'title' => translate([
+						'text' => 'No Requests Left',
+						'isPublicFacing' => true,
+					]),
+				];
+			}
+
 			return $this->driver->submitLocalIllRequest($patron, $localIllForm);
 		}else{
 			return [

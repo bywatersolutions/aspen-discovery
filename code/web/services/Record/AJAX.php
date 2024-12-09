@@ -263,6 +263,19 @@ class Record_AJAX extends Action {
 							'modalButtons' => '',
 							'success' => true,
 						];
+					} elseif (!$user->hasRemainingLocalIllRequests()) {
+						$results = [
+							'title' => translate([
+								'text' => 'No Requests Left',
+								'isPublicFacing' => true,
+							]),
+							'modalBody' => translate([
+								'text' => 'You have reached the maximum number of requests that your library allows. You may request additional titles once the titles you have requested are returned.',
+								'isPublicFacing' => true,
+							]),
+							'modalButtons' => '',
+							'success' => true,
+						];
 					} else {
 						$marcRecord = new MarcRecordDriver($id);
 

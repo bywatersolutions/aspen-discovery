@@ -362,6 +362,7 @@ class Library extends DataObject {
 	public $materialsRequestNewEmail;
 	public $showGroupedHoldCopiesCount;
 	public $localIllRequestType;
+	public $maximumLocalIllRequests;
 	public $ILLSystem;
 	public $interLibraryLoanName;
 	public $interLibraryLoanUrl;
@@ -3375,6 +3376,14 @@ class Library extends DataObject {
 						],
 						'label' => 'Local ILL Request Type',
 						'description' => 'The system to use when generating local ILL requests within the ILS',
+						'hideInLists' => true,
+						'default' => 0,
+					],
+					'maximumLocalIllRequests' => [
+						'property' => 'maximumLocalIllRequests',
+						'type' => 'integer',
+						'label' => 'Maximum Local ILL Requests',
+						'description' => 'The maximum number of Local ILL requests to allow. Leave at 0 to not restrict.',
 						'hideInLists' => true,
 						'default' => 0,
 					],

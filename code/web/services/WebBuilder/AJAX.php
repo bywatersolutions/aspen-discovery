@@ -821,6 +821,7 @@ class WebBuilder_AJAX extends JSON_Action {
 				}
 				$hours[$key] = $hourObj;
 			}
+			$parentLibrary = $locationToProcess->getParentLibrary();
 			$libraryLocation = [
 				'id' => $locationToProcess->locationId,
 				'name' => $locationToProcess->displayName,
@@ -835,7 +836,7 @@ class WebBuilder_AJAX extends JSON_Action {
 				'image' => $locationToProcess->locationImage ? $configArray['Site']['url'] . '/files/original/' . $locationToProcess->locationImage : null,
 				'longitude' => floatval($locationToProcess->longitude),
 				'latitude' => floatval($locationToProcess->latitude),
-				'homeLink' => !empty($library->homeLink) ? $library->homeLink : null,
+				'homeLink' => (!empty($locationToProcess->homeLink) && $locationToProcess->homeLink !== 'default') ? $locationToProcess->homeLink : ((!empty($parentLibrary->homeLink) && $parentLibrary->homeLink !== 'default') ? $parentLibrary->homeLink : null),
 				'hoursMessage' => Location::getLibraryHoursMessage($locationToProcess->locationId, true),
 			];
 

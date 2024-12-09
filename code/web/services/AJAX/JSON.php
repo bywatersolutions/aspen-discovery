@@ -394,7 +394,7 @@ class AJAX_JSON extends Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getHoursAndLocations() {
+	function getHoursAndLocations() : string {
 		//Get a list of locations for the current library
 		global $library;
 		global $configArray;
@@ -475,6 +475,7 @@ class AJAX_JSON extends Action {
 				}
 				$hours[$key] = $hourObj;
 			}
+			$parentLibrary = $locationToProcess->parentLibrary;
 			$libraryLocation = [
 				'id' => $locationToProcess->locationId,
 				'name' => $locationToProcess->displayName,
@@ -489,7 +490,7 @@ class AJAX_JSON extends Action {
 				'image' => $locationToProcess->locationImage ? $configArray['Site']['url'] . '/files/original/' . $locationToProcess->locationImage : null,
 				'longitude' => floatval($locationToProcess->longitude),
 				'latitude' => floatval($locationToProcess->latitude),
-				'homeLink' => !empty($library->homeLink) ? $library->homeLink : null,
+				'homeLink' => (!empty($locationToProcess->homeLink) && $locationToProcess->homeLink !== 'default') ? $locationToProcess->homeLink : ((!empty($parentLibrary->homeLink) && $parentLibrary->homeLink !== 'default') ? $parentLibrary->homeLink : null),
 				'hoursMessage' => Location::getLibraryHoursMessage($locationToProcess->locationId, true),
 			];
 

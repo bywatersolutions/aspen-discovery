@@ -20,25 +20,25 @@
 					<div style="flex-grow: 1; max-width: 300px">
 						<img src="{$curLocation.image}" alt="{$curLocation.name}" class="img-responsive"/>
 					</div>
-                {/if}
+				{/if}
 				<div style="flex-grow: 1">
 					<h2 style="margin-top:0; padding-top: 0">{$curLocation.name}</h2>
-					<address style="text-wrap: normal; word-break: break-all; word-wrap: break-word;">
-                        {if !empty($curLocation.address)}
+					<address style="text-wrap: wrap; word-break: break-all; word-wrap: break-word;">
+						{if !empty($curLocation.address)}
 							{$curLocation.address}<br/>
 						{/if}
-                        {if !empty($curLocation.phone)}
+						{if !empty($curLocation.phone)}
 							<span>{translate text="Phone" isPublicFacing=true}:</span>&nbsp;<a href="tel:{$curLocation.phone}">{$curLocation.phone}</a><br/>
-                        {/if}
-                        {if !empty($curLocation.secondaryPhoneNumber)}
+						{/if}
+						{if !empty($curLocation.secondaryPhoneNumber)}
 							<span>{translate text="Secondary Phone" isPublicFacing=true}:</span>&nbsp;<a href="tel:{$curLocation.secondaryPhoneNumber}">{$curLocation.secondaryPhoneNumber}</a><br/>
-                        {/if}
-                        {if !empty($curLocation.tty)}
+						{/if}
+						{if !empty($curLocation.tty)}
 							<span>{translate text="TTY" isPublicFacing=true}:</span>&nbsp;<a href="tel:{$curLocation.tty}">{$curLocation.tty}</a><br/>
-                        {/if}
-                        {if !empty($curLocation.email)}
+						{/if}
+						{if !empty($curLocation.email)}
 							<span>{translate text="Email" isPublicFacing=true}:</span>&nbsp;<a href="mailto:{$curLocation.email}">{$curLocation.email}</a>
-                        {/if}
+						{/if}
 					</address>
 					{if !empty($curLocation.hoursMessage)}
 						<span class="label label-info" style="font-size: revert; white-space: normal">{$curLocation.hoursMessage}</span>
@@ -49,22 +49,22 @@
 			<div class="row" style="padding-top: 1em">
 				<div class="col-xs-12">
 					<div style="width: 100%; display: inline-flex; flex-direction: row; justify-content: space-around; flex-wrap: wrap; gap: 1rem">
-		                {if !empty($curLocation.map_link)}
+						{if !empty($curLocation.map_link)}
 							<a class="btn btn-default btn-lg" style="flex-grow: 1" href="{$curLocation.map_link}" role="button"><i class="fas fa-directions" role="presentation"></i> {translate text="Visit Library" isPublicFacing=true}</a>
 						{/if}
-	                    {if !empty($curLocation.phone)}
-		                    <a class="btn btn-default btn-lg" style="flex-grow: 1" href="tel:{$curLocation.phone}" role="button"><i class="fas fa-phone" role="presentation"></i> {translate text="Call Library" isPublicFacing=true}</a>
+						{if !empty($curLocation.phone)}
+							<a class="btn btn-default btn-lg" style="flex-grow: 1" href="tel:{$curLocation.phone}" role="button"><i class="fas fa-phone" role="presentation"></i> {translate text="Call Library" isPublicFacing=true}</a>
 						{/if}
-                        {if !empty($curLocation.email)}
+						{if !empty($curLocation.email)}
 							<a class="btn btn-default btn-lg" style="flex-grow: 1" href="mailto:{$curLocation.email}" role="button"><i class="fas fa-envelope" role="presentation"></i> {translate text="Email Library" isPublicFacing=true}</a>
 						{/if}
-                        {if !empty($curLocation.homeLink)}
+						{if !empty($curLocation.homeLink)}
 							<a class="btn btn-default btn-lg" style="flex-grow: 1" href="{$curLocation.homeLink}" role="button" target="_blank" aria-label="{translate text="Visit Website" isPublicFacing=true inAttribute=true} ({translate text="opens in a new window" isPublicFacing=true inAttribute=true})"><i class="fas fa-external-link-alt" role="presentation"></i> {translate text="Visit Website" isPublicFacing=true}</a>
 						{/if}
 					</div>
 				</div>
 			</div>
-            {/if}
+			{/if}
 
 			<div class="row" style="width: 100%; display: inline-flex; flex-direction: row; justify-content: stretch; flex-wrap: wrap; gap: 1rem">
 			{if !empty($curLocation.hasValidHours)}
@@ -107,7 +107,7 @@
 				{/foreach}
 				</div>
 			{/if}
-                {if !empty($curLocation.latitude) && $curLocation.latitude !== 0}
+				{if !empty($curLocation.latitude) && $curLocation.latitude !== 0}
 				<div style="flex-grow: 1; flex-basis: 300px; flex-shrink: 0; justify-self: stretch">
 					<iframe
 							width="100%"

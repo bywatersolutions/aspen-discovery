@@ -136,6 +136,13 @@ AspenDiscovery.Record = (function(){
 		submitLocalIllRequest: function(module, id) {
 			if (Globals.loggedIn){
 				document.body.style.cursor = "wait";
+				var acceptFeeField = $('#acceptFee');
+				if (acceptFeeField !== undefined && acceptFeeField.prop("required")) {
+					if (!acceptFeeField.prop('checked')){
+						alert("You must agree to pay any fees associated with this requests before continuing.");
+						return false;
+					}
+				}
 				var params = {
 					'method': 'submitLocalIllRequest',
 					title: $('#title').val(),
@@ -144,7 +151,7 @@ AspenDiscovery.Record = (function(){
 					isbn: $('#isbn').val(),
 					oclcNumber: $('#oclcNumber').val(),
 					maximumFeeAmount: $('#maximumFeeAmount').val(),
-					acceptFee: $('#acceptFee').prop('checked'),
+					acceptFee: acceptFeeField.prop('checked'),
 					pickupLocation: $('#pickupLocationSelect').val(),
 					catalogKey: $('#catalogKey').val(),
 					note: $('#note').val()

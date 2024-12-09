@@ -171,13 +171,21 @@ function generateYearInReview(User $patron) : void {
 					}
 					$userMessage = new UserMessage();
 					$userMessage->userId = UserAccount::getActiveUserId();
-					$userMessage->message = $yearInReviewSetting->getTextBlockTranslation('promoMessage', $patron->interfaceLanguage);
+					$promoMessage = $yearInReviewSetting->getTextBlockTranslation('promoMessage', $patron->interfaceLanguage);
+					// Remove paragraph tags if it's not multi-paragraph to improve button wrapping
+					if (substr_count($promoMessage, "<p>") == 1) {
+						$promoMessage = preg_replace('/(<p>)|(<\/p>)/', '', $promoMessage);
+					}
+					$userMessage->message = $promoMessage;
 					$userMessage->messageType = 'yearInReview';
 					$userMessage->relatedObjectId = $userYearInReview->id;
 					$userMessage->action1 = "return AspenDiscovery.Account.viewYearInReview(1)";
 					$userMessage->action1Title = 'Yes';
+					$userMessage->action2Title = 'Dismiss';
 					$userMessage->isDismissed = 0;
 					$userMessage->insert();
+					$userMessage->action2 = "return AspenDiscovery.Account.dismissMessage({$userMessage->id})";
+					$userMessage->update();
 				}
 			}
 		}

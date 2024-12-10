@@ -61,6 +61,37 @@ class WebBuilder_AJAX extends JSON_Action {
 
 				$customForm = new CustomForm();
 				$customForm->orderBy('title');
+				if (!UserAccount::userHasPermission('Administer All Custom Forms')) {
+					$libraryCustomForm = new LibraryCustomForm();
+					$userLibrary = Library::getPatronHomeLibrary();
+
+					if ($userLibrary) {
+						$userLibraryId = $userLibrary->libraryId;
+						$libraryCustomForm->whereAdd('libraryId = ' . $userLibraryId);
+
+						$validCustomForms = [];
+						$libraryCustomForm->find();
+						while ($libraryCustomForm->fetch()) {
+							$validCustomForms[] = $libraryCustomForm->formId;
+						}
+
+						if (count($validCustomForms) > 0) {
+							$customForm->whereAddIn('id', $validCustomForms, true);
+						} else {
+							$result = [
+								'success' => true,
+								'values' => $list,
+							];
+							break;
+						}
+					} else {
+						$result = [
+							'success' => false,
+							'message' => 'Unable to determine the home library for this user.',
+						];
+						break;
+					}
+				}
 				$customForm->find();
 
 				while ($customForm->fetch()) {

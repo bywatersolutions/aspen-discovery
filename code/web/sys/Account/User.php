@@ -2809,6 +2809,12 @@ class User extends DataObject {
 			$homeLibrary = $this->getHomeLibrary();
 			if (!empty($homeLibrary)) {
 				if ($homeLibrary->enableReadingHistory) {
+					//Check to see if we are masquerading
+					if (UserAccount::isUserMasquerading()) {
+						if (!$homeLibrary->allowReadingHistoryDisplayInMasqueradeMode) {
+							return false;
+						}
+					}
 					//Check to see if it's enabled by PType
 					$patronType = $this->getPTypeObj();
 					if (!empty($patronType)) {

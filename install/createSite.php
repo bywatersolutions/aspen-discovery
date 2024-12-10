@@ -83,6 +83,15 @@ if (count($_SERVER['argv']) > 1){
 			$variables['ilsStaffUser'] = $configArray['Polaris']['StaffUser'];
 			$variables['ilsStaffPassword'] = $configArray['Polaris']['StaffPassword'];
 			$variables['ilsWorkstationID'] = $configArray['Polaris']['WorkstationID'];
+		}elseif ($variables['ils'] == 'Sierra') {
+			$variables['ilsDriver'] = 'Sierra';
+			$variables['ilsClientId'] = $configArray['Sierra']['ClientId'];
+			$variables['ilsClientSecret'] = $configArray['Sierra']['ClientSecret'];
+			$variables['ilsDatabaseHost'] = $configArray['Sierra']['DBHost'];
+			$variables['ilsDatabaseName'] = $configArray['Sierra']['DBName'];
+			$variables['ilsDatabaseUser'] = $configArray['Sierra']['DBUser'];
+			$variables['ilsDatabasePassword'] = $configArray['Sierra']['DBPwd'];
+			$variables['ilsDatabasePort'] = $configArray['Sierra']['DBPort'];
 		}else{
 			$variables['ilsDriver'] = $configArray['ILS']['ilsDriver'];
 		}
@@ -217,6 +226,15 @@ if (!$foundConfig) {
 		$variables['ilsStaffUser'] = readline("Staff Username for use with the Polaris API > ");
 		$variables['ilsStaffPassword'] = readline("Staff Password for use with the Polaris API > ");
 		$variables['ilsWorkstationID'] = readline("Workstation ID for use with the Polaris API > ");
+	}elseif ($variables['ils'] == 'Sierra'){
+		$variables['ilsDriver'] = 'Sierra';
+		$variables['ilsClientId'] = readline("Client Key for Sierra API > ");
+		$variables['ilsClientSecret'] = readline("Client Secret for Sierra API > ");
+		$variables['ilsDatabaseHost'] = readline("Database host for Sierra DNA > ");
+		$variables['ilsDatabasePort'] = readline("Database port for Sierra DNA > ");
+		$variables['ilsDatabaseName'] = readline("Database schema name for Sierra DNA (normally iii) > ");
+		$variables['ilsDatabaseUser'] = readline("Database username for Sierra DNA > ");
+		$variables['ilsDatabasePassword'] = readline("Database password for Sierra DNA User > ");
 	}
 
 	while (empty($variables['ilsDriver'])) {
@@ -404,6 +422,12 @@ if ($variables['ils'] == 'Koha'){
 	copy("$installDir/install/polaris_connection.sql", "$tmp_dir/polaris_connection_$sitename.sql");
 	replaceVariables("$tmp_dir/polaris_connection_$sitename.sql", $variables);
 	exec("mysql -u{$variables['databaseUser']} -p\"{$variables['databasePassword']}\" {$variables['databaseName']} < $tmp_dir/polaris_connection_$sitename.sql");
+}elseif ($variables['ils'] == 'Sierra'){
+	$tmp_dir = rtrim(sys_get_temp_dir(), "/");
+	echo("Loading Sierra information to database\r\n");
+	copy("$installDir/install/sierra_connection.sql", "$tmp_dir/sierra_connection_$sitename.sql");
+	replaceVariables("$tmp_dir/sierra_connection_$sitename.sql", $variables);
+	exec("mysql -u{$variables['databaseUser']} -p\"{$variables['databasePassword']}\" {$variables['databaseName']} < $tmp_dir/sierra_connection_$sitename.sql");
 }
 
 $aspen_db = null;

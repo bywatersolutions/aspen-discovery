@@ -3321,7 +3321,7 @@ class User extends DataObject {
 				foreach ($groupedWorkIds as $groupedWorkId) {
 					$idsToBaseSuggestionsOn[] = [
 						'workId' => $groupedWorkId,
-						'rating' => '5',
+						'rating' => null
 					];
 				}
 				$recommendations = $searchObject->getMoreLikeThese($idsToBaseSuggestionsOn, 1, 3);
@@ -3332,6 +3332,7 @@ class User extends DataObject {
 						} else {
 							$summary->recommendations[] = $doc['title_display'];
 						}
+						$summary->recommendationIds[] = $doc['id'];
 					}
 				}
 				$searchObject->close();

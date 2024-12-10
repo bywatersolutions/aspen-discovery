@@ -220,7 +220,9 @@ class YearInReviewSetting extends DataObject {
 
 					foreach ($slideInfo->overlay_text as $overlayText) {
 						foreach ($userYearInResults->userData as $field => $value) {
-							$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							if (is_string($value)){
+								$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							}
 						}
 					}
 
@@ -289,11 +291,13 @@ class YearInReviewSetting extends DataObject {
 
 					foreach ($slideInfo->overlay_text as $overlayText) {
 						foreach ($userYearInResults->userData as $field => $value) {
-							$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							if (!is_array($value)) {
+								$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							}
 						}
 					}
 
-					$gotImage = $this->createSlideImage($slideInfo);
+					$gotImage = $this->createSlideImage($slideInfo, $userYearInResults->userData);
 				}
 			}
 		}
@@ -301,9 +305,9 @@ class YearInReviewSetting extends DataObject {
 		return $gotImage;
 	}
 
-	private function createSlideImage(stdClass $slideInfo) : ?string {
+	private function createSlideImage(stdClass $slideInfo, stdClass $userData) : ?string {
 		$gotImage = false;
-		if (count($slideInfo->overlay_text) == 0) {
+		if (empty($slideInfo->overlay_text) && empty($slideInfo->overlay_images)) {
 			//This slide is not dynamic, we just return the static contents
 		}else{
 			require_once ROOT_DIR . '/sys/Covers/CoverImageUtils.php';
@@ -375,6 +379,68 @@ class YearInReviewSetting extends DataObject {
 					addCenteredWrappedTextToImage($slideCanvas, $font, $lines, $fontSize, $fontSize * .2, $left, $top, $textWidth, $color);
 				}else{
 					addWrappedTextToImage($slideCanvas, $font, $lines, $fontSize, $fontSize * .2, $left, $top, $color);
+				}
+			}
+
+			if (!empty($slideInfo->overlay_images)) {
+				foreach ($slideInfo->overlay_images as $overlayImage) {
+					require_once ROOT_DIR . '/sys/Covers/BookCoverProcessor.php';
+					require_once ROOT_DIR . '/RecordDrivers/GroupedWorkDriver.php';
+
+					$sourceImage = null;
+					$recordDriver = null;
+					if ($overlayImage->source == 'recommendation_0' && !empty($userData->recommendationIds[0])){
+						$recordDriver = new GroupedWorkDriver($userData->recommendationIds[0]);
+					}elseif ($overlayImage->source == 'recommendation_1' && !empty($userData->recommendationIds[1])){
+						$recordDriver = new GroupedWorkDriver($userData->recommendationIds[1]);
+					}elseif ($overlayImage->source == 'recommendation_2' && !empty($userData->recommendationIds[2])){
+						$recordDriver = new GroupedWorkDriver($userData->recommendationIds[2]);
+					}
+					if (!empty($recordDriver)){
+						$coverUrl = $recordDriver->getBookcoverUrl('medium', true);
+						$coverUrl = str_replace(' ', '%20', $coverUrl);
+						if (!empty($coverUrl)){
+							$coverImage = imagecreatefromstring(file_get_contents($coverUrl));
+							if ($coverImage !== false){
+								$coverWidth = imagesx($coverImage);
+								$coverHeight = imagesy($coverImage);
+
+								$left = $overlayImage->left;
+								if (str_ends_with($left,'%')) {
+									$percent = str_replace('%', '', $left) / 100;
+									$left = $backgroundWidth * $percent;
+								}elseif (str_ends_with($left,'px')) {
+									$left = str_replace('px', '', $left);
+								}
+								$top = $overlayImage->top;
+								if (str_ends_with($top,'%')) {
+									$percent = str_replace('%', '', $top) / 100;
+									$top = $backgroundWidth * $percent;
+								}elseif (str_ends_with($top,'px')) {
+									$top = str_replace('px', '', $top);
+								}
+
+								$overlayWidth = $overlayImage->width;
+								if (str_ends_with($overlayWidth,'%')) {
+									$percent = str_replace('%', '', $overlayWidth) / 100;
+									$newWidth = $backgroundWidth * $percent;
+								}else{
+									$newWidth = $overlayWidth;
+								}
+
+								$maxDimension = (int)$newWidth;
+								if ($coverWidth > $coverHeight) {
+									$newWidth = $maxDimension;
+									$newHeight = (int)floor($coverHeight * ($maxDimension / $coverWidth));
+								} else {
+									$newHeight = $maxDimension;
+									$newWidth = (int)floor($coverWidth * ($maxDimension / $coverHeight));
+								}
+
+								imagecopyresampled($slideCanvas, $coverImage, $left, $top, 0, 0, $newWidth, $newHeight, $coverWidth, $coverHeight);
+							}
+						}
+					}
 				}
 			}
 

@@ -16,4 +16,5 @@ class ReadingHistorySummary {
 	public array $topGenres = [];
 
 	public array $recommendations = [];
+	public array $recommendationIds = [];
 }

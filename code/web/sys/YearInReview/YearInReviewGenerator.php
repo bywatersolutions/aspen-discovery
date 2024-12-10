@@ -131,13 +131,14 @@ function generateYearInReview(User $patron) : void {
 
 						//Top series
 						if ($readingHistorySummary->topSeries) {
-							$yearInReviewData->userData['topSeries'] = join(" and ", $readingHistorySummary->topSeries);
+							$yearInReviewData->userData['topSeries'] = join("\nand\n", $readingHistorySummary->topSeries);
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 9 : 10;
 						}
 
 						//Recommendations
 						if ($readingHistorySummary->recommendations) {
 							$yearInReviewData->userData['recommendations'] = join("\n\n", $readingHistorySummary->recommendations);
+							$yearInReviewData->userData['recommendationIds'] = $readingHistorySummary->recommendationIds;
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 10: 11;
 						}
 

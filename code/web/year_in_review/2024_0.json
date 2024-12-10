@@ -158,7 +158,7 @@
           "width": "45%",
           "height": "30%",
           "color" : "black",
-          "font_size": "2em",
+          "font_size": "2.25em",
           "align": "center"
         }
       ]
@@ -166,16 +166,25 @@
     {
       "title": "Your 2025 Forecast",
       "background" : "2024_0_8.png",
-      "overlay_text" : [
+      "overlay_text" : [],
+      "overlay_images" : [
         {
-          "text": "{recommendations}",
-          "left": "20%",
-          "top": "325px",
-          "width": "30%",
-          "height": "40%",
-          "color" : "black",
-          "font_size": "1.5em",
-          "align": "center"
+          "source": "recommendation_0",
+          "left" : "125px",
+          "top" : "350px",
+          "width": "175px"
+        },
+        {
+          "source": "recommendation_1",
+          "left" : "325px",
+          "top" : "350px",
+          "width": "175px"
+        },
+        {
+          "source": "recommendation_2",
+          "left" : "525px",
+          "top" : "350px",
+          "width": "175px"
         }
       ]
     },

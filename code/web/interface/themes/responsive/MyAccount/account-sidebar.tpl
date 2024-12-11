@@ -209,7 +209,11 @@
 									</div>
 									{if $hasYearInReview}
 										<ul class="account-submenu">
-											<li class="myAccountLink">&nbsp;&nbsp;&raquo;&nbsp;<a onclick="return AspenDiscovery.Account.viewYearInReview(1);">{translate text=$yearInReviewName isPublicFacing=true} <span class="badge"><span>{translate text="View Now" isPublicFacing=true}</span></span></a></li>
+											{if $yearInReviewViewed}
+												<li class="myAccountLink">&nbsp;&nbsp;&raquo;&nbsp;<a href="/MyAccount/YearInReviewSummary">{translate text=$yearInReviewName isPublicFacing=true}</span></a></li>
+											{else}
+												<li class="myAccountLink">&nbsp;&nbsp;&raquo;&nbsp;<a onclick="return AspenDiscovery.Account.viewYearInReview(1);">{translate text=$yearInReviewName isPublicFacing=true} <span class="badge"><span>{translate text="View Now" isPublicFacing=true}</span></span></a></li>
+											{/if}
 										</ul>
 									{/if}
 								{/if}

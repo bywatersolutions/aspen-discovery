@@ -120,6 +120,10 @@ function generateYearInReview(User $patron) : void {
 									$readingHistorySummary->topGenres[2]
 								]);
 							}
+							$genreNames = array_values($readingHistorySummary->topGenres);
+							$yearInReviewData->userData['topGenre1'] = $genreNames[0];
+							$yearInReviewData->userData['topGenre2'] = count($genreNames) > 1 ?  $genreNames[1] : '';
+							$yearInReviewData->userData['topGenre3'] = count($genreNames) > 2 ?  $genreNames[2] : '';
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 7 : 8;
 						}
 
@@ -132,6 +136,9 @@ function generateYearInReview(User $patron) : void {
 						//Top series
 						if ($readingHistorySummary->topSeries) {
 							$yearInReviewData->userData['topSeries'] = join("\nand\n", $readingHistorySummary->topSeries);
+							$seriesNames = array_values($readingHistorySummary->topSeries);
+							$yearInReviewData->userData['topSeries1'] = $seriesNames[0];
+							$yearInReviewData->userData['topSeries2'] = count($seriesNames) > 1 ?  $seriesNames[1] : '';
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 9 : 10;
 						}
 
@@ -163,7 +170,7 @@ function generateYearInReview(User $patron) : void {
 					//First check for and dismiss existing Year in Review messages
 					$userMessage = new UserMessage();
 					$userMessage->userId = UserAccount::getActiveUserId();
-					$userMessage->messageType = 'yearInReview';
+					$userMessage->messageType = 'yearInReview_' . $yearInReviewSetting->year;
 					$userMessage->isDismissed = 0;
 					$userMessage->find();
 					while ($userMessage->fetch()) {
@@ -178,7 +185,7 @@ function generateYearInReview(User $patron) : void {
 						$promoMessage = preg_replace('/(<p>)|(<\/p>)/', '', $promoMessage);
 					}
 					$userMessage->message = $promoMessage;
-					$userMessage->messageType = 'yearInReview';
+					$userMessage->messageType = 'yearInReview_' . $yearInReviewSetting->year;
 					$userMessage->relatedObjectId = $userYearInReview->id;
 					$userMessage->action1 = "return AspenDiscovery.Account.viewYearInReview(1)";
 					$userMessage->action1Title = 'Yes';

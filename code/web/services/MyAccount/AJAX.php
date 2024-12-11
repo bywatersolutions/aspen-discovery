@@ -8820,6 +8820,7 @@ class MyAccount_AJAX extends JSON_Action {
 		return $result;
 	}
 
+	/** @noinspection PhpUnused */
 	function getYearInReviewSlide() : array {
 		$result = [
 			'success' => false,
@@ -8867,6 +8868,7 @@ class MyAccount_AJAX extends JSON_Action {
 		return $result;
 	}
 
+	/** @noinspection PhpUnused */
 	function getYearInReviewSlideImage() {
 		$gotImage = false;
 		//This returns an image to the browser

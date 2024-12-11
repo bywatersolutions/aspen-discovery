@@ -81,9 +81,15 @@
 			{/if}
 			{if !empty($userHasCatalogConnection) && $hasYearInReview}
 				<div class="header-menu-option" >
-					<a onclick="return AspenDiscovery.Account.viewYearInReview(1);">
-						{translate text=$yearInReviewName isPublicFacing=true}
-					</a>
+					{if $yearInReviewViewed}
+						<a href="/MyAccount/YearInReviewSummary">
+							{translate text=$yearInReviewName isPublicFacing=true}
+						</a>
+					{else}
+						<a onclick="return AspenDiscovery.Account.viewYearInReview(1);">
+							{translate text=$yearInReviewName isPublicFacing=true}
+						</a>
+					{/if}
 				</div>
 			{/if}
 			{if !empty($userHasCatalogConnection) && $enableCostSavings}

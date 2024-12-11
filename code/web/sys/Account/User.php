@@ -2977,13 +2977,13 @@ class User extends DataObject {
 	 * Used by Account Profile, to show users any additional Admin roles they may have.
 	 * @return bool
 	 */
-	public function isStaff() {
+	public function isStaff() : bool {
 		if (count($this->getRoles()) > 0) {
 			return true;
 		} else {
 			$patronType = $this->getPTypeObj();
 			if (!empty($patronType)) {
-				return $patronType->isStaff;
+				return boolval($patronType->isStaff);
 			}
 		}
 		return false;
@@ -5672,7 +5672,7 @@ class User extends DataObject {
 				$userYearInReview->userId = $this->id;
 				$userYearInReview->wrappedActive = true;
 				if ($userYearInReview->find(true)){
-					$this->_yearInReviewResults = $userYearInReview->wrappedResults;
+					$this->_yearInReviewResults = $userYearInReview;
 					$yearInReviewSetting = new YearInReviewSetting();
 					$yearInReviewSetting->id = $userYearInReview->settingId;
 					if ($yearInReviewSetting->find(true)) {
@@ -5690,10 +5690,20 @@ class User extends DataObject {
 
 	private $_hasYearInReview;
 	private $_yearInReviewSetting;
+	/** @var UserYearInReview */
 	private $_yearInReviewResults;
 	public function hasYearInReview() : bool {
 		$this->loadYearInReviewInfo();
 		return $this->_hasYearInReview;
+	}
+
+	public function yearInReviewViewed() : bool {
+		$yearInReviewResults = $this->getYearInReviewResult();
+		if (!is_null($yearInReviewResults)) {
+			return $yearInReviewResults->wrappedViewed;
+		}else{
+			return false;
+		}
 	}
 
 	public function getYearInReviewSetting() : YearInReviewSetting|false {
@@ -5702,12 +5712,21 @@ class User extends DataObject {
 		return $this->_yearInReviewSetting;
 	}
 
-	public function getYearInReviewResults() : ?stdClass {
+	public function getYearInReviewResult() : ?UserYearInReview {
 		$this->loadYearInReviewInfo();
 		if (empty($this->_yearInReviewResults)){
 			return null;
 		}else{
-			return json_decode($this->_yearInReviewResults);
+			return $this->_yearInReviewResults;
+		}
+	}
+
+	public function getYearInReviewResultData() : ?stdClass {
+		$this->loadYearInReviewInfo();
+		if (empty($this->_yearInReviewResults->wrappedResults)){
+			return null;
+		}else{
+			return json_decode($this->_yearInReviewResults->wrappedResults);
 		}
 	}
 }

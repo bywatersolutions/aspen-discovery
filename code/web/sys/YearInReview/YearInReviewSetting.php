@@ -202,15 +202,32 @@ class YearInReviewSetting extends DataObject {
 		];
 
 		//Load slide configuration for the year
-		$userYearInResults = $patron->getYearInReviewResults();
-		if ($userYearInResults !== false) {
-			$style = (isset($userYearInResults->activeStyle) && is_numeric($userYearInResults->activeStyle)) ? $userYearInResults->activeStyle : $this->style;
+		$yearInReviewResultData = $patron->getYearInReviewResultData();
+		if ($yearInReviewResultData !== false) {
+			$yearInReviewResult = $patron->getYearInReviewResult();
+			if (!$yearInReviewResult->wrappedViewed){
+				//Dismiss the user message if active
+				require_once ROOT_DIR . '/sys/Account/UserMessage.php';
+				$userMessage = new UserMessage();
+				$userMessage->userId = $patron->id;
+				$userMessage->messageType = 'yearInReview_' . $patron->getYearInReviewSetting()->year;
+				$userMessage->isDismissed = 0;
+				if ($userMessage->find(true)) {
+					$userMessage->isDismissed = 1;
+					$userMessage->update();
+				}
+
+				//User is viewing wrapped for the first time
+				$yearInReviewResult->wrappedViewed = true;
+				$yearInReviewResult->update();
+			}
+			$style = (isset($yearInReviewResultData->activeStyle) && is_numeric($yearInReviewResultData->activeStyle)) ? $yearInReviewResultData->activeStyle : $this->style;
 			$configurationFile = ROOT_DIR . "/year_in_review/{$this->year}_$style.json";
 			if (file_exists($configurationFile)) {
 				$slideConfiguration = json_decode(file_get_contents($configurationFile));
 
-				if ($slideNumber > 0 && $slideNumber <= $userYearInResults->numSlidesToShow) {
-					$slideIndex = $userYearInResults->slidesToShow[$slideNumber - 1];
+				if ($slideNumber > 0 && $slideNumber <= $yearInReviewResultData->numSlidesToShow) {
+					$slideIndex = $yearInReviewResultData->slidesToShow[$slideNumber - 1];
 					$slideInfo = $slideConfiguration->slides[$slideIndex - 1];
 					$result['success'] = true;
 					$result['title'] = translate([
@@ -219,7 +236,7 @@ class YearInReviewSetting extends DataObject {
 					]);
 
 					foreach ($slideInfo->overlay_text as $overlayText) {
-						foreach ($userYearInResults->userData as $field => $value) {
+						foreach ($yearInReviewResultData->userData as $field => $value) {
 							if (is_string($value)){
 								$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
 							}
@@ -227,7 +244,7 @@ class YearInReviewSetting extends DataObject {
 					}
 
 					$result['slideConfiguration'] = $slideInfo;
-					$result['numSlidesToShow'] = $userYearInResults->numSlidesToShow;
+					$result['numSlidesToShow'] = $yearInReviewResultData->numSlidesToShow;
 					$result['modalBody'] = $this->formatSlide($slideInfo, $slideNumber);
 
 					$modalButtons = '';
@@ -238,7 +255,7 @@ class YearInReviewSetting extends DataObject {
 								'inAttribute' => true,
 							]) . '</button>';
 					}
-					if ($slideNumber < $userYearInResults->numSlidesToShow) {
+					if ($slideNumber < $yearInReviewResultData->numSlidesToShow) {
 						$modalButtons .= '<button type="button" class="btn btn-primary" onclick="return AspenDiscovery.Account.viewYearInReview(' . $slideNumber + 1 . ')">' . translate([
 								'text' => 'Next',
 								'isPublicFacing' => true,
@@ -278,7 +295,7 @@ class YearInReviewSetting extends DataObject {
 	public function getSlideImage(User $patron, int|string $slideNumber) : bool {
 		//Load slide configuration for the year
 		$gotImage = true;
-		$userYearInResults = $patron->getYearInReviewResults();
+		$userYearInResults = $patron->getYearInReviewResultData();
 		if ($userYearInResults !== false) {
 			$style = (isset($userYearInResults->activeStyle) && is_numeric($userYearInResults->activeStyle)) ? $userYearInResults->activeStyle : $this->style;
 			$configurationFile = ROOT_DIR . "/year_in_review/{$this->year}_$style.json";

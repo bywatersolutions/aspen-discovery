@@ -88,7 +88,7 @@
           "text": "{topFormat1}",
           "left": "23%",
           "top": "410px",
-          "width": "30%",
+          "width": "40%",
           "height": "20%",
           "color" : "white",
           "font" : "GothicA1-Regular",
@@ -99,7 +99,7 @@
           "text": "{topFormat2}",
           "left": "23%",
           "top": "650px",
-          "width": "30%",
+          "width": "40%",
           "height": "20%",
           "color" : "white",
           "font" : "GothicA1-Regular",
@@ -110,7 +110,7 @@
           "text": "{topFormat3}",
           "left": "23%",
           "top": "890px",
-          "width": "30%",
+          "width": "40%",
           "height": "20%",
           "color" : "white",
           "font" : "GothicA1-Regular",
@@ -162,7 +162,7 @@
         {
           "text": "{topSeries}",
           "left": "700px",
-          "top": "550px",
+          "top": "475px",
           "width": "45%",
           "height": "30%",
           "color" : "white",
@@ -176,18 +176,25 @@
     {
       "title": "Your 2025 Forecast",
       "background" : "2024_1_9.png",
-      "overlay_text" : [
+      "overlay_text" : [],
+      "overlay_images" : [
         {
-          "text": "{recommendations}",
-          "left": "200px",
-          "top": "430px",
-          "width": "40%",
-          "height": "40%",
-          "color" : "white",
-          "font" : "GothicA1-Regular",
-          "font_size": "2.25em",
-          "allCaps": true,
-          "align": "left"
+          "source": "recommendation_0",
+          "left" : "200px",
+          "top" : "440px",
+          "width": "300px"
+        },
+        {
+          "source": "recommendation_1",
+          "left" : "525px",
+          "top" : "440px",
+          "width": "300px"
+        },
+        {
+          "source": "recommendation_2",
+          "left" : "850px",
+          "top" : "440px",
+          "width": "300px"
         }
       ]
     },

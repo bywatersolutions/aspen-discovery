@@ -1592,6 +1592,7 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 	public void loadPrintFormatInformation(AbstractGroupedWorkSolr groupedWork, RecordInfo recordInfo, org.marc4j.marc.Record record, boolean hasChildRecords) {
 		//Check to see if we have child records, if so format will be Serials
 		if (hasChildRecords) {
+			if (groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Title has child records, loading format from bib.", 2);}
 			//A record with children will not generally have items, so we will load from the bib.
 			loadPrintFormatFromBib(groupedWork, recordInfo, record);
 			if (recordInfo.getFormats().isEmpty()) {
@@ -1649,9 +1650,14 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 			if (settings.getCheckRecordForLargePrint()){
 				boolean doLargePrintCheck = false;
 				if ((uniqueItemFormats.size() == 1) && uniqueItemFormats.iterator().next().equalsIgnoreCase("Book")){
+					if (groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("All items are Book, checking record for Large Print.",2);}
+
 					doLargePrintCheck = true;
 				}else if ((uniqueItemFormats.size() == 2) && uniqueItemFormats.contains("Book") && uniqueItemFormats.contains("Large Print")){
+					if (groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("All items are Book or Large Print, checking record for Large Print.",2);}
 					doLargePrintCheck = true;
+				}else {
+					if (groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Record has items that are not Book/Large Print, skipping Large Print check.",2);}
 				}
 				if (doLargePrintCheck) {
 					LinkedHashSet<String> printFormats = formatClassifier.getUntranslatedFormatsFromBib(groupedWork, record, settings);

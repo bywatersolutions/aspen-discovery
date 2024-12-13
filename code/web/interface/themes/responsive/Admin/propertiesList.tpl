@@ -208,6 +208,13 @@
 
 	{if !empty($pageLinks.all)}<div class="text-center">{$pageLinks.all}</div>{/if}
 
+	{if $canCompare || $canBatchUpdate || $canExportToCSV}
+		<div class="btn-group">
+			<button type='button' class="btn btn-default" onclick="$('.selectedObject').prop( 'checked', true );return false">{translate text='Select All' isAdminFacing=true}</button>
+			<button type='button' class="btn btn-default" onclick="$('.selectedObject').prop( 'checked', false );return false">{translate text='Deselect All' isAdminFacing=true}</button>
+		</div>
+	{/if}
+
 	<input type='hidden' name='objectAction' id='objectAction' value='' />
 	{if !empty($canCompare)}
 		<div class="btn-group">

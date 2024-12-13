@@ -186,9 +186,8 @@ class LocalIllForm extends DataObject {
 			'property' => 'title',
 			'type' => 'label',
 			'label' => 'Title',
-			'description' => 'The title of the title to be requested',
+			'description' => '',
 			'maxLength' => 255,
-			'required' => true,
 			'default' => ($marcRecordDriver != null ? StringUtils::removeTrailingPunctuation($marcRecordDriver->getTitle()) : ''),
 		];
 		if ($this->showAcceptFee) {
@@ -253,7 +252,7 @@ class LocalIllForm extends DataObject {
 			'property' => 'note',
 			'type' => 'text',
 			'label' => 'Note',
-			'description' => 'Any additional information you want us to have about this request',
+			'description' => 'Any additional information you want us to have about this request (40 characters maximum)',
 			'required' => false,
 			'default' => ($volumeInfo == null) ? '' : $volumeInfo,
 			'maxLength' => 40
@@ -308,7 +307,6 @@ class LocalIllForm extends DataObject {
 				'text' => 'The title to request',
 				'isPublicFacing' => true,
 			]),
-			'required' => true,
 			'maxLength' => 255,
 		];
 
@@ -360,7 +358,7 @@ class LocalIllForm extends DataObject {
 				'isPublicFacing' => true,
 			]),
 			'description' => translate([
-				'text' => 'Any additional information you want us to have about this request',
+				'text' => 'Any additional information you want us to have about this request (40 characters maximum)',
 				'isPublicFacing' => true,
 			]),
 			'required' => false,

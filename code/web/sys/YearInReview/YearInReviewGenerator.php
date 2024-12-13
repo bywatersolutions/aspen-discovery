@@ -26,7 +26,17 @@ function generateYearInReview(User $patron) : void {
 			$userYearInReview = new UserYearInReview();
 			$userYearInReview->userId = $patron->id;
 			$userYearInReview->settingId = $yearInReviewSetting->id;
+			$reloadData = false;
 			if (!$userYearInReview->find(true)) {
+				$reloadData = true;
+			}else{
+				if (isset($_REQUEST['reload'])) {
+					$reloadData = true;
+					$userYearInReview->delete();
+				}
+			}
+
+			if ($reloadData) {
 				//We have not created year in review data for the user
 				$readingHistorySize = $patron->getReadingHistorySizeForYear($yearInReviewSetting->year);
 
@@ -39,6 +49,7 @@ function generateYearInReview(User $patron) : void {
 					if ($yearInReviewSetting->year == 2024) {
 						$yearInReviewData = new stdClass();
 						$yearInReviewData->userData = [];
+						$yearInReviewData->activeStyle = $yearInReviewSetting->style;
 
 						/** @noinspection PhpIfWithCommonPartsInspection */
 						if ($yearInReviewSetting->style == 0) {
@@ -61,8 +72,20 @@ function generateYearInReview(User $patron) : void {
 						}
 
 						//Hot Month / Busy Months
+						$isSteadyUser = false;
 						if ($readingHistorySummary->maxMonthlyCheckouts - $readingHistorySummary->averageCheckouts > 2) {
-							$yearInReviewData->userData['topMonth'] = date("F", strtotime($readingHistorySummary->topMonth));
+							foreach ($readingHistorySummary->monthlyCheckouts as $month => $monthlyCheckoutCount) {
+								if ($readingHistorySummary->topMonth != $month) {
+									if ($readingHistorySummary->maxMonthlyCheckouts - $monthlyCheckoutCount < 2) {
+										$isSteadyUser = true;
+									}
+								}
+							}
+						}
+						if (!$isSteadyUser) {
+							$dateObj   = DateTime::createFromFormat('!m', $readingHistorySummary->topMonth);
+							$monthName = $dateObj->format('F');
+							$yearInReviewData->userData['topMonth'] = $monthName;
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 4 : 5;
 						}else{
 							$yearInReviewData->userData['averageCheckouts'] = $readingHistorySummary->averageCheckouts;
@@ -70,7 +93,7 @@ function generateYearInReview(User $patron) : void {
 						}
 
 						//Top formats
-						if (!empty($readingHistorySummary->topFormats)) {
+						if (!empty($readingHistorySummary->topFormats) && count($readingHistorySummary->topFormats) >= 3) {
 							$yearInReviewData->userData['topFormats'] = join("\n", $readingHistorySummary->topFormats);
 							$formatNames = array_values($readingHistorySummary->topFormats);
 							$yearInReviewData->userData['topFormat1'] = $formatNames[0];
@@ -91,12 +114,16 @@ function generateYearInReview(User $patron) : void {
 								]);
 							}elseif(count($readingHistorySummary->topGenres) == 3){
 								$yearInReviewData->userData['topGenres'] = join("\n", [
-									$readingHistorySummary->topGenres[0],
-									$readingHistorySummary->topGenres[1],
+									$readingHistorySummary->topGenres[0] . ', ',
+									$readingHistorySummary->topGenres[1]. ', ',
 									'and',
 									$readingHistorySummary->topGenres[2]
 								]);
 							}
+							$genreNames = array_values($readingHistorySummary->topGenres);
+							$yearInReviewData->userData['topGenre1'] = $genreNames[0];
+							$yearInReviewData->userData['topGenre2'] = count($genreNames) > 1 ?  $genreNames[1] : '';
+							$yearInReviewData->userData['topGenre3'] = count($genreNames) > 2 ?  $genreNames[2] : '';
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 7 : 8;
 						}
 
@@ -108,13 +135,17 @@ function generateYearInReview(User $patron) : void {
 
 						//Top series
 						if ($readingHistorySummary->topSeries) {
-							$yearInReviewData->userData['topSeries'] = join(" and ", $readingHistorySummary->topSeries);
+							$yearInReviewData->userData['topSeries'] = join("\nand\n", $readingHistorySummary->topSeries);
+							$seriesNames = array_values($readingHistorySummary->topSeries);
+							$yearInReviewData->userData['topSeries1'] = $seriesNames[0];
+							$yearInReviewData->userData['topSeries2'] = count($seriesNames) > 1 ?  $seriesNames[1] : '';
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 9 : 10;
 						}
 
 						//Recommendations
 						if ($readingHistorySummary->recommendations) {
 							$yearInReviewData->userData['recommendations'] = join("\n\n", $readingHistorySummary->recommendations);
+							$yearInReviewData->userData['recommendationIds'] = $readingHistorySummary->recommendationIds;
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 10: 11;
 						}
 
@@ -139,7 +170,7 @@ function generateYearInReview(User $patron) : void {
 					//First check for and dismiss existing Year in Review messages
 					$userMessage = new UserMessage();
 					$userMessage->userId = UserAccount::getActiveUserId();
-					$userMessage->messageType = 'yearInReview';
+					$userMessage->messageType = 'yearInReview_' . $yearInReviewSetting->year;
 					$userMessage->isDismissed = 0;
 					$userMessage->find();
 					while ($userMessage->fetch()) {
@@ -148,13 +179,21 @@ function generateYearInReview(User $patron) : void {
 					}
 					$userMessage = new UserMessage();
 					$userMessage->userId = UserAccount::getActiveUserId();
-					$userMessage->message = $yearInReviewSetting->getTextBlockTranslation('promoMessage', $patron->interfaceLanguage);
-					$userMessage->messageType = 'yearInReview';
+					$promoMessage = $yearInReviewSetting->getTextBlockTranslation('promoMessage', $patron->interfaceLanguage);
+					// Remove paragraph tags if it's not multi-paragraph to improve button wrapping
+					if (substr_count($promoMessage, "<p>") == 1) {
+						$promoMessage = preg_replace('/(<p>)|(<\/p>)/', '', $promoMessage);
+					}
+					$userMessage->message = $promoMessage;
+					$userMessage->messageType = 'yearInReview_' . $yearInReviewSetting->year;
 					$userMessage->relatedObjectId = $userYearInReview->id;
 					$userMessage->action1 = "return AspenDiscovery.Account.viewYearInReview(1)";
 					$userMessage->action1Title = 'Yes';
+					$userMessage->action2Title = 'Dismiss';
 					$userMessage->isDismissed = 0;
 					$userMessage->insert();
+					$userMessage->action2 = "return AspenDiscovery.Account.dismissMessage({$userMessage->id})";
+					$userMessage->update();
 				}
 			}
 		}

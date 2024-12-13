@@ -202,13 +202,32 @@ class YearInReviewSetting extends DataObject {
 		];
 
 		//Load slide configuration for the year
-		$configurationFile = ROOT_DIR . "/year_in_review/{$this->year}_$this->style.json";
-		if (file_exists($configurationFile)) {
-			$slideConfiguration = json_decode(file_get_contents($configurationFile));
-			$userYearInResults = $patron->getYearInReviewResults();
-			if ($userYearInResults !== false) {
-				if ($slideNumber > 0 && $slideNumber <= $userYearInResults->numSlidesToShow) {
-					$slideIndex = $userYearInResults->slidesToShow[$slideNumber - 1];
+		$yearInReviewResultData = $patron->getYearInReviewResultData();
+		if ($yearInReviewResultData !== false) {
+			$yearInReviewResult = $patron->getYearInReviewResult();
+			if (!$yearInReviewResult->wrappedViewed){
+				//Dismiss the user message if active
+				require_once ROOT_DIR . '/sys/Account/UserMessage.php';
+				$userMessage = new UserMessage();
+				$userMessage->userId = $patron->id;
+				$userMessage->messageType = 'yearInReview_' . $patron->getYearInReviewSetting()->year;
+				$userMessage->isDismissed = 0;
+				if ($userMessage->find(true)) {
+					$userMessage->isDismissed = 1;
+					$userMessage->update();
+				}
+
+				//User is viewing wrapped for the first time
+				$yearInReviewResult->wrappedViewed = true;
+				$yearInReviewResult->update();
+			}
+			$style = (isset($yearInReviewResultData->activeStyle) && is_numeric($yearInReviewResultData->activeStyle)) ? $yearInReviewResultData->activeStyle : $this->style;
+			$configurationFile = ROOT_DIR . "/year_in_review/{$this->year}_$style.json";
+			if (file_exists($configurationFile)) {
+				$slideConfiguration = json_decode(file_get_contents($configurationFile));
+
+				if ($slideNumber > 0 && $slideNumber <= $yearInReviewResultData->numSlidesToShow) {
+					$slideIndex = $yearInReviewResultData->slidesToShow[$slideNumber - 1];
 					$slideInfo = $slideConfiguration->slides[$slideIndex - 1];
 					$result['success'] = true;
 					$result['title'] = translate([
@@ -217,14 +236,16 @@ class YearInReviewSetting extends DataObject {
 					]);
 
 					foreach ($slideInfo->overlay_text as $overlayText) {
-						foreach ($userYearInResults->userData as $field => $value) {
-							$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+						foreach ($yearInReviewResultData->userData as $field => $value) {
+							if (is_string($value)){
+								$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							}
 						}
 					}
 
 					$result['slideConfiguration'] = $slideInfo;
-					$result['numSlidesToShow'] = $userYearInResults->numSlidesToShow;
-					$result['modalBody'] = $this->formatSlide($slideInfo, $patron, $slideNumber, $this->year);
+					$result['numSlidesToShow'] = $yearInReviewResultData->numSlidesToShow;
+					$result['modalBody'] = $this->formatSlide($slideInfo, $slideNumber);
 
 					$modalButtons = '';
 					if ($slideNumber > 1) {
@@ -234,7 +255,7 @@ class YearInReviewSetting extends DataObject {
 								'inAttribute' => true,
 							]) . '</button>';
 					}
-					if ($slideNumber < $userYearInResults->numSlidesToShow) {
+					if ($slideNumber < $yearInReviewResultData->numSlidesToShow) {
 						$modalButtons .= '<button type="button" class="btn btn-primary" onclick="return AspenDiscovery.Account.viewYearInReview(' . $slideNumber + 1 . ')">' . translate([
 								'text' => 'Next',
 								'isPublicFacing' => true,
@@ -250,13 +271,13 @@ class YearInReviewSetting extends DataObject {
 				}
 			}else{
 				$result['message'] = translate([
-					'text' => 'Unable to find year in review data',
+					'text' => 'Unable to find year in review configuration file',
 					'isPublicFacing' => true,
 				]);
 			}
 		}else{
 			$result['message'] = translate([
-				'text' => 'Unable to find year in review configuration file',
+				'text' => 'Unable to find year in review data',
 				'isPublicFacing' => true,
 			]);
 		}
@@ -264,7 +285,7 @@ class YearInReviewSetting extends DataObject {
 		return $result;
 	}
 
-	private function formatSlide(stdClass $slideInfo, User $patron, int $slideNumber, string|int $year) : string {
+	private function formatSlide(stdClass $slideInfo, int $slideNumber) : string {
 		global $interface;
 		$interface->assign('slideNumber', $slideNumber);
 		$interface->assign('slideInfo', $slideInfo);
@@ -274,22 +295,26 @@ class YearInReviewSetting extends DataObject {
 	public function getSlideImage(User $patron, int|string $slideNumber) : bool {
 		//Load slide configuration for the year
 		$gotImage = true;
-		$configurationFile = ROOT_DIR . "/year_in_review/{$this->year}_$this->style.json";
-		if (file_exists($configurationFile)) {
-			$slideConfiguration = json_decode(file_get_contents($configurationFile));
-			$userYearInResults = $patron->getYearInReviewResults();
-			if ($userYearInResults !== false) {
+		$userYearInResults = $patron->getYearInReviewResultData();
+		if ($userYearInResults !== false) {
+			$style = (isset($userYearInResults->activeStyle) && is_numeric($userYearInResults->activeStyle)) ? $userYearInResults->activeStyle : $this->style;
+			$configurationFile = ROOT_DIR . "/year_in_review/{$this->year}_$style.json";
+			if (file_exists($configurationFile)) {
+				$slideConfiguration = json_decode(file_get_contents($configurationFile));
+
 				if ($slideNumber > 0 && $slideNumber <= $userYearInResults->numSlidesToShow) {
 					$slideIndex = $userYearInResults->slidesToShow[$slideNumber - 1];
 					$slideInfo = $slideConfiguration->slides[$slideIndex - 1];
 
 					foreach ($slideInfo->overlay_text as $overlayText) {
 						foreach ($userYearInResults->userData as $field => $value) {
-							$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							if (!is_array($value)) {
+								$overlayText->text = str_replace("{" . $field . "}", $value, $overlayText->text);
+							}
 						}
 					}
 
-					$gotImage = $this->createSlideImage($slideInfo);
+					$gotImage = $this->createSlideImage($slideInfo, $userYearInResults->userData);
 				}
 			}
 		}
@@ -297,9 +322,9 @@ class YearInReviewSetting extends DataObject {
 		return $gotImage;
 	}
 
-	private function createSlideImage(stdClass $slideInfo) : ?string {
+	private function createSlideImage(stdClass $slideInfo, stdClass $userData) : ?string {
 		$gotImage = false;
-		if (count($slideInfo->overlay_text) == 0) {
+		if (empty($slideInfo->overlay_text) && empty($slideInfo->overlay_images)) {
 			//This slide is not dynamic, we just return the static contents
 		}else{
 			require_once ROOT_DIR . '/sys/Covers/CoverImageUtils.php';
@@ -364,13 +389,75 @@ class YearInReviewSetting extends DataObject {
 				}
 
 				[
-					$totalHeight,
+					,
 					$lines,
 				] = wrapTextForDisplay($font, $overlayText->text, $fontSize, $fontSize * .2, $textWidth);
 				if ($overlayText->align == 'center') {
 					addCenteredWrappedTextToImage($slideCanvas, $font, $lines, $fontSize, $fontSize * .2, $left, $top, $textWidth, $color);
 				}else{
 					addWrappedTextToImage($slideCanvas, $font, $lines, $fontSize, $fontSize * .2, $left, $top, $color);
+				}
+			}
+
+			if (!empty($slideInfo->overlay_images)) {
+				foreach ($slideInfo->overlay_images as $overlayImage) {
+					require_once ROOT_DIR . '/sys/Covers/BookCoverProcessor.php';
+					require_once ROOT_DIR . '/RecordDrivers/GroupedWorkDriver.php';
+
+					$sourceImage = null;
+					$recordDriver = null;
+					if ($overlayImage->source == 'recommendation_0' && !empty($userData->recommendationIds[0])){
+						$recordDriver = new GroupedWorkDriver($userData->recommendationIds[0]);
+					}elseif ($overlayImage->source == 'recommendation_1' && !empty($userData->recommendationIds[1])){
+						$recordDriver = new GroupedWorkDriver($userData->recommendationIds[1]);
+					}elseif ($overlayImage->source == 'recommendation_2' && !empty($userData->recommendationIds[2])){
+						$recordDriver = new GroupedWorkDriver($userData->recommendationIds[2]);
+					}
+					if (!empty($recordDriver)){
+						$coverUrl = $recordDriver->getBookcoverUrl('medium', true);
+						$coverUrl = str_replace(' ', '%20', $coverUrl);
+						if (!empty($coverUrl)){
+							$coverImage = imagecreatefromstring(file_get_contents($coverUrl));
+							if ($coverImage !== false){
+								$coverWidth = imagesx($coverImage);
+								$coverHeight = imagesy($coverImage);
+
+								$left = $overlayImage->left;
+								if (str_ends_with($left,'%')) {
+									$percent = str_replace('%', '', $left) / 100;
+									$left = $backgroundWidth * $percent;
+								}elseif (str_ends_with($left,'px')) {
+									$left = str_replace('px', '', $left);
+								}
+								$top = $overlayImage->top;
+								if (str_ends_with($top,'%')) {
+									$percent = str_replace('%', '', $top) / 100;
+									$top = $backgroundWidth * $percent;
+								}elseif (str_ends_with($top,'px')) {
+									$top = str_replace('px', '', $top);
+								}
+
+								$overlayWidth = $overlayImage->width;
+								if (str_ends_with($overlayWidth,'%')) {
+									$percent = str_replace('%', '', $overlayWidth) / 100;
+									$newWidth = $backgroundWidth * $percent;
+								}else{
+									$newWidth = $overlayWidth;
+								}
+
+								$maxDimension = (int)$newWidth;
+								if ($coverWidth > $coverHeight) {
+									$newWidth = $maxDimension;
+									$newHeight = (int)floor($coverHeight * ($maxDimension / $coverWidth));
+								} else {
+									$newHeight = $maxDimension;
+									$newWidth = (int)floor($coverWidth * ($maxDimension / $coverHeight));
+								}
+
+								imagecopyresampled($slideCanvas, $coverImage, $left, $top, 0, 0, $newWidth, $newHeight, $coverWidth, $coverHeight);
+							}
+						}
+					}
 				}
 			}
 

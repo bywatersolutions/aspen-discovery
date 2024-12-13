@@ -263,6 +263,19 @@ class Record_AJAX extends Action {
 							'modalButtons' => '',
 							'success' => true,
 						];
+					} elseif (!$user->hasRemainingLocalIllRequests()) {
+						$results = [
+							'title' => translate([
+								'text' => 'No Requests Left',
+								'isPublicFacing' => true,
+							]),
+							'modalBody' => translate([
+								'text' => 'You have reached the maximum number of requests that your library allows. You may request additional titles once the titles you have requested are returned.',
+								'isPublicFacing' => true,
+							]),
+							'modalButtons' => '',
+							'success' => true,
+						];
 					} else {
 						$marcRecord = new MarcRecordDriver($id);
 
@@ -1963,10 +1976,25 @@ class Record_AJAX extends Action {
 				if ($item->itemId == $itemId) {
 					$relatedUrls = $item->getRelatedUrls();
 					foreach ($relatedUrls as $relatedUrl) {
-						return [
-							'success' => true,
-							'url' => $relatedUrl['url']
-						];
+						if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($relatedUrl['url'])) {
+							$libKeyLink = $this->getLibKeyUrl($relatedUrl['url']);
+							if (!empty($libKeyLink)) {
+								return [
+									'success' => true,
+									'url' => $libKeyLink
+								];
+							} else {
+								return [
+									'success' => true,
+									'url' => $relatedUrl['url']
+								];
+							} 
+						} else {
+							return [
+								'success' => true,
+								'url' => $relatedUrl['url']
+							];	
+						}
 					}
 				}
 			}
@@ -1984,4 +2012,11 @@ class Record_AJAX extends Action {
 			'modalButtons' => "",
 		];
 	}
+
+	private function getLibKeyUrl($doiUrl) {
+		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
+		$libKeyDriver = new LibKeyDriver();
+		return $libKeyDriver->getLibKeyLink($doiUrl);
+	}
 }
+

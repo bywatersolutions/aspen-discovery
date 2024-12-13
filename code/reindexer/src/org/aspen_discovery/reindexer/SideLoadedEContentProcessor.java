@@ -35,6 +35,11 @@ class SideLoadedEContentProcessor extends MarcRecordProcessor{
 		try{
 			HashSet<RecordInfo> allRelatedRecords = new HashSet<>();
 			RecordInfo recordInfo = loadEContentRecord(groupedWork, identifier, record);
+			if (recordInfo == null) {
+				//This record was not valid (probably due to not having a valid URL).
+				return;
+			}
+
 			allRelatedRecords.add(recordInfo);
 
 			//Updates based on the overall bib (shared regardless of scoping)
@@ -280,5 +285,5 @@ class SideLoadedEContentProcessor extends MarcRecordProcessor{
 		}else{
 			return null;
 		}
-	} 
+	}
 }

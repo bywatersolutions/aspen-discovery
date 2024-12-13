@@ -497,6 +497,7 @@ if ($isLoggedIn) {
 	$interface->assign('enablePaymentHistory', $user->isPaymentHistoryEnabled());
 	$interface->assign('enableCostSavings', $user->isCostSavingsEnabled());
 	$interface->assign('hasYearInReview', $user->hasYearInReview());
+	$interface->assign('yearInReviewViewed', $user->yearInReviewViewed());
 	$interface->assign('enableNotificationHistory', $user->isNotificationHistoryEnabled());
 
 	//Check to see if there is a followup module and if so, use that module and action for the next page load
@@ -659,6 +660,7 @@ if (UserAccount::isLoggedIn() && (!isset($_REQUEST['action']) || $_REQUEST['acti
 	$interface->assign('enablePaymentHistory', $user->isPaymentHistoryEnabled());
 	$interface->assign('enableCostSavings', $user->isCostSavingsEnabled());
 	$interface->assign('hasYearInReview', $user->hasYearInReview());
+	$interface->assign('yearInReviewViewed', $user->yearInReviewViewed());
 	$interface->assign('enableNotificationHistory', $user->isNotificationHistoryEnabled());
 
 	$homeLibrary = Library::getLibraryForLocation(UserAccount::getUserHomeLocationId());

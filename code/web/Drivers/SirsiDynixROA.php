@@ -1005,10 +1005,26 @@ class SirsiDynixROA extends HorizonAPI {
 			return $checkedOutTitles;
 		}
 
+		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroup.php';
+		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroupLocation.php';
+
+		$homeLocation = $patron->getHomeLocation();
+		$holdGroupsForLocation = new HoldGroupLocation();
+		$holdGroupsForLocation->locationId = $homeLocation->locationId;
+		$holdGroupIds = $holdGroupsForLocation->fetchAll('holdGroupId');
+		$holdGroups = [];
+		foreach ($holdGroupIds as $holdGroupId) {
+			$holdGroup = new HoldGroup();
+			$holdGroup->id = $holdGroupId;
+			if ($holdGroup->find(true)) {
+				$holdGroups[] = clone $holdGroup;
+			}
+		}
+
 		//Now that we have the session token, get holds information
 		$webServiceURL = $this->getWebServiceURL();
 		//Get a list of holds for the user
-		$includeFields = urlencode('circRecordList{*,item{barcode,bib{title,author},itemType,call{dispCallNumber}}}');
+		$includeFields = urlencode('circRecordList{*,item{barcode,currentLibrary,bib{title,author},itemType,call{dispCallNumber}}}');
 		$patronCheckouts = $this->getWebServiceResponse('getCheckouts', $webServiceURL . '/user/patron/key/' . $patron->unique_ils_id . '?includeFields=' . $includeFields, null, $sessionToken);
 
 		if (!empty($patronCheckouts->fields->circRecordList)) {
@@ -1056,6 +1072,26 @@ class SirsiDynixROA extends HorizonAPI {
 					}
 					if (!empty($checkout->fields->item->fields->call->fields->dispCallNumber)) {
 						$curCheckout->callNumber = $checkout->fields->item->fields->call->fields->dispCallNumber;
+					}
+
+					if (empty($holdGroups)) {
+						$inHoldGroup = true;
+					}else{
+						$inHoldGroup = false;
+						foreach ($holdGroups as $holdGroup){
+							if (in_array($checkout->fields->item->fields->currentLibrary->key, $holdGroup->getLocationCodes())){
+								$inHoldGroup = true;
+								break;
+							}
+						}
+					}
+
+					if (!$inHoldGroup) {
+						$curCheckout->outOfHoldGroupMessage = translate(['text' => 'Provided by Another Library', 'isPublicFacing' => true]);
+						$library = $patron->getHomeLibrary();
+						if (!$library->allowRenewingOutOfHoldGroupCheckouts){
+							$curCheckout->canRenew = false;
+						}
 					}
 
 					$sCount++;
@@ -1236,11 +1272,14 @@ class SirsiDynixROA extends HorizonAPI {
 				}
 
 				$holdAvailable = false;
-				if (!isset($curHold->status)){
-					$holdAvailable = true;
-				}elseif (strcasecmp($curHold->status, "being_held") === 0) {
-					$holdAvailable = true;
+				if (empty($hold->fields->mailFlag)) {
+					if (!isset($curHold->status)) {
+						$holdAvailable = true;
+					} elseif (strcasecmp($curHold->status, "being_held") === 0) {
+						$holdAvailable = true;
+					}
 				}
+
 				if (!$holdAvailable) {
 					$curHold->available = false;
 					$holds['unavailable'][] = $curHold;
@@ -1252,11 +1291,15 @@ class SirsiDynixROA extends HorizonAPI {
 						$curHold->cancelable = false;
 					}
 					//Do not allow holds that are outside the active hold group from being canceled.
-					$inHoldGroup = false;
-					foreach ($holdGroups as $holdGroup){
-						if (in_array($hold->fields->selectedItem->fields->currentLibrary->key, $holdGroup->getLocationCodes())){
-							$inHoldGroup = true;
-							break;
+					if (empty($holdGroups)) {
+						$inHoldGroup = true;
+					}else {
+						$inHoldGroup = false;
+						foreach ($holdGroups as $holdGroup) {
+							if (in_array($hold->fields->selectedItem->fields->currentLibrary->key, $holdGroup->getLocationCodes())) {
+								$inHoldGroup = true;
+								break;
+							}
 						}
 					}
 					if (!$inHoldGroup) {
@@ -3652,7 +3695,7 @@ class SirsiDynixROA extends HorizonAPI {
 	}
 
 	public function showWaitListInCheckouts(): bool {
-		return true;
+		return false;
 	}
 
 	public function showHoldPlacedDate(): bool {

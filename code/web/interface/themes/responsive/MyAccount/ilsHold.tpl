@@ -3,7 +3,9 @@
 	<div class="result row ilsHold_{$record->sourceId|escapeCSS}_{$record->cancelId|escapeCSS}">
 		{if $section != 'available'}
 		<div class="selectTitle col-xs-12 col-sm-1">
-			<input type="checkbox" name="selected[{$record->userId}|{$record->sourceId}|{$record->cancelId}]" class="titleSelect" id="selected{$record->cancelId}">
+			{if $record->cancelable || $record->canFreeze}
+				<input type="checkbox" name="selected[{$record->userId}|{$record->sourceId}|{$record->cancelId}]" class="titleSelect" id="selected{$record->cancelId}">
+			{/if}
 		</div>
 		{/if}
 		{* Cover column *}

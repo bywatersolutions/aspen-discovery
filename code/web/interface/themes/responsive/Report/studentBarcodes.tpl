@@ -66,10 +66,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 <style>
 .avery5160 {
 	/* Avery 5160 labels */
-	width: 2.625in !important; 
-	height: 1in !important; 
+	width: 2.625in !important;
+	height: 1in !important;
 	margin: 0in .125in 0in 0in !important;
-	padding: .212in 0 0 .475in !important;
+	padding: .0625in !important;
 	float: left;
 	display: inline-block;
 	text-align: left;
@@ -89,43 +89,51 @@ document.addEventListener("DOMContentLoaded", function(event) {
 }
 
 @media print {
+	@page {
+		size: letter !important;
+		margin: 0.5in 0.0675in 0.5in 0.1875in; /* Adjust the margin to fit content within the page */
+	}
 	.avery5160 {
 		break-inside: avoid-page !important;
-		outline: 0px; 
+		outline: 0px !important;
 	}
 	#footer-container
 	, #header-wrapper
 	, #horizontal-menu-bar-wrapper
+	, #page-header
 	, #side-bar
 	, #system-message-header
 	, .breadcrumbs {
 		display: none;
 	}
-	.container
+	body
+	, .container
+	, #content-container .row /* somewhere else this is getting set to 'margin: 0 -15px;' which is causing the text to shift left off the page */
 	, #main-content-with-sidebar
 	, #main-content
+	, #page-container
 	, #printish {
 		clear: both !important;
 		left: 0 !important;
 		margin: 0 !important;;
 		padding: 0 !important;
 	}
+	/*.page {*/
+	/*	break-after: page !important;*/
+	/*	break-inside: avoid-page !important;*/
+	/*	height: 10.6in !important;*/
+	/*	width: 8.25in !important;*/
+	/*	margin-left: .2in !important;*/
+	/*	margin-top: .4in !important;*/
+	/*}*/
 	.page {
-		break-after: page !important;
-		break-inside: avoid-page !important;
-		height: 10.6in !important;
-		width: 8.25in !important;
-		margin-left: .2in !important;
-		margin-top: .4in !important;
+		margin: 0 !important;
 	}
 	#reportFrontMatter {
 		display: none;
 	}
 }
 
-@page {
-	size: letter !important;
-}
 </style>
 {/literal}
 

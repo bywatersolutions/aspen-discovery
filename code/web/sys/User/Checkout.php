@@ -25,6 +25,7 @@ class Checkout extends CircEntry {
 	public $returnClaim;
 	public $holdQueueLength;
 	public $isIll;
+	public $outOfHoldGroupMessage;
 
 	//For OverDrive
 	public $collectionName;

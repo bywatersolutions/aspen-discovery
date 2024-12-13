@@ -140,26 +140,12 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 			$materialsRequests->whereAdd('user.homeLocationId IN (' . implode(', ', $locationsForLibrary) . ')');
 
 			if (count($availableStatuses) > count($statusesToShow)) {
-				$statusSql = "";
-				foreach ($statusesToShow as $status) {
-					if (strlen($statusSql) > 0) {
-						$statusSql .= ",";
-					}
-					$statusSql .= $materialsRequests->escape($status);
-				}
-				$materialsRequests->whereAdd("status in ($statusSql)");
+				$materialsRequests->whereAddIn('status', $statusesToShow, false);
 			}
 
 			if (count($availableFormats) > count($formatsToShow)) {
 				//At least one format is disabled
-				$formatSql = "";
-				foreach ($formatsToShow as $format) {
-					if (strlen($formatSql) > 0) {
-						$formatSql .= ",";
-					}
-					$formatSql .= $materialsRequests->escape($format);
-				}
-				$materialsRequests->whereAdd("format in ($formatSql)");
+				$materialsRequests->whereAddIn('format', $formatsToShow, true);
 			}
 
 			if (!empty($assigneesToShow) || $showUnassigned) {

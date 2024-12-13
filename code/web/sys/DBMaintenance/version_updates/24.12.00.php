@@ -113,7 +113,7 @@ function getUpdates24_12_00(): array {
 					wrappedResults TEXT,
 					UNIQUE (userId, settingId)
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci',
-				'ALTER TABLE ptype ADD COLUMN enableYearInReview TINYINT DEFAULT 0'
+				'ALTER TABLE ptype ADD COLUMN enableYearInReview TINYINT DEFAULT 1'
 			]
 		], //year_in_review_settings
 		'add_end_date_to_year_in_review_settings' => [
@@ -130,6 +130,13 @@ function getUpdates24_12_00(): array {
 				'ALTER TABLE year_in_review_settings ADD COLUMN style TINYINT DEFAULT 0',
 			]
 		], //add_end_date_to_year_in_review_settings
+		'create_2024_default_year_in_review_settings' => [
+			'title' => 'Create 2024 Default Year In Review Settings',
+			'description' => 'Create 2024 Default Year In Review Settings',
+			'sql' => [
+				"INSERT INTO year_in_review_settings (name, year, style, staffStartDate, patronStartDate, endDate) VALUE ('2024 Shelved', 2024, 0, 1733036400, 1735714800, 1738393200)"
+			]
+		], //create_2024_default_year_in_review_settings
 		'add_active_status_to_materials_requests' => [
 			'title' => 'Add Active Status to Materials Requests',
 			'description' => 'Add active status to Materials requests so they can be distinguished from open requests',
@@ -181,7 +188,28 @@ function getUpdates24_12_00(): array {
 				'ALTER TABLE library ADD COLUMN enableAddToReadingHistory TINYINT DEFAULT 1',
 				'ALTER TABLE user_reading_history_work ADD COLUMN isManuallyAdded TINYINT DEFAULT 0'
 			]
-		],
+		], //enable_add_to_reading_history
+		'add_checkout_out_of_hold_group_message' => [
+			'title' => 'Add checkout out of hold group message',
+			'description' => 'Add checkout out of hold group message',
+			'sql' => [
+				'ALTER TABLE user_checkout ADD COLUMN outOfHoldGroupMessage TINYTEXT'
+			]
+		], //add_checkout_out_of_hold_group_message
+		'library_allow_renewing_out_of_hold_group_checkouts' => [
+			'title' => 'Library - Allow Renewing Out of Hold Group Checkouts',
+			'description' => 'Library - Allow Renewing Out of Hold Group Checkouts',
+			'sql' => [
+				'ALTER TABLE library ADD COLUMN allowRenewingOutOfHoldGroupCheckouts TINYINT DEFAULT 1',
+			]
+		], //library_allow_renewing_out_of_hold_group_checkouts
+		'library_maximum_local_ill_requests' => [
+			'title' => 'Library - Maximum Local ILL Requests',
+			'description' => 'Add the ability to set a maximum number of Local ILL requests per library',
+			'sql' => [
+				'ALTER TABLE library ADD COLUMN maximumLocalIllRequests INT DEFAULT 0',
+			]
+		], //library_maximum_local_ill_requests
 
 		//katherine
 
@@ -207,6 +235,27 @@ function getUpdates24_12_00(): array {
 		], //optional_show_title_on_grapes_pages
 
 		//chloe - PTFS-Europe
+		'create_libkey_permissions' => [
+			'title' => 'Create LibKey Permissions',
+			'description' => 'Add an LibKey permission section containing the Administer LibKey Settings permission',
+			'sql' => [
+				"INSERT INTO permissions (name, sectionName, weight, description) VALUES ( 'Administer LibKey Settings','Third Party Enrichment', 0, 'Allows the user to administer the integration with LibKey')",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer LibKey Settings'))",
+			],
+		],// create_libkey_permissions
+		'create_libkey_settings_table' => [
+			'title' => 'Create LibKey Settings Table',
+			'description' => 'Add an LibKey settings table',
+			'sql' => [
+				"CREATE TABLE libkey_settings (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					name VARCHAR(255) NOT NULL,
+					libraryId VARCHAR(20) NOT NULL,
+					apiKey VARCHAR(255) NOT NULL
+				)",
+				"ALTER TABLE library ADD libKeySettingId INT NOT NULL DEFAULT -1"
+			],
+		],// create_libkey_permissions
 
 
 		//James Staub - Nashville Public Library

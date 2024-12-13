@@ -2809,6 +2809,12 @@ class User extends DataObject {
 			$homeLibrary = $this->getHomeLibrary();
 			if (!empty($homeLibrary)) {
 				if ($homeLibrary->enableReadingHistory) {
+					//Check to see if we are masquerading
+					if (UserAccount::isUserMasquerading()) {
+						if (!$homeLibrary->allowReadingHistoryDisplayInMasqueradeMode) {
+							return false;
+						}
+					}
 					//Check to see if it's enabled by PType
 					$patronType = $this->getPTypeObj();
 					if (!empty($patronType)) {
@@ -2971,13 +2977,13 @@ class User extends DataObject {
 	 * Used by Account Profile, to show users any additional Admin roles they may have.
 	 * @return bool
 	 */
-	public function isStaff() {
+	public function isStaff() : bool {
 		if (count($this->getRoles()) > 0) {
 			return true;
 		} else {
 			$patronType = $this->getPTypeObj();
 			if (!empty($patronType)) {
-				return $patronType->isStaff;
+				return boolval($patronType->isStaff);
 			}
 		}
 		return false;
@@ -3258,6 +3264,7 @@ class User extends DataObject {
 				$yearEnd = strtotime(($year+1) . '-01-01');
 				$readingHistoryDB->whereAdd("checkOutDate >= $yearStart");
 				$readingHistoryDB->whereAdd("checkOutDate < $yearEnd");
+				$readingHistoryDB->whereAdd("format IS NOT NULL AND format <> ''");
 				$readingHistoryDB->groupBy('format');
 				$readingHistoryDB->orderBy('count(format) DESC');
 				$readingHistoryDB->limit(0, 3);
@@ -3314,7 +3321,7 @@ class User extends DataObject {
 				foreach ($groupedWorkIds as $groupedWorkId) {
 					$idsToBaseSuggestionsOn[] = [
 						'workId' => $groupedWorkId,
-						'rating' => '5',
+						'rating' => null
 					];
 				}
 				$recommendations = $searchObject->getMoreLikeThese($idsToBaseSuggestionsOn, 1, 3);
@@ -3325,6 +3332,7 @@ class User extends DataObject {
 						} else {
 							$summary->recommendations[] = $doc['title_display'];
 						}
+						$summary->recommendationIds[] = $doc['id'];
 					}
 				}
 				$searchObject->close();
@@ -3343,8 +3351,8 @@ class User extends DataObject {
 					$readingHistoryDB = new ReadingHistoryEntry();
 					$readingHistoryDB->userId = $this->id;
 					$readingHistoryDB->whereAdd('deleted = 0');
-					$monthStart = strtotime("$year-$month-01");
-					$monthEnd = strtotime(($year+1) . "-$month-01");
+					$monthStart = mktime(0, 0, 0, $month, 1, $year);
+					$monthEnd = mktime(0, 0, 0, $month + 1, 1, $year);
 					$readingHistoryDB->whereAdd("checkOutDate >= $monthStart");
 					$readingHistoryDB->whereAdd("checkOutDate < $monthEnd");
 					$readingHistoryDB->groupBy('groupedWorkPermanentId, title, author');
@@ -4064,6 +4072,7 @@ class User extends DataObject {
 		$sections['third_party_enrichment']->addAction(new AdminAction('ContentCafe Settings', 'Define settings for ContentCafe integration.', '/Enrichment/ContentCafeSettings'), 'Administer Third Party Enrichment API Keys');
 		$sections['third_party_enrichment']->addAction(new AdminAction('DP.LA Settings', 'Define settings for DP.LA integration.', '/Enrichment/DPLASettings'), 'Administer Third Party Enrichment API Keys');
 		$sections['third_party_enrichment']->addAction(new AdminAction('Google API Settings', 'Define settings for integrating Google APIs within Aspen Discovery.', '/Enrichment/GoogleApiSettings'), 'Administer Third Party Enrichment API Keys');
+		$sections['third_party_enrichment']->addAction(new AdminAction('LibKey Settings', 'Administer LibKey Settings', '/Admin/LibKeySettings'), 'Administer LibKey Settings');
 		$nytSettingsAction = new AdminAction('New York Times Settings', 'Define settings for integrating New York Times Content within Aspen Discovery.', '/Enrichment/NewYorkTimesSettings');
 		$nytListsAction = new AdminAction('New York Times Lists', 'View Lists from the New York Times and manually refresh content.', '/Enrichment/NYTLists');
 		if ($sections['third_party_enrichment']->addAction($nytSettingsAction, 'Administer Third Party Enrichment API Keys')) {
@@ -4925,6 +4934,35 @@ class User extends DataObject {
 		}
 	}
 
+	public function hasRemainingLocalIllRequests() : bool {
+		$homeLibrary = $this->getHomeLibrary();
+		if ($homeLibrary != null) {
+			if ($homeLibrary->maximumLocalIllRequests > 0) {
+				//Figure out the number of Local ILL requests, we just care about ILS holds and checkouts, so we can get from the driver.
+				$numLocalIllRequests = 0;
+				$holds = $this->getCatalogDriver()->getHolds($this);
+				foreach ($holds as $holdSection) {
+					/** @var Hold $hold */
+					foreach ($holdSection as $hold) {
+						if (!empty($hold->outOfHoldGroupMessage)) {
+							$numLocalIllRequests++;
+						}
+					}
+				}
+				$checkouts = $this->getCatalogDriver()->getCheckouts($this);
+				foreach ($checkouts as $checkout) {
+					if (!empty($checkout->outOfHoldGroupMessage)){
+						$numLocalIllRequests++;
+					}
+				}
+				if ($numLocalIllRequests >= $homeLibrary->maximumLocalIllRequests) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	protected function clearRuntimeDataVariables() {
 		if ($this->_accountProfile != null) {
 			$this->_accountProfile->__destruct();
@@ -5634,7 +5672,7 @@ class User extends DataObject {
 				$userYearInReview->userId = $this->id;
 				$userYearInReview->wrappedActive = true;
 				if ($userYearInReview->find(true)){
-					$this->_yearInReviewResults = $userYearInReview->wrappedResults;
+					$this->_yearInReviewResults = $userYearInReview;
 					$yearInReviewSetting = new YearInReviewSetting();
 					$yearInReviewSetting->id = $userYearInReview->settingId;
 					if ($yearInReviewSetting->find(true)) {
@@ -5652,10 +5690,20 @@ class User extends DataObject {
 
 	private $_hasYearInReview;
 	private $_yearInReviewSetting;
+	/** @var UserYearInReview */
 	private $_yearInReviewResults;
 	public function hasYearInReview() : bool {
 		$this->loadYearInReviewInfo();
 		return $this->_hasYearInReview;
+	}
+
+	public function yearInReviewViewed() : bool {
+		$yearInReviewResults = $this->getYearInReviewResult();
+		if (!is_null($yearInReviewResults)) {
+			return $yearInReviewResults->wrappedViewed;
+		}else{
+			return false;
+		}
 	}
 
 	public function getYearInReviewSetting() : YearInReviewSetting|false {
@@ -5664,12 +5712,21 @@ class User extends DataObject {
 		return $this->_yearInReviewSetting;
 	}
 
-	public function getYearInReviewResults() : ?stdClass {
+	public function getYearInReviewResult() : ?UserYearInReview {
 		$this->loadYearInReviewInfo();
 		if (empty($this->_yearInReviewResults)){
 			return null;
 		}else{
-			return json_decode($this->_yearInReviewResults);
+			return $this->_yearInReviewResults;
+		}
+	}
+
+	public function getYearInReviewResultData() : ?stdClass {
+		$this->loadYearInReviewInfo();
+		if (empty($this->_yearInReviewResults->wrappedResults)){
+			return null;
+		}else{
+			return json_decode($this->_yearInReviewResults->wrappedResults);
 		}
 	}
 }

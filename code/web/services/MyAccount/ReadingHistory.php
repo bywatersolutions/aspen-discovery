@@ -4,7 +4,7 @@ require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 require_once ROOT_DIR . '/sys/Pager.php';
 
 class ReadingHistory extends MyAccount {
-	function launch() {
+	function launch() : void {
 		global $interface;
 		global $library;
 
@@ -56,7 +56,7 @@ class ReadingHistory extends MyAccount {
 			//Check to see if there is an action to perform.
 			if (!empty($_REQUEST['readingHistoryAction'])) {
 				//Perform the requested action
-				$selectedTitles = isset($_REQUEST['selected']) ? $_REQUEST['selected'] : [];
+				$selectedTitles = $_REQUEST['selected'] ?? [];
 				$readingHistoryAction = $_REQUEST['readingHistoryAction'];
 				$patron->doReadingHistoryAction($readingHistoryAction, $selectedTitles);
 

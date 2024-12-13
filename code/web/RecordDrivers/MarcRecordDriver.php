@@ -1064,7 +1064,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 					}
 				}
 
-				$this->_actions[$variationId] = array_merge($this->_actions[$variationId], $this->createActionsFromUrls($relatedUrls, null, $variationId));
+				$this->_actions[$variationId] = array_merge($this->_actions[$variationId], $this->createActionsFromUrls($relatedUrls, $relatedRecord, $variationId));
 
 				if ($interface->getVariable('displayingSearchResults')) {
 					$showHoldButton = $interface->getVariable('showHoldButtonInSearchResults');
@@ -1315,6 +1315,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		$i = 0;
 		if (count($relatedUrls) > 1) {
 			//We will show a popup to let people choose the URL they want
+
 			$title = translate([
 				'text' => 'Access Online',
 				'isPublicFacing' => true,
@@ -1329,34 +1330,52 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 				'target' => '_blank',
 			];
 		} elseif (count($relatedUrls)  == 1) {
-			$urlInfo = reset($relatedUrls);
 
-			//Revert to access online per Karen at CCU.  If people want to switch it back, we can add a per library switch
-			$title = translate([
-				'text' => 'Access Online',
-				'isPublicFacing' => true,
-			]);
-			$alt = 'Available online from ' . $urlInfo['source'];
-			$action = $configArray['Site']['url'] . '/' . $this->getModule() . '/' . $this->id . "/AccessOnline?index=$i&variationId=$variationId";
-			$fileOrUrl = isset($urlInfo['url']) ? $urlInfo['url'] : $urlInfo['file'];
-			if (strlen($fileOrUrl) > 0) {
-				if (strlen($fileOrUrl) >= 3) {
-					$extension = strtolower(substr($fileOrUrl, strlen($fileOrUrl), 3));
-					if ($extension == 'pdf') {
-						$title = translate([
-							'text' => 'Access PDF',
-							'isPublicFacing' => true,
-						]);
-					}
-				}
+			if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($relatedUrls[0]['url'])) {
+				$libKeyLink = $this->getLibKeyUrl($relatedUrls[0]['url']);
+				$title = translate([
+					'text' => 'Access Online',
+					'isPublicFacing' => true,
+				]);
 				$actions[] = [
-					'url' => $action,
-					'redirectUrl' => $fileOrUrl,
 					'title' => $title,
+					'url' => $libKeyLink ? $libKeyLink : $relatedUrls[0]['url'],
 					'requireLogin' => false,
-					'alt' => $alt,
+					'type' => 'access_online',
+					'id' => "accessOnline_{$this->getId()}",
 					'target' => '_blank',
 				];
+	
+			} else {
+				$urlInfo = reset($relatedUrls);
+
+				//Revert to access online per Karen at CCU.  If people want to switch it back, we can add a per library switch
+				$title = translate([
+					'text' => 'Access Online',
+					'isPublicFacing' => true,
+				]);
+				$alt = 'Available online from ' . $urlInfo['source'];
+				$action = $configArray['Site']['url'] . '/' . $this->getModule() . '/' . $this->id . "/AccessOnline?index=$i&variationId=$variationId";
+				$fileOrUrl = isset($urlInfo['url']) ? $urlInfo['url'] : $urlInfo['file'];
+				if (strlen($fileOrUrl) > 0) {
+					if (strlen($fileOrUrl) >= 3) {
+						$extension = strtolower(substr($fileOrUrl, strlen($fileOrUrl), 3));
+						if ($extension == 'pdf') {
+							$title = translate([
+								'text' => 'Access PDF',
+								'isPublicFacing' => true,
+							]);
+						}
+					}
+					$actions[] = [
+						'url' => $action,
+						'redirectUrl' => $fileOrUrl,
+						'title' => $title,
+						'requireLogin' => false,
+						'alt' => $alt,
+						'target' => '_blank',
+					];
+				}
 			}
 		} else {
 			foreach ($relatedUrls as $urlInfo) {
@@ -1392,6 +1411,11 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return $actions;
 	}
 
+	private function getLibKeyUrl($doiUrl) {
+		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
+		$libKeyDriver = new LibKeyDriver();
+		return $libKeyDriver->getLibKeyLink($doiUrl);
+	}
 
 	private $catalogDriver = null;
 
@@ -1660,6 +1684,12 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 			$interface->assign('periodicalIssues', $issues);
 		}
 		$links = $this->getLinks();
+		if (Library::getActiveLibrary()->libKeySettingId != -1  && !empty($links[0]['url'])) {
+			$libKeyLink = $this->getLibKeyUrl($links[0]['url']);
+			if (!empty($libKeyLink)) {
+				$links[] = ['title' => $libKeyLink, 'url' => $libKeyLink];
+			}
+		}
 		$interface->assign('links', $links);
 		$interface->assign('show856LinksAsTab', $library->getGroupedWorkDisplaySettings()->show856LinksAsTab);
 		$interface->assign('showItemDueDates', $library->getGroupedWorkDisplaySettings()->showItemDueDates);

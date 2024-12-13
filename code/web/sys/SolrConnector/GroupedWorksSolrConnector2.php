@@ -262,8 +262,12 @@ class GroupedWorksSolrConnector2 extends Solr {
 			if (strlen($idString) > 0) {
 				$idString .= ' OR ';
 			}
-			$ratingBoost = $ratingInfo['rating'];
-			$idString .= "id:{$ratingInfo['workId']}^$ratingBoost";
+			if (empty($ratingInfo['rating'])){
+				$idString .= "id:{$ratingInfo['workId']}";
+			}else{
+				$ratingBoost = $ratingInfo['rating'];
+				$idString .= "id:{$ratingInfo['workId']}^$ratingBoost";
+			}
 			$numIdsProcessed++;
 			//Only process up to 500 IDs at a time to avoid overwhelming solr
 			if ($numIdsProcessed >= 500) {

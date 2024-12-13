@@ -2504,11 +2504,7 @@ class User extends DataObject {
 			'title' => translate([
 				'text' => 'Error',
 				'isPublicFacing' => true,
-			]),
-			'message' => translate([
-				'text' => 'Error modifying hold.',
-				'isPublicFacing' => true,
-			]),
+			])
 		];
 
 		$allHolds = $user->getHolds();
@@ -2557,13 +2553,10 @@ class User extends DataObject {
 						}
 					} else {
 						$failed++;
-						$result['message'] = '<div class="alert alert-warning">Hold not available</div>';
 					}
 
 				} elseif ($canFreeze == 0) {
 					$failed++;
-				} else {
-					$result['message'] = '<div class="alert alert-warning">All holds already frozen</div>';
 				}
 			}
 		}
@@ -3019,10 +3012,10 @@ class User extends DataObject {
 		return $result;
 	}
 
-	public function updateHomeLibrary($newHomeLocationCode) {
+	public function updateHomeLibrary($newHomeLocationCode) : array {
 		$catalogDriver = $this->getCatalogDriver();
 		if (empty($catalogDriver)) { // getCatalogDriver() may return null, guard clause required
-			return;
+			return ['success'=>false,'message'=>'This account is not connected to an ILS, cannot connect to home library.'];
 		}
 		$result = $catalogDriver->updateHomeLibrary($this, $newHomeLocationCode);
 		$this->clearCache();
@@ -4995,15 +4988,32 @@ class User extends DataObject {
 
 	public function getDisplayName() {
 		if (empty($this->displayName)) {
-			if ($this->firstname == '') {
+			if (empty($this->firstname)) {
 				$this->__set('displayName', $this->lastname);
 			} else {
 				// #PK-979 Make display name configurable firstname, last initial, vs first initial last name
 				$homeLibrary = $this->getHomeLibrary();
 				if ($homeLibrary == null || ($homeLibrary->patronNameDisplayStyle == 'firstinitial_lastname')) {
 					$this->__set('displayName', substr($this->firstname, 0, 1) . '. ' . $this->lastname);
-				} else {
+				} elseif ($homeLibrary->patronNameDisplayStyle == 'lastinitial_firstname') {
 					$this->__set('displayName', $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.');
+				} elseif ($homeLibrary->patronNameDisplayStyle == 'firstinitial_middleinitial_lastname') {
+					$firstNames = explode(' ', $this->firstname);
+					$displayName = '';
+					for ($i = 0; $i < count($firstNames); $i++){
+						$displayName .= ' '  . substr($firstNames[$i], 0, 1) . '.';
+					}
+					$displayName .= ' '  . $this->lastname;
+
+					$this->__set('displayName', trim($displayName));
+				} elseif ($homeLibrary->patronNameDisplayStyle == 'firstname_middleinitial_lastinitial') {
+					$firstNames = explode(' ', $this->firstname);
+					$displayName = $firstNames[0];
+					for ($i = 1; $i < count($firstNames); $i++){
+						$displayName .= ' '  . substr($firstNames[$i], 0, 1) . '.';
+					}
+					$displayName .= ' '  . substr($this->lastname, 0, 1) . '.';
+					$this->__set('displayName', trim($displayName));
 				}
 			}
 			$this->update();

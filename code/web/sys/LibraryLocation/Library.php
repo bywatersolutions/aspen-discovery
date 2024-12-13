@@ -1512,6 +1512,8 @@ class Library extends DataObject {
 								'values' => [
 									'firstinitial_lastname' => 'First Initial. Last Name',
 									'lastinitial_firstname' => 'First Name Last Initial.',
+									'firstinitial_middleinitial_lastname' => 'First Initial. Middle Initial. Last Name',
+									'firstname_middleinitial_lastinitial' => 'First Name Middle Initial. Last Initial.'
 								],
 								'label' => 'Patron Display Name Style',
 								'description' => 'How to generate the patron display name',

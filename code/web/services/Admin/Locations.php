@@ -205,24 +205,27 @@ class Admin_Locations extends ObjectEditor {
 	function customListActions() : array {
 		$actions = [];
 		$symphonyActive = false;
+		$sierraActive = false;
 		foreach (UserAccount::getAccountProfiles() as $accountProfileInfo) {
 			/** @var AccountProfile $accountProfile */
 			$accountProfile = $accountProfileInfo['accountProfile'];
 			if ($accountProfile->ils == 'symphony') {
 				$symphonyActive = true;
+			}elseif ($accountProfile->ils == 'sierra') {
+				$sierraActive = true;
 			}
 		}
-		if ($symphonyActive) {
+		if ($symphonyActive || $sierraActive) {
 			$actions[] = [
-				'label' => 'Update From Symphony',
-				'action' => 'loadLocationsFromSymphony',
+				'label' => 'Update From ILS',
+				'action' => 'loadLocationsFromILS',
 			];
 		}
 		return $actions;
 	}
 
 	/** @noinspection PhpUnused */
-	function loadLocationsFromSymphony() : void {
+	function loadLocationsFromILS() : void {
 		global $library;
 		$user = UserAccount::getActiveUserObj();
 		$accountProfile = $library->getAccountProfile();
@@ -231,12 +234,12 @@ class Admin_Locations extends ObjectEditor {
 		if (!empty($catalogDriverName)) {
 			$catalogDriver = CatalogFactory::getCatalogConnectionInstance($catalogDriverName, $accountProfile);
 		}
-		if ($catalogDriver->driver instanceof SirsiDynixROA) {
+		if ($catalogDriver->driver instanceof SirsiDynixROA || $catalogDriver->driver instanceof Sierra) {
 			$result = $catalogDriver->driver->loadLocations();
 			$user->__set('updateMessage', $result['message']);
 			$user->__set('updateMessageIsError', !$result['success']);
 		}else{
-			$user->__set('updateMessage', translate(['text'=>'This instance is not connected to Symphony, cannot load locations.', 'isAdminFacing' => true]));
+			$user->__set('updateMessage', translate(['text'=>'This instance is not connected to an ILS where locations can be loaded.', 'isAdminFacing' => true]));
 		}
 		$user->update();
 		header("Location: /Admin/Locations");

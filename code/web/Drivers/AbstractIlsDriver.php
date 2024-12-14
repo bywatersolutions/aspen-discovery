@@ -903,4 +903,18 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 			'message' => 'This functionality has not been implemented for this ILS',
 		];
 	}
+
+	public function loadLocations() : array {
+		return [
+			'success' => false,
+			'message' => 'This functionality has not been implemented for this ILS',
+		];
+	}
+
+	public function loadLibraries() : array {
+		return [
+			'success' => false,
+			'message' => 'This functionality has not been implemented for this ILS',
+		];
+	}
 }

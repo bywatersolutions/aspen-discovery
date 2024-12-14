@@ -2719,4 +2719,166 @@ class Sierra extends Millennium {
 		}
 		return null;
 	}
+
+	public function loadLibraries() : array {
+		$result = [
+			'success' => false,
+			'message' => 'Could not load libraries from Sierra'
+		];
+
+		$sierraUrl = $this->accountProfile->vendorOpacUrl;
+		$sierraUrl = $sierraUrl . "/iii/sierra-api/v{$this->accountProfile->apiVersion}/branches";
+		$branches = $this->_callUrl('sierra.getBranches', $sierraUrl);
+		if ($branches != null){
+			$numUpdated = 0;
+			$numErrors = 0;
+			$firstTheme = new Theme();
+			$firstTheme->orderBy('id');
+			$firstTheme->find(true);
+
+			$firstGroupedWorkDisplaySettings = new GroupedWorkDisplaySetting();
+			$firstGroupedWorkDisplaySettings->orderBy('id');
+			$firstGroupedWorkDisplaySettings->find(true);
+
+			if ($branches->total > 0) {
+				foreach ($branches->entries as $entry) {
+					$library = new Library();
+					$library->ilsCode = $entry->id;
+					if (!$library->find(true)){
+						$library->subdomain = $entry->id;
+						$library->displayName = $entry->name;
+						$libraryTheme = new LibraryTheme();
+						$libraryTheme->themeId = $firstTheme->id;
+						$library->__set('themes', [$libraryTheme]);
+
+						$recordsToInclude = [];
+						$recordToInclude = new LibraryRecordToInclude();
+						$recordToInclude->indexingProfileId = $this->getIndexingProfile()->id;
+						$recordToInclude->markRecordsAsOwned = 1;
+						$recordToInclude->location = $entry->id . ".*";
+						$recordsToInclude[] = $recordToInclude;
+
+						$recordToInclude = new LibraryRecordToInclude();
+						$recordToInclude->indexingProfileId = $this->getIndexingProfile()->id;
+						$recordToInclude->markRecordsAsOwned = 0;
+						$recordToInclude->location = '.*';
+						$recordsToInclude[] = $recordToInclude;
+
+						$library->groupedWorkDisplaySettingId = $firstGroupedWorkDisplaySettings->id;
+
+						$library->__set('recordsToInclude', $recordsToInclude);
+
+						if ($library->insert()){
+							$numUpdated++;
+						}else{
+							$numErrors++;
+						}
+					}
+				}
+			}
+			if ($numErrors > 0){
+				$result = [
+					'success' => true,
+					'message' => "Loaded $numUpdated libraries from Sierra, $numErrors had errors loading."
+				];
+			}else{
+				$result = [
+					'success' => true,
+					'message' => "Loaded $numUpdated libraries from Sierra"
+				];
+			}
+		}
+
+		return $result;
+	}
+
+	public function loadLocations() : array {
+		$result = [
+			'success' => false,
+			'message' => 'Unknown error loading locations from Sierra'
+		];
+		$sierraUrl = $this->accountProfile->vendorOpacUrl;
+		$sierraUrl = $sierraUrl . "/iii/sierra-api/v{$this->accountProfile->apiVersion}/branches";
+		$branches = $this->_callUrl('sierra.getBranches', $sierraUrl);
+		if ($branches != null){
+			$numUpdated = 0;
+			$numErrors = 0;
+			if ($branches->total > 0) {
+				foreach ($branches->entries as $entry) {
+					$library = new Library();
+					$library->ilsCode = $entry->id;
+					if (!$library->find(true)){
+						//Could not get the library
+						$numErrors++;
+					}else{
+						//Got the library
+						foreach ($entry->locations as $sierraLocation) {
+							$locationCode = $sierraLocation->code;
+							$location = new Location();
+							$location->code = $locationCode;
+							if (!$location->find(true)) {
+								//This location has not been added to the database yet.
+								$location = new Location();
+								$location->code = $locationCode;
+								$location->displayName = $sierraLocation->name;
+								$location->createSearchInterface = 1;
+								$location->showInSelectInterface = 1;
+								$location->enableAppAccess = 1;
+								$location->theme = -1;
+								$location->useLibraryThemes = 1;
+								$location->languageAndDisplayInHeader = 1;
+								$location->displayExploreMoreBarInSummon = 1;
+								$location->displayExploreMoreBarInEbscoEds = 1;
+								$location->displayExploreMoreBarInEbscoHost = 1;
+								$location->displayExploreMoreBarInCatalogSearch = 1;
+								$location->showInLocationsAndHoursList = 1;
+								$location->validHoldPickupBranch = 1;
+								$location->validSelfRegistrationBranch = 1;
+								$location->showHoldButton = 1;
+								$location->publicListsToInclude = 4;
+								$location->automaticTimeoutLength = 90;
+								$location->automaticTimeoutLengthLoggedOut = 450;
+								$location->showEmailThis = 1;
+								$location->showShareOnExternalSites = 1;
+								$location->showFavorites = 1;
+								$location->includeLibraryRecordsToInclude = 1;
+
+								$recordToInclude = new LocationRecordToInclude();
+								$recordToInclude->indexingProfileId = $this->getIndexingProfile()->id;
+								$recordToInclude->markRecordsAsOwned = 1;
+								$recordToInclude->location = $locationCode . ".*";
+								$recordsToInclude = [$recordToInclude];
+
+								//Figure out the library for the location
+								$location->libraryId = $library->libraryId;
+
+								$location->__set('recordsToInclude', $recordsToInclude);
+
+								if ($location->insert()){
+									$numUpdated++;
+								}else{
+									$numErrors++;
+								}
+							}
+						}
+
+					}
+
+				}
+			}
+			if ($numErrors > 0){
+				$result = [
+					'success' => true,
+					'message' => "Loaded $numUpdated libraries from Sierra, $numErrors had errors loading."
+				];
+			}else{
+				$result = [
+					'success' => true,
+					'message' => "Loaded $numUpdated libraries from Sierra"
+				];
+			}
+		}
+
+		return $result;
+	}
 }

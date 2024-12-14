@@ -318,4 +318,44 @@ class Admin_Libraries extends ObjectEditor {
 
 		return $settings;
 	}
+
+	function customListActions() : array {
+		$actions = [];
+		$sierraActive = false;
+		foreach (UserAccount::getAccountProfiles() as $accountProfileInfo) {
+			/** @var AccountProfile $accountProfile */
+			$accountProfile = $accountProfileInfo['accountProfile'];
+			if ($accountProfile->ils == 'sierra') {
+				$sierraActive = true;
+			}
+		}
+		if ($sierraActive) {
+			$actions[] = [
+				'label' => 'Update From ILS',
+				'action' => 'loadLibrariesFromILS',
+			];
+		}
+		return $actions;
+	}
+
+	/** @noinspection PhpUnused */
+	function loadLibrariesFromILS() : void {
+		global $library;
+		$user = UserAccount::getActiveUserObj();
+		$accountProfile = $library->getAccountProfile();
+		$catalogDriverName = trim($accountProfile->driver);
+		$catalogDriver = null;
+		if (!empty($catalogDriverName)) {
+			$catalogDriver = CatalogFactory::getCatalogConnectionInstance($catalogDriverName, $accountProfile);
+		}
+		if ($catalogDriver->driver instanceof Sierra) {
+			$result = $catalogDriver->driver->loadLibraries();
+			$user->__set('updateMessage', $result['message']);
+			$user->__set('updateMessageIsError', !$result['success']);
+		}else{
+			$user->__set('updateMessage', translate(['text'=>'This instance is not connected to an ILS where libraries can be loaded.', 'isAdminFacing' => true]));
+		}
+		$user->update();
+		header("Location: /Admin/Libraries");
+	}
 }

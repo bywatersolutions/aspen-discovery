@@ -34,7 +34,9 @@ class ExternalReviews {
 
 		// Fetch from provider
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
+		global $library;
 		$syndeticsSettings = new SyndeticsSetting();
+		$syndeticsSettings->id = $library->syndeticsSettingId;
 		if ($syndeticsSettings->find(true)) {
 			$result = $this->syndetics($syndeticsSettings);
 			if ($result != null) {

@@ -555,7 +555,9 @@ class BookCoverProcessor {
 
 			//TODO: Allow these to be sorted
 			require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
+			global $library;
 			$syndeticsSettings = new SyndeticsSetting();
+			$syndeticsSettings->id = $library->syndeticsSettingId;
 			if ($syndeticsSettings->find(true)) {
 				if ($this->syndetics($syndeticsSettings->syndeticsKey)) {
 					return true;

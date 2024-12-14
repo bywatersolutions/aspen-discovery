@@ -2223,6 +2223,35 @@ AspenDiscovery.Admin = (function () {
 				$("#formatMap_groupingCategory_" + index).text(groupingCategory);
 			}
 			return true;
+		},
+
+		updateSyndeticsFields: function () {
+			var isUnbound = $("#syndeticsUnbound").prop("checked");
+			if (isUnbound) {
+				$("#propertyRowunboundAccountNumber").show();
+				$("#propertyRowunboundInstanceNumber").show();
+				$("#propertyRowsyndeticsKey").hide();
+				$("#propertyRowhasSummary").hide();
+				$("#propertyRowhasAvSummary").hide();
+				$("#propertyRowhasAvProfile").hide();
+				$("#propertyRowhasToc").hide();
+				$("#propertyRowhasExcerpt").hide();
+				$("#propertyRowhasFictionProfile").hide();
+				$("#propertyRowhasAuthorNotes").hide();
+				$("#propertyRowhasVideoClip").hide();
+			}else{
+				$("#propertyRowunboundAccountNumber").hide();
+				$("#propertyRowunboundInstanceNumber").hide();
+				$("#propertyRowsyndeticsKey").show();
+				$("#propertyRowhasSummary").show();
+				$("#propertyRowhasAvSummary").show();
+				$("#propertyRowhasAvProfile").show();
+				$("#propertyRowhasToc").show();
+				$("#propertyRowhasExcerpt").show();
+				$("#propertyRowhasFictionProfile").show();
+				$("#propertyRowhasAuthorNotes").show();
+				$("#propertyRowhasVideoClip").show();
+			}
 		}
 
 	};

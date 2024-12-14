@@ -220,6 +220,7 @@ class Library extends DataObject {
 	public /** @noinspection PhpUnused */
 		$eContentLinkRules;
 	public $novelistSettingId;
+	public $syndeticsSettingId;
 	public /** @noinspection PhpUnused */
 		$allowAutomaticSearchReplacements;
 
@@ -565,6 +566,17 @@ class Library extends DataObject {
 		$novelist->find();
 		while ($novelist->fetch()) {
 			$availableNovelistSettings[$novelist->id] = $novelist->profile;
+		}
+
+		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
+		$syndetics = new SyndeticsSetting();
+		$availableSyndeticsSettings = [
+			'-1' => 'None',
+		];
+		$syndetics->orderBy('name');
+		$syndetics->find();
+		while ($syndetics->fetch()) {
+			$availableSyndeticsSettings[$syndetics->id] = $syndetics->name;
 		}
 
 		$materialsRequestOptions = [
@@ -3063,6 +3075,15 @@ class Library extends DataObject {
 						'values' => $availableNovelistSettings,
 						'label' => 'NoveList Select Profile',
 						'description' => 'The NoveList Select Profile to use',
+						'default' => '-1',
+						'hideInLists' => true,
+					],
+					'syndeticsSettingId' => [
+						'property' => 'syndeticsSettingId',
+						'type' => 'enum',
+						'values' => $availableSyndeticsSettings,
+						'label' => 'Syndetics Setting',
+						'description' => 'The Syndetics Settings to use',
 						'default' => '-1',
 						'hideInLists' => true,
 					],

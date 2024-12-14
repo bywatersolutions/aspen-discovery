@@ -724,7 +724,9 @@ class SearchAPI extends AbstractAPI {
 		}
 
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
+		global $library;
 		$syndeticsSetting = new SyndeticsSetting();
+		$syndeticsSetting->id = $library->syndeticsSettingId;
 		if ($syndeticsSetting->find(true)) {
 			$this->addCheck($checks, "Syndetics");
 		}

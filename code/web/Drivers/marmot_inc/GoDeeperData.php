@@ -7,6 +7,7 @@ class GoDeeperData {
 		global $configArray;
 		global $memCache;
 		global $timer;
+		global $library;
 		if (is_array($upc)) {
 			$upc = count($upc) > 0 ? reset($upc) : '';
 		}
@@ -22,6 +23,7 @@ class GoDeeperData {
 			// Use Syndetics Go-Deeper Data.
 			require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
 			$syndeticsSettings = new SyndeticsSetting();
+			$syndeticsSettings->id = $library->syndeticsSettingId;
 			if ($syndeticsSettings->find(true)) {
 				if (!$syndeticsSettings->syndeticsUnbound) {
 					try {
@@ -213,10 +215,11 @@ class GoDeeperData {
 	}
 
 	static function getSummary($workId, $isbn, $upc) {
-
+		global $library;
 		$summaryData = [];
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
 		$syndeticsSettings = new SyndeticsSetting();
+		$syndeticsSettings->id = $library->syndeticsSettingId;
 		if ($syndeticsSettings->find(true) && ($syndeticsSettings->syndeticsUnbound == false)) {
 			$summaryData = self::getSyndeticsSummary($syndeticsSettings, $workId, $isbn, $upc);
 		}
@@ -382,7 +385,9 @@ class GoDeeperData {
 	function getTableOfContents($isbn, $upc) {
 		$tocData = [];
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
+		global $library;
 		$syndeticsSettings = new SyndeticsSetting();
+		$syndeticsSettings->id = $library->syndeticsSettingId;
 		if ($syndeticsSettings->find(true)) {
 			$tocData = self::getSyndeticsTableOfContents($syndeticsSettings, $isbn, $upc);
 		}
@@ -852,6 +857,7 @@ class GoDeeperData {
 
 	static function getHtmlData($dataType, $recordType, $isbn, $upc) {
 		global $interface;
+		global $library;
 
 		$interface->assign('recordType', $recordType);
 		$id = !empty($_REQUEST['id']) ? $_REQUEST['id'] : $_GET['id'];
@@ -863,6 +869,7 @@ class GoDeeperData {
 		// Use Syndetics Data
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
 		$syndeticsSettings = new SyndeticsSetting();
+		$syndeticsSettings->id = $library->syndeticsSettingId;
 		if ($syndeticsSettings->find(true)) {
 			switch (strtolower($dataType)) {
 				case 'summary' :

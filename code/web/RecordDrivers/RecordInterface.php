@@ -124,9 +124,11 @@ abstract class RecordInterface {
 		$hasSyndeticsUnbound = false;
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
 		$syndeticsSettings = new SyndeticsSetting();
+		$syndeticsSettings->id = $library->syndeticsSettingId;
 		if ($syndeticsSettings->find(true)) {
 			if ($syndeticsSettings->syndeticsUnbound) {
 				$interface->assign('unboundAccountNumber', $syndeticsSettings->unboundAccountNumber);
+				$interface->assign('unboundInstanceNumber', $syndeticsSettings->unboundInstanceNumber);
 				$hasSyndeticsUnbound = true;
 			}
 		}

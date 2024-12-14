@@ -1,6 +1,6 @@
 {strip}
 	<div id="syndetics_unbound"></div>
-	<script src="https://unbound.syndetics.com/syndeticsunbound/connector/initiator.php?a_id={$unboundAccountNumber}" type="text/javascript"></script>
+	<script src="https://unbound.syndetics.com/syndeticsunbound/connector/initiator.php?a_id={$unboundAccountNumber}{if !empty($unboundInstanceNumber)}&i_id={$unboundInstanceNumber}{/if}" type="text/javascript"></script>
 	<script type="text/javascript">
 		var su_session = LibraryThingConnector.runUnboundWithMetadata({ldelim}
 			"title":"{$recordDriver->getTitle()}",

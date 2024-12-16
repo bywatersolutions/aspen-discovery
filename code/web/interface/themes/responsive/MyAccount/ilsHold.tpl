@@ -114,11 +114,20 @@
 					{/if}
 
 					<div class="row">
-						<div class="result-label col-tn-4">{translate text='Pickup Location' isPublicFacing=true}</div>
-						<div class="col-tn-8 result-value hold-pickup-location">
+						<div class="result-label col-tn-4">{translate text='Pickup Branch' isPublicFacing=true}</div>
+						<div class="col-tn-8 result-value hold-pickup-branch">
 							{$record->pickupLocationName|escape}
 						</div>
 					</div>
+
+					{if $record->pickupSublocationName}
+						<div class="row">
+							<div class="result-label col-tn-4">{translate text='Pickup Location' isPublicFacing=true}</div>
+							<div class="col-tn-8 result-value hold-pickup-location">
+								{$record->pickupSublocationName|escape}
+							</div>
+						</div>
+					{/if}
 
 					{if !empty($showPlacedColumn) && $record->createDate}
 						<div class="row">

@@ -2224,7 +2224,6 @@ AspenDiscovery.Admin = (function () {
 			}
 			return true;
 		},
-
 		updateSyndeticsFields: function () {
 			var isUnbound = $("#syndeticsUnbound").prop("checked");
 			if (isUnbound) {
@@ -2252,6 +2251,22 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowhasAuthorNotes").show();
 				$("#propertyRowhasVideoClip").show();
 			}
+		},
+		validateSublocationHoldPickupAreaAspen: function (sourceControl) {
+			var sourceControlObj = $(sourceControl);
+			var index = sourceControlObj.data("id");
+			if (index !== undefined) {
+				var ilsId = $('input[name="sublocations_ilsId[' + index + ']"]').val();
+				var isValidHoldPickupAreaILSValue = $('input[name="sublocations_isValidHoldPickupAreaILS[' + index + ']"]').is(":checked");
+				var isValidHoldPickupAreaAspen = $('input[name="sublocations_isValidHoldPickupAreaAspen[' + index + ']"]');
+				if(ilsId === '' || !isValidHoldPickupAreaILSValue) {
+					isValidHoldPickupAreaAspen.removeAttr('checked');
+					$(isValidHoldPickupAreaAspen).attr('disabled', true);
+				} else {
+					$(isValidHoldPickupAreaAspen).attr('disabled', false);
+				}
+			}
+			return true;
 		}
 
 	};

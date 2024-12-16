@@ -45,7 +45,7 @@
 									{if !empty($subProperty.readOnly) || !empty($property.readOnly)}
 										{if $subPropValue == 1}{translate text='Yes' isAdminFacing=true}{else}{translate text='No' isAdminFacing=true}{/if}
 									{/if}
-									<input type='checkbox' name='{$propName}_{$subPropName}[{$subObject->id}]' {if $subPropValue == 1}checked='checked'{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly)} style="display: none"{/if} data-id="{$subObject->id}"/>
+									<input type='checkbox' name='{$propName}_{$subPropName}[{$subObject->id}]' {if $subPropValue == 1}checked='checked'{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly)} style="display: none"{/if} data-id="{$subObject->id}" {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if}/>
 								{elseif $subProperty.type=='multiSelect'}
 									<span id="{$propName}_{$subPropName}_{$subObject->id}" data-id="{$subObject->id}">
 										{if is_array($subPropValue) && count($subPropValue) > 0}

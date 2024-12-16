@@ -1344,7 +1344,7 @@ class SirsiDynixROA extends HorizonAPI {
 	 *                              If an error occurs, return an AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch = null, $type = 'request', $cancelIfNotFilledByDate = null) {
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch = null, $type = 'request', $cancelIfNotFilledByDate = null, $pickupSublocation = null) {
 		return $this->placeSirsiHold($patron, $recordId, $itemId, false, $pickupBranch, $type, $cancelIfNotFilledByDate);
 	}
 
@@ -1596,7 +1596,7 @@ class SirsiDynixROA extends HorizonAPI {
 		}
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		if ($volumeId == '' && !$this->alwaysPlaceVolumeHoldWhenVolumesArePresent()) {
 			return $this->placeSirsiHold($patron, $recordId, '', $volumeId, $pickupBranch);
 		} elseif ($volumeId == '' && $this->alwaysPlaceVolumeHoldWhenVolumesArePresent()) {
@@ -1767,7 +1767,7 @@ class SirsiDynixROA extends HorizonAPI {
 
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		$staffSessionToken = $this->getStaffSessionToken();
 		if (!$staffSessionToken) {
 			$result = [

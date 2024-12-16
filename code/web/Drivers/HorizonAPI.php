@@ -398,7 +398,7 @@ abstract class HorizonAPI extends AbstractIlsDriver {
 	 *                              If an error occurs, return an AspenError
 	 * @access  public
 	 */
-	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $type = 'request', $cancelIfNotFilledByDate = null) {
+	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $type = 'request', $cancelIfNotFilledByDate = null, $pickupSublocation = null) {
 		global $configArray;
 
 		$userId = $patron->id;
@@ -489,7 +489,7 @@ abstract class HorizonAPI extends AbstractIlsDriver {
 		return $this->updateHoldDetailed($patron, 'update', null, $itemToThawId, '', 'off');
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		return $this->updateHoldDetailed($patron, 'update', null, $itemToUpdateId, $newPickupLocation, 'off');
 	}
 

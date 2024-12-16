@@ -14,6 +14,8 @@ class Hold extends CircEntry {
 	public $locationUpdateable;
 	public $pickupLocationId;
 	public $pickupLocationName;
+    public $pickupSublocationId;
+    public $pickupSublocationName;
 	public $status;
 	public $position;
 	public $holdQueueLength;

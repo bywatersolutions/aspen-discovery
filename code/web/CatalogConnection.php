@@ -881,12 +881,13 @@ class CatalogConnection {
 	 * @param string $recordId The id of the bib record
 	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
 	 * @param string $cancelDate
+     * @param string $pickupSublocation The sublocation where the user wants to pickup the item when available
 	 * @return  mixed                 True if successful, false if unsuccessful
 	 *                                If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeHold($patron, $recordId, $pickupBranch, $cancelDate = null) {
-		$result = $this->driver->placeHold($patron, $recordId, $pickupBranch, $cancelDate);
+	function placeHold($patron, $recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		$result = $this->driver->placeHold($patron, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		if ($result['success'] == true) {
 			$indexingProfileId = $this->driver->getIndexingProfile()->id;
 			//Track usage by the user
@@ -941,8 +942,8 @@ class CatalogConnection {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
-		return $this->driver->placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate);
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		return $this->driver->placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 	}
 
 	function updatePatronInfo($user, $canUpdateContactInfo, $fromMasquerade = false): array {
@@ -1298,8 +1299,8 @@ class CatalogConnection {
 		return $this->driver->thawHold($patron, $recordId, $itemToThawId);
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
-		return $this->driver->changeHoldPickupLocation($patron, $recordId, $itemToUpdateId, $newPickupLocation);
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
+		return $this->driver->changeHoldPickupLocation($patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation);
 	}
 
 	public function renewCheckout($patron, $recordId, $itemId = null, $itemIndex = null) {
@@ -1345,8 +1346,8 @@ class CatalogConnection {
 		}
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
-		return $this->driver->placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch);
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		return $this->driver->placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 	}
 
 	public function importListsFromIls($patron) {

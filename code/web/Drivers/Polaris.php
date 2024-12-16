@@ -622,6 +622,16 @@ class Polaris extends AbstractIlsDriver {
 				} else {
 					$curHold->pickupLocationName = $holdInfo->PickupBranchName;
 				}
+
+                require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+                $curPickupHoldArea = new Sublocation();
+                $curPickupHoldArea->ilsId = ''; // where can we get this for the hold?
+                if($curPickupHoldArea->find(true)){
+                    $curPickupHoldArea->fetch();
+                    $curHold->pickupSublocationId = $curPickupHoldArea->id;
+                    $curHold->pickupSublocationName = $curPickupHoldArea->name;
+                }
+
 				$curHold->expirationDate = $this->parsePolarisDate($holdInfo->PickupByDate);
 				$curHold->position = $holdInfo->QueuePosition;
 				$curHold->holdQueueLength = $holdInfo->QueueTotal;
@@ -727,11 +737,11 @@ class Polaris extends AbstractIlsDriver {
 		return $holds;
 	}
 
-	function placeHold($patron, $recordId, $pickupBranch = null, $cancelDate = null) {
-		return $this->placeItemHold($patron, $recordId, null, $pickupBranch, $cancelDate);
+	function placeHold($patron, $recordId, $pickupBranch = null, $cancelDate = null, $pickupSublocation = null) {
+		return $this->placeItemHold($patron, $recordId, null, $pickupBranch, $cancelDate, $pickupSublocation);
 	}
 
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		if (strpos($recordId, ':') !== false) {
 			[
 				,
@@ -807,7 +817,7 @@ class Polaris extends AbstractIlsDriver {
 		return $hold_result;
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		if (strpos($recordId, ':') !== false) {
 			[
 				,
@@ -839,6 +849,11 @@ class Polaris extends AbstractIlsDriver {
 		$staffUserInfo = $this->getStaffUserInfo();
 		$body->UserID = (int)$staffUserInfo['polarisId'];
 		$body->RequestingOrgID = (int)$patron->getHomeLocationCode();
+
+        if($pickupSublocation) {
+            $body->HoldPickupAreaID = (int)$pickupSublocation;
+        }
+
 		$encodedBody = json_encode($body);
 		$response = $this->getWebServiceResponse($polarisUrl, 'POST', '', $encodedBody);
 		ExternalRequestLogEntry::logRequest('polaris.placeVolumeHold', 'POST', $this->getWebServiceURL() . $polarisUrl, $this->apiCurlWrapper->getHeaders(), $encodedBody, $this->lastResponseCode, $response, []);
@@ -1400,7 +1415,8 @@ class Polaris extends AbstractIlsDriver {
 		}
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
+        // Todo: Add HoldPickupAreaID value to update hold area ($newPickupSublocation) ??
 		$staffInfo = $this->getStaffUserInfo();
 		$polarisUrl = "/PAPIService/REST/public/v1/1033/100/1/patron/{$patron->getBarcode()}/holdrequests/$itemToUpdateId/pickupbranch?wsid={$this->getWorkstationID($patron)}&userid={$staffInfo['polarisId']}&pickupbranchid=$newPickupLocation";
 		$body = new stdClass();

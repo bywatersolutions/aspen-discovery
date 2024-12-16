@@ -139,6 +139,8 @@ class Location extends DataObject {
 	 */
 	public $ebscohostSearchSettingId;
 
+    private $_sublocations;
+
 	//LiDA Settings
 	public $lidaLocationSettingId;
 	public $lidaSelfCheckSettingId;
@@ -286,6 +288,11 @@ class Location extends DataObject {
 			}
 		}
 		global $enabledModules;
+
+        require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+        $sublocationSettingsStructure = Sublocation::getObjectStructure('locations');
+        //unset($sublocationSettingsStructure['locationId']);
+        unset($sublocationSettingsStructure['weight']);
 
 		$structure = [
 			'locationId' => [
@@ -1417,6 +1424,32 @@ class Location extends DataObject {
 			];
 		}
 
+        $structure['sublocationsSection'] = [
+            'property' => 'sublocationsSection',
+            'type' => 'section',
+            'label' => 'Sublocations',
+            'hideInLists' => true,
+            'renderAsHeading' => true,
+            'properties' => [
+                'sublocations' => [
+                    'property' => 'sublocations',
+                    'type' => 'oneToMany',
+                    'label' => "Sublocation Settings",
+                    'description' => "Additional Settings information for sublocations assigned to this location",
+                    'keyThis' => 'locationId',
+                    'keyOther' => 'locationId',
+                    'subObjectType' => 'subLocation',
+                    'structure' => $sublocationSettingsStructure,
+                    'sortable' => true,
+                    'storeDb' => true,
+                    'allowEdit' => true,
+                    'canEdit' => false,
+                    'canAddNew' => true,
+                    'canDelete' => true,
+                ],
+            ]
+        ];
+
 		if (!UserAccount::userHasPermission('Administer All Libraries')) {
 			unset($structure['isMainBranch']);
 		}
@@ -1588,6 +1621,26 @@ class Location extends DataObject {
 
 		return $locationList;
 	}
+
+    /**
+     * Get a list of sublocations where a user can pick up from
+     **
+     * @return Sublocation[]
+     */
+     function getPickupSublocations(): array {
+        require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+        $sublocations = [];
+        $object = new Sublocation();
+        $object->locationId = $this->locationId;
+        $object->isValidHoldPickupAreaILS = 1;
+        $object->orderBy('weight');
+        $object->find();
+        while ($object->fetch()) {
+            $sublocations[$object->id] = clone($object);
+        }
+
+        return $sublocations;
+    }
 
 	/** @var string|Location|null */
 	private static $activeLocation = 'unset';
@@ -1919,7 +1972,9 @@ class Location extends DataObject {
 			return $this->getCloudLibraryScope();
 		} elseif ($name == 'themes') {
 			return $this->getThemes();
-		} else {
+		} elseif ($name == 'sublocations') {
+            return $this->getSublocations();
+        } else {
 			return parent::__get($name);
 		}
 	}
@@ -1941,7 +1996,9 @@ class Location extends DataObject {
 			$this->_cloudLibraryScope = $value;
 		} elseif ($name == 'themes') {
 			$this->_themes = $value;
-		} else {
+		} elseif ($name == 'sublocations') {
+            $this->_sublocations = $value;
+        } else {
 			parent::__set($name, $value);
 		}
 	}
@@ -1964,6 +2021,7 @@ class Location extends DataObject {
 			$this->saveCoordinates();
 			$this->saveThemes();
 			$this->saveEventMapping();
+            $this->saveSublocations();
 		}
 		return $ret;
 	}
@@ -1986,6 +2044,7 @@ class Location extends DataObject {
 			$this->saveCoordinates();
 			$this->saveThemes();
 			$this->saveEventMapping();
+            $this->saveSublocations();
 		}
 		return $ret;
 	}
@@ -3062,4 +3121,30 @@ class Location extends DataObject {
 		}
 		return 'none';
 	}
+
+    /**
+     * @return Sublocation[]
+     */
+    public function getSublocations() : array {
+        if (!isset($this->_sublocations)) {
+            $this->_sublocations = [];
+            if (!empty($this->locationId)) {
+                $object = new Sublocation();
+                $object->locationId = $this->locationId;
+                $object->orderBy('weight');
+                $object->find();
+                while ($object->fetch()) {
+                    $this->_sublocations[$object->id] = clone($object);
+                }
+            }
+        }
+        return $this->_sublocations;
+    }
+
+    public function saveSublocations() {
+        if (isset ($this->_sublocations) && is_array($this->_sublocations)) {
+            $this->saveOneToManyOptions($this->_sublocations, 'locationId');
+            unset($this->_sublocations);
+        }
+    }
 }

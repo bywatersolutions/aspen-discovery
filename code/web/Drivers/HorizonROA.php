@@ -1015,7 +1015,7 @@ abstract class HorizonROA extends AbstractIlsDriver {
 		}
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $holdToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $holdToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		$sessionToken = $this->getSessionToken($patron);
 		if (!$sessionToken) {
 			return [

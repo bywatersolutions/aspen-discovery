@@ -1049,6 +1049,7 @@ AspenDiscovery.Account = (function () {
 				, recordId: $('#recordId').val()
 				, holdId: $('#holdId').val()
 				, newLocation: $('#newPickupLocation').val()
+				, newSublocation: $('#pickupSublocation').val()
 			};
 
 			// noinspection JSUnresolvedFunction
@@ -2808,6 +2809,42 @@ AspenDiscovery.Account = (function () {
 					AspenDiscovery.showMessage(data.title, data.message);
 				}
 			}).fail(AspenDiscovery.ajaxFail);
+			return false;
+		},
+		generateSublocationSelect: function () {
+			var locationCode = $('#pickupLocation').val();
+			var selectPlaceholder = document.getElementById("sublocationSelectPlaceHolder");
+			var url = Globals.path + '/MyAccount/AJAX';
+			var params = {
+				method: 'getSublocationsSelect',
+				locationCode : locationCode,
+				context: 'myPreferences'
+			};
+			$.getJSON(url, params, function (data){
+				if (data.success) {
+					selectPlaceholder.innerHTML = data.selectHtml;
+				} else {
+					selectPlaceholder.innerHTML = '';
+				}
+			});
+			return false;
+		},
+		generateChangeSublocationSelect: function () {
+			var locationCode = $('#newPickupLocation').val();
+			var selectPlaceholder = document.getElementById("sublocationSelectPlaceHolder");
+			var url = Globals.path + '/MyAccount/AJAX';
+			var params = {
+				method: 'getSublocationsSelect',
+				locationCode : locationCode,
+				context: 'updatePickupLocation'
+			};
+			$.getJSON(url, params, function (data){
+				if (data.success) {
+					selectPlaceholder.innerHTML = data.selectHtml;
+				} else {
+					selectPlaceholder.innerHTML = '';
+				}
+			});
 			return false;
 		}
 	};

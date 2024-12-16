@@ -958,7 +958,7 @@ class Sierra extends Millennium {
 		}
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		$sierraUrl = $this->accountProfile->vendorOpacUrl . "/iii/sierra-api/v{$this->accountProfile->apiVersion}/patrons/holds/{$itemToUpdateId}";
 		$params = [
 			'pickupLocation' => $newPickupLocation,
@@ -1166,14 +1166,14 @@ class Sierra extends Millennium {
 		return $hold_result;
 	}
 
-	public function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	public function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		//return parent::placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate);
-		return $this->placeHold($patron, $itemId, $pickupBranch, $cancelDate);
+		return $this->placeHold($patron, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 		//return $this->placeHold($patron, $itemId, $pickupBranch, $cancelDate);
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
-		return parent::placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch);
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		return parent::placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 		// TODO: Use Sierra APIs to place volume holds
 	}
 

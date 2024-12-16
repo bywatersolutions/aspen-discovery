@@ -390,7 +390,7 @@ class Record_AJAX extends Action {
 			$isOnHold = $user->isRecordOnHold($recordSource, $id);
 			$interface->assign('isOnHold', $isOnHold);
 
-			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations)) {
+			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations, $rememberHoldPickupSublocation)) {
 				return [
 					'holdFormBypassed' => false,
 					'title' => translate([
@@ -875,6 +875,8 @@ class Record_AJAX extends Action {
 				//Rather than asking the user for this explicitly, we do it based on the pickup location
 				$pickupBranch = $_REQUEST['pickupBranch'];
 
+                $pickupSublocation = $_REQUEST['pickupSublocation'] ?? false;
+
 				$patron = null;
 				if (!empty($_REQUEST['selectedUser'])) {
 					$selectedUserId = $_REQUEST['selectedUser'];
@@ -943,12 +945,12 @@ class Record_AJAX extends Action {
 					}
 
 					if ($holdType == 'item' && isset($_REQUEST['selectedItem'])) {
-						$return = $patron->placeItemHold($shortId, $_REQUEST['selectedItem'], $pickupBranch, $cancelDate);
+						$return = $patron->placeItemHold($shortId, $_REQUEST['selectedItem'], $pickupBranch, $cancelDate, $pickupSublocation);
 					} else {
 						if (isset($_REQUEST['volume']) && $holdType == 'volume') {
-							$return = $patron->placeVolumeHold($shortId, $_REQUEST['volume'], $pickupBranch);
+							$return = $patron->placeVolumeHold($shortId, $_REQUEST['volume'], $pickupBranch, $pickupSublocation);
 						} else {
-							$return = $patron->placeHold($shortId, $pickupBranch, $cancelDate);
+							$return = $patron->placeHold($shortId, $pickupBranch, $cancelDate, $pickupSublocation);
 						}
 					}
 
@@ -973,6 +975,18 @@ class Record_AJAX extends Action {
 										$patron->update();
 									}
 								}
+
+                                require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+                                $sublocation = new Sublocation();
+                                if ($sublocation->get('ilsId',$pickupSublocation)) {
+                                    if($pickupLocation->locationId == $sublocation->locationId) {
+                                        if($sublocation->id != $user->pickupSublocationId) {
+                                            $patron->setPickupSublocationId($sublocation->id);
+                                            $patron->update();
+                                        }
+                                    }
+                                }
+
 							}
 						} elseif (isset($return['confirmationNeeded']) && $return['confirmationNeeded']) {
 							$confirmationNeeded = true;
@@ -1699,11 +1713,12 @@ class Record_AJAX extends Action {
 	/**
 	 * @param string $recordSource
 	 * @param bool $rememberHoldPickupLocation
+     * @param bool $rememberHoldPickupSublocation
 	 * @param MarcRecordDriver $marcRecord
 	 * @param Location[] $locations
 	 * @return bool
 	 */
-	function setupHoldForm(string $recordSource, ?bool &$rememberHoldPickupLocation, MarcRecordDriver $marcRecord, ?array &$locations): bool {
+	function setupHoldForm(string $recordSource, ?bool &$rememberHoldPickupLocation, MarcRecordDriver $marcRecord, ?array &$locations, ?bool &$rememberHoldPickupSublocation): bool {
 		global $interface;
 		$user = UserAccount::getLoggedInUser();
 		if ($user->getCatalogDriver() == null) {
@@ -1745,6 +1760,7 @@ class Record_AJAX extends Action {
 		//Check to see if the record must be picked up at the holding branch
 		$relatedRecord = $marcRecord->getGroupedWorkDriver()->getRelatedRecord($marcRecord->getIdWithSource());
 		$pickupAt = $relatedRecord->getHoldPickupSetting();
+        $pickupSublocations = [];
 		//1 = restrict to owning location
 		//2 = restrict to the owning library
 		if ($pickupAt > 0) {
@@ -1756,6 +1772,12 @@ class Record_AJAX extends Action {
 				}
 			}
 		}
+
+        foreach ($locations as $locationKey => $location) {
+            if(is_object($location)){
+                $pickupSublocations[$locationKey] = $location->getPickupSublocations();
+            }
+        }
 		$interface->assign('pickupAt', $pickupAt);
 
 		//Check to see if we need to prompt for hold notifications
@@ -1771,6 +1793,7 @@ class Record_AJAX extends Action {
 		if (!$multipleAccountPickupLocations && !$promptForHoldNotifications && $library->allowRememberPickupLocation) {
 			//If the patron's preferred pickup location is not valid, then force them to pick a new location
 			$preferredPickupLocationIsValid = false;
+            $preferredPickupSublocationIsValid = false;
 			foreach ($locations as $location) {
 				if (is_object($location) && ($location->locationId == $user->pickupLocationId)) {
 					$preferredPickupLocationIsValid = true;
@@ -1782,13 +1805,27 @@ class Record_AJAX extends Action {
 			} else {
 				$rememberHoldPickupLocation = false;
 			}
+
+            $sublocationLookup = new Sublocation();
+            $sublocationLookup->locationId = $user->pickupSublocationId;
+            $sublocationLookup->isValidHoldPickupAreaILS = 1;
+            $sublocationLookup->isValidHoldPickupAreaAspen = 1;
+            if($sublocationLookup->find(true)) {
+                $preferredPickupSublocationIsValid = true;
+            }
+            if($preferredPickupSublocationIsValid) {
+                $rememberHoldPickupSublocation = $user->rememberHoldPickupSublocation;
+            }
 		} else {
 			$rememberHoldPickupLocation = false;
 		}
 		$interface->assign('rememberHoldPickupLocation', $rememberHoldPickupLocation);
+        $interface->assign('rememberHoldPickupSublocation', $rememberHoldPickupSublocation);
 
 		$interface->assign('pickupLocations', $locations);
-		$interface->assign('multipleUsers', $multipleAccountPickupLocations); // switch for displaying the account drop-down (used for linked accounts)
+        $interface->assign('pickupSublocations', $pickupSublocations);
+
+        $interface->assign('multipleUsers', $multipleAccountPickupLocations); // switch for displaying the account drop-down (used for linked accounts)
 
 		$interface->assign('showHoldCancelDate', $library->showHoldCancelDate);
 		$interface->assign('defaultNotNeededAfterDays', $library->defaultNotNeededAfterDays);

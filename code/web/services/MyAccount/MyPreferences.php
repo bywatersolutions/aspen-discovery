@@ -56,6 +56,15 @@ class MyAccount_MyPreferences extends MyAccount {
 			$pickupLocations = $patron->getValidPickupBranches($patron->getAccountProfile()->recordSource);
 			$interface->assign('pickupLocations', $pickupLocations);
 
+            $pickupSublocations = [];
+            foreach ($pickupLocations as $locationKey => $location) {
+                if(is_object($location)){
+                    $pickupSublocations[$location->locationId] = $location->getPickupSublocations();
+                }
+            }
+
+            $interface->assign('pickupSublocations', $pickupSublocations);
+
 			if ($patron->hasEditableUsername()) {
 				$interface->assign('showUsernameField', true);
 				$interface->assign('editableUsername', $patron->getEditableUsername());

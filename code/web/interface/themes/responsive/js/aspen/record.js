@@ -670,6 +670,25 @@ AspenDiscovery.Record = (function(){
 				}
 			});
 			return false;
+		},
+
+		generateSublocationSelect: function () {
+			var locationCode = $('#pickupBranch').val();
+			var selectPlaceholder = document.getElementById("sublocationSelectPlaceHolder");
+			var url = Globals.path + '/MyAccount/AJAX';
+			var params = {
+				method: 'getSublocationsSelect',
+				locationCode : locationCode,
+				context: 'placeHold'
+			};
+			$.getJSON(url, params, function (data){
+				if (data.success) {
+					selectPlaceholder.innerHTML = data.selectHtml;
+				} else {
+					selectPlaceholder.innerHTML = '';
+				}
+			});
+			return false;
 		}
 	};
 }(AspenDiscovery.Record || {}));

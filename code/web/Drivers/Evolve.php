@@ -268,15 +268,15 @@ class Evolve extends AbstractIlsDriver {
 	/**
 	 * @inheritDoc
 	 */
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
-		return $this->placeItemHold($patron, $recordId, $volumeId, $pickupBranch);
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		return $this->placeItemHold($patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 	}
 
 
 	/**
 	 * @inheritDoc
 	 */
-	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		$hold_result = [
 			'success' => false,
 			'message' => translate([
@@ -349,7 +349,7 @@ class Evolve extends AbstractIlsDriver {
 		return $result;
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		$result = [
 			'success' => false,
 			'message' => translate([

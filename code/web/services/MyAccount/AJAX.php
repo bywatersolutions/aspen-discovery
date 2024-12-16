@@ -1987,6 +1987,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 			$location = new Location();
 			$pickupBranches = $location->getPickupBranches($patronOwningHold);
+            $pickupSublocations = [];
 
 			$pickupAt = 0;
 			require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
@@ -2002,10 +2003,17 @@ class MyAccount_AJAX extends JSON_Action {
 						}
 					}
 				}
+
+                foreach ($pickupBranches as $locationKey => $location) {
+                    if(is_object($location)){
+                        $pickupSublocations[$locationKey] = $location->getPickupSublocations();
+                    }
+                }
 			}
 
 			$interface->assign('pickupAt', $pickupAt);
 			$interface->assign('pickupLocations', $pickupBranches);
+            $interface->assign('pickupSublocations', $pickupSublocations);
 
 			$results = [
 				'title' => translate([
@@ -2073,6 +2081,7 @@ class MyAccount_AJAX extends JSON_Action {
 		try {
 			$holdId = $_REQUEST['holdId'];
 			$newPickupLocation = $_REQUEST['newLocation'];
+            $newPickupSublocation = $_REQUEST['newSublocation'] ?? null;
 
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getLoggedInUser();
@@ -2080,7 +2089,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$patronOwningHold = $user->getUserReferredTo($patronId);
 				if ($patronOwningHold != false) {
 					if ($patronOwningHold->validatePickupBranch($newPickupLocation)) {
-						return $patronOwningHold->changeHoldPickUpLocation($holdId, $newPickupLocation);
+						return $patronOwningHold->changeHoldPickUpLocation($holdId, $newPickupLocation, $newPickupSublocation);
 					} else {
 						return [
 							'result' => false,
@@ -8898,4 +8907,68 @@ class MyAccount_AJAX extends JSON_Action {
 		//Since this returns an image, don't return
 		die();
 	}
+
+    /** @noinspection PhpUnused */
+    function getSublocationsSelect() {
+        global $interface;
+        $html = '';
+        $success = false;
+        $context = $_REQUEST['context'] ?? '';
+        if (UserAccount::isLoggedIn()) {
+            $patron = UserAccount::getActiveUserObj();
+            if (isset($_REQUEST['locationCode'])) {
+                $location = new Location();
+                if ($context === 'myPreferences') {
+                    $location->locationId = $_REQUEST['locationCode'];
+                } else {
+                    $location->code = $_REQUEST['locationCode'];
+                }
+                if ($location->find(true)) {
+                    $sublocations = [];
+                    require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+                    $object = new Sublocation();
+                    $object->locationId = $location->locationId;
+                    $object->isValidHoldPickupAreaILS = 1;
+                    $object->isValidHoldPickupAreaAspen = 1;
+                    $object->orderBy('weight');
+                    $object->find();
+                    while ($object->fetch()) {
+                        $sublocations[$object->id] = $object->name;
+                    }
+
+                    if (count($sublocations) > 0) {
+                        $success = true;
+                        if ($context === 'myPreferences') {
+                            $labelText = 'Preferred Pickup Location';
+                        } elseif($context === 'changePickupLocation') {
+                            $labelText = 'Select a new location to pickup your hold';
+                        } else {
+                            $labelText = 'Select your pickup location';
+                        }
+                        $html .= '<label class="control-label" for="pickupSublocation">' . translate([
+                                'text' => $labelText,
+                                'isPublicFacing' => true,
+                            ]) . '</label>';
+                        $html .= '<div class="controls">';
+                        $html .= '<select name="pickupSublocation" id="pickupSublocation" class="form-control">';
+                        foreach ($sublocations as $location => $label) {
+                            $selected = false;
+                            if($patron->pickupSublocationId === $location) {
+                                $selected = true;
+                            }
+                            $html .= '<option value="' . $location . '"' . ($selected ? ' selected="selected"' : '') . '>' .
+                                $label . '</option>';
+                        }
+                        $html .= '</select>';
+                        $html .= '</div>';
+                    }
+                }
+
+            }
+        }
+        return [
+            'success' => $success,
+            'selectHtml' => $html
+        ];
+    }
 }

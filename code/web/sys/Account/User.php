@@ -67,6 +67,7 @@ class User extends DataObject {
 
 	public $rememberHoldPickupLocation;
 	public $pickupLocationId;
+    public $pickupSublocationId;
 
 	public $lastListUsed;
 	public $browseAddToHome;
@@ -1398,7 +1399,7 @@ class User extends DataObject {
 		if (isset($_POST['pickupLocation']) && !is_array($_POST['pickupLocation']) && preg_match('/^\d{1,3}$/', $_POST['pickupLocation']) == 0) {
 			return [
 				'success' => false,
-				'message' => 'The preferred pickup location had an incorrect format.',
+				'message' => 'The preferred pickup branch had an incorrect format.',
 			];
 		}
 		if (isset($_POST['myLocation1']) && !is_array($_POST['myLocation1']) && preg_match('/^\d{1,3}$/', $_POST['myLocation1']) == 0) {
@@ -1413,6 +1414,12 @@ class User extends DataObject {
 				'message' => 'The 2nd location had an incorrect format.',
 			];
 		}
+        if (isset($_POST['pickupSublocation']) && !is_array($_POST['pickupSublocation']) && preg_match('/^\d{1,3}$/', $_POST['pickupSublocation']) == 0) {
+            return [
+                'success' => false,
+                'message' => 'The preferred pickup location had an incorrect format.',
+            ];
+        }
 
 		if (isset($_REQUEST['profileLanguage'])) {
 			$this->__set('interfaceLanguage', $_REQUEST['profileLanguage']);
@@ -1434,7 +1441,7 @@ class User extends DataObject {
 				if ($location->getNumResults() != 1) {
 					return [
 						'success' => false,
-						'message' => 'The pickup location could not be found in the database.',
+						'message' => 'The pickup branch could not be found in the database.',
 					];
 				} else {
 					$this->__set('pickupLocationId', $_POST['pickupLocation']);
@@ -1473,8 +1480,25 @@ class User extends DataObject {
 				}
 			}
 		}
+        if (isset($_POST['pickupSublocation'])) {
+            if ($_POST['pickupSublocation'] == 0) {
+                $this->__set('pickupSublocationId', $_POST['pickupSublocation']);
+            } else {
+                require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+                $sublocation = new Sublocation();
+                $sublocation->get('id', $_POST['pickupSublocation']);
+                if ($sublocation->getNumResults() != 1) {
+                    return [
+                        'success' => false,
+                        'message' => 'The pickup location could not be found in the database.',
+                    ];
+                } else {
+                    $this->__set('pickupSublocationId', $_POST['pickupSublocation']);
+                }
+            }
+        }
 
-		//update DB values with current checkbox status in myPreferences
+        //update DB values with current checkbox status in myPreferences
 		if (isset ($_COOKIE['cookieConsent'])) {
 			setcookie("cookieConsent", "", time() - 3600, "/"); //remove old cookie so new one can be generated on next page load
 			$this->__set('userCookiePreferenceEssential', 1);
@@ -2300,6 +2324,28 @@ class User extends DataObject {
 		return $locations;
 	}
 
+    /**
+     * Get a list of sublocations where a user can pick-up from
+     **
+     * @return Sublocation[]
+     */
+    public function getValidSublocations(int $locationId): array {
+        require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+        $sublocations = [];
+        $object = new Sublocation();
+        $object->locationId = $locationId;
+        $object->isValidHoldPickupAreaILS = 1;
+        $object->isValidHoldPickupAreaAspen = 1;
+        $object->orderBy('weight');
+        $object->find();
+        while ($object->fetch()) {
+            $sublocations[$object->id] = clone($object);
+        }
+
+        ksort($sublocations);
+        return $sublocations;
+    }
+
 	/**
 	 * Place Hold
 	 *
@@ -2313,8 +2359,8 @@ class User extends DataObject {
 	 * message - the message to display
 	 * @access public
 	 */
-	function placeHold($recordId, $pickupBranch, $cancelDate = null) {
-		$result = $this->getCatalogDriver()->placeHold($this, $recordId, $pickupBranch, $cancelDate);
+	function placeHold($recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		$result = $this->getCatalogDriver()->placeHold($this, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
 			'text' => 'You',
@@ -2340,8 +2386,8 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function placeVolumeHold($recordId, $volumeId, $pickupBranch) {
-		$result = $this->getCatalogDriver()->placeVolumeHold($this, $recordId, $volumeId, $pickupBranch);
+	function placeVolumeHold($recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		$result = $this->getCatalogDriver()->placeVolumeHold($this, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
 			'text' => 'You',
@@ -2409,8 +2455,8 @@ class User extends DataObject {
 	 * If an error occurs, return a AspenError
 	 * @access public
 	 */
-	function placeItemHold($recordId, $itemId, $pickupBranch, $cancelDate = null) {
-		$result = $this->getCatalogDriver()->placeItemHold($this, $recordId, $itemId, $pickupBranch, $cancelDate);
+	function placeItemHold($recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		$result = $this->getCatalogDriver()->placeItemHold($this, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
 			'text' => 'You',
@@ -2485,8 +2531,8 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function changeHoldPickUpLocation($itemToUpdateId, $newPickupLocation): array {
-		$result = $this->getCatalogDriver()->changeHoldPickupLocation($this, null, $itemToUpdateId, $newPickupLocation);
+	function changeHoldPickUpLocation($itemToUpdateId, $newPickupLocation, $newPickupSublocation): array {
+		$result = $this->getCatalogDriver()->changeHoldPickupLocation($this, null, $itemToUpdateId, $newPickupLocation, $newPickupSublocation);
 		$this->clearCache();
 		return $result;
 	}
@@ -3141,6 +3187,10 @@ class User extends DataObject {
 		$this->__set('pickupLocationId', $pickupLocationId);
 	}
 
+    public function setPickupSublocationId(int $pickupSublocationId) {
+        $this->__set('pickupSublocationId', $pickupSublocationId);
+    }
+
 	public function setRememberHoldPickupLocation(bool $rememberPickupLocation) {
 		$this->__set('rememberHoldPickupLocation', $rememberPickupLocation);
 	}
@@ -3730,6 +3780,34 @@ class User extends DataObject {
 
 		return $pickupBranch;
 	}
+
+    function getPickupSublocationCode() {
+        $pickupBranch = null;
+        if ($this->pickupSublocationId > 0) {
+            $pickupBranch = $this->pickupSublocationId;
+            $sublocationLookup = new Sublocation();
+            $sublocationLookup->locationId = $pickupBranch;
+            if ($sublocationLookup->find(true)) {
+                $pickupBranch = $sublocationLookup->ilsId;
+            }
+        }
+
+        return $pickupBranch;
+    }
+
+    function getPickupSublocationName() {
+        $pickupBranch = null;
+        if ($this->pickupSublocationId > 0) {
+            $pickupBranch = $this->pickupSublocationId;
+            $sublocationLookup = new Sublocation();
+            $sublocationLookup->locationId = $pickupBranch;
+            if ($sublocationLookup->find(true)) {
+                $pickupBranch = $sublocationLookup->name;
+            }
+        }
+
+        return $pickupBranch;
+    }
 
 	function getPickupLocationName() {
 		//Always check if a preferred pickup location has been selected. If not, use the home location

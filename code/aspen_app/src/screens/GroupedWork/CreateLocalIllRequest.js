@@ -67,6 +67,8 @@ const Request = (payload) => {
                     await reloadProfile(library.baseUrl).then((result) => {
                          updateUser(result);
                     });
+               } else {
+                    popAlert(result.title, result.message, 'error');
                }
           });
      };

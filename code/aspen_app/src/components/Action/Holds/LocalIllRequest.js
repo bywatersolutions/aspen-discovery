@@ -17,15 +17,6 @@ export const StartLocalIllRequest = (props) => {
 			variant="solid"
 			minWidth="100%"
 			maxWidth="100%"
-			variant="solid"
-			_text={{
-				padding: 0,
-				textAlign: 'center',
-			}}
-			style={{
-				flex: 1,
-				flexWrap: 'wrap',
-			}}
 			onPress={openLocalIllRequest}>
 			<ButtonText color={theme['colors']['primary']['500-text']} textAlign="center">
 				Request

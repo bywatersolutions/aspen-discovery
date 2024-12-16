@@ -13,7 +13,10 @@ export const StartLocalIllRequest = (props) => {
 	return (
 		<Button
 			size="md"
-			colorScheme="primary"
+			bgColor={theme['colors']['primary']['500']}
+			variant="solid"
+			minWidth="100%"
+			maxWidth="100%"
 			variant="solid"
 			_text={{
 				padding: 0,
@@ -24,7 +27,9 @@ export const StartLocalIllRequest = (props) => {
 				flexWrap: 'wrap',
 			}}
 			onPress={openLocalIllRequest}>
-			Request
+			<ButtonText color={theme['colors']['primary']['500-text']} textAlign="center">
+				Request
+			</ButtonText>
 		</Button>
 	);
 };

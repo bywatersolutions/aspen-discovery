@@ -286,6 +286,10 @@ function doFullUpgrade($operatingSystem, $linuxDistribution, $serverName, $versi
 				executeCommand("Running version upgrade script", "cd $installDir/install; ./upgrade_$versionToUpdateTo.sh $serverName", $scheduledUpdate);
 			}
 		}
+
+		if (file_exists("$installDir/install/updateCron_$versionToUpdateTo.sh")) {
+			executeCommand("Running cron update", "cd $installDir/install; php ./updateCron_$versionToUpdateTo.php $serverName", $scheduledUpdate);
+		}
 	}
 
 	//Update Solr files

@@ -59,7 +59,7 @@ class MyAccount_MyPreferences extends MyAccount {
             $pickupSublocations = [];
             foreach ($pickupLocations as $locationKey => $location) {
                 if(is_object($location)){
-                    $pickupSublocations[$location->locationId] = $location->getPickupSublocations();
+                    $pickupSublocations[$location->locationId] = $patron->getValidSublocations($location->locationId);
                 }
             }
 

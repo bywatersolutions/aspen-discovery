@@ -1775,7 +1775,7 @@ class Record_AJAX extends Action {
 
         foreach ($locations as $locationKey => $location) {
             if(is_object($location)){
-                $pickupSublocations[$locationKey] = $location->getPickupSublocations();
+                $pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);;
             }
         }
 		$interface->assign('pickupAt', $pickupAt);
@@ -1806,12 +1806,20 @@ class Record_AJAX extends Action {
 				$rememberHoldPickupLocation = false;
 			}
 
+            require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+            require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+            $patronType = $user->getPTypeObj();
             $sublocationLookup = new Sublocation();
             $sublocationLookup->locationId = $user->pickupSublocationId;
             $sublocationLookup->isValidHoldPickupAreaILS = 1;
             $sublocationLookup->isValidHoldPickupAreaAspen = 1;
             if($sublocationLookup->find(true)) {
-                $preferredPickupSublocationIsValid = true;
+                $sublocationPType = new SublocationPatronType();
+                $sublocationPType->patronTypeId = $patronType->id;
+                $sublocationPType->sublocationId = $sublocationLookup->id;
+                if($sublocationPType->find(true)) {
+                    $preferredPickupSublocationIsValid = true;
+                }
             }
             if($preferredPickupSublocationIsValid) {
                 $rememberHoldPickupSublocation = $user->rememberHoldPickupSublocation;

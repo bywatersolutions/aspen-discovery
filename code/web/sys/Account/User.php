@@ -2331,6 +2331,8 @@ class User extends DataObject {
      */
     public function getValidSublocations(int $locationId): array {
         require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+        require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+        $patronType = $this->getPTypeObj();
         $sublocations = [];
         $object = new Sublocation();
         $object->locationId = $locationId;
@@ -2339,7 +2341,12 @@ class User extends DataObject {
         $object->orderBy('weight');
         $object->find();
         while ($object->fetch()) {
-            $sublocations[$object->id] = clone($object);
+            $sublocationPType = new SublocationPatronType();
+            $sublocationPType->patronTypeId = $patronType->id;
+            $sublocationPType->sublocationId = $object->id;
+            if($sublocationPType->find(true)) {
+                $sublocations[$object->id] = clone($object);
+            }
         }
 
         ksort($sublocations);

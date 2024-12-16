@@ -2006,7 +2006,7 @@ class MyAccount_AJAX extends JSON_Action {
 
                 foreach ($pickupBranches as $locationKey => $location) {
                     if(is_object($location)){
-                        $pickupSublocations[$locationKey] = $location->getPickupSublocations();
+                        $pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);
                     }
                 }
 			}
@@ -8916,6 +8916,7 @@ class MyAccount_AJAX extends JSON_Action {
         $context = $_REQUEST['context'] ?? '';
         if (UserAccount::isLoggedIn()) {
             $patron = UserAccount::getActiveUserObj();
+            $patronType = $patron->getPTypeObj();
             if (isset($_REQUEST['locationCode'])) {
                 $location = new Location();
                 if ($context === 'myPreferences') {
@@ -8926,6 +8927,7 @@ class MyAccount_AJAX extends JSON_Action {
                 if ($location->find(true)) {
                     $sublocations = [];
                     require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+                    require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
                     $object = new Sublocation();
                     $object->locationId = $location->locationId;
                     $object->isValidHoldPickupAreaILS = 1;
@@ -8933,7 +8935,12 @@ class MyAccount_AJAX extends JSON_Action {
                     $object->orderBy('weight');
                     $object->find();
                     while ($object->fetch()) {
-                        $sublocations[$object->id] = $object->name;
+                        $sublocationPType = new SublocationPatronType();
+                        $sublocationPType->patronTypeId = $patronType->id;
+                        $sublocationPType->sublocationId = $object->id;
+                        if($sublocationPType->find(true)) {
+                            $sublocations[$object->id] = $object->name;
+                        }
                     }
 
                     if (count($sublocations) > 0) {

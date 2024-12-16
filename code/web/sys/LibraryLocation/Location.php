@@ -291,7 +291,6 @@ class Location extends DataObject {
 
         require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
         $sublocationSettingsStructure = Sublocation::getObjectStructure('locations');
-        //unset($sublocationSettingsStructure['locationId']);
         unset($sublocationSettingsStructure['weight']);
 
 		$structure = [
@@ -1443,7 +1442,7 @@ class Location extends DataObject {
                     'sortable' => true,
                     'storeDb' => true,
                     'allowEdit' => true,
-                    'canEdit' => false,
+                    'canEdit' => true,
                     'canAddNew' => true,
                     'canDelete' => true,
                 ],
@@ -1633,6 +1632,7 @@ class Location extends DataObject {
         $object = new Sublocation();
         $object->locationId = $this->locationId;
         $object->isValidHoldPickupAreaILS = 1;
+        $object->isValidHoldPickupAreaAspen = 1;
         $object->orderBy('weight');
         $object->find();
         while ($object->fetch()) {

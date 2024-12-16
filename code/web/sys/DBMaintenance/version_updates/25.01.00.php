@@ -84,6 +84,18 @@ function getUpdates25_01_00(): array {
                 "ALTER TABLE user_hold ADD COLUMN pickupSublocationName VARCHAR(100)",
             ],
         ], //sublocation_hold_data
+        'sublocation_ptype_restriction' => [
+            'title' => 'Sublocation Patron Type Restrictions',
+            'description' => 'Add new table for restricting patron types to sublocations',
+            'continueOnError' => true,
+            'sql' => [
+                "CREATE TABLE sublocation_ptype (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					sublocationId INT(11),
+					patronTypeId INT(11)
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+            ]
+        ], //sublocation_ptype_restriction
 
 		//kodi
 

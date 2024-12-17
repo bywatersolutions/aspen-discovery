@@ -287,7 +287,7 @@ function doFullUpgrade($operatingSystem, $linuxDistribution, $serverName, $versi
 			}
 		}
 
-		if (file_exists("$installDir/install/updateCron_$versionToUpdateTo.sh")) {
+		if (file_exists("$installDir/install/updateCron_$versionToUpdateTo.php")) {
 			executeCommand("Running cron update", "cd $installDir/install; php ./updateCron_$versionToUpdateTo.php $serverName", $scheduledUpdate);
 		}
 	}

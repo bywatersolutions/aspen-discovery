@@ -1,6 +1,7 @@
-import {Button} from 'native-base';
+import {Button, ButtonText} from '@gluestack-ui/themed';
 import React from 'react';
 import {navigate} from '../../../helpers/RootNavigator';
+import { ThemeContext } from '../../../context/initialContext';
 
 export const StartLocalIllRequest = (props) => {
 	const openLocalIllRequest = () => {
@@ -9,6 +10,7 @@ export const StartLocalIllRequest = (props) => {
 			workTitle: props.workTitle
 		});
 	};
+	const { theme } = React.useContext(ThemeContext);
 
 	return (
 		<Button

@@ -62,7 +62,7 @@ class MockILS extends AbstractIlsDriver{
 		// TODO: Implement thawHold() method.
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		// TODO: Implement changeHoldPickupLocation() method.
 	}
 

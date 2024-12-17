@@ -180,7 +180,15 @@ class Evergreen extends AbstractIlsDriver {
 	 */
 	private function getCallNumberForCopy(array $mappedCopy, $authtoken) {
 		$label = '';
-		$flesh = ["flesh"=>1,"flesh_fields"=>["acn"=>["prefix","suffix"]]];
+		$flesh = [
+			"flesh" => 1,
+			"flesh_fields" => [
+				"acn" => [
+					"prefix",
+					"suffix"
+				]
+			]
+		];
 		$evergreenUrl = $this->accountProfile->patronApiUrl . '/osrf-gateway-v1';
 		$request = 'service=open-ils.pcrud&method=open-ils.pcrud.retrieve.acn';
 		$request .= '&param=' . json_encode($authtoken);
@@ -381,15 +389,14 @@ class Evergreen extends AbstractIlsDriver {
 		return $result;
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
-		return $this->placeItemHold($patron, $recordId, $volumeId, $pickupBranch);
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		return $this->placeItemHold($patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 	}
-
 
 	/**
 	 * @inheritDoc
 	 */
-	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		$hold_result = [
 			'success' => false,
 			'message' => translate([
@@ -691,7 +698,7 @@ class Evergreen extends AbstractIlsDriver {
 		return $result;
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		$result = [
 			'success' => false,
 			'message' => translate([
@@ -782,7 +789,7 @@ class Evergreen extends AbstractIlsDriver {
 		return true;
 	}
 
-	public function canLoadReadingHistoryInMasqueradeMode() : bool {
+	public function canLoadReadingHistoryInMasqueradeMode(): bool {
 		$activePatron = UserAccount::getActiveUserObj();
 		if (!empty($activePatron)) {
 			return !empty($activePatron->ils_password);
@@ -791,7 +798,7 @@ class Evergreen extends AbstractIlsDriver {
 	}
 
 
-	public function performsReadingHistoryUpdatesOfILS() : bool {
+	public function performsReadingHistoryUpdatesOfILS(): bool {
 		return false;
 	}
 
@@ -810,7 +817,7 @@ class Evergreen extends AbstractIlsDriver {
 		$offset = 0;
 		$hasMoreHistory = true;
 
-		while ($hasMoreHistory){
+		while ($hasMoreHistory) {
 			$authToken = $this->getAPIAuthToken($patron, false);
 			if ($authToken != null) {
 				//Get a list of checkouts
@@ -824,7 +831,7 @@ class Evergreen extends AbstractIlsDriver {
 				$params = 'service=open-ils.actor';
 				$params .= '&method=open-ils.actor.history.circ';
 				$params .= '&param=' . json_encode($authToken);
-				$params .= '&param={"offset":' . $offset .',"limit":100}';
+				$params .= '&param={"offset":' . $offset . ',"limit":100}';
 				$apiResponse = $this->apiCurlWrapper->curlPostPage($evergreenUrl, $params);
 
 				ExternalRequestLogEntry::logRequest('evergreen.getReadingHistory', 'POST', $evergreenUrl, $this->apiCurlWrapper->getHeaders(), $params, $this->apiCurlWrapper->getResponseCode(), $apiResponse, []);
@@ -840,7 +847,7 @@ class Evergreen extends AbstractIlsDriver {
 						if (empty($circEntryMapped['source_circ'])) {
 							$modsForCopy = $this->getModsForCopy($circEntryMapped['target_copy']);
 							if ($modsForCopy != null) {
-								if (is_integer($modsForCopy['doc_id'])){
+								if (is_integer($modsForCopy['doc_id'])) {
 									$modsForCopy['doc_id'] = strval($modsForCopy['doc_id']);
 								}
 								$curTitle = [];
@@ -853,7 +860,7 @@ class Evergreen extends AbstractIlsDriver {
 								$marcRecordDriver = new MarcRecordDriver($modsForCopy['doc_id']);
 								if ($marcRecordDriver->isValid()) {
 									$curTitle['format'] = $marcRecordDriver->getPrimaryFormat();
-								}else{
+								} else {
 									$curTitle['format'] = 'Unknown';
 								}
 								if (!empty($circEntryMapped['xact_start'])) {
@@ -904,7 +911,7 @@ class Evergreen extends AbstractIlsDriver {
 			if (!empty($historyEntry['recordId'])) {
 				if ($systemVariables->storeRecordDetailsInDatabase) {
 					/** @noinspection SqlResolve */
-					$getRecordDetailsQuery = 'SELECT permanent_id, indexed_format.format FROM grouped_work_records 
+					$getRecordDetailsQuery = 'SELECT permanent_id, indexed_format.format FROM grouped_work_records
 								  LEFT JOIN grouped_work ON groupedWorkId = grouped_work.id
 								  LEFT JOIN indexed_record_source ON sourceId = indexed_record_source.id
 								  LEFT JOIN indexed_format on formatId = indexed_format.id
@@ -1239,7 +1246,10 @@ class Evergreen extends AbstractIlsDriver {
 							return $hold_result;
 						}
 					} else {
-						$hold_result['message'] = translate(['text'=>"This hold cannot be placed at this time. If you feel that this is in error, please contact your library for more information.",'isPublicFacing'=>true]);
+						$hold_result['message'] = translate([
+							'text' => "This hold cannot be placed at this time. If you feel that this is in error, please contact your library for more information.",
+							'isPublicFacing' => true
+						]);
 						return $hold_result;
 					}
 				}
@@ -1336,11 +1346,11 @@ class Evergreen extends AbstractIlsDriver {
 						$transactionRaw = $transactionObj->transaction->__p;
 						$record = null;
 						if (!empty($transactionObj->record)) {
-							$record =  $transactionObj->record->__p;
+							$record = $transactionObj->record->__p;
 						}
 						$circ = null;
 						if (!empty($transactionObj->circ)) {
-							$circ =  $transactionObj->circ->__p;
+							$circ = $transactionObj->circ->__p;
 						}
 						/** @noinspection SpellCheckingInspection */
 						$transactionObj = $this->mapEvergreenFields($transactionRaw, $this->fetchIdl('mbts'));
@@ -1384,8 +1394,7 @@ class Evergreen extends AbstractIlsDriver {
 	}
 
 
-	public function completeFinePayment(User $patron, UserPayment $payment)
-	{
+	public function completeFinePayment(User $patron, UserPayment $payment) {
 		global $logger;
 		$result = [
 			'success' => false,
@@ -1394,7 +1403,10 @@ class Evergreen extends AbstractIlsDriver {
 
 		$authToken = $this->getAPIAuthToken($patron, true);
 		if ($authToken == null) {
-			$result['message'] = translate(['text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.', 'isPublicFacing'=>true]);
+			$result['message'] = translate([
+				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'isPublicFacing' => true
+			]);
 			$logger->log('Unable to authenticate with Evergreen while completing fine payment', Logger::LOG_ERROR);
 			return $result;
 		}
@@ -1465,7 +1477,10 @@ class Evergreen extends AbstractIlsDriver {
 				$result['message'] = "Error {$apiResponse->payload[0]->textcode} updating your payment, please visit the library with your receipt.";
 			}
 		} else {
-			$result['message'] = translate(['text' => 'Unable to post the payment to the library ILS. The library has been notified and will manually reconcile the payment.', 'isPublicFacing'=>true]);
+			$result['message'] = translate([
+				'text' => 'Unable to post the payment to the library ILS. The library has been notified and will manually reconcile the payment.',
+				'isPublicFacing' => true
+			]);
 			$logger->log('Unable to post the payment to the library ILS. The library has been notified and will manually reconcile the payment. Response code: ' . $this->apiCurlWrapper->getResponseCode(), Logger::LOG_ERROR);
 		}
 
@@ -1612,7 +1627,7 @@ class Evergreen extends AbstractIlsDriver {
 		//The user might have logged in with their username, make sure to set the card
 		$staffUserInfo = $this->getStaffUserInfo();
 
-		if (!is_object($userData['card'])){
+		if (!is_object($userData['card'])) {
 			if ($staffUserInfo['userValid']) {
 				//Get details for the card
 				//Lookup the patron type
@@ -2144,8 +2159,7 @@ class Evergreen extends AbstractIlsDriver {
 		$apiResponse = json_decode($apiResponse);
 
 		// first check to see if we need to retry the patron lookup by username
-		if (isset($apiResponse->payload[0]) && isset($apiResponse->payload[0]->textcode) &&
-			$apiResponse->payload[0]->textcode == 'ACTOR_USER_NOT_FOUND') {
+		if (isset($apiResponse->payload[0]) && isset($apiResponse->payload[0]->textcode) && $apiResponse->payload[0]->textcode == 'ACTOR_USER_NOT_FOUND') {
 			$apiResponse = $this->_requestPasswordReset('username', $patronIdentifier, $email);
 			$apiResponse = json_decode($apiResponse);
 		}
@@ -2428,7 +2442,7 @@ class Evergreen extends AbstractIlsDriver {
 
 	// Evergreen currently supports fetching users by ID or by barcode, but not by username
 	// therefore we will disable masquerade with just  username.
-	public function supportsLoginWithUsername() : bool {
+	public function supportsLoginWithUsername(): bool {
 		return false;
 	}
 
@@ -2436,7 +2450,7 @@ class Evergreen extends AbstractIlsDriver {
 		return true;
 	}
 
-	public function allowUpdatesOfPreferredName(User $patron) : bool {
+	public function allowUpdatesOfPreferredName(User $patron): bool {
 		return false;
 	}
 
@@ -2473,27 +2487,27 @@ class Evergreen extends AbstractIlsDriver {
 						$user->_preferredName = '';
 						if (!empty($mappedPatronData['pref_prefix'])) {
 							$user->_preferredName .= $mappedPatronData['pref_prefix'] . ' ';
-						}elseif (!empty($mappedPatronData['prefix'])) {
+						} elseif (!empty($mappedPatronData['prefix'])) {
 							$user->_preferredName .= $mappedPatronData['prefix'] . ' ';
 						}
 						if (!empty($mappedPatronData['pref_first_given_name'])) {
 							$user->_preferredName .= $mappedPatronData['pref_first_given_name'];
-						}elseif (!empty($mappedPatronData['first_given_name'])) {
+						} elseif (!empty($mappedPatronData['first_given_name'])) {
 							$user->_preferredName .= $mappedPatronData['first_given_name'];
 						}
 						if (!empty($mappedPatronData['pref_second_given_name'])) {
 							$user->_preferredName .= ' ' . $mappedPatronData['pref_second_given_name'];
-						}elseif (!empty($mappedPatronData['second_given_name'])) {
+						} elseif (!empty($mappedPatronData['second_given_name'])) {
 							$user->_preferredName .= ' ' . $mappedPatronData['second_given_name'];
 						}
 						if (!empty($mappedPatronData['pref_family_name'])) {
 							$user->_preferredName .= ' ' . $mappedPatronData['pref_family_name'];
-						}elseif (!empty($mappedPatronData['family_name'])) {
+						} elseif (!empty($mappedPatronData['family_name'])) {
 							$user->_preferredName .= ' ' . $mappedPatronData['family_name'];
 						}
 						if (!empty($mappedPatronData['pref_suffix'])) {
 							$user->_preferredName .= ' ' . $mappedPatronData['pref_suffix'];
-						}elseif (!empty($mappedPatronData['suffix'])) {
+						} elseif (!empty($mappedPatronData['suffix'])) {
 							$user->_preferredName .= ' ' . $mappedPatronData['suffix'];
 						}
 						$user->_preferredName = trim($user->_preferredName);

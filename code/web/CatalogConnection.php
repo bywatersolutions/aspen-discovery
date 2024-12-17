@@ -159,23 +159,23 @@ class CatalogConnection {
 			$invalidUser = false;
 			if (!empty($user->firstname) && (strip_tags($user->firstname) != $user->firstname)) {
 				$invalidUser = true;
-			}elseif (!empty($user->lastname) && (strip_tags($user->lastname) != $user->lastname)) {
+			} elseif (!empty($user->lastname) && (strip_tags($user->lastname) != $user->lastname)) {
 				$invalidUser = true;
-			}elseif (!empty($user->email) && (strip_tags($user->email) != $user->email)) {
+			} elseif (!empty($user->email) && (strip_tags($user->email) != $user->email)) {
 				$invalidUser = true;
-			}elseif (!empty($user->username) && (strip_tags($user->username) != $user->username)) {
+			} elseif (!empty($user->username) && (strip_tags($user->username) != $user->username)) {
 				$invalidUser = true;
-			}elseif (!empty($user->ils_username) && (strip_tags($user->ils_username) != $user->ils_username)) {
+			} elseif (!empty($user->ils_username) && (strip_tags($user->ils_username) != $user->ils_username)) {
 				$invalidUser = true;
-			}elseif (!empty($user->ils_barcode) && (strip_tags($user->ils_barcode) != $user->ils_barcode)) {
+			} elseif (!empty($user->ils_barcode) && (strip_tags($user->ils_barcode) != $user->ils_barcode)) {
 				$invalidUser = true;
-			}elseif (!empty($user->ils_password) && (strip_tags($user->ils_password) != $user->ils_password)) {
+			} elseif (!empty($user->ils_password) && (strip_tags($user->ils_password) != $user->ils_password)) {
 				$invalidUser = true;
-			}elseif (!empty($user->displayName) && (strip_tags($user->displayName) != $user->displayName)) {
+			} elseif (!empty($user->displayName) && (strip_tags($user->displayName) != $user->displayName)) {
 				$invalidUser = true;
-			}elseif (!empty($user->phone) && (strip_tags($user->phone) != $user->phone)) {
+			} elseif (!empty($user->phone) && (strip_tags($user->phone) != $user->phone)) {
 				$invalidUser = true;
-			}elseif (!empty($user->patronType) && (strip_tags($user->patronType) != $user->patronType)) {
+			} elseif (!empty($user->patronType) && (strip_tags($user->patronType) != $user->patronType)) {
 				$invalidUser = true;
 			}
 			if ($invalidUser) {
@@ -261,7 +261,7 @@ class CatalogConnection {
 		$timer->logTime("Updated Additional Runtime information for user " . $user->id);
 	}
 
-	public function getRegistrationCapabilities() : array {
+	public function getRegistrationCapabilities(): array {
 		return $this->driver->getRegistrationCapabilities();
 	}
 
@@ -271,11 +271,14 @@ class CatalogConnection {
 	 * @param string $email - The email address to look for
 	 * @return array
 	 */
-	public function lookupAccountByEmail($email) : array {
+	public function lookupAccountByEmail($email): array {
 		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 			return [
 				'success' => false,
-				'message' => translate(['text' => 'The email supplied was not valid.', 'isPublicFacing' => true])
+				'message' => translate([
+					'text' => 'The email supplied was not valid.',
+					'isPublicFacing' => true
+				])
 			];
 		} else {
 			$cardsByEmail = $this->driver->lookupAccountByEmail($email);
@@ -324,7 +327,7 @@ class CatalogConnection {
 		}
 	}
 
-	public function lookupAccountByPhoneNumber($phone) : array {
+	public function lookupAccountByPhoneNumber($phone): array {
 		if (strlen($phone) >= 7 && strlen($phone) <= 11) {
 			$result = $this->driver->lookupAccountByPhoneNumber($phone);
 			if ($result['success']) {
@@ -383,22 +386,25 @@ class CatalogConnection {
 					}
 				}
 				return $result;
-			}else{
+			} else {
 				return $result;
 			}
-		}else{
+		} else {
 			return [
 				'success' => false,
-				'message' => translate(['text' => 'The phone number supplied was not valid.', 'isPublicFacing' => true])
+				'message' => translate([
+					'text' => 'The phone number supplied was not valid.',
+					'isPublicFacing' => true
+				])
 			];
 		}
 	}
 
-	public function getBasicRegistrationForm() : array {
+	public function getBasicRegistrationForm(): array {
 		return $this->driver->getBasicRegistrationForm();
 	}
 
-	public function processBasicRegistrationForm(bool $addressValidated) : array {
+	public function processBasicRegistrationForm(bool $addressValidated): array {
 		return $this->driver->processBasicRegistrationForm($addressValidated);
 	}
 
@@ -610,7 +616,7 @@ class CatalogConnection {
 			if (!$patron->initialReadingHistoryLoaded) {
 				$okToLoadFromIls = true;
 				$masqueradeMode = UserAccount::isUserMasquerading();
-				if ($masqueradeMode){
+				if ($masqueradeMode) {
 					$okToLoadFromIls = $this->driver->canLoadReadingHistoryInMasqueradeMode();
 				}
 				if ($okToLoadFromIls) {
@@ -620,28 +626,28 @@ class CatalogConnection {
 						if ($result['numTitles'] > 0) {
 							foreach ($result['titles'] as $title) {
 								//if ($title['permanentId'] != null) {
-									$userReadingHistoryEntry = new ReadingHistoryEntry();
-									$userReadingHistoryEntry->userId = $patron->id;
-									$userReadingHistoryEntry->groupedWorkPermanentId = $title['permanentId'];
-									$userReadingHistoryEntry->source = $this->accountProfile->recordSource;
-									$userReadingHistoryEntry->sourceId = $title['recordId'];
-									$userReadingHistoryEntry->title = substr($title['title'], 0, 150);
-									$userReadingHistoryEntry->author = substr($title['author'], 0, 75);
-									$userReadingHistoryEntry->format = $title['format'];
-									$userReadingHistoryEntry->checkOutDate = $title['checkout'];
-									if (!empty($title['checkin'])) {
-										$userReadingHistoryEntry->checkInDate = $title['checkin'];
-									} else {
-										$userReadingHistoryEntry->checkInDate = null;
-									}
-									if (empty($title['isIll'])) {
-										$userReadingHistoryEntry->isIll = 0;
-									}else {
-										$userReadingHistoryEntry->isIll = 1;
-									}
-									$userReadingHistoryEntry->deleted = 0;
-									$userReadingHistoryEntry->insert();
-									$userReadingHistoryEntry = null;
+								$userReadingHistoryEntry = new ReadingHistoryEntry();
+								$userReadingHistoryEntry->userId = $patron->id;
+								$userReadingHistoryEntry->groupedWorkPermanentId = $title['permanentId'];
+								$userReadingHistoryEntry->source = $this->accountProfile->recordSource;
+								$userReadingHistoryEntry->sourceId = $title['recordId'];
+								$userReadingHistoryEntry->title = substr($title['title'], 0, 150);
+								$userReadingHistoryEntry->author = substr($title['author'], 0, 75);
+								$userReadingHistoryEntry->format = $title['format'];
+								$userReadingHistoryEntry->checkOutDate = $title['checkout'];
+								if (!empty($title['checkin'])) {
+									$userReadingHistoryEntry->checkInDate = $title['checkin'];
+								} else {
+									$userReadingHistoryEntry->checkInDate = null;
+								}
+								if (empty($title['isIll'])) {
+									$userReadingHistoryEntry->isIll = 0;
+								} else {
+									$userReadingHistoryEntry->isIll = 1;
+								}
+								$userReadingHistoryEntry->deleted = 0;
+								$userReadingHistoryEntry->insert();
+								$userReadingHistoryEntry = null;
 								//}
 							}
 						}
@@ -686,7 +692,11 @@ class CatalogConnection {
 		} elseif ($sortOption == "format") {
 			$readingHistoryDB->orderBy('format ASC, title ASC, MAX(checkOutDate) DESC');
 		}
-		$readingHistoryDB->groupBy(['groupedWorkPermanentId', 'title', 'author']);
+		$readingHistoryDB->groupBy([
+			'groupedWorkPermanentId',
+			'title',
+			'author'
+		]);
 
 		$numTitles = $readingHistoryDB->count();
 
@@ -725,7 +735,7 @@ class CatalogConnection {
 	 * @param array $selectedTitles The titles to do the action on if applicable
 	 * @return array success and message are the array keys
 	 */
-	function doReadingHistoryAction(User $patron, string $action, array $selectedTitles) : array {
+	function doReadingHistoryAction(User $patron, string $action, array $selectedTitles): array {
 		$result = [
 			'success' => false,
 			'message' => translate([
@@ -814,7 +824,7 @@ class CatalogConnection {
 			$homeLibrary = $patron->getHomeLibrary();
 			if ($action == 'optIn') {
 				$performIlsAction = $homeLibrary->optInToReadingHistoryUpdatesILS;
-			}elseif ($action == 'optOut') {
+			} elseif ($action == 'optOut') {
 				$performIlsAction = $homeLibrary->optOutOfReadingHistoryUpdatesILS;
 			}
 			if ($performIlsAction) {
@@ -881,12 +891,13 @@ class CatalogConnection {
 	 * @param string $recordId The id of the bib record
 	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
 	 * @param string $cancelDate
+	 * @param string $pickupSublocation The sublocation where the user wants to pickup the item when available
 	 * @return  mixed                 True if successful, false if unsuccessful
 	 *                                If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeHold($patron, $recordId, $pickupBranch, $cancelDate = null) {
-		$result = $this->driver->placeHold($patron, $recordId, $pickupBranch, $cancelDate);
+	function placeHold($patron, $recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		$result = $this->driver->placeHold($patron, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		if ($result['success'] == true) {
 			$indexingProfileId = $this->driver->getIndexingProfile()->id;
 			//Track usage by the user
@@ -941,8 +952,8 @@ class CatalogConnection {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
-		return $this->driver->placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate);
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		return $this->driver->placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 	}
 
 	function updatePatronInfo($user, $canUpdateContactInfo, $fromMasquerade = false): array {
@@ -1113,7 +1124,7 @@ class CatalogConnection {
 		return $historyEntry;
 	}
 
-	public function bypassReadingHistoryUpdate($patron, $isNightlyUpdate) : bool {
+	public function bypassReadingHistoryUpdate($patron, $isNightlyUpdate): bool {
 		//Check to see if we need to update the reading history.  Only update every 5 minutes in normal situations.
 		$curTime = time();
 		if ((($curTime - $patron->lastReadingHistoryUpdate) < 60 * 5) && !isset($_REQUEST['reload'])) {
@@ -1191,7 +1202,7 @@ class CatalogConnection {
 				if (!$historyEntryDB->insert()) {
 					global $logger;
 					$logger->log("Could not insert new reading history entry", Logger::LOG_ERROR);
-				}else{
+				} else {
 					if ($patron->enableCostSavings) {
 						$patron->__set('totalCostSavings', $patron->totalCostSavings + $historyEntryDB->costSavings);
 					}
@@ -1238,8 +1249,7 @@ class CatalogConnection {
 
 	function cancelHold($patron, $recordId, $cancelId = null, $isIll = false): array {
 
-		$holdToCancel =
-		//Make sure the hold should be cancelable
+		$holdToCancel = //Make sure the hold should be cancelable
 		$holds = $this->getHolds($patron);
 		$okToCancel = false;
 		$foundHold = false;
@@ -1249,13 +1259,13 @@ class CatalogConnection {
 				if ($hold->recordId == $recordId) {
 					$foundHold = true;
 				}
-			}else{
+			} else {
 				if ($hold->cancelId == $cancelId) {
 					$foundHold = true;
 				}
 			}
 			if ($foundHold) {
-				if ($hold->cancelable){
+				if ($hold->cancelable) {
 					$okToCancel = true;
 				}
 				break;
@@ -1267,25 +1277,28 @@ class CatalogConnection {
 					if ($hold->recordId == $recordId) {
 						$foundHold = true;
 					}
-				}else{
+				} else {
 					if ($hold->cancelId == $cancelId) {
 						$foundHold = true;
 					}
 				}
 				if ($foundHold) {
-					if ($hold->cancelable){
+					if ($hold->cancelable) {
 						$okToCancel = true;
 					}
 					break;
 				}
 			}
 		}
-		if ($okToCancel){
+		if ($okToCancel) {
 			return $this->driver->cancelHold($patron, $recordId, $cancelId, $isIll);
-		}else{
+		} else {
 			return [
 				'success' => false,
-				'message' => translate(['text' => 'This hold cannot be canceled', 'isPublicFacing' => true]),
+				'message' => translate([
+					'text' => 'This hold cannot be canceled',
+					'isPublicFacing' => true
+				]),
 			];
 		}
 	}
@@ -1298,15 +1311,15 @@ class CatalogConnection {
 		return $this->driver->thawHold($patron, $recordId, $itemToThawId);
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
-		return $this->driver->changeHoldPickupLocation($patron, $recordId, $itemToUpdateId, $newPickupLocation);
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
+		return $this->driver->changeHoldPickupLocation($patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation);
 	}
 
 	public function renewCheckout($patron, $recordId, $itemId = null, $itemIndex = null) {
 		return $this->driver->renewCheckout($patron, $recordId, $itemId, $itemIndex);
 	}
 
-	public function renewAll(User $patron) : array {
+	public function renewAll(User $patron): array {
 		if ($this->driver->hasFastRenewAll()) {
 			return $this->driver->renewAll($patron);
 		} else {
@@ -1345,8 +1358,8 @@ class CatalogConnection {
 		}
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
-		return $this->driver->placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch);
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		return $this->driver->placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 	}
 
 	public function importListsFromIls($patron) {
@@ -1606,7 +1619,7 @@ class CatalogConnection {
 		return $user;
 	}
 
-	public function supportsLoginWithUsername() : bool {
+	public function supportsLoginWithUsername(): bool {
 		return $this->driver->supportsLoginWithUsername();
 	}
 
@@ -1636,9 +1649,9 @@ class CatalogConnection {
 		return $this->driver->getStudentReportData($location, $showOverdueOnly, $date);
 	}
 
-    public function getWeedingReportData($location) {
-        return $this->driver->getWeedingReportData($location);
-    }
+	public function getWeedingReportData($location) {
+		return $this->driver->getWeedingReportData($location);
+	}
 
 	/**
 	 * Loads any contact information that is not stored by Aspen Discovery from the ILS. Updates the user object.
@@ -1796,7 +1809,7 @@ class CatalogConnection {
 		return $this->driver->showDateInFines();
 	}
 
-	public function initiatePasswordResetByEmail() : array {
+	public function initiatePasswordResetByEmail(): array {
 		if ($this->getForgotPasswordType() == 'emailAspenResetLink') {
 			$email = $_REQUEST['email'];
 			if (!filter_var($_REQUEST['email'], FILTER_VALIDATE_EMAIL)) {
@@ -1822,7 +1835,7 @@ class CatalogConnection {
 		}
 	}
 
-	public function initiatePasswordResetByBarcode() : array {
+	public function initiatePasswordResetByBarcode(): array {
 		if ($this->getForgotPasswordType() == 'emailAspenResetLink') {
 			if (!isset($_REQUEST['barcode'])) {
 				return [
@@ -1850,7 +1863,7 @@ class CatalogConnection {
 		return $this->driver->checkoutBySip($patron, $barcode, $currentLocationId);
 	}
 
-	public function hasAPICheckout() : bool {
+	public function hasAPICheckout(): bool {
 		return $this->driver->hasAPICheckout();
 	}
 
@@ -1858,7 +1871,7 @@ class CatalogConnection {
 		return $this->driver->checkoutByAPI($patron, $barcode, $currentLocation);
 	}
 
-	public function allowUpdatesOfPreferredName(User $patron) : bool {
+	public function allowUpdatesOfPreferredName(User $patron): bool {
 		return $this->driver->allowUpdatesOfPreferredName($patron);
 	}
 
@@ -1878,7 +1891,7 @@ class CatalogConnection {
 		return $this->driver->updateUserMessageQueue($patron);
 	}
 
-	public function submitLocalIllRequest(User $patron, LocalIllForm $localIllForm) : array {
+	public function submitLocalIllRequest(User $patron, LocalIllForm $localIllForm): array {
 		if ($this->driver->supportsLocalIllRequests()) {
 			//Check to be sure the user has remaining requests
 			if (!$patron->hasRemainingLocalIllRequests()) {
@@ -1896,7 +1909,7 @@ class CatalogConnection {
 			}
 
 			return $this->driver->submitLocalIllRequest($patron, $localIllForm);
-		}else{
+		} else {
 			return [
 				'success' => false,
 				'message' => translate([

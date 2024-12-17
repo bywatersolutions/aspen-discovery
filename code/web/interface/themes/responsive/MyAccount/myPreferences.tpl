@@ -133,9 +133,9 @@
 					{if !empty($allowRememberPickupLocation) && count($pickupLocations) > 1 && !empty($isAssociatedWithILS)}
 						{* Allow editing the pickup location *}
 						<div class="form-group propertyRow">
-							<label for="pickupLocation" class="control-label">{translate text='Preferred Pickup Location' isPublicFacing=true}</label>
+							<label for="pickupLocation" class="control-label">{translate text='Preferred Pickup Branch' isPublicFacing=true}</label>
 							{if $edit == true && !empty($allowPickupLocationUpdates)}
-								<select name="pickupLocation" id="pickupLocation" class="form-control">
+								<select name="pickupLocation" id="pickupLocation" class="form-control" onchange="AspenDiscovery.Account.generateSublocationSelect();">
 									{if count($pickupLocations) > 0}
 										{foreach from=$pickupLocations item=location}
 											{if is_object($location)}
@@ -150,6 +150,32 @@
 								</select>
 							{else}
 								&nbsp;{$profile->getPickupLocationName()|escape}
+							{/if}
+						</div>
+						<div id="pickupSublocationOptions" class="form-group propertyRow">
+							{if $edit == true && !empty($allowPickupLocationUpdates)}
+								{if $profile->pickupLocationId}
+									<div id="sublocationSelectPlaceHolder">
+										<label class="control-label" for="pickupSublocation">{translate text='Preferred Pickup Location' isPublicFacing=true}</label>
+										<div class="controls">
+											<select name="pickupSublocation" id="pickupSublocation" class="form-control">
+												<option value="0default">{translate text='Please Select a Location' isPublicFacing=true}</option>
+												{foreach from=$pickupSublocations item=sublocations key=key}
+													{if $key == $profile->pickupLocationId}
+														{foreach from=$sublocations item=sublocation}
+															<option value="{$sublocation->id}" {if $sublocation->id == $profile->pickupSublocationId}selected="selected"{/if}>{$sublocation->name}</option>
+														{/foreach}
+													{/if}
+												{/foreach}
+											</select>
+										</div>
+									</div>
+
+								{else}
+								<div id="sublocationSelectPlaceHolder"></div>
+								{/if}
+							{else}
+								{$profile->getPickupSublocationName()|escape}
 							{/if}
 						</div>
 					{/if}

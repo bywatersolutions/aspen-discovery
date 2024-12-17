@@ -7,7 +7,7 @@ global $configArray;
 
 class Record_AJAX extends Action {
 
-	function launch() : void {
+	function launch(): void {
 		global $timer;
 		$method = (isset($_GET['method']) && !is_array($_GET['method'])) ? $_GET['method'] : '';
 		$timer->logTime("Starting method $method");
@@ -29,7 +29,7 @@ class Record_AJAX extends Action {
 
 
 	/** @noinspection PhpUnused */
-	function downloadMarc() : void {
+	function downloadMarc(): void {
 		$id = $_REQUEST['id'];
 		$marcData = MarcLoader::loadMarcRecordByILSId($id);
 		header('Content-Description: File Transfer');
@@ -390,7 +390,7 @@ class Record_AJAX extends Action {
 			$isOnHold = $user->isRecordOnHold($recordSource, $id);
 			$interface->assign('isOnHold', $isOnHold);
 
-			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations)) {
+			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations, $rememberHoldPickupSublocation)) {
 				return [
 					'holdFormBypassed' => false,
 					'title' => translate([
@@ -412,8 +412,8 @@ class Record_AJAX extends Action {
 			$items = $marcRecord->getCopies();
 			array_multisort(array_column($items, 'description'), SORT_NATURAL, $items);
 			$relatedRecord = $marcRecord->getGroupedWorkDriver()->getRelatedRecord($marcRecord->getIdWithSource());
-			if (count($relatedRecord->recordVariations) > 1){
-				foreach ($relatedRecord->recordVariations as $variation){
+			if (count($relatedRecord->recordVariations) > 1) {
+				foreach ($relatedRecord->recordVariations as $variation) {
 					if (($selectedVariationId == -1) || ($selectedVariationId == $variation->databaseId)) {
 						$formatValue = $variation->manifestation->format;
 						global $indexingProfiles;
@@ -432,7 +432,7 @@ class Record_AJAX extends Action {
 					}
 				}
 				//if we get no result and all hold types are 'none' just return the marc primary format
-				if (empty($format)){
+				if (empty($format)) {
 					$format = $marcRecord->getPrimaryFormat();
 				}
 				//Filter the items according to the selected variation
@@ -443,7 +443,7 @@ class Record_AJAX extends Action {
 						}
 					}
 				}
-			}else{
+			} else {
 				$format = $marcRecord->getPrimaryFormat();
 			}
 
@@ -634,12 +634,12 @@ class Record_AJAX extends Action {
 					'success' => true,
 				];
 				if ($holdType != 'none') {
-					if ($isOnHold){
+					if ($isOnHold) {
 						$results['modalButtons'] = "<button type='submit' name='submit' id='requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHoldForm();'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
 								'text' => "Yes, Place Hold",
 								'isPublicFacing' => true,
 							]) . "</button>";
-					}else{
+					} else {
 						$results['modalButtons'] = "<button type='submit' name='submit' id='requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHoldForm();'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
 								'text' => "Submit Hold Request",
 								'isPublicFacing' => true,
@@ -875,6 +875,8 @@ class Record_AJAX extends Action {
 				//Rather than asking the user for this explicitly, we do it based on the pickup location
 				$pickupBranch = $_REQUEST['pickupBranch'];
 
+				$pickupSublocation = $_REQUEST['pickupSublocation'] ?? false;
+
 				$patron = null;
 				if (!empty($_REQUEST['selectedUser'])) {
 					$selectedUserId = $_REQUEST['selectedUser'];
@@ -943,12 +945,12 @@ class Record_AJAX extends Action {
 					}
 
 					if ($holdType == 'item' && isset($_REQUEST['selectedItem'])) {
-						$return = $patron->placeItemHold($shortId, $_REQUEST['selectedItem'], $pickupBranch, $cancelDate);
+						$return = $patron->placeItemHold($shortId, $_REQUEST['selectedItem'], $pickupBranch, $cancelDate, $pickupSublocation);
 					} else {
 						if (isset($_REQUEST['volume']) && $holdType == 'volume') {
-							$return = $patron->placeVolumeHold($shortId, $_REQUEST['volume'], $pickupBranch);
+							$return = $patron->placeVolumeHold($shortId, $_REQUEST['volume'], $pickupBranch, $pickupSublocation);
 						} else {
-							$return = $patron->placeHold($shortId, $pickupBranch, $cancelDate);
+							$return = $patron->placeHold($shortId, $pickupBranch, $cancelDate, $pickupSublocation);
 						}
 					}
 
@@ -973,6 +975,18 @@ class Record_AJAX extends Action {
 										$patron->update();
 									}
 								}
+
+								require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+								$sublocation = new Sublocation();
+								if ($sublocation->get('ilsId', $pickupSublocation)) {
+									if ($pickupLocation->locationId == $sublocation->locationId) {
+										if ($sublocation->id != $user->pickupSublocationId) {
+											$patron->setPickupSublocationId($sublocation->id);
+											$patron->update();
+										}
+									}
+								}
+
 							}
 						} elseif (isset($return['confirmationNeeded']) && $return['confirmationNeeded']) {
 							$confirmationNeeded = true;
@@ -1026,7 +1040,7 @@ class Record_AJAX extends Action {
 													'needsIllRequest' => true,
 												];
 											}
-										}elseif ($illLoanType == 'localIll') {
+										} elseif ($illLoanType == 'localIll') {
 											require_once ROOT_DIR . '/sys/InterLibraryLoan/LocalIllForm.php';
 											//Get configuration for the form.
 											$localIllForm = new LocalIllForm();
@@ -1699,11 +1713,12 @@ class Record_AJAX extends Action {
 	/**
 	 * @param string $recordSource
 	 * @param bool $rememberHoldPickupLocation
+	 * @param bool $rememberHoldPickupSublocation
 	 * @param MarcRecordDriver $marcRecord
 	 * @param Location[] $locations
 	 * @return bool
 	 */
-	function setupHoldForm(string $recordSource, ?bool &$rememberHoldPickupLocation, MarcRecordDriver $marcRecord, ?array &$locations): bool {
+	function setupHoldForm(string $recordSource, ?bool &$rememberHoldPickupLocation, MarcRecordDriver $marcRecord, ?array &$locations, ?bool &$rememberHoldPickupSublocation): bool {
 		global $interface;
 		$user = UserAccount::getLoggedInUser();
 		if ($user->getCatalogDriver() == null) {
@@ -1745,6 +1760,7 @@ class Record_AJAX extends Action {
 		//Check to see if the record must be picked up at the holding branch
 		$relatedRecord = $marcRecord->getGroupedWorkDriver()->getRelatedRecord($marcRecord->getIdWithSource());
 		$pickupAt = $relatedRecord->getHoldPickupSetting();
+		$pickupSublocations = [];
 		//1 = restrict to owning location
 		//2 = restrict to the owning library
 		if ($pickupAt > 0) {
@@ -1754,6 +1770,12 @@ class Record_AJAX extends Action {
 				if (is_object($location) && !in_array(strtolower($location->code), $itemLocations)) {
 					unset($locations[$locationKey]);
 				}
+			}
+		}
+
+		foreach ($locations as $locationKey => $location) {
+			if (is_object($location)) {
+				$pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);;
 			}
 		}
 		$interface->assign('pickupAt', $pickupAt);
@@ -1771,6 +1793,7 @@ class Record_AJAX extends Action {
 		if (!$multipleAccountPickupLocations && !$promptForHoldNotifications && $library->allowRememberPickupLocation) {
 			//If the patron's preferred pickup location is not valid, then force them to pick a new location
 			$preferredPickupLocationIsValid = false;
+			$preferredPickupSublocationIsValid = false;
 			foreach ($locations as $location) {
 				if (is_object($location) && ($location->locationId == $user->pickupLocationId)) {
 					$preferredPickupLocationIsValid = true;
@@ -1782,12 +1805,34 @@ class Record_AJAX extends Action {
 			} else {
 				$rememberHoldPickupLocation = false;
 			}
+
+			require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+			require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+			$patronType = $user->getPTypeObj();
+			$sublocationLookup = new Sublocation();
+			$sublocationLookup->locationId = $user->pickupSublocationId;
+			$sublocationLookup->isValidHoldPickupAreaILS = 1;
+			$sublocationLookup->isValidHoldPickupAreaAspen = 1;
+			if ($sublocationLookup->find(true)) {
+				$sublocationPType = new SublocationPatronType();
+				$sublocationPType->patronTypeId = $patronType->id;
+				$sublocationPType->sublocationId = $sublocationLookup->id;
+				if ($sublocationPType->find(true)) {
+					$preferredPickupSublocationIsValid = true;
+				}
+			}
+			if ($preferredPickupSublocationIsValid) {
+				$rememberHoldPickupSublocation = $user->rememberHoldPickupSublocation;
+			}
 		} else {
 			$rememberHoldPickupLocation = false;
 		}
 		$interface->assign('rememberHoldPickupLocation', $rememberHoldPickupLocation);
+		$interface->assign('rememberHoldPickupSublocation', $rememberHoldPickupSublocation);
 
 		$interface->assign('pickupLocations', $locations);
+		$interface->assign('pickupSublocations', $pickupSublocations);
+
 		$interface->assign('multipleUsers', $multipleAccountPickupLocations); // switch for displaying the account drop-down (used for linked accounts)
 
 		$interface->assign('showHoldCancelDate', $library->showHoldCancelDate);
@@ -1864,7 +1909,7 @@ class Record_AJAX extends Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function forceReindex() : array {
+	function forceReindex(): array {
 		require_once ROOT_DIR . '/sys/Grouping/GroupedWork.php';
 
 		$id = $_REQUEST['id'];
@@ -1988,12 +2033,12 @@ class Record_AJAX extends Action {
 									'success' => true,
 									'url' => $relatedUrl['url']
 								];
-							} 
+							}
 						} else {
 							return [
 								'success' => true,
 								'url' => $relatedUrl['url']
-							];	
+							];
 						}
 					}
 				}

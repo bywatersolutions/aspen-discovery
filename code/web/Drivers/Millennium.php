@@ -598,10 +598,10 @@ class Millennium extends AbstractIlsDriver {
 	 *                                  If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		require_once ROOT_DIR . '/Drivers/marmot_inc/MillenniumHolds.php';
 		$millenniumHolds = new MillenniumHolds($this);
-		return $millenniumHolds->placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch);
+		return $millenniumHolds->placeVolumeHold($patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 	}
 
 	public function cancelHold($patron, $recordId, $cancelId = null, $isIll = false): array {
@@ -626,7 +626,7 @@ class Millennium extends AbstractIlsDriver {
 		return $millenniumHolds->updateHoldDetailed($patron, 'update', null, $itemToThawId, $this->getIndexingProfile(), '', 'off');
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		require_once ROOT_DIR . '/Drivers/marmot_inc/MillenniumHolds.php';
 		$millenniumHolds = new MillenniumHolds($this);
 		return $millenniumHolds->updateHoldDetailed($patron, 'update', null, $itemToUpdateId, $this->getIndexingProfile(), $newPickupLocation, null); // freeze value of null gets us to change  pickup location

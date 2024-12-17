@@ -366,9 +366,9 @@ class FOLIO extends AbstractIlsDriver {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {}
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		return [
 			'success' => false,
 			'message' => 'Volume level holds have not been implemented for this ILS.',
@@ -390,7 +390,7 @@ class FOLIO extends AbstractIlsDriver {
 		];
 	}
 
-	function changeHoldPickupLocation($patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation($patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		global $logger;
 		$hold = $this->makeRequest('GET', '/circulation/requests/' . $recordId);
 		$hold = json_decode($hold, true);

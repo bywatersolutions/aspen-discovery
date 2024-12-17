@@ -671,7 +671,7 @@ class MillenniumHolds {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate) {
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation = null) {
 		global $logger;
 		global $library;
 
@@ -791,7 +791,7 @@ class MillenniumHolds {
 	 *                                If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		global $logger;
 
 		if (strpos($recordId, ':')) {

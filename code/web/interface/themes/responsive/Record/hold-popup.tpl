@@ -53,19 +53,36 @@
 							{/if}
 						{/foreach}
 					{/if}
-					{if ($rememberHoldPickupLocation && $allowRememberPickupLocation) || $onlyOnePickupLocation }
+					{assign var="onlyOnePickupSublocation" value=false}
+					{if count($pickupSublocations) == 1}
+						{foreach from=$pickupSublocations item=firstSublocation}
+							{if !is_string($firstSublocation) && ($firstSublocation->code == $user->getPickupSublocationCode())}
+								{assign var="onlyOnePickupSublocation" value=true}
+							{/if}
+						{/foreach}
+					{/if}
+					{if ($rememberHoldPickupLocation && $allowRememberPickupLocation) || $onlyOnePickupLocation}
 						<input type="hidden" name="pickupBranch" id="pickupBranch" value="{$user->getPickupLocationCode()}">
 						{if ($rememberHoldPickupLocation && $allowRememberPickupLocation)}
 							<input type="hidden" name="rememberHoldPickupLocation" id="rememberHoldPickupLocation" value="true">
 						{else}
 							<input type="hidden" name="rememberHoldPickupLocation" id="rememberHoldPickupLocation" value="off">
 						{/if}
+
+						{if $onlyOnePickupSublocation}
+							<input type="hidden" name="pickupSublocation" id="pickupSublocation" value="{$user->getPickupSublocationCode()}">
+							{if ($rememberHoldPickupSublocation)}
+									<input type="hidden" name="rememberHoldPickupSublocation" id="rememberHoldPickupSublocation" value="true">
+								{else}
+									<input type="hidden" name="rememberHoldPickupSublocation" id="rememberHoldPickupSublocation" value="off">
+							{/if}
+						{/if}
 						<input type="hidden" name="user" id="user" value="{$user->id}">
 					{else}
 						<div id="pickupLocationOptions" class="form-group">
 							<label class="control-label" for="pickupBranch">{translate text="I want to pick this up at" isPublicFacing=true} </label>
 							<div class="controls">
-								<select name="pickupBranch" id="pickupBranch" class="form-control">
+								<select name="pickupBranch" id="pickupBranch" class="form-control" onchange="AspenDiscovery.Record.generateSublocationSelect();">
 									{if count($pickupLocations) > 0}
 										{foreach from=$pickupLocations item=location}
 											{if is_string($location)}
@@ -78,6 +95,10 @@
 										<option>placeholder</option>
 									{/if}
 								</select>
+
+								<div id="pickupSublocationOptions" style="margin-top:15px">
+									<div id="sublocationSelectPlaceHolder"></div>
+								</div>
 
 								{if empty($multipleUsers) && $allowRememberPickupLocation}
 									<div class="form-group">

@@ -67,6 +67,7 @@ class User extends DataObject {
 
 	public $rememberHoldPickupLocation;
 	public $pickupLocationId;
+	public $pickupSublocationId;
 
 	public $lastListUsed;
 	public $browseAddToHome;
@@ -200,7 +201,7 @@ class User extends DataObject {
 	 *
 	 * @return null|CatalogConnection
 	 */
-	function getCatalogDriver() : ?CatalogConnection {
+	function getCatalogDriver(): ?CatalogConnection {
 		if ($this->_catalogDriver == null) {
 			//Based off the source of the user, get the AccountProfile
 			$accountProfile = $this->getAccountProfile();
@@ -266,14 +267,14 @@ class User extends DataObject {
 	function __set($name, $value) {
 		if ($name == 'roles') {
 			$this->setRoles($value);
-		}elseif($name == 'additionalAdministrationLocations') {
+		} elseif ($name == 'additionalAdministrationLocations') {
 			$this->setAdditionalAdministrationLocations($value);
 		} else {
 			parent::__set($name, $value);
 		}
 	}
 
-	public function delete($useWhere = false) : int {
+	public function delete($useWhere = false): int {
 		$ret = parent::delete($useWhere);
 		if ($ret) {
 			// delete browse_category_dismissal
@@ -465,7 +466,7 @@ class User extends DataObject {
 		$this->saveRoles();
 	}
 
-	function getRoles() : array {
+	function getRoles(): array {
 		if (is_null($this->_roles)) {
 			$this->_roles = [];
 			//Load roles for the user from the user
@@ -532,14 +533,14 @@ class User extends DataObject {
 		return $this->_roles;
 	}
 
-	function setAdditionalAdministrationLocations($values) : void {
+	function setAdditionalAdministrationLocations($values): void {
 		$this->_additionalAdministrationLocations = $values;
 
 		//Update the database, first remove existing values
 		$this->saveAdditionalAdministrationLocations();
 	}
 
-	function getAdditionalAdministrationLocations() : array {
+	function getAdditionalAdministrationLocations(): array {
 		if (is_null($this->_additionalAdministrationLocations)) {
 			$this->_additionalAdministrationLocations = [];
 			require_once ROOT_DIR . '/sys/Administration/AdministrationLocation.php';
@@ -556,7 +557,7 @@ class User extends DataObject {
 		return $this->_additionalAdministrationLocations;
 	}
 
-	function saveAdditionalAdministrationLocations() : void {
+	function saveAdditionalAdministrationLocations(): void {
 		if (isset($this->id) && isset($this->_additionalAdministrationLocations) && is_array($this->_additionalAdministrationLocations)) {
 			require_once ROOT_DIR . '/sys/Administration/AdministrationLocation.php';
 			$userAdministrationLocations = new AdministrationLocation();
@@ -714,8 +715,7 @@ class User extends DataObject {
 							$linkedUser = new User();
 							$linkedUser->id = $userLink->linkedAccountId;
 							if ($linkedUser->find(true)) {
-								/** @var User $userData */
-								//$userData = $memCache->get("user_{$serverName}_{$linkedUser->id}");
+								/** @var User $userData */ //$userData = $memCache->get("user_{$serverName}_{$linkedUser->id}");
 								//if ($userData === false || isset($_REQUEST['reload'])) {
 								//Load full information from the catalog
 								$linkedUser = UserAccount::validateAccount($linkedUser->ils_barcode, $linkedUser->ils_password, $linkedUser->source, $this);
@@ -836,9 +836,9 @@ class User extends DataObject {
 			$userHomeLibrary = Library::getPatronHomeLibrary($this);
 			if ($userHomeLibrary) {
 				if ($source == 'overdrive') {
-					if (empty($this->getBarcode())){
+					if (empty($this->getBarcode())) {
 						return false;
-					}else if (array_key_exists('OverDrive', $enabledModules)) {
+					} else if (array_key_exists('OverDrive', $enabledModules)) {
 						$overDriveSettings = $userHomeLibrary->getLibraryOverdriveSettings();
 						foreach ($overDriveSettings as $libraryOverDriveSetting) {
 							if ($libraryOverDriveSetting->circulationEnabled) {
@@ -866,7 +866,7 @@ class User extends DataObject {
 	/**
 	 * @return OverDriveSetting[]
 	 */
-	function getAvailableOverDriveSettings(string $readerName) : array {
+	function getAvailableOverDriveSettings(string $readerName): array {
 		$overDriveUsers = $this->getRelatedEcontentUsers('overdrive');
 
 		$relatedLibraries = [];
@@ -923,7 +923,7 @@ class User extends DataObject {
 		$homeLocation = Location::getDefaultLocationForUser();
 		if ($homeLocation != null) {
 			return $homeLocation->getInterlibraryLoanType();
-		}else{
+		} else {
 			return 'none';
 		}
 	}
@@ -1124,7 +1124,7 @@ class User extends DataObject {
 				$this->homeLocationId = 0;
 				global $logger;
 				$logger->log('No Home Location ID was set for newly created user.', Logger::LOG_WARNING);
-			}else{
+			} else {
 				//Get the home library for the user
 				$homeLibrary = $this->getHomeLibrary();
 				if ($homeLibrary !== null) {
@@ -1398,7 +1398,7 @@ class User extends DataObject {
 		if (isset($_POST['pickupLocation']) && !is_array($_POST['pickupLocation']) && preg_match('/^\d{1,3}$/', $_POST['pickupLocation']) == 0) {
 			return [
 				'success' => false,
-				'message' => 'The preferred pickup location had an incorrect format.',
+				'message' => 'The preferred pickup branch had an incorrect format.',
 			];
 		}
 		if (isset($_POST['myLocation1']) && !is_array($_POST['myLocation1']) && preg_match('/^\d{1,3}$/', $_POST['myLocation1']) == 0) {
@@ -1411,6 +1411,12 @@ class User extends DataObject {
 			return [
 				'success' => false,
 				'message' => 'The 2nd location had an incorrect format.',
+			];
+		}
+		if (isset($_POST['pickupSublocation']) && !is_array($_POST['pickupSublocation']) && preg_match('/^\d{1,3}$/', $_POST['pickupSublocation']) == 0) {
+			return [
+				'success' => false,
+				'message' => 'The preferred pickup location had an incorrect format.',
 			];
 		}
 
@@ -1434,7 +1440,7 @@ class User extends DataObject {
 				if ($location->getNumResults() != 1) {
 					return [
 						'success' => false,
-						'message' => 'The pickup location could not be found in the database.',
+						'message' => 'The pickup branch could not be found in the database.',
 					];
 				} else {
 					$this->__set('pickupLocationId', $_POST['pickupLocation']);
@@ -1470,6 +1476,23 @@ class User extends DataObject {
 					];
 				} else {
 					$this->__set('myLocation2Id', $_POST['myLocation2']);
+				}
+			}
+		}
+		if (isset($_POST['pickupSublocation'])) {
+			if ($_POST['pickupSublocation'] == 0) {
+				$this->__set('pickupSublocationId', $_POST['pickupSublocation']);
+			} else {
+				require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+				$sublocation = new Sublocation();
+				$sublocation->get('id', $_POST['pickupSublocation']);
+				if ($sublocation->getNumResults() != 1) {
+					return [
+						'success' => false,
+						'message' => 'The pickup location could not be found in the database.',
+					];
+				} else {
+					$this->__set('pickupSublocationId', $_POST['pickupSublocation']);
 				}
 			}
 		}
@@ -1549,21 +1572,21 @@ class User extends DataObject {
 	 * Returns the home library instance for the patron if known. The home library may be null for users not connected to an ILS.
 	 *
 	 * @param bool $forceReload whether or not a previously loaded home library can be used.
-	 * 		Useful to set in instance when the library is known to be changing.
+	 *        Useful to set in instance when the library is known to be changing.
 	 * @return Library|null
 	 */
-	function getHomeLibrary(bool $forceReload = false) : ?Library {
+	function getHomeLibrary(bool $forceReload = false): ?Library {
 		if ($this->_homeLibrary == null || $forceReload) {
 			$this->_homeLibrary = Library::getPatronHomeLibrary($this);
 		}
 		return $this->_homeLibrary;
 	}
 
-	function getHomeLibrarySystemName() : string {
+	function getHomeLibrarySystemName(): string {
 		$homeLibrary = $this->getHomeLibrary();
 		if ($homeLibrary == null) {
 			return 'No Home Library';
-		}else{
+		} else {
 			return $this->getHomeLibrary()->displayName;
 		}
 	}
@@ -2301,6 +2324,35 @@ class User extends DataObject {
 	}
 
 	/**
+	 * Get a list of sublocations where a user can pick-up from
+	 **
+	 * @return Sublocation[]
+	 */
+	public function getValidSublocations(int $locationId): array {
+		require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+		require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+		$patronType = $this->getPTypeObj();
+		$sublocations = [];
+		$object = new Sublocation();
+		$object->locationId = $locationId;
+		$object->isValidHoldPickupAreaILS = 1;
+		$object->isValidHoldPickupAreaAspen = 1;
+		$object->orderBy('weight');
+		$object->find();
+		while ($object->fetch()) {
+			$sublocationPType = new SublocationPatronType();
+			$sublocationPType->patronTypeId = $patronType->id;
+			$sublocationPType->sublocationId = $object->id;
+			if ($sublocationPType->find(true)) {
+				$sublocations[$object->id] = clone($object);
+			}
+		}
+
+		ksort($sublocations);
+		return $sublocations;
+	}
+
+	/**
 	 * Place Hold
 	 *
 	 * Place a hold for the current user within their ILS
@@ -2313,8 +2365,8 @@ class User extends DataObject {
 	 * message - the message to display
 	 * @access public
 	 */
-	function placeHold($recordId, $pickupBranch, $cancelDate = null) {
-		$result = $this->getCatalogDriver()->placeHold($this, $recordId, $pickupBranch, $cancelDate);
+	function placeHold($recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		$result = $this->getCatalogDriver()->placeHold($this, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
 			'text' => 'You',
@@ -2340,8 +2392,8 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function placeVolumeHold($recordId, $volumeId, $pickupBranch) {
-		$result = $this->getCatalogDriver()->placeVolumeHold($this, $recordId, $volumeId, $pickupBranch);
+	function placeVolumeHold($recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+		$result = $this->getCatalogDriver()->placeVolumeHold($this, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
 			'text' => 'You',
@@ -2409,8 +2461,8 @@ class User extends DataObject {
 	 * If an error occurs, return a AspenError
 	 * @access public
 	 */
-	function placeItemHold($recordId, $itemId, $pickupBranch, $cancelDate = null) {
-		$result = $this->getCatalogDriver()->placeItemHold($this, $recordId, $itemId, $pickupBranch, $cancelDate);
+	function placeItemHold($recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+		$result = $this->getCatalogDriver()->placeItemHold($this, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
 			'text' => 'You',
@@ -2441,7 +2493,7 @@ class User extends DataObject {
 	 * @param int|string $patronId - The ID of the patron to use
 	 * @return User|false
 	 */
-	function getUserReferredTo(int|string $patronId) : User|false {
+	function getUserReferredTo(int|string $patronId): User|false {
 		$patron = false;
 		//Get the correct patron based on the information passed in.
 		if ($patronId == $this->id) {
@@ -2485,8 +2537,8 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function changeHoldPickUpLocation($itemToUpdateId, $newPickupLocation): array {
-		$result = $this->getCatalogDriver()->changeHoldPickupLocation($this, null, $itemToUpdateId, $newPickupLocation);
+	function changeHoldPickUpLocation($itemToUpdateId, $newPickupLocation, $newPickupSublocation): array {
+		$result = $this->getCatalogDriver()->changeHoldPickupLocation($this, null, $itemToUpdateId, $newPickupLocation, $newPickupSublocation);
 		$this->clearCache();
 		return $result;
 	}
@@ -2795,7 +2847,7 @@ class User extends DataObject {
 		return $renewAllResults;
 	}
 
-	public function isReadingHistoryEnabled() : bool {
+	public function isReadingHistoryEnabled(): bool {
 		$catalogDriver = $this->getCatalogDriver();
 		if ($catalogDriver != null) {
 			//Check to see if it's enabled by home library
@@ -2837,7 +2889,7 @@ class User extends DataObject {
 		}
 	}
 
-	public function isCostSavingsEnabled() : bool {
+	public function isCostSavingsEnabled(): bool {
 		//Check to see if it's enabled by home library
 		$homeLibrary = $this->getHomeLibrary();
 		if (!empty($homeLibrary)) {
@@ -2872,8 +2924,16 @@ class User extends DataObject {
 			$payments[] = [
 				'id' => $userPayment->id,
 				'date' => $userPayment->transactionDate,
-				'type' => translate(['text' => ucfirst($userPayment->transactionType), 'isPublicFacing' => true, 'inAttribute' => true]),
-				'completed' => translate(['text' => $completed, 'isPublicFacing' => true, 'inAttribute' => true]),
+				'type' => translate([
+					'text' => ucfirst($userPayment->transactionType),
+					'isPublicFacing' => true,
+					'inAttribute' => true
+				]),
+				'completed' => translate([
+					'text' => $completed,
+					'isPublicFacing' => true,
+					'inAttribute' => true
+				]),
 				'totalPaid' => StringUtils::formatCurrency($userPayment->totalPaid),
 			];
 		}
@@ -2904,7 +2964,7 @@ class User extends DataObject {
 	 *
 	 * @return int|null
 	 */
-	public function getReadingHistoryStartDate() : ?int {
+	public function getReadingHistoryStartDate(): ?int {
 		if ($this->isReadingHistoryEnabled()) {
 			require_once ROOT_DIR . '/sys/ReadingHistoryEntry.php';
 			$readingHistoryEntry = new ReadingHistoryEntry();
@@ -2914,10 +2974,10 @@ class User extends DataObject {
 			$readingHistoryEntry->limit(0, 1);
 			if ($readingHistoryEntry->find(true)) {
 				return $readingHistoryEntry->checkOutDate;
-			}else{
+			} else {
 				return null;
 			}
-		}else{
+		} else {
 			return null;
 		}
 	}
@@ -2970,7 +3030,7 @@ class User extends DataObject {
 	 * Used by Account Profile, to show users any additional Admin roles they may have.
 	 * @return bool
 	 */
-	public function isStaff() : bool {
+	public function isStaff(): bool {
 		if (count($this->getRoles()) > 0) {
 			return true;
 		} else {
@@ -3012,10 +3072,13 @@ class User extends DataObject {
 		return $result;
 	}
 
-	public function updateHomeLibrary($newHomeLocationCode) : array {
+	public function updateHomeLibrary($newHomeLocationCode): array {
 		$catalogDriver = $this->getCatalogDriver();
 		if (empty($catalogDriver)) { // getCatalogDriver() may return null, guard clause required
-			return ['success'=>false,'message'=>'This account is not connected to an ILS, cannot connect to home library.'];
+			return [
+				'success' => false,
+				'message' => 'This account is not connected to an ILS, cannot connect to home library.'
+			];
 		}
 		$result = $catalogDriver->updateHomeLibrary($this, $newHomeLocationCode);
 		$this->clearCache();
@@ -3141,6 +3204,10 @@ class User extends DataObject {
 		$this->__set('pickupLocationId', $pickupLocationId);
 	}
 
+	public function setPickupSublocationId(int $pickupSublocationId) {
+		$this->__set('pickupSublocationId', $pickupSublocationId);
+	}
+
 	public function setRememberHoldPickupLocation(bool $rememberPickupLocation) {
 		$this->__set('rememberHoldPickupLocation', $rememberPickupLocation);
 	}
@@ -3192,7 +3259,7 @@ class User extends DataObject {
 		return $obj->count();
 	}
 
-	function getReadingHistorySizeForYear($year) : int {
+	function getReadingHistorySizeForYear($year): int {
 		if ($this->isReadingHistoryEnabled()) {
 			$catalogDriver = $this->getCatalogDriver();
 			if ($this->trackReadingHistory && $this->initialReadingHistoryLoaded) {
@@ -3201,7 +3268,7 @@ class User extends DataObject {
 				$readingHistoryDB->userId = $this->id;
 				$readingHistoryDB->whereAdd('deleted = 0');
 				$yearStart = strtotime($year . '-01-01');
-				$yearEnd = strtotime(($year+1) . '-01-01');
+				$yearEnd = strtotime(($year + 1) . '-01-01');
 				$readingHistoryDB->whereAdd("checkOutDate >= $yearStart");
 				$readingHistoryDB->whereAdd("checkOutDate < $yearEnd");
 				$readingHistoryDB->groupBy('groupedWorkPermanentId, title, author');
@@ -3211,7 +3278,7 @@ class User extends DataObject {
 		return 0;
 	}
 
-	public function getReadingHistorySummaryForYear($year) : ?ReadingHistorySummary {
+	public function getReadingHistorySummaryForYear($year): ?ReadingHistorySummary {
 		if ($this->isReadingHistoryEnabled()) {
 			$catalogDriver = $this->getCatalogDriver();
 			if ($this->trackReadingHistory && $this->initialReadingHistoryLoaded) {
@@ -3224,7 +3291,7 @@ class User extends DataObject {
 				$readingHistoryDB->userId = $this->id;
 				$readingHistoryDB->whereAdd('deleted = 0');
 				$yearStart = strtotime($year . '-01-01');
-				$yearEnd = strtotime(($year+1) . '-01-01');
+				$yearEnd = strtotime(($year + 1) . '-01-01');
 				$readingHistoryDB->whereAdd("checkOutDate >= $yearStart");
 				$readingHistoryDB->whereAdd("checkOutDate < $yearEnd");
 				$readingHistoryDB->groupBy('groupedWorkPermanentId, title, author');
@@ -3254,7 +3321,7 @@ class User extends DataObject {
 				$readingHistoryDB->userId = $this->id;
 				$readingHistoryDB->whereAdd('deleted = 0');
 				$yearStart = strtotime($year . '-01-01');
-				$yearEnd = strtotime(($year+1) . '-01-01');
+				$yearEnd = strtotime(($year + 1) . '-01-01');
 				$readingHistoryDB->whereAdd("checkOutDate >= $yearStart");
 				$readingHistoryDB->whereAdd("checkOutDate < $yearEnd");
 				$readingHistoryDB->whereAdd("format IS NOT NULL AND format <> ''");
@@ -3367,15 +3434,15 @@ class User extends DataObject {
 
 
 				return $summary;
-			}else{
+			} else {
 				return null;
 			}
-		}else{
+		} else {
 			return null;
 		}
 	}
 
-	function getReadingHistorySize() : int {
+	function getReadingHistorySize(): int {
 		if ($this->_readingHistorySize == null) {
 			if ($this->isReadingHistoryEnabled()) {
 				$catalogDriver = $this->getCatalogDriver();
@@ -3581,7 +3648,7 @@ class User extends DataObject {
 		}
 	}
 
-	function getOverDriveOptions($settingId) : array {
+	function getOverDriveOptions($settingId): array {
 		require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
 		$overDriveDriver = OverDriveDriver::getOverDriveDriver($settingId);
 		return $overDriveDriver->getOptions($this);
@@ -3684,7 +3751,10 @@ class User extends DataObject {
 		if ($this->getHomeLocation() != null) {
 			return $this->getHomeLocation()->displayName;
 		} else {
-			return translate(['text' => 'N/A', 'isPublicFacing' => true]);
+			return translate([
+				'text' => 'N/A',
+				'isPublicFacing' => true
+			]);
 		}
 	}
 
@@ -3726,6 +3796,34 @@ class User extends DataObject {
 			}
 		} else {
 			$pickupBranch = $this->getHomeLocation()->code;
+		}
+
+		return $pickupBranch;
+	}
+
+	function getPickupSublocationCode() {
+		$pickupBranch = null;
+		if ($this->pickupSublocationId > 0) {
+			$pickupBranch = $this->pickupSublocationId;
+			$sublocationLookup = new Sublocation();
+			$sublocationLookup->locationId = $pickupBranch;
+			if ($sublocationLookup->find(true)) {
+				$pickupBranch = $sublocationLookup->ilsId;
+			}
+		}
+
+		return $pickupBranch;
+	}
+
+	function getPickupSublocationName() {
+		$pickupBranch = null;
+		if ($this->pickupSublocationId > 0) {
+			$pickupBranch = $this->pickupSublocationId;
+			$sublocationLookup = new Sublocation();
+			$sublocationLookup->locationId = $pickupBranch;
+			if ($sublocationLookup->find(true)) {
+				$pickupBranch = $sublocationLookup->name;
+			}
 		}
 
 		return $pickupBranch;
@@ -4107,7 +4205,10 @@ class User extends DataObject {
 		$sections['ecommerce']->addAction(new AdminAction('Donations Settings', 'Define Settings for Donations.', '/Admin/DonationsSettings'), 'Administer Donations');
 
 		$sections['email'] = new AdminSection('Email');
-		$sections['email']->addAction(new AdminAction('Email Templates', 'Templates for various emails sent from Aspen Discovery.', '/Admin/EmailTemplates'), ['Administer All Email Templates', 'Administer Library Email Templates']);
+		$sections['email']->addAction(new AdminAction('Email Templates', 'Templates for various emails sent from Aspen Discovery.', '/Admin/EmailTemplates'), [
+			'Administer All Email Templates',
+			'Administer Library Email Templates'
+		]);
 		$sections['email']->addAction(new AdminAction('Amazon SES Settings', 'Settings to allow Aspen Discovery to send emails via Amazon SES.', '/Admin/AmazonSesSettings'), 'Administer Amazon SES');
 		$sections['email']->addAction(new AdminAction('Send Grid Settings', 'Settings to allow Aspen Discovery to send emails via SendGrid.', '/Admin/SendGridSettings'), 'Administer SendGrid');
 		$sections['email']->addAction(new AdminAction('SMTP Settings', 'Settings to allow Aspen Discovery to send emails via an SMTP server.', '/Admin/SMTPSettings'), 'Administer SMTP');
@@ -4736,7 +4837,7 @@ class User extends DataObject {
 		}
 	}
 
-	public function placeHoldForRequest(MaterialsRequest $materialsRequest) : array {
+	public function placeHoldForRequest(MaterialsRequest $materialsRequest): array {
 		$selectedRequestCandidate = $materialsRequest->getSelectedHoldCandidate();
 		$source = $selectedRequestCandidate->source;
 		if ($source == 'ils' || $source == null) {
@@ -4750,7 +4851,7 @@ class User extends DataObject {
 			if ($location->find(true)) {
 				$pickupBranch = $location->code;
 				$locationValid = $this->validatePickupBranch($pickupBranch);
-			}else{
+			} else {
 				$locationValid = false;
 			}
 
@@ -4842,7 +4943,7 @@ class User extends DataObject {
 	 * @param Checkout[] $checkouts
 	 * @return float
 	 */
-	public function calculateCostSavingsForCurrentCheckouts(array $checkouts) : float {
+	public function calculateCostSavingsForCurrentCheckouts(array $checkouts): float {
 		$costSavings = 0;
 		foreach ($checkouts as $checkout) {
 			$costSavings += $checkout->getReplacementCost();
@@ -4852,7 +4953,7 @@ class User extends DataObject {
 		return $costSavings;
 	}
 
-	public function getCurrentCostSavingsMessage(bool $wrapWithAlert) : string {
+	public function getCurrentCostSavingsMessage(bool $wrapWithAlert): string {
 		//Make sure to get checkouts for the user since this triggers the calculation
 		$checkouts = $this->getCheckouts();
 
@@ -4860,38 +4961,46 @@ class User extends DataObject {
 		$linkedUsers = $this->getLinkedUsers();
 		if (count($linkedUsers)) {
 			$costSavingsMessage = "You are saving %1% with what is currently checked out from the library to you and your linked accounts. Learn more in <a href='/MyAccount/LibrarySavings'>Library Savings</a>.";
-		}else{
+		} else {
 			$costSavingsMessage = "You are saving %1% with what is currently checked out from the library. Learn more in <a href='/MyAccount/LibrarySavings'>Library Savings</a>.";
 		}
 		$costSavings = $this->currentCostSavings;
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 		$formattedCostSavings = StringUtils::formatCurrency($costSavings);
 
-		$translatedMessage = translate(['text' => $costSavingsMessage, '1'=>$formattedCostSavings, 'isPublicFacing'=>true]);
+		$translatedMessage = translate([
+			'text' => $costSavingsMessage,
+			'1' => $formattedCostSavings,
+			'isPublicFacing' => true
+		]);
 		if ($wrapWithAlert) {
 			$translatedMessage = '<div class="alert alert-info">' . $translatedMessage . '</div>';
 		}
 		return $translatedMessage;
 	}
 
-	public function getTotalCostSavingsMessage(bool $wrapWithAlert) : string {
+	public function getTotalCostSavingsMessage(bool $wrapWithAlert): string {
 		$totalSavings = 0;
 		$costSavingsMessage = "You have saved %1% by checking out the materials in your reading history from the library. Learn more in <a href='/MyAccount/LibrarySavings'>Library Savings</a>.";
 		$costSavings = $this->totalCostSavings;
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 		$formattedCostSavings = StringUtils::formatCurrency($costSavings);
-		$translatedMessage = translate(['text' => $costSavingsMessage, '1'=>$formattedCostSavings, 'isPublicFacing'=>true]);
+		$translatedMessage = translate([
+			'text' => $costSavingsMessage,
+			'1' => $formattedCostSavings,
+			'isPublicFacing' => true
+		]);
 		if ($wrapWithAlert) {
 			$translatedMessage = '<div class="alert alert-info">' . $translatedMessage . '</div>';
 		}
 		return $translatedMessage;
 	}
 
-	public function getCostSavingsByMonth($month, $year) : float{
+	public function getCostSavingsByMonth($month, $year): float {
 		$startTimeStamp = strtotime($year . '-' . $month);
 		if ($month < 12) {
 			$endTimeStamp = strtotime($year . '-' . ($month + 1));
-		}else{
+		} else {
 			$endTimeStamp = strtotime(($year + 1) . '-01');
 		}
 
@@ -4902,12 +5011,12 @@ class User extends DataObject {
 		$readingHistoryEntry->selectAdd('SUM(costSavings) as costSavings');
 		if ($readingHistoryEntry->find(true)) {
 			return (float)$readingHistoryEntry->costSavings;
-		}else{
+		} else {
 			return 0;
 		}
 	}
 
-	public function getCostSavingsByYear($year) : float{
+	public function getCostSavingsByYear($year): float {
 		if ($this->enableCostSavings) {
 			$startTimeStamp = strtotime($year . '-01-01');
 			$endTimeStamp = strtotime(($year + 1) . '-01-01');
@@ -4922,12 +5031,12 @@ class User extends DataObject {
 			} else {
 				return 0;
 			}
-		}else{
+		} else {
 			return 0;
 		}
 	}
 
-	public function hasRemainingLocalIllRequests() : bool {
+	public function hasRemainingLocalIllRequests(): bool {
 		$homeLibrary = $this->getHomeLibrary();
 		if ($homeLibrary != null) {
 			if ($homeLibrary->maximumLocalIllRequests > 0) {
@@ -4944,7 +5053,7 @@ class User extends DataObject {
 				}
 				$checkouts = $this->getCatalogDriver()->getCheckouts($this);
 				foreach ($checkouts as $checkout) {
-					if (!empty($checkout->outOfHoldGroupMessage)){
+					if (!empty($checkout->outOfHoldGroupMessage)) {
 						$numLocalIllRequests++;
 					}
 				}
@@ -5000,19 +5109,19 @@ class User extends DataObject {
 				} elseif ($homeLibrary->patronNameDisplayStyle == 'firstinitial_middleinitial_lastname') {
 					$firstNames = explode(' ', $this->firstname);
 					$displayName = '';
-					for ($i = 0; $i < count($firstNames); $i++){
-						$displayName .= ' '  . substr($firstNames[$i], 0, 1) . '.';
+					for ($i = 0; $i < count($firstNames); $i++) {
+						$displayName .= ' ' . substr($firstNames[$i], 0, 1) . '.';
 					}
-					$displayName .= ' '  . $this->lastname;
+					$displayName .= ' ' . $this->lastname;
 
 					$this->__set('displayName', trim($displayName));
 				} elseif ($homeLibrary->patronNameDisplayStyle == 'firstname_middleinitial_lastinitial') {
 					$firstNames = explode(' ', $this->firstname);
 					$displayName = $firstNames[0];
-					for ($i = 1; $i < count($firstNames); $i++){
-						$displayName .= ' '  . substr($firstNames[$i], 0, 1) . '.';
+					for ($i = 1; $i < count($firstNames); $i++) {
+						$displayName .= ' ' . substr($firstNames[$i], 0, 1) . '.';
 					}
-					$displayName .= ' '  . substr($this->lastname, 0, 1) . '.';
+					$displayName .= ' ' . substr($this->lastname, 0, 1) . '.';
 					$this->__set('displayName', trim($displayName));
 				}
 			}
@@ -5493,7 +5602,7 @@ class User extends DataObject {
 
 	public function getNumMaterialsRequestsMaxActive() {
 		$homeLibrary = $this->getHomeLibrary();
-		if(is_null($homeLibrary)) {
+		if (is_null($homeLibrary)) {
 			global $library;
 			$homeLibrary = $library;
 		}
@@ -5503,7 +5612,7 @@ class User extends DataObject {
 
 	public function getNumMaterialsRequestsMaxPerYear() {
 		$homeLibrary = $this->getHomeLibrary();
-		if(is_null($homeLibrary)) {
+		if (is_null($homeLibrary)) {
 			global $library;
 			$homeLibrary = $library;
 		}
@@ -5513,7 +5622,7 @@ class User extends DataObject {
 
 	public function getNumMaterialsRequestsRequestsForYear() {
 		$homeLibrary = $this->getHomeLibrary();
-		if(is_null($homeLibrary)) {
+		if (is_null($homeLibrary)) {
 			global $library;
 			$homeLibrary = $library;
 		}
@@ -5523,7 +5632,7 @@ class User extends DataObject {
 		$materialsRequests->createdBy = $this->id;
 		if ($homeLibrary->yearlyRequestLimitType == 0) {
 			$materialsRequests->whereAdd('dateCreated >= unix_timestamp(now() - interval 1 year)');
-		}else{
+		} else {
 			$currentYear = date('Y');
 			$januaryOne = strtotime("01-01-$currentYear");
 			$materialsRequests->whereAdd("dateCreated >= $januaryOne");
@@ -5538,11 +5647,11 @@ class User extends DataObject {
 		return $materialsRequests->count();
 	}
 
-	public function getNumActiveMaterialsRequests() : int {
+	public function getNumActiveMaterialsRequests(): int {
 		require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequest.php';
 		require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestStatus.php';
 		$homeLibrary = $this->getHomeLibrary();
-		if(is_null($homeLibrary)) {
+		if (is_null($homeLibrary)) {
 			global $library;
 			$homeLibrary = $library;
 		}
@@ -5559,7 +5668,7 @@ class User extends DataObject {
 
 	public function getMaterialsRequests() {
 		$homeLibrary = $this->getHomeLibrary();
-		if(is_null($homeLibrary)) {
+		if (is_null($homeLibrary)) {
 			global $library;
 			$homeLibrary = $library;
 		}
@@ -5597,7 +5706,7 @@ class User extends DataObject {
 		return $allRequests;
 	}
 
-	public function submitLocalIllRequest() : array {
+	public function submitLocalIllRequest(): array {
 		if ($this->hasIlsConnection()) {
 			$homeLocation = Location::getDefaultLocationForUser();
 			if ($homeLocation != null) {
@@ -5641,7 +5750,7 @@ class User extends DataObject {
 						'success' => false,
 					];
 				}
-			}else{
+			} else {
 				$results = [
 					'title' => translate([
 						'text' => 'Invalid Configuration',
@@ -5655,7 +5764,7 @@ class User extends DataObject {
 				];
 			}
 			return $results;
-		}else{
+		} else {
 			return [
 				'title' => translate([
 					'text' => 'Error',
@@ -5670,7 +5779,7 @@ class User extends DataObject {
 		}
 	}
 
-	private function loadYearInReviewInfo() : void {
+	private function loadYearInReviewInfo(): void {
 		if ($this->_hasYearInReview == null) {
 			$this->_hasYearInReview = false;
 			$this->_yearInReviewResults = false;
@@ -5681,7 +5790,7 @@ class User extends DataObject {
 				$userYearInReview = new UserYearInReview();
 				$userYearInReview->userId = $this->id;
 				$userYearInReview->wrappedActive = true;
-				if ($userYearInReview->find(true)){
+				if ($userYearInReview->find(true)) {
 					$this->_yearInReviewResults = $userYearInReview;
 					$yearInReviewSetting = new YearInReviewSetting();
 					$yearInReviewSetting->id = $userYearInReview->settingId;
@@ -5692,7 +5801,7 @@ class User extends DataObject {
 						$this->_hasYearInReview = true;
 					}
 				}
-			}catch (Exception $e) {
+			} catch (Exception $e) {
 				//We get an exception if the tables are not setup, ignore
 			}
 		}
@@ -5702,46 +5811,47 @@ class User extends DataObject {
 	private $_yearInReviewSetting;
 	/** @var UserYearInReview */
 	private $_yearInReviewResults;
-	public function hasYearInReview() : bool {
+
+	public function hasYearInReview(): bool {
 		$this->loadYearInReviewInfo();
 		return $this->_hasYearInReview;
 	}
 
-	public function yearInReviewViewed() : bool {
+	public function yearInReviewViewed(): bool {
 		$yearInReviewResults = $this->getYearInReviewResult();
 		if (!is_null($yearInReviewResults)) {
 			return $yearInReviewResults->wrappedViewed;
-		}else{
+		} else {
 			return false;
 		}
 	}
 
-	public function getYearInReviewSetting() : YearInReviewSetting|false {
+	public function getYearInReviewSetting(): YearInReviewSetting|false {
 		//Use the side effect of has Year
 		$this->loadYearInReviewInfo();
 		return $this->_yearInReviewSetting;
 	}
 
-	public function getYearInReviewResult() : ?UserYearInReview {
+	public function getYearInReviewResult(): ?UserYearInReview {
 		$this->loadYearInReviewInfo();
-		if (empty($this->_yearInReviewResults)){
+		if (empty($this->_yearInReviewResults)) {
 			return null;
-		}else{
+		} else {
 			return $this->_yearInReviewResults;
 		}
 	}
 
-	public function getYearInReviewResultData() : ?stdClass {
+	public function getYearInReviewResultData(): ?stdClass {
 		$this->loadYearInReviewInfo();
-		if (empty($this->_yearInReviewResults->wrappedResults)){
+		if (empty($this->_yearInReviewResults->wrappedResults)) {
 			return null;
-		}else{
+		} else {
 			return json_decode($this->_yearInReviewResults->wrappedResults);
 		}
 	}
 }
 
-function modifiedEmpty($var) : bool {
+function modifiedEmpty($var): bool {
 	// specified values of zero will not be considered empty
 	return empty($var) && $var !== 0 && $var !== '0';
 }

@@ -991,7 +991,7 @@ AspenDiscovery.Admin = (function () {
 			var useLibraryThemes = $("#useLibraryThemes").prop("checked");
 			if (useLibraryThemes) {
 				$("#propertyRowthemes").hide();
-			}else{
+			} else {
 				$("#propertyRowthemes").show();
 			}
 		},
@@ -1395,40 +1395,40 @@ AspenDiscovery.Admin = (function () {
 			this.updateGroupedWorkSortFields('music');
 			this.updateGroupedWorkSortFields('other');
 		},
-		updateGroupedWorkSortFields: function(groupingCategory) {
+		updateGroupedWorkSortFields: function (groupingCategory) {
 			if (groupingCategory == 'book') {
 				var selectedOption = $("#bookSortMethodSelect").find(":selected").val();
 				if (selectedOption == 1) {
 					$("#propertyRowsortedBookFormats").hide();
-				}else{
+				} else {
 					$("#propertyRowsortedBookFormats").show();
 				}
-			}else if (groupingCategory == 'comic') {
+			} else if (groupingCategory == 'comic') {
 				var selectedOption = $("#comicSortMethodSelect").find(":selected").val();
 				if (selectedOption == 1) {
 					$("#propertyRowsortedComicFormats").hide();
-				}else{
+				} else {
 					$("#propertyRowsortedComicFormats").show();
 				}
-			}else if (groupingCategory == 'movie') {
+			} else if (groupingCategory == 'movie') {
 				var selectedOption = $("#movieSortMethodSelect").find(":selected").val();
 				if (selectedOption == 1) {
 					$("#propertyRowsortedMovieFormats").hide();
-				}else{
+				} else {
 					$("#propertyRowsortedMovieFormats").show();
 				}
-			}else if (groupingCategory == 'music') {
+			} else if (groupingCategory == 'music') {
 				var selectedOption = $("#musicSortMethodSelect").find(":selected").val();
 				if (selectedOption == 1) {
 					$("#propertyRowsortedMusicFormats").hide();
-				}else{
+				} else {
 					$("#propertyRowsortedMusicFormats").show();
 				}
-			}else if (groupingCategory == 'other') {
+			} else if (groupingCategory == 'other') {
 				var selectedOption = $("#otherSortMethodSelect").find(":selected").val();
 				if (selectedOption == 1) {
 					$("#propertyRowsortedOtherFormats").hide();
-				}else{
+				} else {
 					$("#propertyRowsortedOtherFormats").show();
 				}
 			}
@@ -1921,8 +1921,8 @@ AspenDiscovery.Admin = (function () {
 				$(".propertySectionHeading").show();
 				$(".propertySection").show();
 				//Collapse all panels
-				$(".editor .panel-title a").removeClass('expanded').addClass('collapsed').attr("aria-expanded","false");
-				$(".editor .panel").removeClass('active').attr("aria-expanded","false");
+				$(".editor .panel-title a").removeClass('expanded').addClass('collapsed').attr("aria-expanded", "false");
+				$(".editor .panel").removeClass('active').attr("aria-expanded", "false");
 				$(".editor .accordion_body").removeClass('in').hide();
 			} else {
 				var allAPropertyRows = $(".propertyRow");
@@ -1936,8 +1936,8 @@ AspenDiscovery.Admin = (function () {
 					}
 				});
 				//Expand all panels
-				$(".editor .panel-title a").removeClass('collapsed').addClass('expanded').attr("aria-expanded","true");
-				$(".editor .panel").addClass('active').attr("aria-expanded","true");
+				$(".editor .panel-title a").removeClass('collapsed').addClass('expanded').attr("aria-expanded", "true");
+				$(".editor .panel").addClass('active').attr("aria-expanded", "true");
 				$(".editor .accordion_body").addClass('in').show();
 			}
 		},
@@ -2009,7 +2009,7 @@ AspenDiscovery.Admin = (function () {
 		searchCommunityContentKeyDown: function (e, toolModule, toolName) {
 			if (e.keyCode === 9) {
 				AspenDiscovery.Admin.searchCommunityContent(toolModule, toolName);
-			}else if (e.keyCode === 10 || e.keyCode === 13) {
+			} else if (e.keyCode === 10 || e.keyCode === 13) {
 				e.preventDefault();
 				AspenDiscovery.Admin.searchCommunityContent(toolModule, toolName);
 			}
@@ -2052,7 +2052,7 @@ AspenDiscovery.Admin = (function () {
 			}
 			AspenDiscovery.loadingMessage();
 			$.getJSON(url, params,
-				function(data){
+				function (data) {
 					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				}
 			);
@@ -2061,7 +2061,7 @@ AspenDiscovery.Admin = (function () {
 
 		showSelectedScheduleUpdateForm: function () {
 			var selectedSites = AspenDiscovery.getSelectedAspenSites();
-			if(selectedSites) {
+			if (selectedSites) {
 				var url = Globals.path + '/Greenhouse/AJAX';
 				var params = {
 					'method': 'getSelectedScheduleUpdateForm',
@@ -2069,7 +2069,7 @@ AspenDiscovery.Admin = (function () {
 				}
 				AspenDiscovery.loadingMessage();
 				$.getJSON(url, params,
-					function(data){
+					function (data) {
 						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 					}
 				);
@@ -2085,7 +2085,7 @@ AspenDiscovery.Admin = (function () {
 			}
 			AspenDiscovery.loadingMessage();
 			$.getJSON(url, params,
-				function(data){
+				function (data) {
 					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				}
 			);
@@ -2110,11 +2110,11 @@ AspenDiscovery.Admin = (function () {
 			return false;
 		},
 
-		showScheduledUpdateDetails: function(id){
-			return AspenDiscovery.Account.ajaxLightbox(Globals.path + "/Greenhouse/AJAX?method=showScheduledUpdateDetails&id=" +id, true);
+		showScheduledUpdateDetails: function (id) {
+			return AspenDiscovery.Account.ajaxLightbox(Globals.path + "/Greenhouse/AJAX?method=showScheduledUpdateDetails&id=" + id, true);
 		},
 
-		toggleFieldLock: function(module, tool, field) {
+		toggleFieldLock: function (module, tool, field) {
 			var url = Globals.path + '/Admin/AJAX';
 			var params = {
 				method: 'toggleFieldLock',
@@ -2124,7 +2124,7 @@ AspenDiscovery.Admin = (function () {
 			};
 
 			$.getJSON(url, params, function (data) {
-				if (data.success){
+				if (data.success) {
 					$('#fieldLock' + field).replaceWith(data.lockToggle);
 				} else {
 					AspenDiscovery.showMessage('An error occurred', data.message);
@@ -2133,7 +2133,7 @@ AspenDiscovery.Admin = (function () {
 			return false;
 		},
 
-		showCopyOptions: function(module, toolname, id) {
+		showCopyOptions: function (module, toolname, id) {
 			var url = Globals.path + '/' + module + '/' + toolname;
 			var params = {
 				id: id,
@@ -2141,7 +2141,7 @@ AspenDiscovery.Admin = (function () {
 			};
 
 			$.getJSON(url, params, function (data) {
-				if (data.success){
+				if (data.success) {
 					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				} else {
 					AspenDiscovery.showMessage('An error occurred', data.message);
@@ -2150,7 +2150,7 @@ AspenDiscovery.Admin = (function () {
 			return false;
 		},
 
-		showCopyMenuLinksForm: function(libraryId) {
+		showCopyMenuLinksForm: function (libraryId) {
 			var url = Globals.path + '/Admin/AJAX';
 			var params = {
 				method: 'getCopyMenuLinksForm',
@@ -2158,7 +2158,7 @@ AspenDiscovery.Admin = (function () {
 			};
 
 			$.getJSON(url, params, function (data) {
-				if (data.success){
+				if (data.success) {
 					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				} else {
 					AspenDiscovery.showMessage('An error occurred', data.message);
@@ -2211,7 +2211,7 @@ AspenDiscovery.Admin = (function () {
 				var groupingCategory = 'book';
 				if (format.match(/graphicnovel|graphic novel|comic|ecomic|manga/gi)) {
 					groupingCategory = 'comic';
-				}else{
+				} else {
 					if (formatCategory === "Movies") {
 						groupingCategory = 'movie';
 					} else if (formatCategory === "Music") {
@@ -2224,7 +2224,6 @@ AspenDiscovery.Admin = (function () {
 			}
 			return true;
 		},
-
 		updateSyndeticsFields: function () {
 			var isUnbound = $("#syndeticsUnbound").prop("checked");
 			if (isUnbound) {
@@ -2239,7 +2238,7 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowhasFictionProfile").hide();
 				$("#propertyRowhasAuthorNotes").hide();
 				$("#propertyRowhasVideoClip").hide();
-			}else{
+			} else {
 				$("#propertyRowunboundAccountNumber").hide();
 				$("#propertyRowunboundInstanceNumber").hide();
 				$("#propertyRowsyndeticsKey").show();
@@ -2252,6 +2251,22 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowhasAuthorNotes").show();
 				$("#propertyRowhasVideoClip").show();
 			}
+		},
+		validateSublocationHoldPickupAreaAspen: function (sourceControl) {
+			var sourceControlObj = $(sourceControl);
+			var index = sourceControlObj.data("id");
+			if (index !== undefined) {
+				var ilsId = $('input[name="sublocations_ilsId[' + index + ']"]').val();
+				var isValidHoldPickupAreaILSValue = $('input[name="sublocations_isValidHoldPickupAreaILS[' + index + ']"]').is(":checked");
+				var isValidHoldPickupAreaAspen = $('input[name="sublocations_isValidHoldPickupAreaAspen[' + index + ']"]');
+				if (ilsId === '' || !isValidHoldPickupAreaILSValue) {
+					isValidHoldPickupAreaAspen.removeAttr('checked');
+					$(isValidHoldPickupAreaAspen).attr('disabled', true);
+				} else {
+					$(isValidHoldPickupAreaAspen).attr('disabled', false);
+				}
+			}
+			return true;
 		}
 
 	};

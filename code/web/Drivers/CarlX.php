@@ -587,7 +587,7 @@ class CarlX extends AbstractIlsDriver {
 	 *                                title - the title of the record the user is placing a hold on
 	 * @access  public
 	 */
-	public function placeHold(User $patron, $recordId, $pickupBranch = null, $cancelDate = null) {
+	public function placeHold(User $patron, $recordId, $pickupBranch = null, $cancelDate = null, $pickupSublocation = null) {
 		return $this->placeHoldViaSIP($patron, $recordId, $pickupBranch, $cancelDate);
 	}
 
@@ -604,7 +604,7 @@ class CarlX extends AbstractIlsDriver {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		return $this->placeHoldViaSIP($patron, $recordId, $pickupBranch, $cancelDate, 'item', null, null, null, $itemId);
 	}
 
@@ -642,7 +642,7 @@ class CarlX extends AbstractIlsDriver {
 		return $result;
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $holdId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $holdId, $newPickupLocation, $newPickupSublocation = null): array {
 		$unavailableHoldViaSIP = $this->getUnavailableHoldViaSIP($patron, $holdId);
 		$queuePosition = $unavailableHoldViaSIP['queuePosition'];
 		$freeze = null;

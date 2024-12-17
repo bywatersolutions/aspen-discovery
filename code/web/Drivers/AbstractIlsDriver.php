@@ -43,13 +43,13 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	abstract function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null);
+	abstract function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null);
 
 	abstract function freezeHold(User $patron, $recordId, $itemToFreezeId, $dateToReactivate): array;
 
 	abstract function thawHold(User $patron, $recordId, $itemToThawId): array;
 
-	abstract function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array;
+	abstract function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array;
 
 	abstract function updatePatronInfo(User $patron, $canUpdateContactInfo, $fromMasquerade);
 
@@ -244,7 +244,7 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 		];
 	}
 
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		return [
 			'success' => false,
 			'message' => 'Volume level holds have not been implemented for this ILS.',

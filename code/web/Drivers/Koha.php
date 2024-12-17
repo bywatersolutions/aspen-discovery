@@ -1906,7 +1906,7 @@ class Koha extends AbstractIlsDriver {
 	 * @param string $pickupBranch
 	 * @return array
 	 */
-	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch) {
+	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
 		// Store result for API or app use
 		$result['api'] = [];
 
@@ -2038,7 +2038,7 @@ class Koha extends AbstractIlsDriver {
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		// Store result for API or app use
 		$hold_result['api'] = [];
 
@@ -3192,7 +3192,7 @@ class Koha extends AbstractIlsDriver {
 		return $result;
 	}
 
-	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation): array {
+	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
 		// Store result for API or app use
 		$result['api'] = [];
 

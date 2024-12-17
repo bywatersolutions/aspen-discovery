@@ -3304,7 +3304,7 @@ class Library extends DataObject {
 						'description' => 'Determine which material formats are available to patrons for request',
 						'keyThis' => 'libraryId',
 						'keyOther' => 'libraryId',
-						'subObjectType' => 'MaterialsRequestFormat/s',
+						'subObjectType' => 'MaterialsRequestFormat',
 						'structure' => $materialsRequestFormatsStructure,
 						'sortable' => true,
 						'storeDb' => true,

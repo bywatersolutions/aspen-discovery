@@ -116,10 +116,13 @@ echo "127.0.0.1    $SITE_NAME" >> /etc/hosts
 echo "%   * Triggering pending database updates"
 curl -k http://"$SITE_NAME"/API/SystemAPI?method=runPendingDatabaseUpdates
 
+sudo -u www-data	php /usr/local/aspen-discovery/docker/files/cron/checkBackgroundProcessesDocker.php $SITE_NAME >/proc/1/fd/1 2>/proc/1/fd/2
+
 echo "%"
 echo "%   Aspen Discovery ready to use!"
 echo "%"
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+
 
 # FIXME: We should probably run Apache in foreground instead. We need to
 #        figure an approach to the curl above in order to do it

@@ -1,6 +1,7 @@
-import {Button} from 'native-base';
+import {Button, ButtonText} from '@gluestack-ui/themed';
 import React from 'react';
 import {navigate} from '../../../helpers/RootNavigator';
+import { ThemeContext } from '../../../context/initialContext';
 
 export const StartLocalIllRequest = (props) => {
 	const openLocalIllRequest = () => {
@@ -9,22 +10,19 @@ export const StartLocalIllRequest = (props) => {
 			workTitle: props.workTitle
 		});
 	};
+	const { theme } = React.useContext(ThemeContext);
 
 	return (
 		<Button
 			size="md"
-			colorScheme="primary"
+			bgColor={theme['colors']['primary']['500']}
 			variant="solid"
-			_text={{
-				padding: 0,
-				textAlign: 'center',
-			}}
-			style={{
-				flex: 1,
-				flexWrap: 'wrap',
-			}}
+			minWidth="100%"
+			maxWidth="100%"
 			onPress={openLocalIllRequest}>
-			Request
+			<ButtonText color={theme['colors']['primary']['500-text']} textAlign="center">
+				Request
+			</ButtonText>
 		</Button>
 	);
 };

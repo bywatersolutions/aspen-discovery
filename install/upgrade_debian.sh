@@ -22,6 +22,7 @@ git pull origin $2
 
 cd /usr/local/aspen-discovery/install
 if [ -f "/usr/local/aspen-discovery/install/upgrade_debian_$2.sh" ]; then
+  echo "Running version updates"
   /usr/local/aspen-discovery/install/upgrade_debian_$2.sh
 fi
 

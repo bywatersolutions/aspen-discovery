@@ -153,10 +153,10 @@
       "overlay_text" : [
         {
           "text": "{topSeries}",
-          "left": "50px",
+          "left": "100px",
           "top": "300px",
-          "width": "45%",
-          "height": "30%",
+          "width": "40%",
+          "height": "35%",
           "color" : "black",
           "font_size": "2.25em",
           "align": "center"

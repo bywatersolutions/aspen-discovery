@@ -1017,6 +1017,7 @@ class IndexingProfile extends DataObject {
 						'label' => 'Check Record for Large Print',
 						'default' => true,
 						'description' => 'Check metadata within the record to see if a book is large print',
+						'note'        => 'Only applies when all items have formats of either Book or Large Print',
 						'forcesReindex' => true,
 					],
 					'formatMap' => [

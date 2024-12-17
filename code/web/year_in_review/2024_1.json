@@ -162,12 +162,12 @@
         {
           "text": "{topSeries}",
           "left": "700px",
-          "top": "475px",
-          "width": "45%",
+          "top": "450px",
+          "width": "35%",
           "height": "30%",
           "color" : "white",
           "font" : "GothicA1-Regular",
-          "font_size": "5em",
+          "font_size": "4.2em",
           "allCaps": true,
           "align": "left"
         }

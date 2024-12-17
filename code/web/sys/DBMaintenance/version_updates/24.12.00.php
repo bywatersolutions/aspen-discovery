@@ -27,6 +27,7 @@ function getUpdates24_12_00(): array {
 			'continueOnError' => true,
 			'sql' => [
 				"UPDATE permissions SET name = 'Administer Hold Groups' where name = 'Administer VDX Hold Groups'",
+				"UPDATE permissions SET description = 'Allows the user to define Hold Groups for Interlibrary Loans.' where description = 'Allows the user to define Hold Groups for Interlibrary Loans with VDX.'",
 				"RENAME TABLE vdx_hold_groups TO hold_groups",
 				"RENAME TABLE vdx_hold_group_location TO hold_group_location",
 				"ALTER TABLE hold_group_location CHANGE COLUMN vdxHoldGroupId holdGroupId INT"

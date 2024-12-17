@@ -1,4 +1,4 @@
-<code_scheme name="Default" version="173">
+<code_scheme name="Aspen" version="173">
   <option name="OTHER_INDENT_OPTIONS">
     <value>
       <option name="USE_TAB_CHARACTER" value="true" />
@@ -9,6 +9,9 @@
     <option name="KEEP_RPAREN_AND_LBRACE_ON_ONE_LINE" value="true" />
     <option name="FORCE_EMPTY_METHODS_IN_ONE_LINE" value="true" />
   </PHPCodeStyleSettings>
+  <editorconfig>
+    <option name="ENABLED" value="false" />
+  </editorconfig>
   <codeStyleSettings language="HTML">
     <indentOptions>
       <option name="USE_TAB_CHARACTER" value="true" />
@@ -17,7 +20,7 @@
   </codeStyleSettings>
   <codeStyleSettings language="JSON">
     <indentOptions>
-      <option name="USE_TAB_CHARACTER" value="true" />
+      <option name="TAB_SIZE" value="2" />
     </indentOptions>
   </codeStyleSettings>
   <codeStyleSettings language="JavaScript">

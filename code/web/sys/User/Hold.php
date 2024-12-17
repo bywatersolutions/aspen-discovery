@@ -14,8 +14,8 @@ class Hold extends CircEntry {
 	public $locationUpdateable;
 	public $pickupLocationId;
 	public $pickupLocationName;
-    public $pickupSublocationId;
-    public $pickupSublocationName;
+	public $pickupSublocationId;
+	public $pickupSublocationName;
 	public $status;
 	public $position;
 	public $holdQueueLength;
@@ -125,7 +125,10 @@ class Hold extends CircEntry {
 				$hold['location'] = $location->code;
 			}
 		}
-		$hold['status'] = translate(['text' => $hold['status'], 'isPublicFacing' => true]);
+		$hold['status'] = translate([
+			'text' => $hold['status'],
+			'isPublicFacing' => true
+		]);
 		$recordDriver = $this->getRecordDriver();
 		if ($recordDriver && $recordDriver->isValid()) {
 			$hold['isbn'] = $recordDriver->getCleanISBN();

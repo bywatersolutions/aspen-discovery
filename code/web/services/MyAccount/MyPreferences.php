@@ -56,14 +56,14 @@ class MyAccount_MyPreferences extends MyAccount {
 			$pickupLocations = $patron->getValidPickupBranches($patron->getAccountProfile()->recordSource);
 			$interface->assign('pickupLocations', $pickupLocations);
 
-            $pickupSublocations = [];
-            foreach ($pickupLocations as $locationKey => $location) {
-                if(is_object($location)){
-                    $pickupSublocations[$location->locationId] = $patron->getValidSublocations($location->locationId);
-                }
-            }
+			$pickupSublocations = [];
+			foreach ($pickupLocations as $locationKey => $location) {
+				if (is_object($location)) {
+					$pickupSublocations[$location->locationId] = $patron->getValidSublocations($location->locationId);
+				}
+			}
 
-            $interface->assign('pickupSublocations', $pickupSublocations);
+			$interface->assign('pickupSublocations', $pickupSublocations);
 
 			if ($patron->hasEditableUsername()) {
 				$interface->assign('showUsernameField', true);
@@ -82,10 +82,10 @@ class MyAccount_MyPreferences extends MyAccount {
 			global $offlineMode;
 			if (isset($_POST['updateScope']) && !$offlineMode) {
 				$samePatron = true;
-				if ($_REQUEST['patronId'] != $user->id){
+				if ($_REQUEST['patronId'] != $user->id) {
 					$samePatron = false;
 				}
-				if ($samePatron){
+				if ($samePatron) {
 					$result = $patron->updateUserPreferences();
 					if (isset($result['message'])) {
 						$user->updateMessage = $result['message'];
@@ -97,12 +97,12 @@ class MyAccount_MyPreferences extends MyAccount {
 						if (!empty($user->updateMessage)) {
 							$user->updateMessage .= '<br/>';
 						}
-						if(!empty($result2)){ // $result2 may be null, guard clause required
+						if (!empty($result2)) { // $result2 may be null, guard clause required
 							$user->updateMessage .= implode('<br/>', $result2['messages']);
 							$user->updateMessageIsError = $user->updateMessageIsError && !$result2['success'];
 						}
 					}
-				}else{
+				} else {
 					$user->updateMessage = translate([
 						'text' => 'Wrong account credentials, please try again.',
 						'isPublicFacing' => true,

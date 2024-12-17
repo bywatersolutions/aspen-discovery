@@ -118,7 +118,7 @@ class MyAccount_AJAX extends JSON_Action {
 							];
 						}
 					} else {
-						if ($linkingSettingUser == '1' || $linkingSettingUser == '3'){
+						if ($linkingSettingUser == '1' || $linkingSettingUser == '3') {
 							$result = [
 								'success' => false,
 								'title' => translate([
@@ -130,7 +130,7 @@ class MyAccount_AJAX extends JSON_Action {
 									'isPublicFacing' => true,
 								]),
 							];
-						}else if ($linkingSettingLinkee == '2' || $linkingSettingLinkee == '3') {
+						} else if ($linkingSettingLinkee == '2' || $linkingSettingLinkee == '3') {
 							$result = [
 								'success' => false,
 								'title' => translate([
@@ -142,7 +142,7 @@ class MyAccount_AJAX extends JSON_Action {
 									'isPublicFacing' => true,
 								]),
 							];
-						}else {
+						} else {
 							$result = [
 								'success' => false,
 								'title' => translate([
@@ -428,7 +428,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$catalog = CatalogFactory::getCatalogConnectionInstance();
 		$selfRegTerms = $catalog->getSelfRegistrationTerms();
 		return [
-			'title' => translate ([
+			'title' => translate([
 				'text' => 'Terms of Service',
 				'isPublicFacing' => true,
 			]),
@@ -708,7 +708,10 @@ class MyAccount_AJAX extends JSON_Action {
 		];
 
 		if (!UserAccount::isLoggedIn()) {
-			$result['message'] = translate(['text' => 'You must be logged in to cancel a hold.  Please close this dialog and login again.', 'isPublicFacing' => true]);
+			$result['message'] = translate([
+				'text' => 'You must be logged in to cancel a hold.  Please close this dialog and login again.',
+				'isPublicFacing' => true
+			]);
 		} else {
 			$success = 0;
 			$user = UserAccount::getLoggedInUser();
@@ -726,7 +729,10 @@ class MyAccount_AJAX extends JSON_Action {
 								'text' => 'Error',
 								'isPublicFacing' => true,
 							]),
-							'message' => translate(['text' => 'Sorry, it looks like you don\'t have access to that patron.', 'isPublicFacing' => true]),
+							'message' => translate([
+								'text' => 'Sorry, it looks like you don\'t have access to that patron.',
+								'isPublicFacing' => true
+							]),
 						];
 					} else {
 						$holdType = 'unknown';
@@ -856,8 +862,14 @@ class MyAccount_AJAX extends JSON_Action {
 	function cancelAllHolds() {
 		$tmpResult = [
 			'success' => false,
-			'title' => translate(['text' => 'Error', 'isPublicFacing' => true]),
-			'message' => translate(['text' => 'Unable to cancel all holds', 'isPublicFacing' => true]),
+			'title' => translate([
+				'text' => 'Error',
+				'isPublicFacing' => true
+			]),
+			'message' => translate([
+				'text' => 'Unable to cancel all holds',
+				'isPublicFacing' => true
+			]),
 		];
 		$user = UserAccount::getLoggedInUser();
 		if ($user) {
@@ -911,7 +923,10 @@ class MyAccount_AJAX extends JSON_Action {
 						'inAttribute' => true,
 					]) . '</div>';
 				$tmpResult['message'] = $message;
-				$tmpResult['title'] = translate(['text' => 'Success', 'isPublicFacing' => true]);
+				$tmpResult['title'] = translate([
+					'text' => 'Success',
+					'isPublicFacing' => true
+				]);
 
 			}
 		} else {
@@ -973,7 +988,7 @@ class MyAccount_AJAX extends JSON_Action {
 							'text' => 'Success',
 							'isPublicFacing' => true,
 						]);
-					}else{
+					} else {
 						$message = '<div class="alert alert-danger">' . $result['message'] . '</div>';
 						$result['message'] = $message;
 						$result['title'] = translate([
@@ -1021,7 +1036,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$promptForReactivationDate = false;
 		}
 
-		if($promptForReactivationDate) {
+		if ($promptForReactivationDate) {
 			global $interface;
 			$reactivateDateNotRequired = $user->reactivateDateNotRequired();
 			$interface->assign('reactivateDateNotRequired', $reactivateDateNotRequired);
@@ -1140,9 +1155,9 @@ class MyAccount_AJAX extends JSON_Action {
 
 						if ($success == 0) {
 							$alertStatus = 'alert-danger';
-						}else if ($success != $total) {
+						} else if ($success != $total) {
 							$alertStatus = 'alert-warning';
-						}else {
+						} else {
 							$alertStatus = 'alert-success';
 						}
 						$message = '<div class="alert ' . $alertStatus . '">' . translate([
@@ -1186,7 +1201,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$promptForReactivationDate = false;
 		}
 
-		if($promptForReactivationDate) {
+		if ($promptForReactivationDate) {
 			global $interface;
 			$reactivateDateNotRequired = $user->reactivateDateNotRequired();
 			$interface->assign('reactivateDateNotRequired', $reactivateDateNotRequired);
@@ -1330,7 +1345,7 @@ class MyAccount_AJAX extends JSON_Action {
 			'message' => translate([
 				'text' => 'Error thawing hold.',
 				'isPublicFacing' => true,
- 			]),
+			]),
 		];
 
 		if (!UserAccount::isLoggedIn()) {
@@ -1408,9 +1423,9 @@ class MyAccount_AJAX extends JSON_Action {
 
 						if ($success == 0) {
 							$alertStatus = 'alert-danger';
-						}else if ($success != $total) {
+						} else if ($success != $total) {
 							$alertStatus = 'alert-warning';
-						}else {
+						} else {
 							$alertStatus = 'alert-success';
 						}
 						$message = '<div class="alert ' . $alertStatus . '">' . translate([
@@ -1562,21 +1577,21 @@ class MyAccount_AJAX extends JSON_Action {
 								$userListEntry->title = substr($list->title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Events') {
-							if (preg_match('`^communico`', $userListEntry->sourceId)){
+							if (preg_match('`^communico`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/CommunicoEventRecordDriver.php';
 								$recordDriver = new CommunicoEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
 									$userListEntry->title = substr($title, 0, 50);
 								}
-							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)){
+							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 								$recordDriver = new SpringshareLibCalEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
 									$userListEntry->title = substr($title, 0, 50);
 								}
-							} elseif (preg_match('`^assabet`', $userListEntry->sourceId)){
+							} elseif (preg_match('`^assabet`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 								$recordDriver = new AssabetEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
@@ -1743,11 +1758,11 @@ class MyAccount_AJAX extends JSON_Action {
 		if ($isPrimaryAccountAuthenticationSSO || $library->ssoSettingId != -1) {
 			try {
 				$ssoSettingId = null;
-				if($isPrimaryAccountAuthenticationSSO) {
+				if ($isPrimaryAccountAuthenticationSSO) {
 					require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
 					$accountProfile = new AccountProfile();
 					$accountProfile->id = $library->accountProfileId;
-					if($accountProfile->find(true)) {
+					if ($accountProfile->find(true)) {
 						$ssoSettingId = $accountProfile->ssoSettingId;
 					}
 				} else {
@@ -1806,14 +1821,14 @@ class MyAccount_AJAX extends JSON_Action {
 			if ($twoFactorExpired) {
 				//We have an abandoned 2-factor authentication enrollment
 				UserAccount::softLogout();
-			}else {
+			} else {
 				return $this->get2FAEnrollment();
 			}
-		}elseif (!empty($_SESSION['has2FA'])) {
+		} elseif (!empty($_SESSION['has2FA'])) {
 			if ($twoFactorExpired) {
 				//We have an abandoned 2-factor authentication enrollment
 				UserAccount::softLogout();
-			}else {
+			} else {
 				$interface->assign('codeSent', !empty($_SESSION['codeSent']));
 				$referer = $_REQUEST['referer'] ?? null;
 				$interface->assign('referer', $referer);
@@ -1847,7 +1862,7 @@ class MyAccount_AJAX extends JSON_Action {
 		}
 
 		$enableForgotBarcode = 0;
-		if($library->enableForgotBarcode && $library->twilioSettingId != -1) {
+		if ($library->enableForgotBarcode && $library->twilioSettingId != -1) {
 			$enableForgotBarcode = $library->enableForgotBarcode;
 		}
 		$interface->assign('enableForgotBarcode', $enableForgotBarcode);
@@ -1872,7 +1887,7 @@ class MyAccount_AJAX extends JSON_Action {
 		if (isset($_REQUEST['multiStep'])) {
 			$multiStep = true;
 			$interface->assign('multiStep', true);
-		}else{
+		} else {
 			$multiStep = false;
 		}
 
@@ -1987,7 +2002,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 			$location = new Location();
 			$pickupBranches = $location->getPickupBranches($patronOwningHold);
-            $pickupSublocations = [];
+			$pickupSublocations = [];
 
 			$pickupAt = 0;
 			require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
@@ -2004,16 +2019,16 @@ class MyAccount_AJAX extends JSON_Action {
 					}
 				}
 
-                foreach ($pickupBranches as $locationKey => $location) {
-                    if(is_object($location)){
-                        $pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);
-                    }
-                }
+				foreach ($pickupBranches as $locationKey => $location) {
+					if (is_object($location)) {
+						$pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);
+					}
+				}
 			}
 
 			$interface->assign('pickupAt', $pickupAt);
 			$interface->assign('pickupLocations', $pickupBranches);
-            $interface->assign('pickupSublocations', $pickupSublocations);
+			$interface->assign('pickupSublocations', $pickupSublocations);
 
 			$results = [
 				'title' => translate([
@@ -2081,7 +2096,7 @@ class MyAccount_AJAX extends JSON_Action {
 		try {
 			$holdId = $_REQUEST['holdId'];
 			$newPickupLocation = $_REQUEST['newLocation'];
-            $newPickupSublocation = $_REQUEST['newSublocation'] ?? null;
+			$newPickupSublocation = $_REQUEST['newSublocation'] ?? null;
 
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getLoggedInUser();
@@ -2320,7 +2335,7 @@ class MyAccount_AJAX extends JSON_Action {
 		}
 		global $interface;
 		$interface->assign('renewResults', $renewResults);
-		if(isset($renewResults['confirmRenewalFee']) && $renewResults['confirmRenewalFee']) {
+		if (isset($renewResults['confirmRenewalFee']) && $renewResults['confirmRenewalFee']) {
 			return [
 				'title' => translate([
 					'text' => 'Confirm Renewal',
@@ -2375,7 +2390,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 							if (!$tmpResult['success']) {
 								$failedRenewals++;
-								if(isset($tmpResult['confirmRenewalFee']) && $tmpResult['confirmRenewalFee']) {
+								if (isset($tmpResult['confirmRenewalFee']) && $tmpResult['confirmRenewalFee']) {
 									$failure_messages = translate([
 										'text' => 'Renewing some overdue items will result in a charge to your account. Please renew overdue items individually.',
 										'isPublicFacing' => true,
@@ -2443,7 +2458,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 		global $interface;
 		$interface->assign('renew_message_data', $renewResults);
-		if(isset($renewResults['confirmRenewalFee']) && $renewResults['confirmRenewalFee']) {
+		if (isset($renewResults['confirmRenewalFee']) && $renewResults['confirmRenewalFee']) {
 			return [
 				'title' => translate([
 					'text' => 'Confirm Renewal',
@@ -2917,18 +2932,22 @@ class MyAccount_AJAX extends JSON_Action {
 			header('Cache-Control: max-age=0');
 			$fp = fopen('php://output', 'w');
 
-			$fields = ['Title', 'Author', 'Format'];
+			$fields = [
+				'Title',
+				'Author',
+				'Format'
+			];
 			if ($showOut) {
 				$fields[] = 'Out';
 			}
 			$fields[] = 'Due';
-			if ($showRenewed){
+			if ($showRenewed) {
 				$fields[] = 'Renewed';
 			}
-			if ($showWaitList){
+			if ($showWaitList) {
 				$fields[] = 'Wait List';
 			}
-			if ($hasLinkedUsers){
+			if ($hasLinkedUsers) {
 				$fields[] = 'User';
 			}
 
@@ -2995,19 +3014,23 @@ class MyAccount_AJAX extends JSON_Action {
 				}
 
 
-				$row = array ($title, $author, $format);
+				$row = array(
+					$title,
+					$author,
+					$format
+				);
 				if ($showOut) {
 					$row[] = $checkoutDate;
 				}
 				$row[] = $dueDate;
-				if ($showRenewed){
-					$row[] =$Renewed;
+				if ($showRenewed) {
+					$row[] = $Renewed;
 				}
-				if ($showWaitList){
-					$row[] =$waitList;
+				if ($showWaitList) {
+					$row[] = $waitList;
 				}
-				if ($hasLinkedUsers){
-					$row[] =$userName;
+				if ($hasLinkedUsers) {
+					$row[] = $userName;
 				}
 				fputcsv($fp, $row);
 			}
@@ -3099,8 +3122,16 @@ class MyAccount_AJAX extends JSON_Action {
 						'isPublicFacing' => true,
 					]);
 
-					$availFields = [$titleCol, $authorCol, $formatCol, $placedCol, $pickupCol, $statusCol, $pickupByCol];
-					if ($hasLinkedUsers){
+					$availFields = [
+						$titleCol,
+						$authorCol,
+						$formatCol,
+						$placedCol,
+						$pickupCol,
+						$statusCol,
+						$pickupByCol
+					];
+					if ($hasLinkedUsers) {
 						$availFields[] = $userCol;
 					}
 					fputcsv($fp, $availFields);
@@ -3168,14 +3199,22 @@ class MyAccount_AJAX extends JSON_Action {
 
 						$user = $row->getUserName();
 
-						$availValues = [$title, $author, $format, $placed, $pickup, $status, $expireDate, $user];
-						if ($hasLinkedUsers){
+						$availValues = [
+							$title,
+							$author,
+							$format,
+							$placed,
+							$pickup,
+							$status,
+							$expireDate,
+							$user
+						];
+						if ($hasLinkedUsers) {
 							$availValues[] = $user;
 						}
 						fputcsv($fp, $availValues);
 					}
-				}
-				else {
+				} else {
 					// Section header
 					$holdType = translate([
 						'text' => 'Holds - ' . ucfirst($exportType),
@@ -3217,12 +3256,18 @@ class MyAccount_AJAX extends JSON_Action {
 						'isPublicFacing' => true,
 					]);
 
-					$unavailFields = [$titleCol, $authorCol, $formatCol, $placedCol, $pickupCol];
-					if ($showPosition){
+					$unavailFields = [
+						$titleCol,
+						$authorCol,
+						$formatCol,
+						$placedCol,
+						$pickupCol
+					];
+					if ($showPosition) {
 						$unavailFields[] = $positionCol;
 					}
 					$unavailFields[] = $statusCol;
-					if ($hasLinkedUsers){
+					if ($hasLinkedUsers) {
 						$unavailFields[] = $userCol;
 					}
 					fputcsv($fp, $unavailFields);
@@ -3253,7 +3298,7 @@ class MyAccount_AJAX extends JSON_Action {
 							$format = '';
 						}
 						if (empty($row->createDate)) {
-							$placed= '';
+							$placed = '';
 						} else {
 							if (is_array($row->createDate)) {
 								$placed = new DateTime();
@@ -3278,12 +3323,18 @@ class MyAccount_AJAX extends JSON_Action {
 
 						$user = $row->getUserName();
 
-						$unavailValues = [$title, $author, $format, $placed, $pickup];
-						if ($showPosition){
+						$unavailValues = [
+							$title,
+							$author,
+							$format,
+							$placed,
+							$pickup
+						];
+						if ($showPosition) {
 							$unavailValues[] = $position;
 						}
 						$unavailValues[] = $status;
-						if ($hasLinkedUsers){
+						if ($hasLinkedUsers) {
 							$unavailValues[] = $user;
 						}
 						fputcsv($fp, $unavailValues);
@@ -3314,7 +3365,12 @@ class MyAccount_AJAX extends JSON_Action {
 
 			try {
 				// Set properties
-				$fields = array('Title', 'Author', 'Format', 'Last used');
+				$fields = array(
+					'Title',
+					'Author',
+					'Format',
+					'Last used'
+				);
 				fputcsv($fp, $fields);
 
 				//Loop Through The Report Data
@@ -3335,7 +3391,12 @@ class MyAccount_AJAX extends JSON_Action {
 							$lastCheckout = $row['checkout'];
 						}
 					}
-					$results = array ($title, $author, $format, $lastCheckout);
+					$results = array(
+						$title,
+						$author,
+						$format,
+						$lastCheckout
+					);
 					fputcsv($fp, $results);
 				}
 			} catch (Exception $e) {
@@ -3372,7 +3433,7 @@ class MyAccount_AJAX extends JSON_Action {
 				]),
 				'showCostSavings' => false,
 			];
-		}else if (!$offlineMode || $interface->getVariable('enableEContentWhileOffline')) {
+		} else if (!$offlineMode || $interface->getVariable('enableEContentWhileOffline')) {
 			$source = $_REQUEST['source'];
 			$interface->assign('source', $source);
 			$this->setShowCovers();
@@ -3448,7 +3509,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$readerName = $readerName->getReaderName();
 				$interface->assign('readerName', $readerName);
 
-				if ($interface->getVariable('enableCostSavings') && $source == 'all'){
+				if ($interface->getVariable('enableCostSavings') && $source == 'all') {
 					//Get costs savings
 					$result['showCostSavings'] = true;
 					$result['costSavingsMessage'] = $user->getCurrentCostSavingsMessage(true);
@@ -3610,20 +3671,19 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	public function getVendor($sourceId) {
-		if (preg_match('`^communico`', $sourceId)){
+		if (preg_match('`^communico`', $sourceId)) {
 			return "communico";
-		} elseif (preg_match('`^libcal`', $sourceId)){
+		} elseif (preg_match('`^libcal`', $sourceId)) {
 			return "springshare";
-		} elseif (preg_match('`^lc_`', $sourceId)){
+		} elseif (preg_match('`^lc_`', $sourceId)) {
 			return "library_market";
-		} elseif (preg_match('`^assabet`', $sourceId)){
+		} elseif (preg_match('`^assabet`', $sourceId)) {
 			return "assabet";
 		}
 	}
 
 	/** @noinspection PhpUnused */
-	public function getSavedEvents()
-	{
+	public function getSavedEvents() {
 		global $interface;
 		global $timer;
 		global $library;
@@ -3650,7 +3710,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$event->whereAdd("eventDate >= $curTime");
 			$event->orderBy('eventDate ASC');
 		}
-		if ($eventsFilter == 'all'){
+		if ($eventsFilter == 'all') {
 			$event->orderBy('eventDate DESC');
 
 		}
@@ -3689,20 +3749,20 @@ class MyAccount_AJAX extends JSON_Action {
 				];
 			} else {
 				$events[$entry->sourceId] = [
-				'id' => $entry->id,
-				'sourceId' => $entry->sourceId,
-				'title' => $entry->title,
-				'link' => null,
-				'externalLink' => null,
-				'location' => $entry->location,
-				'regRequired' => $entry->regRequired,
-				'isRegistered' => $registration,
-				'eventDate' => $entry->eventDate,
-				'pastEvent' => true,
-				'vendor' => self::getVendor($entry->sourceId)
-			];
+					'id' => $entry->id,
+					'sourceId' => $entry->sourceId,
+					'title' => $entry->title,
+					'link' => null,
+					'externalLink' => null,
+					'location' => $entry->location,
+					'regRequired' => $entry->regRequired,
+					'isRegistered' => $registration,
+					'eventDate' => $entry->eventDate,
+					'pastEvent' => true,
+					'vendor' => self::getVendor($entry->sourceId)
+				];
+			}
 		}
-	}
 
 		$filter = isset($_REQUEST['eventsFilter']) ? $_REQUEST['eventsFilter'] : '';
 		$interface->assign('eventsFilter', $filter);
@@ -3722,7 +3782,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 		$result['success'] = true;
 		$result['message'] = "";
-		$result['myEvents']= $interface->fetch('MyAccount/myEventsList.tpl');
+		$result['myEvents'] = $interface->fetch('MyAccount/myEventsList.tpl');
 
 		return $result;
 	}
@@ -4114,7 +4174,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$donateToLocation = $_REQUEST['toLocation'];
 		}
 		$toLocation = -1;
-		if($donateToLocation) {
+		if ($donateToLocation) {
 			require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 			$location = new Location();
 			$location->displayName = $donateToLocation;
@@ -4127,7 +4187,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 		$earmarkId = $_REQUEST['earmark'] ?? null;
 		$comments = 'None';
-		if($earmarkId) {
+		if ($earmarkId) {
 			require_once ROOT_DIR . '/sys/Donations/DonationEarmark.php';
 			$earmark = new DonationEarmark();
 			$earmark->id = $earmarkId;
@@ -4248,7 +4308,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$payment->paidFromInstance = $library->subdomain;
 
 		if (isset($_REQUEST['token'])) {
-			if ($paymentType == 'square'){
+			if ($paymentType == 'square') {
 				$payment->squareToken = $_REQUEST['token'];
 			} else {
 				$payment->aciToken = $_REQUEST['token'];
@@ -4261,7 +4321,11 @@ class MyAccount_AJAX extends JSON_Action {
 		//Add a line item for the donation
 		$paymentLine = new UserPaymentLine();
 		$paymentLine->paymentId = $payment->id;
-		$paymentLine->description = translate(['text'=>'Donation', 'inAttribute'=>true,'isPublicFacing'=>true]);
+		$paymentLine->description = translate([
+			'text' => 'Donation',
+			'inAttribute' => true,
+			'isPublicFacing' => true
+		]);
 		$paymentLine->amountPaid = $donationValue;
 		$paymentLine->insert();
 
@@ -4279,7 +4343,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$donation->honoreeLastName = $_REQUEST['honoreeLastName'];
 		}
 		$donation->shouldBeNotified = isset($_REQUEST['shouldBeNotified']) ? 1 : 0;
-		if($donation->shouldBeNotified == 1) {
+		if ($donation->shouldBeNotified == 1) {
 			$donation->notificationFirstName = $_REQUEST['notificationFirstName'];
 			$donation->notificationLastName = $_REQUEST['notificationLastName'];
 			$donation->notificationAddress = $_REQUEST['notificationAddress'];
@@ -4340,7 +4404,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$donation->honoreeLastName = $tempDonation->dedication->honoreeLastName;
 		}
 		$donation->shouldBeNotified = $tempDonation->shouldBeNotified;
-		if($tempDonation->shouldBeNotified == 1) {
+		if ($tempDonation->shouldBeNotified == 1) {
 			$donation->notificationFirstName = $tempDonation->notification->notificationFirstName;
 			$donation->notificationLastName = $tempDonation->notification->notificationLastName;
 			$donation->notificationAddress = $tempDonation->notification->notificationAddress;
@@ -4599,7 +4663,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$payment->paidFromInstance = $library->subdomain;
 
 			if (isset($_REQUEST['token'])) {
-				if($paymentType == 'ACI') {
+				if ($paymentType == 'ACI') {
 					$payment->aciToken = $_REQUEST['token'];
 					// Generate 16 bytes (128 bits) of random data or use the data passed into the function.
 					$data = random_bytes(16);
@@ -4614,13 +4678,13 @@ class MyAccount_AJAX extends JSON_Action {
 					$uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 					$payment->orderId = $uuid;
 				}
-				if($paymentType == 'deluxe') {
+				if ($paymentType == 'deluxe') {
 					$payment->deluxeRemittanceId = $_REQUEST['token'];
 				}
-				if($paymentType == 'square') {
+				if ($paymentType == 'square') {
 					$payment->squareToken = $_REQUEST['token'];
 				}
-				if($paymentType == 'stripe'){
+				if ($paymentType == 'stripe') {
 					$payment->stripeToken = $_REQUEST['token'];
 				}
 			}
@@ -4927,7 +4991,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$payment->update();
 			$donation = new Donation();
 			$donation->paymentId = $payment->id;
-			if($donation->find(true)) {
+			if ($donation->find(true)) {
 				$donation->sendReceiptEmail();
 				return [
 					'success' => true,
@@ -4958,7 +5022,10 @@ class MyAccount_AJAX extends JSON_Action {
 				if ($result['success'] == false) {
 					//If the payment does not complete in the ILS, add information to the payment for tracking
 					//Also send an email to the admin that it was completed in PayPal, but not the ILS
-					$payment->message .= translate(['text'=>'Your payment was received, but was not cleared in our library software. Your account will be updated within the next business day. If you need more immediate assistance, please visit the library with your receipt.', 'isPublicFacing'=>true]) . ' ' . $result['message'];
+					$payment->message .= translate([
+							'text' => 'Your payment was received, but was not cleared in our library software. Your account will be updated within the next business day. If you need more immediate assistance, please visit the library with your receipt.',
+							'isPublicFacing' => true
+						]) . ' ' . $result['message'];
 					$payment->update();
 					$result['message'] = $payment->message;
 
@@ -5071,11 +5138,11 @@ class MyAccount_AJAX extends JSON_Action {
 		require_once ROOT_DIR . '/sys/ECommerce/SquareSetting.php';
 		$squareSettings = new SquareSetting();
 		$squareSettings->id = $paymentLibrary->squareSettingId;
-		if($squareSettings->find(true)) {
+		if ($squareSettings->find(true)) {
 			require_once ROOT_DIR . '/sys/CurlWrapper.php';
 			$paymentRequest = new CurlWrapper();
 			$baseUrl = 'https://connect.squareup.com';
-			if($squareSettings->sandboxMode == 1) {
+			if ($squareSettings->sandboxMode == 1) {
 				$baseUrl = 'https://connect.squareupsandbox.com';
 			}
 
@@ -5094,7 +5161,8 @@ class MyAccount_AJAX extends JSON_Action {
 				$paymentId = $payment->id;
 				$paymentAmount = $payment->totalPaid;
 				$body = [
-					'idempotency_key' => strval($paymentId), // Square needs this to be a string, so guarantee it
+					'idempotency_key' => strval($paymentId),
+					// Square needs this to be a string, so guarantee it
 					'amount_money' => [
 						'amount' => (int)round($payment->totalPaid * 100),
 						'currency' => 'USD'
@@ -5108,7 +5176,7 @@ class MyAccount_AJAX extends JSON_Action {
 				if ($paymentRequestResults->payment) {
 					$paymentResults = $paymentRequestResults->payment;
 					if ($paymentResults->status == 'COMPLETED' || $paymentResults->status == 'APPROVED') {
-						if($transactionType == 'donation') {
+						if ($transactionType == 'donation') {
 							$payment->completed = 1;
 							$payment->transactionId = $paymentResults->id;
 							$payment->orderId = $paymentResults->order_id;
@@ -5116,7 +5184,7 @@ class MyAccount_AJAX extends JSON_Action {
 							$donation = new Donation();
 							$donation->paymentId = $payment->id;
 
-							if($donation->find(true)) {
+							if ($donation->find(true)) {
 								$donation->sendReceiptEmail();
 								return [
 									'success' => true,
@@ -5134,7 +5202,7 @@ class MyAccount_AJAX extends JSON_Action {
 								];
 							}
 						} else {
-							if($payment->completed) {
+							if ($payment->completed) {
 								return [
 									'success' => false,
 									'message' => 'This payment has already been processed'
@@ -5146,7 +5214,7 @@ class MyAccount_AJAX extends JSON_Action {
 								$user = UserAccount::getActiveUserObj();
 								$patron = $user->getUserReferredTo($patronId);
 								$result = $patron->completeFinePayment($payment);
-								if($result['success'] == false) {
+								if ($result['success'] == false) {
 									$payment->message .= 'Your payment was received, but was not cleared in our library software. Your account will be updated within the next business day. If you need more immediate assistance, please visit the library with your receipt. ' . $result['message'];
 									$payment->update();
 									$result['message'] = $payment->message;
@@ -5894,7 +5962,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$transactionIDNumber = $NCRPaymentsSetting->lastTransactionNumber + 1;
 				$NCRPaymentsSetting->lastTransactionNumber = $transactionIDNumber;
 				$NCRPaymentsSetting->update();
-				$transactionIdentifier = "AspenPayment" .$userLibrary->libraryId . $userLibrary->ilsCode . $transactionIDNumber;
+				$transactionIdentifier = "AspenPayment" . $userLibrary->libraryId . $userLibrary->ilsCode . $transactionIDNumber;
 				$newRedirectRequest = new CurlWrapper();
 				$newRedirectRequest->addCustomHeaders([
 					"Content-Type: application/json",
@@ -5929,7 +5997,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$result = json_decode($resultJSON);
 				ExternalRequestLogEntry::logRequest('ncr.createNCROrder', 'POST', $url, $newRedirectRequest->getHeaders(), json_encode($postParams), $newRedirectRequest->getResponseCode(), $resultJSON, []);
 
-				if ($result->status != "ok"){
+				if ($result->status != "ok") {
 					return [
 						'success' => false,
 						'message' => $result->errors[0]->message,
@@ -5971,10 +6039,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$currencyFormatter = new NumberFormatter($activeLanguage->locale . '@currency=' . $currencyCode, NumberFormatter::CURRENCY);
 			$currencyFormatter->setSymbol(NumberFormatter::CURRENCY_SYMBOL, '');
 
-			/** @var Library $paymentLibrary */
-			/** @var Library $userLibrary */
-			/** @var UserPayment $payment */
-			/** @var User $patron */
+			/** @var Library $paymentLibrary */ /** @var Library $userLibrary */ /** @var UserPayment $payment */ /** @var User $patron */
 			/** @noinspection PhpUnusedLocalVariableInspection */
 			if ($transactionType == 'donation') {
 				[
@@ -6043,15 +6108,22 @@ class MyAccount_AJAX extends JSON_Action {
 				$postParams = [
 					'udf1' => $payment->id,
 					'accountid' => $snapPaySetting->accountId,
-					'customerid' => $patron->id, // TO DO: ensure correct ID
-					'currencycode' => 'USD', // TO DO: Allow for other currency types
+					'customerid' => $patron->id,
+					// TO DO: ensure correct ID
+					'currencycode' => 'USD',
+					// TO DO: Allow for other currency types
 					'transactionamount' => number_format($payment->totalPaid, 2),
 					'merchantid' => $snapPaySetting->merchantId,
-					'paymentmode' => 'CC', // TO DO: allow ACH too
-					'cvvrequired' => 'Y', // TO DO: allow N too
-					'enableemailreceipt' => 'Y', // TO DO: allow N too
-					'redirectionurl' => $configArray['Site']['url'] . "/MyAccount/SnapPayComplete", // TO DO: documentation: FISERV pdf has 'redirectionurl'; error has 'redirecturl'; 'redirectionurl ' is correct
-					'signature' => $HmacValue, // TO DO: documentation: FISERV pdf has 'signature'; error has 'Signature'; 'signature' is correct
+					'paymentmode' => 'CC',
+					// TO DO: allow ACH too
+					'cvvrequired' => 'Y',
+					// TO DO: allow N too
+					'enableemailreceipt' => 'Y',
+					// TO DO: allow N too
+					'redirectionurl' => $configArray['Site']['url'] . "/MyAccount/SnapPayComplete",
+					// TO DO: documentation: FISERV pdf has 'redirectionurl'; error has 'redirecturl'; 'redirectionurl ' is correct
+					'signature' => $HmacValue,
+					// TO DO: documentation: FISERV pdf has 'signature'; error has 'Signature'; 'signature' is correct
 					'firstname' => $patron->firstname,
 					'lastname' => $patron->lastname,
 					'addressline1' => $patron->_address1,
@@ -6643,10 +6715,10 @@ class MyAccount_AJAX extends JSON_Action {
 							require_once ROOT_DIR . '/sys/Browse/SubBrowseCategories.php';
 							$subBrowseCategory = new SubBrowseCategories();
 							$subBrowseCategory->subCategoryId = $browseCategory->id;
-							if($subBrowseCategory->find(true)) {
+							if ($subBrowseCategory->find(true)) {
 								$parentCategory = new BrowseCategory();
 								$parentCategory->id = $subBrowseCategory->browseCategoryId;
-								if($parentCategory->find(true)) {
+								if ($parentCategory->find(true)) {
 									$parentLabel = $parentCategory->label . ': ';
 								}
 							}
@@ -6661,7 +6733,7 @@ class MyAccount_AJAX extends JSON_Action {
 				return [
 					'title' => 'Hidden browse categories',
 					'modalBody' => $interface->fetch('MyAccount/hiddenBrowseCategories.tpl'),
-					'modalButtons' => '<button type="button" class="tool btn btn-primary" onclick="return AspenDiscovery.Account.showBrowseCategory()">' . translate ([
+					'modalButtons' => '<button type="button" class="tool btn btn-primary" onclick="return AspenDiscovery.Account.showBrowseCategory()">' . translate([
 							'text' => 'Show These Browse Categories',
 							'isPublicFacing' => true,
 						]) . '</button>',
@@ -6800,7 +6872,7 @@ class MyAccount_AJAX extends JSON_Action {
 	/** @noinspection PhpUnused */
 	function eventRegistrationModal() {
 		$eventUrl = $_REQUEST['regLink'];
-		if(isset($_REQUEST['vendor'])) {
+		if (isset($_REQUEST['vendor'])) {
 			$vendor = $_REQUEST['vendor'];
 			$body = "";
 			global $library;
@@ -6808,33 +6880,33 @@ class MyAccount_AJAX extends JSON_Action {
 			$libraryEventSettings = new LibraryEventsSetting();
 			$libraryEventSettings->settingSource = $vendor;
 			$libraryEventSettings->libraryId = $library->libraryId;
-			if ($libraryEventSettings->find(true)){
-				if ($vendor == 'communico'){
+			if ($libraryEventSettings->find(true)) {
+				if ($vendor == 'communico') {
 					require_once ROOT_DIR . '/sys/Events/CommunicoSetting.php';
 					$communicoSettings = new CommunicoSetting();
 					$communicoSettings->id = $libraryEventSettings->settingId;
-					if($communicoSettings->find(true)) {
+					if ($communicoSettings->find(true)) {
 						$body = $communicoSettings->registrationModalBody;
 					}
 				} else if ($vendor == 'springshare') {
 					require_once ROOT_DIR . '/sys/Events/SpringshareLibCalSetting.php';
 					$springshareSettings = new SpringshareLibCalSetting();
 					$springshareSettings->id = $libraryEventSettings->settingId;
-					if($springshareSettings->find(true)) {
+					if ($springshareSettings->find(true)) {
 						$body = $springshareSettings->registrationModalBody;
 					}
 				} else if ($vendor == 'library_market') {
 					require_once ROOT_DIR . '/sys/Events/LMLibraryCalendarSetting.php';
 					$libraryMarketSettings = new LMLibraryCalendarSetting();
 					$libraryMarketSettings->id = $libraryEventSettings->settingId;
-					if($libraryMarketSettings->find(true)) {
+					if ($libraryMarketSettings->find(true)) {
 						$body = $libraryMarketSettings->registrationModalBody;
 					}
 				} else if ($vendor == 'assabet') {
 					require_once ROOT_DIR . '/sys/Events/AssabetSetting.php';
 					$assabetSettings = new AssabetSetting();
 					$assabetSettings->id = $libraryEventSettings->settingId;
-					if($assabetSettings->find(true)) {
+					if ($assabetSettings->find(true)) {
 						$body = $assabetSettings->registrationModalBody;
 					}
 				}
@@ -6847,7 +6919,15 @@ class MyAccount_AJAX extends JSON_Action {
 					'isPublicFacing' => true,
 				]),
 				'body' => $body,
-				'buttons' => '<a href="' . $eventUrl . '" class="btn btn-primary" target="_blank" aria-label="'.translate(['text' => 'Go to Registration', 'isPublicFacing' => true, 'inAttribute' => true]).' ('.translate(['text' => 'opens in a new window', 'isPublicFacing' => true, 'inAttribute' => true]).')"><i class="fas fa-external-link-alt" role="presentation"></i> ' . translate([
+				'buttons' => '<a href="' . $eventUrl . '" class="btn btn-primary" target="_blank" aria-label="' . translate([
+						'text' => 'Go to Registration',
+						'isPublicFacing' => true,
+						'inAttribute' => true
+					]) . ' (' . translate([
+						'text' => 'opens in a new window',
+						'isPublicFacing' => true,
+						'inAttribute' => true
+					]) . ')"><i class="fas fa-external-link-alt" role="presentation"></i> ' . translate([
 						'text' => 'Go to Registration',
 						'isPublicFacing' => true,
 					]) . '</a>',
@@ -6859,7 +6939,15 @@ class MyAccount_AJAX extends JSON_Action {
 					'text' => 'Registration Information',
 					'isPublicFacing' => true,
 				]),
-				'buttons' => '<a href="' . $eventUrl . '" class="btn btn-primary" target="_blank" aria-label="'.translate(['text' => 'Go to Registration', 'isPublicFacing' => true, 'inAttribute' => true]).' ('.translate(['text' => 'opens in a new window', 'isPublicFacing' => true, 'inAttribute' => true]).')"><i class="fas fa-external-link-alt" role="presentation"></i> ' . translate([
+				'buttons' => '<a href="' . $eventUrl . '" class="btn btn-primary" target="_blank" aria-label="' . translate([
+						'text' => 'Go to Registration',
+						'isPublicFacing' => true,
+						'inAttribute' => true
+					]) . ' (' . translate([
+						'text' => 'opens in a new window',
+						'isPublicFacing' => true,
+						'inAttribute' => true
+					]) . ')"><i class="fas fa-external-link-alt" role="presentation"></i> ' . translate([
 						'text' => 'Go to Registration',
 						'isPublicFacing' => true,
 					]) . '</a>',
@@ -6897,7 +6985,7 @@ class MyAccount_AJAX extends JSON_Action {
 			} else {
 				$userEventsEntry->sourceId = $sourceId;
 
-				if (preg_match('`^communico`', $userEventsEntry->sourceId)){
+				if (preg_match('`^communico`', $userEventsEntry->sourceId)) {
 					require_once ROOT_DIR . '/RecordDrivers/CommunicoEventRecordDriver.php';
 					$recordDriver = new CommunicoEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
@@ -6905,16 +6993,16 @@ class MyAccount_AJAX extends JSON_Action {
 						$userEventsEntry->title = substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
-						if ($recordDriver->isRegistrationRequired()){
+						if ($recordDriver->isRegistrationRequired()) {
 							$regRequired = 1;
-						}else{
+						} else {
 							$regRequired = 0;
 						}
 						$userEventsEntry->regRequired = $regRequired;
 						$userEventsEntry->location = $recordDriver->getBranch();
 						$externalUrl = $recordDriver->getExternalUrl();
 					}
-				} elseif (preg_match('`^libcal`', $userEventsEntry->sourceId)){
+				} elseif (preg_match('`^libcal`', $userEventsEntry->sourceId)) {
 					require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 					$recordDriver = new SpringshareLibCalEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
@@ -6922,16 +7010,16 @@ class MyAccount_AJAX extends JSON_Action {
 						$userEventsEntry->title = substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
-						if ($recordDriver->isRegistrationRequired()){
+						if ($recordDriver->isRegistrationRequired()) {
 							$regRequired = 1;
-						}else{
+						} else {
 							$regRequired = 0;
 						}
 						$userEventsEntry->regRequired = $regRequired;
 						$userEventsEntry->location = $recordDriver->getBranch();
 						$externalUrl = $recordDriver->getExternalUrl();
 					}
-				} elseif (preg_match('`^lc_`', $userEventsEntry->sourceId)){
+				} elseif (preg_match('`^lc_`', $userEventsEntry->sourceId)) {
 					require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
 					$recordDriver = new LibraryCalendarEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
@@ -6939,17 +7027,16 @@ class MyAccount_AJAX extends JSON_Action {
 						$userEventsEntry->title = substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
-						if ($recordDriver->isRegistrationRequired()){
+						if ($recordDriver->isRegistrationRequired()) {
 							$regRequired = 1;
-						}else{
+						} else {
 							$regRequired = 0;
 						}
 						$userEventsEntry->regRequired = $regRequired;
 						$userEventsEntry->location = $recordDriver->getBranch();
 						$externalUrl = $recordDriver->getExternalUrl();
 					}
-				}
-				elseif (preg_match('`^assabet_`', $userEventsEntry->sourceId)){
+				} elseif (preg_match('`^assabet_`', $userEventsEntry->sourceId)) {
 					require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 					$recordDriver = new AssabetEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
@@ -6957,9 +7044,9 @@ class MyAccount_AJAX extends JSON_Action {
 						$userEventsEntry->title = substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
-						if ($recordDriver->isRegistrationRequired()){
+						if ($recordDriver->isRegistrationRequired()) {
 							$regRequired = 1;
-						}else{
+						} else {
 							$regRequired = 0;
 						}
 						$userEventsEntry->regRequired = $regRequired;
@@ -6991,7 +7078,7 @@ class MyAccount_AJAX extends JSON_Action {
 				]);
 				$result['regRequired'] = false;
 
-				if ($regRequired){
+				if ($regRequired) {
 					$result['message'] = translate([
 						'text' => "This event was saved to your events successfully. Saving an event to your events is not the same as registering.",
 						'isPublicFacing' => true,
@@ -7068,7 +7155,7 @@ class MyAccount_AJAX extends JSON_Action {
 				'text' => 'Add To',
 				'isPublicFacing' => true,
 			]);
-		}else{
+		} else {
 			$title = translate([
 				'text' => 'Add To List',
 				'isPublicFacing' => true,
@@ -7134,11 +7221,11 @@ class MyAccount_AJAX extends JSON_Action {
 					]);
 					$listOk = false;
 				} else {
-						//Authorization check: Ensure list belongs to logged in user
+					//Authorization check: Ensure list belongs to logged in user
 					$currentUser = UserAccount::getActiveUserObj();
 					if (!$currentUser->canEditList($userList)) {
 						$result['success'] = false;
-						$result['message'] =translate([
+						$result['message'] = translate([
 							'text' => 'You are not authorized to modify this list.',
 							'isPublicFacing' => true,
 						]);
@@ -7187,28 +7274,28 @@ class MyAccount_AJAX extends JSON_Action {
 								$userListEntry->title = substr($list->title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Events') {
-							if (preg_match('`^communico`', $userListEntry->sourceId)){
+							if (preg_match('`^communico`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/CommunicoEventRecordDriver.php';
 								$recordDriver = new CommunicoEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
 									$userListEntry->title = substr($title, 0, 50);
 								}
-							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)){
+							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 								$recordDriver = new SpringshareLibCalEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
 									$userListEntry->title = substr($title, 0, 50);
 								}
-							} elseif (preg_match('`^lc_`', $userListEntry->sourceId)){
+							} elseif (preg_match('`^lc_`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
 								$recordDriver = new LibraryCalendarEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
 									$userListEntry->title = substr($title, 0, 50);
 								}
-							} elseif (preg_match('`^assabet_`', $userListEntry->sourceId)){
+							} elseif (preg_match('`^assabet_`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 								$recordDriver = new AssabetEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
@@ -7263,12 +7350,12 @@ class MyAccount_AJAX extends JSON_Action {
 							$userObject->update();
 						}
 						$result['success'] = true;
-						if ($userListEntry->source == 'Events'){
+						if ($userListEntry->source == 'Events') {
 							$result['message'] = translate([
 								'text' => 'This event was saved to your list successfully.',
 								'isPublicFacing' => true,
 							]);
-						}else{
+						} else {
 							$result['message'] = translate([
 								'text' => 'This title was saved to your list successfully.',
 								'isPublicFacing' => true,
@@ -7284,7 +7371,7 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function saveToReadingHistory() : array {
+	function saveToReadingHistory(): array {
 		$result = [];
 
 		if (!UserAccount::isLoggedIn()) {
@@ -7336,7 +7423,7 @@ class MyAccount_AJAX extends JSON_Action {
 						//No cost savings updates since this is outside the library
 						if ($readingHistoryEntry->find(true)) {
 							$existingEntry = true;
-						}else{
+						} else {
 							$existingEntry = false;
 						}
 						if ($existingEntry) {
@@ -7351,7 +7438,7 @@ class MyAccount_AJAX extends JSON_Action {
 							'text' => 'This title was saved to your reading history successfully.',
 							'isPublicFacing' => true,
 						]);
-					}else{
+					} else {
 						$result['success'] = false;
 						$result['message'] = translate([
 							'text' => 'Could not find that title in the catalog.',
@@ -8280,7 +8367,7 @@ class MyAccount_AJAX extends JSON_Action {
 		}
 		$user = UserAccount::getActiveUserObj();
 		$pickupSettings = $user->getCatalogDriver()->getCurbsidePickupSettings($pickupLocation);
-		if($pickupSettings['disabledDays']) {
+		if ($pickupSettings['disabledDays']) {
 			return $pickupSettings['disabledDays'];
 		}
 
@@ -8444,7 +8531,7 @@ class MyAccount_AJAX extends JSON_Action {
 						'text' => 'Next',
 						'isPublicFacing' => true,
 					]) . "</button>";
-			}else{
+			} else {
 				$buttons = "";
 			}
 			return [
@@ -8700,22 +8787,22 @@ class MyAccount_AJAX extends JSON_Action {
 			]),
 		];
 		global $interface;
-		if(isset($_REQUEST['listId']) && ctype_digit($_REQUEST['listId'])) {
+		if (isset($_REQUEST['listId']) && ctype_digit($_REQUEST['listId'])) {
 			$userListId = $_REQUEST['listId'];
-			require_once ROOT_DIR .'/sys/UserLists/UserList.php';
+			require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 			$list = new UserList();
 			$list->id = $userListId;
-			if($list->find(true)) {
+			if ($list->find(true)) {
 				if ($list->public == true || (UserAccount::isLoggedIn() && UserAccount::getActiveUserId() == $list->user_id)) {
 					$list->buildRIS();
 				} else {
 					$result = [
 						'result' => false,
-							'message' => translate([
-								'text' => 'Export User List to RIS: You do not have access to this list.',
-								'isPublicFacing' => true,
-							]),
-						];
+						'message' => translate([
+							'text' => 'Export User List to RIS: You do not have access to this list.',
+							'isPublicFacing' => true,
+						]),
+					];
 				}
 			} else {
 				$result = [
@@ -8747,13 +8834,13 @@ class MyAccount_AJAX extends JSON_Action {
 			]),
 		];
 
-		if(isset($_REQUEST['messageId']) && ctype_digit($_REQUEST['messageId'])) {
+		if (isset($_REQUEST['messageId']) && ctype_digit($_REQUEST['messageId'])) {
 			$userMessageId = $_REQUEST['messageId'];
 			require_once ROOT_DIR . '/sys/Account/UserILSMessage.php';
 			$ilsMessage = new UserILSMessage();
 			$ilsMessage->id = $userMessageId;
 			$ilsMessage->userId = UserAccount::getActiveUserId();
-			if($ilsMessage->find(true)) {
+			if ($ilsMessage->find(true)) {
 				$interface->assign('userMessage', $ilsMessage);
 				return [
 					'title' => $ilsMessage->title ?? '',
@@ -8774,15 +8861,15 @@ class MyAccount_AJAX extends JSON_Action {
 			]),
 		];
 
-		if(isset($_REQUEST['messageId']) && ctype_digit($_REQUEST['messageId'])) {
+		if (isset($_REQUEST['messageId']) && ctype_digit($_REQUEST['messageId'])) {
 			$userMessageId = $_REQUEST['messageId'];
 			require_once ROOT_DIR . '/sys/Account/UserILSMessage.php';
 			$ilsMessage = new UserILSMessage();
 			$ilsMessage->id = $userMessageId;
 			$ilsMessage->userId = UserAccount::getActiveUserId();
-			if($ilsMessage->find(true)) {
+			if ($ilsMessage->find(true)) {
 				$ilsMessage->isRead = 1;
-				if($ilsMessage->update()) {
+				if ($ilsMessage->update()) {
 					$result = [
 						'success' => true,
 						'message' => translate([
@@ -8806,15 +8893,15 @@ class MyAccount_AJAX extends JSON_Action {
 			]),
 		];
 
-		if(isset($_REQUEST['messageId']) && ctype_digit($_REQUEST['messageId'])) {
+		if (isset($_REQUEST['messageId']) && ctype_digit($_REQUEST['messageId'])) {
 			$userMessageId = $_REQUEST['messageId'];
 			require_once ROOT_DIR . '/sys/Account/UserILSMessage.php';
 			$ilsMessage = new UserILSMessage();
 			$ilsMessage->id = $userMessageId;
 			$ilsMessage->userId = UserAccount::getActiveUserId();
-			if($ilsMessage->find(true)) {
+			if ($ilsMessage->find(true)) {
 				$ilsMessage->isRead = 0;
-				if($ilsMessage->update()) {
+				if ($ilsMessage->update()) {
 					$result = [
 						'success' => true,
 						'message' => translate([
@@ -8830,7 +8917,7 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getYearInReviewSlide() : array {
+	function getYearInReviewSlide(): array {
 		$result = [
 			'success' => false,
 			'title' => translate([
@@ -8852,22 +8939,22 @@ class MyAccount_AJAX extends JSON_Action {
 
 			if ($patron->hasYearInReview()) {
 				$slideNumber = $_REQUEST['slide'] ?? 1;
-				if (is_numeric($slideNumber)){
+				if (is_numeric($slideNumber)) {
 					$yearInReviewSettings = $patron->getYearInReviewSetting();
 					$result = $yearInReviewSettings->getSlide($patron, (int)$slideNumber);
-				}else{
+				} else {
 					$result['message'] = translate([
 						'text' => "Invalid Slide Number.",
 						'isPublicFacing' => true,
 					]);
 				}
-			}else{
+			} else {
 				$result['message'] = translate([
 					'text' => "Year in Review is not active for your account.",
 					'isPublicFacing' => true,
 				]);
 			}
-		}else{
+		} else {
 			$result['message'] = translate([
 				'text' => "You must be logged in.  Please close this dialog and login to view your Year in Review.",
 				'isPublicFacing' => true,
@@ -8908,74 +8995,73 @@ class MyAccount_AJAX extends JSON_Action {
 		die();
 	}
 
-    /** @noinspection PhpUnused */
-    function getSublocationsSelect() {
-        global $interface;
-        $html = '';
-        $success = false;
-        $context = $_REQUEST['context'] ?? '';
-        if (UserAccount::isLoggedIn()) {
-            $patron = UserAccount::getActiveUserObj();
-            $patronType = $patron->getPTypeObj();
-            if (isset($_REQUEST['locationCode'])) {
-                $location = new Location();
-                if ($context === 'myPreferences') {
-                    $location->locationId = $_REQUEST['locationCode'];
-                } else {
-                    $location->code = $_REQUEST['locationCode'];
-                }
-                if ($location->find(true)) {
-                    $sublocations = [];
-                    require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
-                    require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-                    $object = new Sublocation();
-                    $object->locationId = $location->locationId;
-                    $object->isValidHoldPickupAreaILS = 1;
-                    $object->isValidHoldPickupAreaAspen = 1;
-                    $object->orderBy('weight');
-                    $object->find();
-                    while ($object->fetch()) {
-                        $sublocationPType = new SublocationPatronType();
-                        $sublocationPType->patronTypeId = $patronType->id;
-                        $sublocationPType->sublocationId = $object->id;
-                        if($sublocationPType->find(true)) {
-                            $sublocations[$object->id] = $object->name;
-                        }
-                    }
+	/** @noinspection PhpUnused */
+	function getSublocationsSelect() {
+		global $interface;
+		$html = '';
+		$success = false;
+		$context = $_REQUEST['context'] ?? '';
+		if (UserAccount::isLoggedIn()) {
+			$patron = UserAccount::getActiveUserObj();
+			$patronType = $patron->getPTypeObj();
+			if (isset($_REQUEST['locationCode'])) {
+				$location = new Location();
+				if ($context === 'myPreferences') {
+					$location->locationId = $_REQUEST['locationCode'];
+				} else {
+					$location->code = $_REQUEST['locationCode'];
+				}
+				if ($location->find(true)) {
+					$sublocations = [];
+					require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+					require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+					$object = new Sublocation();
+					$object->locationId = $location->locationId;
+					$object->isValidHoldPickupAreaILS = 1;
+					$object->isValidHoldPickupAreaAspen = 1;
+					$object->orderBy('weight');
+					$object->find();
+					while ($object->fetch()) {
+						$sublocationPType = new SublocationPatronType();
+						$sublocationPType->patronTypeId = $patronType->id;
+						$sublocationPType->sublocationId = $object->id;
+						if ($sublocationPType->find(true)) {
+							$sublocations[$object->id] = $object->name;
+						}
+					}
 
-                    if (count($sublocations) > 0) {
-                        $success = true;
-                        if ($context === 'myPreferences') {
-                            $labelText = 'Preferred Pickup Location';
-                        } elseif($context === 'changePickupLocation') {
-                            $labelText = 'Select a new location to pickup your hold';
-                        } else {
-                            $labelText = 'Select your pickup location';
-                        }
-                        $html .= '<label class="control-label" for="pickupSublocation">' . translate([
-                                'text' => $labelText,
-                                'isPublicFacing' => true,
-                            ]) . '</label>';
-                        $html .= '<div class="controls">';
-                        $html .= '<select name="pickupSublocation" id="pickupSublocation" class="form-control">';
-                        foreach ($sublocations as $location => $label) {
-                            $selected = false;
-                            if($patron->pickupSublocationId === $location) {
-                                $selected = true;
-                            }
-                            $html .= '<option value="' . $location . '"' . ($selected ? ' selected="selected"' : '') . '>' .
-                                $label . '</option>';
-                        }
-                        $html .= '</select>';
-                        $html .= '</div>';
-                    }
-                }
+					if (count($sublocations) > 0) {
+						$success = true;
+						if ($context === 'myPreferences') {
+							$labelText = 'Preferred Pickup Location';
+						} elseif ($context === 'changePickupLocation') {
+							$labelText = 'Select a new location to pickup your hold';
+						} else {
+							$labelText = 'Select your pickup location';
+						}
+						$html .= '<label class="control-label" for="pickupSublocation">' . translate([
+								'text' => $labelText,
+								'isPublicFacing' => true,
+							]) . '</label>';
+						$html .= '<div class="controls">';
+						$html .= '<select name="pickupSublocation" id="pickupSublocation" class="form-control">';
+						foreach ($sublocations as $location => $label) {
+							$selected = false;
+							if ($patron->pickupSublocationId === $location) {
+								$selected = true;
+							}
+							$html .= '<option value="' . $location . '"' . ($selected ? ' selected="selected"' : '') . '>' . $label . '</option>';
+						}
+						$html .= '</select>';
+						$html .= '</div>';
+					}
+				}
 
-            }
-        }
-        return [
-            'success' => $success,
-            'selectHtml' => $html
-        ];
-    }
+			}
+		}
+		return [
+			'success' => $success,
+			'selectHtml' => $html
+		];
+	}
 }

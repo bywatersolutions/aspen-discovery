@@ -309,7 +309,7 @@ class Polaris extends AbstractIlsDriver {
 						}
 						$renewResult['message'][] = $title . ':' . $blockRow->ErrorDesc;
 					}
-				}else{
+				} else {
 					$renewResult['success'] = true;
 					$renewResult['message'] = translate([
 						'text' => 'All titles renewed successfully',
@@ -337,7 +337,7 @@ class Polaris extends AbstractIlsDriver {
 					$apiMessage .= $blockRow->ErrorDesc;
 
 					// Item renewal block
-					if($blockRow->PAPIErrorType == 2) {
+					if ($blockRow->PAPIErrorType == 2) {
 						// Confirm charge for renewing item
 						if ($blockRow->ErrorAllowOverride) {
 							$confirmRenewalFee = true;
@@ -450,7 +450,7 @@ class Polaris extends AbstractIlsDriver {
 
 					$userCanOverride = false;
 					// Item renewal block
-					if($blockRow->PAPIErrorType == 2) {
+					if ($blockRow->PAPIErrorType == 2) {
 						// Confirm charge for renewing item
 						$userCanOverride = $blockRow->ErrorAllowOverride;
 					}
@@ -473,7 +473,7 @@ class Polaris extends AbstractIlsDriver {
 						'text' => $message,
 						'isPublicFacing' => true,
 					]);
-					$result['api']['action'] =translate([
+					$result['api']['action'] = translate([
 						'text' => 'Renew Item',
 						'isPublicFacing' => true,
 					]);
@@ -623,14 +623,14 @@ class Polaris extends AbstractIlsDriver {
 					$curHold->pickupLocationName = $holdInfo->PickupBranchName;
 				}
 
-                require_once  ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
-                $curPickupHoldArea = new Sublocation();
-                $curPickupHoldArea->ilsId = ''; // where can we get this for the hold?
-                if($curPickupHoldArea->find(true)){
-                    $curPickupHoldArea->fetch();
-                    $curHold->pickupSublocationId = $curPickupHoldArea->id;
-                    $curHold->pickupSublocationName = $curPickupHoldArea->name;
-                }
+				require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+				$curPickupHoldArea = new Sublocation();
+				$curPickupHoldArea->ilsId = ''; // where can we get this for the hold?
+				if ($curPickupHoldArea->find(true)) {
+					$curPickupHoldArea->fetch();
+					$curHold->pickupSublocationId = $curPickupHoldArea->id;
+					$curHold->pickupSublocationName = $curPickupHoldArea->name;
+				}
 
 				$curHold->expirationDate = $this->parsePolarisDate($holdInfo->PickupByDate);
 				$curHold->position = $holdInfo->QueuePosition;
@@ -850,9 +850,9 @@ class Polaris extends AbstractIlsDriver {
 		$body->UserID = (int)$staffUserInfo['polarisId'];
 		$body->RequestingOrgID = (int)$patron->getHomeLocationCode();
 
-        if($pickupSublocation) {
-            $body->HoldPickupAreaID = (int)$pickupSublocation;
-        }
+		if ($pickupSublocation) {
+			$body->HoldPickupAreaID = (int)$pickupSublocation;
+		}
 
 		$encodedBody = json_encode($body);
 		$response = $this->getWebServiceResponse($polarisUrl, 'POST', '', $encodedBody);
@@ -1071,7 +1071,7 @@ class Polaris extends AbstractIlsDriver {
 			}
 			if (is_null($patronBasicData->EmailAddress)) {
 				$user->email = '';
-			}else{
+			} else {
 				$user->email = $patronBasicData->EmailAddress;
 			}
 
@@ -1416,7 +1416,7 @@ class Polaris extends AbstractIlsDriver {
 	}
 
 	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
-        // Todo: Add HoldPickupAreaID value to update hold area ($newPickupSublocation) ??
+		// Todo: Add HoldPickupAreaID value to update hold area ($newPickupSublocation) ??
 		$staffInfo = $this->getStaffUserInfo();
 		$polarisUrl = "/PAPIService/REST/public/v1/1033/100/1/patron/{$patron->getBarcode()}/holdrequests/$itemToUpdateId/pickupbranch?wsid={$this->getWorkstationID($patron)}&userid={$staffInfo['polarisId']}&pickupbranchid=$newPickupLocation";
 		$body = new stdClass();
@@ -1569,7 +1569,7 @@ class Polaris extends AbstractIlsDriver {
 				unset($body->LegalNameMiddle);
 				unset($body->LegalNameLast);
 				unset($body->UseLegalNameOnNotices);
-			}else{
+			} else {
 				if ($body->NameFirst == $patronBasicData->NameFirst) {
 					unset($body->NameFirst);
 				}
@@ -1597,7 +1597,7 @@ class Polaris extends AbstractIlsDriver {
 				unset($body->StreetOne);
 				unset($body->StreetTwo);
 				unset($body->StreetThree);
-			}else{
+			} else {
 				if ($address != null) {
 					if ($body->PostalCode == $address->PostalCode) {
 						unset($body->PostalCode);
@@ -1633,7 +1633,7 @@ class Polaris extends AbstractIlsDriver {
 				unset($body->PhoneVoice2Carrier);
 				unset($body->PhoneVoice3Carrier);
 				unset($body->TxtPhoneNumber);
-			}else{
+			} else {
 				if ($body->PhoneVoice1 == $patronBasicData->PhoneVoice1) {
 					unset($body->PhoneVoice1);
 				}
@@ -1659,7 +1659,7 @@ class Polaris extends AbstractIlsDriver {
 			if (!$library->showNoticeTypeInProfile) {
 				unset($body->DeliveryOptionID);
 				unset($body->EReceiptOptionID);
-			}else{
+			} else {
 				if ($body->DeliveryOptionID == $patronBasicData->DeliveryOptionID) {
 					unset($body->DeliveryOptionID);
 				}
@@ -2931,7 +2931,7 @@ class Polaris extends AbstractIlsDriver {
 		return true;
 	}
 
-	public function supportsLoginWithUsername() : bool {
+	public function supportsLoginWithUsername(): bool {
 		return true;
 	}
 
@@ -3007,7 +3007,7 @@ class Polaris extends AbstractIlsDriver {
 		return true;
 	}
 
-	private function getCarrierList() : array {
+	private function getCarrierList(): array {
 		$staffUserInfo = $this->getStaffUserInfo();
 		$polarisUrl = "/PAPIService/REST/protected/v1/1033/100/1/{$staffUserInfo['accessToken']}/sysadmin/mobilephonecarriers";
 		$carriersResponse = $this->getWebServiceResponse($polarisUrl, 'GET', $staffUserInfo['accessSecret'], false, true);

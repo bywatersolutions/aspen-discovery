@@ -310,6 +310,14 @@ BODY;
 				$current = &$this->lastSearchResults->Data->Records[$x];
 				$interface->assign('recordIndex', $x + 1);
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
+				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers)) {
+					foreach ($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers as $ui) {
+						if ($ui->Type == "doi") {
+							$interface->assign('libKeyUrl', $this->getLibKeyUrl($ui->Value));
+							break;
+						}
+					}
+				}
 
 				require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 				$record = new EbscoRecordDriver($current);
@@ -907,4 +915,11 @@ BODY;
 
 		return $researchStarters;
 	}
+
+	private function getLibKeyUrl($uniqueIdentifierList) {
+		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
+		$libKeyDriver = new LibKeyDriver();
+		return $libKeyDriver->getLibKeyLink($uniqueIdentifierList);
+	}
+
 }

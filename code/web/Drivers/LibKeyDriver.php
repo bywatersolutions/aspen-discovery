@@ -1,7 +1,7 @@
 <?php
 
 class LibKeyDriver {
-	public function getLibKeyLink($data): string | null {
+	public function getLibKeyResult($data): array | null {
 		require_once ROOT_DIR . '/sys/LibKey/LibKeySetting.php';
 		$activeLibrary = Library::getActiveLibrary();
 		$settings = new LibKeySetting();
@@ -14,12 +14,11 @@ class LibKeyDriver {
 		if (!$doi) {
 			return null;
 		}
-		$response = $curlWrapper->curlGetPage("https://public-api.thirdiron.com/public/v1/libraries/" . $settings->libraryId  . "/articles/doi/" . $doi . "?access_token=" . $settings->apiKey);
+		$response = $curlWrapper->curlGetPage("https://public-api.thirdiron.com/public/v1/libraries/" . $settings->libraryId  . "/articles/doi/" . $doi . "?access_token=" . $settings->apiKey . "&include=journal");
 		if (empty($response)) {
 			return null;
 		}
-		$result = json_decode($response, true)["data"]["bestIntegratorLink"]["bestLink"];
-		return $result;
+		return json_decode($response, true);
 	}
 	
 	private function getDoi($data): string | null {

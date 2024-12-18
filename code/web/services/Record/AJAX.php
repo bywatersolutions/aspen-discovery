@@ -2016,7 +2016,7 @@ class Record_AJAX extends Action {
 	private function getLibKeyUrl($doiUrl) {
 		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
 		$libKeyDriver = new LibKeyDriver();
-		return $libKeyDriver->getLibKeyLink($doiUrl);
+		return $libKeyDriver->getLibKeyResult($uniqueIdentifierList)["data"]["bestIntegratorLink"]["bestLink"];
 	}
 }
 

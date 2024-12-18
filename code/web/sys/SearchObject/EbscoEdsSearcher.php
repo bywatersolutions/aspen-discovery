@@ -313,7 +313,9 @@ BODY;
 				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers)) {
 					foreach ($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers as $ui) {
 						if ($ui->Type == "doi") {
-							$interface->assign('libKeyUrl', $this->getLibKeyUrl($ui->Value));
+							$libKeyResult =  $this->getLibKeyResult($ui->Value);
+							$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
+							$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
 							break;
 						}
 					}
@@ -916,10 +918,10 @@ BODY;
 		return $researchStarters;
 	}
 
-	private function getLibKeyUrl($uniqueIdentifierList) {
+	private function getLibKeyResult($uniqueIdentifierList) {
 		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
 		$libKeyDriver = new LibKeyDriver();
-		return $libKeyDriver->getLibKeyLink($uniqueIdentifierList);
+		return $libKeyDriver->getLibKeyResult($uniqueIdentifierList);
 	}
 
 }

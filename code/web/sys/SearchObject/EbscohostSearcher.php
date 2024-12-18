@@ -255,7 +255,9 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 				$interface->assign('recordIndex', $x + 1);
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
 				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($current->header->controlInfo->artinfo->ui)) {
-					$interface->assign('libKeyUrl', $this->getLibKeyUrl($current->header->controlInfo->artinfo->ui));
+					$libKeyResult =  $this->getLibKeyResult($current->header->controlInfo->artinfo->ui);
+					$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
+					$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
 				}
 				require_once ROOT_DIR . '/RecordDrivers/EbscohostRecordDriver.php';
 				$record = new EbscohostRecordDriver($current);
@@ -954,10 +956,9 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 		return $list;
 	}
 
-	private function getLibKeyUrl($uniqueIdentifierList) {
+	private function getLibKeyResult($uniqueIdentifier) {
 		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
 		$libKeyDriver = new LibKeyDriver();
-		return $libKeyDriver->getLibKeyLink($uniqueIdentifierList);
+		return $libKeyDriver->getLibKeyResult($uniqueIdentifier);
 	}
-
 }

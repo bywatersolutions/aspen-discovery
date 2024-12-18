@@ -4,7 +4,11 @@
 		<div class="coversColumn col-xs-3 col-sm-3{if empty($viewingCombinedResults)} col-md-3 col-lg-2{/if} text-center" aria-hidden="true" role="presentation">
 			{if $disableCoverArt != 1 && !empty($bookCoverUrlMedium)}
 				<a href="{$summUrl}" onclick="AspenDiscovery.EBSCO.trackEdsUsage('{$summId}')" target="_blank" aria-hidden="true">
-					<img src="{$bookCoverUrlMedium}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
+					{if !empty($libKeyCoverImageUrl)}
+						<img src="{$libKeyCoverImageUrl}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
+					{else}
+						<img src="{$bookCoverUrlMedium}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
+					{/if} 
 				</a>
 			{/if}
 		</div>

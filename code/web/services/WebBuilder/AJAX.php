@@ -64,10 +64,29 @@ class WebBuilder_AJAX extends JSON_Action {
 				if (!UserAccount::userHasPermission('Administer All Custom Forms')) {
 					$libraryCustomForm = new LibraryCustomForm();
 					$userLibrary = Library::getPatronHomeLibrary();
+					$additionalAdminLocations = UserAccount::getActiveUserObj()->getAdditionalAdministrationLocations();
+
+					$validLibraryIds = [];
 
 					if ($userLibrary) {
-						$userLibraryId = $userLibrary->libraryId;
-						$libraryCustomForm->whereAdd('libraryId = ' . $userLibraryId);
+						$validLibraryIds[] = $userLibrary->libraryId;
+					}
+
+
+					if (!empty($additionalAdminLocations)) {
+						foreach ($additionalAdminLocations as $locationId => $locationName) {
+							$library = Library::getLibraryForLocation($locationId);
+							if ($library) {
+								$validLibraryIds[] = $library->libraryId;
+							}
+						}
+					}
+
+
+					if (count($validLibraryIds) > 0) {
+
+						$libraryCustomForm->whereAddIn('libraryId', $validLibraryIds, true);
+
 
 						$validCustomForms = [];
 						$libraryCustomForm->find();

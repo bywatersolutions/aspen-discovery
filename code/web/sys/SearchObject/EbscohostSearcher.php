@@ -256,8 +256,15 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
 				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($current->header->controlInfo->artinfo->ui)) {
 					$libKeyResult =  $this->getLibKeyResult($current->header->controlInfo->artinfo->ui);
+					if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
+						$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
+						$interface->assign('retracted', true);
+						break;
+					}
 					$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
 					$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
+					$interface->assign('retracted', false);
+					break;
 				}
 				require_once ROOT_DIR . '/RecordDrivers/EbscohostRecordDriver.php';
 				$record = new EbscohostRecordDriver($current);

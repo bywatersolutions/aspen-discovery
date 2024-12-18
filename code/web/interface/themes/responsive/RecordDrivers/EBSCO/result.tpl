@@ -4,7 +4,7 @@
 		<div class="coversColumn col-xs-3 col-sm-3{if empty($viewingCombinedResults)} col-md-3 col-lg-2{/if} text-center" aria-hidden="true" role="presentation">
 			{if $disableCoverArt != 1 && !empty($bookCoverUrlMedium)}
 				<a href="{$summUrl}" onclick="AspenDiscovery.EBSCO.trackEdsUsage('{$summId}')" target="_blank" aria-hidden="true">
-					{if !empty($libKeyCoverImageUrl)}
+					{if !empty($libKeyCoverImageUrl) && !$retracted}
 						<img src="{$libKeyCoverImageUrl}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
 					{else}
 						<img src="{$bookCoverUrlMedium}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
@@ -23,6 +23,11 @@
 				</a>
 			</div>
 		</div>
+		{if $retracted}
+			<div class="alert alert-warning btn" id="retraction-warning" role="alert" aria-live="polite">
+				<strong><a href="{$libKeyUrl}" target="_blank"><span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true" aria-label="{translate text="Retracted" isPublicFacing=true inAttribute=true} ({translate text="opens in a new window" isPublicFacing=true inAttribute=true})"></span> {translate text='Retracted' isPublicFacing=true}</a> <i class="fas fa-external-link-alt" role="presentation"></i></strong>
+			</div>
+		{/if}
 
 		{if !empty($summAuthor)}
 			<div class="row">

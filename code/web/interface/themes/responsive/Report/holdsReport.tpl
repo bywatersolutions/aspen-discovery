@@ -59,7 +59,7 @@
 		div#main-content-with-sidebar {
 			padding: 0in !important;
 		}
-		div#system-message-header {
+		div#system-messages {
 			display: none !important;
 		}
 		table#holdsReportTable {

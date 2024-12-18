@@ -147,7 +147,7 @@
 		div#page-header {
 			display: none !important;
 		}
-		div#system-message-header {
+		div#system-messages {
 			display: none !important;
 		}
 		div#footer-container {

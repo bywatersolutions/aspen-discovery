@@ -82,7 +82,7 @@
             , #header-wrapper
             , #horizontal-menu-bar-wrapper
             , #side-bar
-            , #system-message-header
+            , #system-messages
             , .breadcrumbs {
                 display: none;
             }

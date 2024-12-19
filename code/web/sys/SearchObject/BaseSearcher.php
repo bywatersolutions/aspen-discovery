@@ -2356,7 +2356,7 @@ abstract class SearchObject_BaseSearcher {
 	 * @param bool $preventQueryModification Should we make sure the query doesn't change
 	 * @return  object   Search results (format may vary from class to class).
 	 */
-	abstract public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false);
+	abstract public function processSearch(bool $returnIndexErrors = false, bool $recommendations = false, bool $preventQueryModification = false) : AspenError|array;
 
 	/**
 	 * Get error message from index response, if any.  This will only work if
@@ -2612,24 +2612,24 @@ abstract class SearchObject_BaseSearcher {
 		// Stash our old data for a minute
 		$oldView = $this->view;
 		$oldPage = $this->page;
-	
+
 		// Add the new view
 		$this->view = 'ris';
-	
+
 		// Remove page number
 		$this->page = 1;
-	
+
 		// Get the new URL
 		$url = $this->renderSearchUrl();
-	
+
 		// Restore the old data
 		$this->view = $oldView;
 		$this->page = $oldPage;
-	
+
 		// Return the URL
 		return $url;
 	}
-	
+
 	/**
 	 * Turn our results into an RIS feed
 	 *
@@ -2640,7 +2640,7 @@ abstract class SearchObject_BaseSearcher {
 		//By default, return nothing, and we will override for grouped works and anything else that should be represented.
 		return '';
 	}
-	
+
 
 	public abstract function getResultRecordSet();
 
@@ -2690,7 +2690,7 @@ abstract class SearchObject_BaseSearcher {
 	 * @param $field
 	 * @return string
 	 */
-	protected function getScopedFieldName($field): string {
+	protected function getScopedFieldName(string $field): string {
 		return $field;
 	}
 

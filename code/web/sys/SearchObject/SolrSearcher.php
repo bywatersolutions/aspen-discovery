@@ -255,14 +255,11 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 	 *                                     we encounter an error (false) or return
 	 *                                     it for access via the getIndexError()
 	 *                                     method (true)?
-	 * @param bool $recommendations Should we process recommendations along
-	 *                                     with the search itself?
-	 * @param bool $preventQueryModification Should we allow the search engine
-	 *                                             to modify the query or is it already
-	 *                                             a well formatted query
-	 * @return  array solr result structure (for now)
+	 * @param bool $recommendations Should we process recommendations along with the search itself?
+	 * @param bool $preventQueryModification Should we allow the search engine to modify the query or is it already a well-formatted query
+	 * @return  AspenError|array solr result structure (for now)
 	 */
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
 		// Our search has already been processed in init()
 		$search = $this->searchTerms;
 
@@ -334,8 +331,8 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 			}
 		}
 
-		// If we are only searching one field use the DisMax handler
-		//    for that field. If left at null let solr take care of it
+		// If we are only searching one field, use the DisMax handler
+		//    for that field. If left at null, let solr take care of it
 		if (count($search) == 1 && isset($search[0]['index'])) {
 			$this->index = $search[0]['index'];
 		}

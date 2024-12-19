@@ -125,24 +125,24 @@ class SearchObject_WebsitesSearcher extends SearchObject_SolrSearcher {
 		return 'id';
 	}
 
-	public function getRecordDriverForResult($current) {
-		if ($current['recordtype'] == 'WebPage') {
+	public function getRecordDriverForResult($record) {
+		if ($record['recordtype'] == 'WebPage') {
 			require_once ROOT_DIR . '/RecordDrivers/WebsitePageRecordDriver.php';
-			return new WebsitePageRecordDriver($current);
-		} elseif ($current['recordtype'] == 'WebResource') {
+			return new WebsitePageRecordDriver($record);
+		} elseif ($record['recordtype'] == 'WebResource') {
 			require_once ROOT_DIR . '/RecordDrivers/WebResourceRecordDriver.php';
-			return new WebResourceRecordDriver($current);
-		} elseif ($current['recordtype'] == 'BasicPage') {
+			return new WebResourceRecordDriver($record);
+		} elseif ($record['recordtype'] == 'BasicPage') {
 			require_once ROOT_DIR . '/RecordDrivers/BasicPageRecordDriver.php';
-			return new BasicPageRecordDriver($current);
-		} elseif ($current['recordtype'] == 'PortalPage') {
+			return new BasicPageRecordDriver($record);
+		} elseif ($record['recordtype'] == 'PortalPage') {
 			require_once ROOT_DIR . '/RecordDrivers/PortalPageRecordDriver.php';
-			return new PortalPageRecordDriver($current);
-		} elseif ($current['recordtype'] == 'GrapesPage') {
+			return new PortalPageRecordDriver($record);
+		} elseif ($record['recordtype'] == 'GrapesPage') {
 			require_once ROOT_DIR . '/RecordDrivers/GrapesPageRecordDriver.php';
-			return new GrapesPageRecordDriver($current);
+			return new GrapesPageRecordDriver($record);
 		} else {
-			AspenError::raiseError("Unknown type of Website result {$current['recordtype']}");
+			AspenError::raiseError("Unknown type of Website result {$record['recordtype']}");
 		}
 		return null;
 	}

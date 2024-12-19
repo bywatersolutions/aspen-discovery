@@ -1010,12 +1010,17 @@ abstract class Solr {
 		// Break apart sort into field name and sort direction (note error
 		// suppression to prevent notice when direction is left blank):
 		$sort = trim($sort);
-		@list($sortField, $sortDirection) = explode(' ', $sort);
+		if (str_contains($sort, ' ')) {
+			@list($sortField, $sortDirection) = explode(' ', $sort);
+		}else{
+			$sortField = $sort;
+			$sortDirection = 'asc';
+		}
 
 		// Default sort order (may be overridden by switch below):
 		$defaultSortDirection = 'asc';
 
-		// Normalize sort direction to either "asc" or "desc":
+		// Normalize the sort direction to either "asc" or "desc":
 		$sortDirection = strtolower(trim($sortDirection));
 		if ($sortDirection != 'desc' && $sortDirection != 'asc') {
 			$sortDirection = $defaultSortDirection;

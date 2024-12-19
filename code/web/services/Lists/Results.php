@@ -45,9 +45,9 @@ class Lists_Results extends ResultsAction {
 		// Set Interface Variables
 		//   Those we can construct BEFORE the search is executed
 		$interface->assign('sortList', $searchObject->getSortList());
-		$interface->assign('rssLink', $searchObject->getRSSUrl());
+		//$interface->assign('rssLink', $searchObject->getRSSUrl());
 		$interface->assign('excelLink', $searchObject->getExcelUrl());
-		$interface->assign('risLink', $searchObject->getRisUrl());
+		//$interface->assign('risLink', $searchObject->getRisUrl());
 
 		// Hide Covers when the user has set that setting on the Search Results Page
 		$this->setShowCovers();

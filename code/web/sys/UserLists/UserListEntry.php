@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
@@ -22,25 +22,27 @@ class UserListEntry extends DataObject {
 		];
 	}
 
-	/**
-	 * @param bool $updateBrowseCategories
-	 * @return bool
-	 */
-	function insert($updateBrowseCategories = true) {
+	function insert($context = '') : int {
 		$result = parent::insert();
 		global $memCache;
 		$memCache->delete('user_list_data_' . UserAccount::getActiveUserId());
+
+		$this->updateParentListDateUpdated();
+
 		return $result;
 	}
 
 	/**
-	 * @param bool $updateBrowseCategories
-	 * @return bool|int|mixed
+	 * @param string $context
+	 * @return bool|int
 	 */
-	function update($updateBrowseCategories = true) {
+	function update($context = '') : bool|int {
 		$result = parent::update();
 		global $memCache;
 		$memCache->delete('user_list_data_' . UserAccount::getActiveUserId());
+
+		$this->updateParentListDateUpdated();
+
 		return $result;
 	}
 
@@ -53,7 +55,21 @@ class UserListEntry extends DataObject {
 		$result = parent::delete($useWhere);
 		global $memCache;
 		$memCache->delete('user_list_data_' . UserAccount::getActiveUserId());
+
+		$this->updateParentListDateUpdated();
+
 		return $result;
+	}
+
+	private function updateParentListDateUpdated() : void {
+		if (!empty($this->listId)) {
+			$parentList = new UserList();
+			$parentList->id = $this->listId;
+			if ($parentList->find(true)) {
+				$parentList->dateUpdated = time();
+				$parentList->update();
+			}
+		}
 	}
 
 	public function getRecordDriver() {

@@ -40,9 +40,9 @@
 
 		{* User's viewing mode toggle switch *}
 		{if !empty($showSearchToolsAtTop)}
-			{include file="Search/search-toolbar.tpl"}
+			{include file="Search/search-toolbar-no-display-mode.tpl"}
 		{else}
-			{include file="Search/results-displayMode-toggle.tpl"}
+			{include file="Search/results-no-displayMode-toggle.tpl"}
 		{/if}
 
 		<div class="clearer"></div>

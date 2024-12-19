@@ -621,7 +621,7 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 		return false;
 	}
 
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
 		$settings = $this->getSettings();
 		if ($settings == null) {
 			return new AspenError("EBSCOhost searching is not configured for this library.");

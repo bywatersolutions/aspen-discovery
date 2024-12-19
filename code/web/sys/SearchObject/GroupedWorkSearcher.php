@@ -85,14 +85,11 @@ class SearchObject_GroupedWorkSearcher extends SearchObject_AbstractGroupedWorkS
 	 *                                     we encounter an error (false) or return
 	 *                                     it for access via the getIndexError()
 	 *                                     method (true)?
-	 * @param bool $recommendations Should we process recommendations along
-	 *                                     with the search itself?
-	 * @param bool $preventQueryModification Should we allow the search engine
-	 *                                             to modify the query or is it already
-	 *                                             a well formatted query
-	 * @return  array
+	 * @param bool $recommendations Should we process recommendations along with the search itself?
+	 * @param bool $preventQueryModification Should we allow the search engine to modify the query or is it already a well formatted query
+	 * @return  AspenError|array
 	 */
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array{
 		global $timer;
 		global $solrScope;
 
@@ -317,8 +314,8 @@ class SearchObject_GroupedWorkSearcher extends SearchObject_AbstractGroupedWorkS
 		}
 
 
-		// If we are only searching one field use the DisMax handler
-		//    for that field. If left at null let solr take care of it
+		// If we are only searching one field, use the DisMax handler
+		//    for that field. If left at null, let solr take care of it
 		if (count($search) == 1 && isset($search[0]['index'])) {
 			$this->index = $search[0]['index'];
 		}
@@ -631,7 +628,7 @@ class SearchObject_GroupedWorkSearcher extends SearchObject_AbstractGroupedWorkS
 	 * @param $field
 	 * @return string
 	 */
-	protected function getScopedFieldName($field): string {
+	protected function getScopedFieldName(string $field): string {
 		global $solrScope;
 		if ($solrScope) {
 			if ($field === 'availability_toggle') {
@@ -671,8 +668,8 @@ class SearchObject_GroupedWorkSearcher extends SearchObject_AbstractGroupedWorkS
 	 * Process facets from the results object
 	 *
 	 * @access  public
-	 * @param array $filter Array of field => on-screen description
-	 *                                  listing all of the desired facet fields;
+	 * @param array $filter Array of field = on-screen description
+	 *                                  listing all the desired facet fields;
 	 *                                  set to null to get all configured values.
 	 * @return  array   Facets data arrays
 	 */

@@ -553,7 +553,7 @@ BODY;
 		return false;
 	}
 
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
 		$isAuthenticated = $this->authenticate();
 		if (empty($isAuthenticated)) {
 			return null;

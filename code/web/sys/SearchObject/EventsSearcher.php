@@ -72,7 +72,7 @@ class SearchObject_EventsSearcher extends SearchObject_SolrSearcher {
 	 *                                             a well formatted query
 	 * @return  array solr result structure (for now)
 	 */
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
 		// Our search has already been processed in init()
 		$search = $this->searchTerms;
 
@@ -366,20 +366,20 @@ class SearchObject_EventsSearcher extends SearchObject_SolrSearcher {
 		return 'id';
 	}
 
-	public function getRecordDriverForResult($current) {
-		if (substr($current['type'], 0, 12) == 'event_libcal') {
+	public function getRecordDriverForResult($record) {
+		if (substr($record['type'], 0, 12) == 'event_libcal') {
 			require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
-			return new SpringshareLibCalEventRecordDriver($current);
-		} else if (substr($current['type'], 0, 15) == 'event_communico') {
+			return new SpringshareLibCalEventRecordDriver($record);
+		} else if (substr($record['type'], 0, 15) == 'event_communico') {
 			require_once ROOT_DIR . '/RecordDrivers/CommunicoEventRecordDriver.php';
-			return new CommunicoEventRecordDriver($current);
-		} else if (substr($current['type'], 0, 13) == 'event_assabet') {
+			return new CommunicoEventRecordDriver($record);
+		} else if (substr($record['type'], 0, 13) == 'event_assabet') {
 			require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
-			return new AssabetEventRecordDriver($current);
+			return new AssabetEventRecordDriver($record);
 		} else {
 			// TODO: rewrite Library Market Library Calendar type as event_lm or something similar. 2022 03 20 James.
 			require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
-			return new LibraryCalendarEventRecordDriver($current);
+			return new LibraryCalendarEventRecordDriver($record);
 		}
 	}
 

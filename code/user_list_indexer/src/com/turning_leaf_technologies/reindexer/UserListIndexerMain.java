@@ -181,6 +181,12 @@ public class UserListIndexerMain {
 			if (loadSettingsRS.next()){
 				fullReindex = loadSettingsRS.getBoolean("runFullUpdate");
 				lastReindexTime = loadSettingsRS.getLong("lastUpdateOfChangedLists");
+				long lastFullReindexTime = loadSettingsRS.getLong("lastUpdateOfAllLists");
+				//Run a full reindex every 24 hours to make sure that Date Added and Date Updated Facets update properly
+				long now = new Date().getTime() / 1000;
+				if (now - lastFullReindexTime >  24 * 60 * 60) {
+					fullReindex = true;
+				}
 			}else{
 				logEntry.incErrors("No Settings were found for list indexing");
 			}

@@ -153,9 +153,9 @@ class SearchObject_CourseReservesSearcher extends SearchObject_SolrSearcher {
 		return 'id';
 	}
 
-	public function getRecordDriverForResult($current) {
+	public function getRecordDriverForResult($record) {
 		require_once ROOT_DIR . '/RecordDrivers/CourseReservesRecordDriver.php';
-		return new CourseReservesRecordDriver($current);
+		return new CourseReservesRecordDriver($record);
 	}
 
 	public function getSearchesFile() {

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <schema name="User Lists Index" version="1.5">
 	<types>
-		<fieldType name="unchanged_string" class="StrField"/> 
+		<fieldType name="unchanged_string" class="StrField"/>
 		<fieldType name="integer" class="IntPointField"/>
 		<fieldType name="long" class="LongPointField"/>
 		<fieldType name="float" class="FloatPointField"/>
@@ -127,6 +127,11 @@
 		<field name="days_since_added" type="integer" indexed="true" stored="true" multiValued="false"/>
 		<dynamicField name="local_time_since_added_*" type="unchanged_string" indexed="true" stored="true" multiValued="true"/>
 		<dynamicField name="local_days_since_added_*" type="integer" indexed="true" stored="true" multiValued="false"/>
+		<field name="date_updated" type="date" indexed="true" stored="true" multiValued="false"/>
+		<field name="time_since_updated" type="unchanged_string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+		<field name="days_since_updated" type="integer" indexed="true" stored="true" multiValued="false"/>
+		<dynamicField name="local_time_since_updated_*" type="unchanged_string" indexed="true" stored="true" multiValued="true"/>
+		<dynamicField name="local_days_since_updated_*" type="integer" indexed="true" stored="true" multiValued="false"/>
 		<field name="scope_has_related_records" type="unchanged_string" indexed="true" stored="true" multiValued="true"/>
 
 		<!-- IDs of records that make up the list -->

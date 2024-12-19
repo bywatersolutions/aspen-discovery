@@ -230,7 +230,9 @@ class UserListIndexer {
 			userListSolr.setTitle(allPublicListsRS.getString("title"));
 			userListSolr.setDescription(allPublicListsRS.getString("description"));
 			long created = allPublicListsRS.getLong("created");
+			long dateUpdated = allPublicListsRS.getLong("dateUpdated");
 			userListSolr.setCreated(created);
+			userListSolr.setDateUpdated(dateUpdated);
 
 			try {
 				String displayName = EncryptionUtils.decryptString(allPublicListsRS.getString("displayName"), serverName, logEntry);

@@ -2,6 +2,7 @@
 require_once ROOT_DIR . '/sys/SearchObject/SolrSearcher.php';
 
 class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
+
 	public function __construct() {
 		parent::__construct();
 
@@ -43,6 +44,10 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 		$this->sortOptions = [
 			'relevance' => 'Best Match',
 			'title_sort' => 'Title',
+			'days_since_added, title_sort desc' => 'Date Added Desc',
+			'days_since_added, title_sort asc' => 'Date Added Asc',
+			'days_since_updated, title_sort desc' => 'Date Updated Desc',
+			'days_since_updated, title_sort asc' => 'Date Updated Asc',
 		];
 
 		// Debugging
@@ -60,7 +65,7 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 	 * @param string $searchSource
 	 * @return  boolean
 	 */
-	public function init($searchSource = null) {
+	public function init($searchSource = null) : bool {
 		// Call the standard initialization routine in the parent:
 		parent::init('lists');
 
@@ -121,7 +126,7 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 		return true;
 	} // End init()
 
-	public function getSearchIndexes() {
+	public function getSearchIndexes() : array {
 		return [
 			'ListsKeyword' => translate([
 				'text' => 'Keyword',
@@ -145,13 +150,13 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 	 * Turn our results into a csv document
 	 * @param array $result
 	 */
-	public function buildExcel($result = null) {
+	public function buildExcel($result = null) : void {
 		try {
 			global $configArray;
 
 			if (is_null($result)) {
 				$this->limit = 1000;
-				$result = $this->processSearch(false, false);
+				$result = $this->processSearch();
 			}
 
 			//Output to the browser
@@ -197,20 +202,20 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 		}
 	}
 
-	public function getUniqueField() {
+	public function getUniqueField() : string {
 		return 'id';
 	}
 
-	public function getRecordDriverForResult($current) {
+	public function getRecordDriverForResult($record) : ListsRecordDriver {
 		require_once ROOT_DIR . '/RecordDrivers/ListsRecordDriver.php';
-		return new ListsRecordDriver($current);
+		return new ListsRecordDriver($record);
 	}
 
-	public function getSearchesFile() {
+	public function getSearchesFile() : string {
 		return 'listsSearches';
 	}
 
-	public function supportsSuggestions() {
+	public function supportsSuggestions() : bool {
 		return true;
 	}
 
@@ -219,7 +224,7 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 	 * @param string $searchIndex
 	 * @return array
 	 */
-	public function getSearchSuggestions($searchTerm, $searchIndex) {
+	public function getSearchSuggestions($searchTerm, $searchIndex) : array {
 		$suggestionHandler = 'suggest';
 		if ($searchIndex == 'ListsTitle') {
 			$suggestionHandler = 'title_suggest';
@@ -231,7 +236,7 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 	}
 
 	//TODO: Convert this to use definitions so they can be customized in admin
-	public function getFacetConfig() {
+	public function getFacetConfig() : array {
 		if ($this->facetConfig == null) {
 			$facetConfig = [];
 			$author = new LibraryFacetSetting();
@@ -245,16 +250,68 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 			$author->useMoreFacetPopup = true;
 			$facetConfig["author_display"] = $author;
 
+			global $solrScope;
+			$daysSinceAdded = new LibraryFacetSetting();
+			$daysSinceAdded->id = 2;
+			$daysSinceAdded->multiSelect = false;
+			$daysSinceAdded->facetName = "local_time_since_added_$solrScope";
+			$daysSinceAdded->displayName = "Added In the Last";
+			$daysSinceAdded->numEntriesToShowByDefault = 10;
+			$daysSinceAdded->translate = true;
+			$daysSinceAdded->collapseByDefault = false;
+			$daysSinceAdded->useMoreFacetPopup = false;
+			$facetConfig["local_time_since_added_$solrScope"] = $daysSinceAdded;
+
+			$daysSinceUpdated = new LibraryFacetSetting();
+			$daysSinceUpdated->id = 3;
+			$daysSinceUpdated->multiSelect = false;
+			$daysSinceUpdated->facetName = "local_time_since_updated_$solrScope";
+			$daysSinceUpdated->displayName = "Updated In the Last";
+			$daysSinceUpdated->numEntriesToShowByDefault = 10;
+			$daysSinceUpdated->translate = true;
+			$daysSinceUpdated->collapseByDefault = false;
+			$daysSinceUpdated->useMoreFacetPopup = false;
+			$facetConfig["local_time_since_updated_$solrScope"] = $daysSinceUpdated;
+
 			$this->facetConfig = $facetConfig;
 		}
 		return $this->facetConfig;
 	}
 
-	public function getEngineName() {
+	public function getEngineName() : string {
 		return 'Lists';
 	}
 
-	public function getDefaultIndex() {
+	public function getDefaultIndex() : string {
 		return 'ListsKeyword';
+	}
+
+	/**
+	 * @param string $scopedFieldName
+	 * @return string
+	 */
+	protected function getUnscopedFieldName(string $scopedFieldName): string {
+		if (str_starts_with($scopedFieldName, 'local_time_since_added')) {
+			$scopedFieldName = 'local_time_since_added';
+		}else if (str_starts_with($scopedFieldName, 'local_time_since_updated')) {
+			$scopedFieldName = 'local_time_since_updated';
+		}
+		return $scopedFieldName;
+	}
+
+	/**
+	 * @param string $field
+	 * @return string
+	 */
+	protected function getScopedFieldName(string $field): string {
+		global $solrScope;
+		if ($solrScope) {
+			if ($field === 'time_since_added') {
+				$field = 'local_time_since_added_' . $solrScope;
+			}elseif ($field === 'time_since_updated') {
+				$field = 'local_time_since_updated_' . $solrScope;
+			}
+		}
+		return $field;
 	}
 }

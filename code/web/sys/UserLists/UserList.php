@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 require_once ROOT_DIR . '/sys/UserLists/UserListEntry.php';
@@ -18,16 +18,12 @@ class UserList extends DataObject {
 	public $defaultSort;
 	public $importedFrom;
 	public $nytListModified;
-	/**
-	 * @var int
-	 */
-	private $limit;
 
 	public function getUniquenessFields(): array {
 		return ['id'];
 	}
 
-	public static function getSourceListsForBrowsingAndCarousels() {
+	public static function getSourceListsForBrowsingAndCarousels() : array {
 		$userLists = new UserList();
 		$userLists->public = 1;
 		$userLists->deleted = 0;
@@ -66,6 +62,7 @@ class UserList extends DataObject {
 		// this puts items with no set weight towards the end of the list
 	];
 
+	/** @noinspection PhpUnusedParameterInspection */
 	static function getObjectStructure($context = ''): array {
 		return [
 			'id' => [
@@ -120,12 +117,12 @@ class UserList extends DataObject {
 		return $listEntry->count();
 	}
 
-	function insert($createNow = true) {
-		if ($createNow) {
+	function insert($context = ''): bool|int {
+		if (empty($this->created)) {
 			$this->created = time();
-			if (empty($this->dateUpdated)) {
-				$this->dateUpdated = time();
-			}
+		}
+		if (empty($this->dateUpdated)) {
+			$this->dateUpdated = time();
 		}
 		if ($this->public == 0) {
 			$this->searchable = 0;
@@ -136,7 +133,7 @@ class UserList extends DataObject {
 		return parent::insert();
 	}
 
-	function update($context = '') {
+	function update($context = '')  : bool|int {
 		if ($this->created == 0) {
 			$this->created = time();
 		}
@@ -164,8 +161,10 @@ class UserList extends DataObject {
 			$listEntry = new UserListEntry();
 			$listEntry->listId = $this->id;
 			$listEntry->delete(true);
+
+			$ret = true;
 		} else {
-			parent::delete($useWhere);
+			$ret = parent::delete($useWhere);
 		}
 
 		global $memCache;
@@ -182,7 +181,7 @@ class UserList extends DataObject {
 	 * @param null $sort optional SQL for the query's ORDER BY clause
 	 * @return array      of list entries
 	 */
-	function getListEntries($sort = null, $forLiDA = false, $appVersion = 0) {
+	function getListEntries($sort = null, $forLiDA = false, $appVersion = 0) : array {
 		global $interface;
 		require_once ROOT_DIR . '/sys/UserLists/UserListEntry.php';
 		$listEntry = new UserListEntry();
@@ -256,10 +255,10 @@ class UserList extends DataObject {
 	}
 
 	/**
-	 * @param string $sortName How records should be sorted, if no sort is provided, will use the default for the list
-	 * @return UserListEntry[]|null
+	 * @param ?string $sortName How records should be sorted, if no sort is provided, will use the default for the list
+	 * @return UserListEntry[]
 	 */
-	function getListTitles($sortName = null) {
+	function getListTitles(?string $sortName = null) : array {
 		if (isset($this->listTitles[$this->id])) {
 			return $this->listTitles[$this->id];
 		}
@@ -279,9 +278,9 @@ class UserList extends DataObject {
 
 	/**
 	 * @param UserListEntry $listEntry - The resource to be cleaned
-	 * @return UserListEntry|bool
+	 * @return UserListEntry
 	 */
-	function cleanListEntry($listEntry) {
+	function cleanListEntry(UserListEntry $listEntry) : UserListEntry {
 		//Filter list information for bad words as needed.
 		if (!UserAccount::isLoggedIn() || $this->user_id != UserAccount::getActiveUserId()) {
 			//Load all bad words.
@@ -291,11 +290,10 @@ class UserList extends DataObject {
 
 			//Determine if we should censor bad words or hide the comment completely.
 			$censorWords = $library->getGroupedWorkDisplaySettings()->hideCommentsWithBadWords == 0;
+			//Filter Title
+			$titleText = $badWords->censorBadWords($this->title);
+			$this->title = $titleText;
 			if ($censorWords) {
-				//Filter Title
-				$titleText = $badWords->censorBadWords($this->title);
-				$this->title = $titleText;
-
 				//Filter description
 				$descriptionText = $badWords->censorBadWords($this->description);
 				$this->description = $descriptionText;
@@ -305,9 +303,6 @@ class UserList extends DataObject {
 				$listEntry->notes = $notesText;
 			} else {
 				//Check for bad words in the title or description
-				$titleText = $badWords->censorBadWords($this->title);
-				$this->title = $titleText;
-
 				if (isset($this->description)) {
 					if ($badWords->hasBadWords($this->description)) {
 						$this->description = '';
@@ -380,7 +375,7 @@ class UserList extends DataObject {
 	 * remove all resources within this list
 	 * @param bool $updateBrowseCategories
 	 */
-	function removeAllListEntries(bool $updateBrowseCategories = true) {
+	function removeAllListEntries(bool $updateBrowseCategories = true) : void {
 		$allListEntries = $this->getListTitles();
 		foreach ($allListEntries as $listEntry) {
 			$this->removeListEntry($listEntry, $updateBrowseCategories);
@@ -1283,7 +1278,7 @@ class UserList extends DataObject {
 					$publishDate = '';
 					$uniqueFormats = '';
 					$output = [''];
-				
+
 				} elseif ($curDoc instanceof WebsitePageRecordDriver) {
 					// Hyperlink
 					$link = $curDoc->getLinkUrl() ?? '';
@@ -1361,7 +1356,7 @@ class UserList extends DataObject {
 	// private function formatGroupedWorkCitation($curDoc) {
 	// 	require_once ROOT_DIR . '/RecordDrivers/GroupedWorkDriver.php';
 	// 	require_once ROOT_DIR . '/sys/CitationBuilder.php';
-			
+
 	// 	if ($curDoc->isValid()) {
 	// 		// Initialize an array to store the RIS-formatted citation fields
 	// 		$risFields = array();
@@ -1372,7 +1367,7 @@ class UserList extends DataObject {
 	// 			$format = implode(', ', $format);
 
 	// 		switch ($format) {
-	// 			case 'book': 
+	// 			case 'book':
 	// 				$format = 'BOOK';
 	// 				break;
 	// 			case 'BOOK':
@@ -1468,7 +1463,7 @@ class UserList extends DataObject {
 	// 		}
 
 	// 	 $risFields[] = "TY  - ".$format;
-	// 	}	
+	// 	}
 	// 		//RIS Tag: AU - Author
 	// 		$authors = array();
 	// 		$primaryAuthor = $curDoc->getPrimaryAuthor();
@@ -1571,7 +1566,7 @@ class UserList extends DataObject {
 	// 			$risFields[] = "ST  - ".$shortTilte;
 	// 		}
 
-	// 		// RIS Tag: SN - ISBN 
+	// 		// RIS Tag: SN - ISBN
 	// 		$ISBN = $curDoc->getPrimaryIsbn();
 	// 		if(!empty($ISBN)){
 	// 			$risFields[] = "SN  - ".$ISBN;

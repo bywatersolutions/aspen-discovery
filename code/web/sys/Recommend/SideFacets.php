@@ -168,6 +168,17 @@ class SideFacets implements RecommendationInterface {
 					$sideFacets = $this->applyFacetSettings($facetKey, $sideFacets, $facetSetting, $lockedFacets);
 				}
 			}
+		} elseif ($this->searchObject instanceof SearchObject_ListsSearcher) {
+			foreach ($sideFacets as $facetKey => $facet) {
+				/** @var FacetSetting $facetSetting */
+				$facetSetting = $this->facetSettings[$facetKey];
+
+				//Do special processing of facets
+				if (preg_match('/local_time_since_(added|updated)/i', $facetKey)) {
+					$timeSinceAddedFacet = $this->updateTimeSinceAddedFacet($facet);
+					$sideFacets[$facetKey] = $timeSinceAddedFacet;
+				}
+			}
 		} else {
 			//Process other searchers to add more facet popup
 			foreach ($sideFacets as $facetKey => $facet) {
@@ -200,20 +211,36 @@ class SideFacets implements RecommendationInterface {
 			//Make sure to show all values
 			$timeSinceAddedFacet['valuesToShow'] = count($timeSinceAddedFacet['list']);
 			//We would like to show, On Order, time period values, and then under consideration
-			$onOrderOption = array_key_exists('On Order', $timeSinceAddedFacet['list']) ? $timeSinceAddedFacet['list']['On Order'] : null;
-			$underConsiderationOption = array_key_exists('Under Consideration', $timeSinceAddedFacet['list']) ? $timeSinceAddedFacet['list']['Under Consideration'] : null;
-			if ($onOrderOption != null) {
-				unset($timeSinceAddedFacet['list']['On Order']);
-			}
-			if ($underConsiderationOption != null) {
-				unset($timeSinceAddedFacet['list']['Under Consideration']);
-			}
-			$sortedOptions = array_reverse($timeSinceAddedFacet['list']);
-			if ($onOrderOption != null) {
-				$sortedOptions = ['On Order' => $onOrderOption] + $sortedOptions;
-			}
-			if ($underConsiderationOption != null) {
-				$sortedOptions = $sortedOptions + ['Under Consideration' => $underConsiderationOption];
+//			$onOrderOption = array_key_exists('On Order', $timeSinceAddedFacet['list']) ? $timeSinceAddedFacet['list']['On Order'] : null;
+//			$underConsiderationOption = array_key_exists('Under Consideration', $timeSinceAddedFacet['list']) ? $timeSinceAddedFacet['list']['Under Consideration'] : null;
+//			if ($onOrderOption != null) {
+//				unset($timeSinceAddedFacet['list']['On Order']);
+//			}
+//			if ($underConsiderationOption != null) {
+//				unset($timeSinceAddedFacet['list']['Under Consideration']);
+//			}
+			$sortOrder = [
+				'On Order' => null,
+				'Day' => null,
+				'Week' => null,
+				'Month' => null,
+				'2 Months' => null,
+				'Quarter' => null,
+				'Six Months' => null,
+				'Year' => null,
+				'Under Consideration' => null,
+			];
+			$sortedOptions = array_merge($sortOrder, $timeSinceAddedFacet['list']);
+//			if ($onOrderOption != null) {
+//				$sortedOptions = ['On Order' => $onOrderOption] + $sortedOptions;
+//			}
+//			if ($underConsiderationOption != null) {
+//				$sortedOptions = $sortedOptions + ['Under Consideration' => $underConsiderationOption];
+//			}
+			foreach ($sortedOptions as $key => $value) {
+				if (is_null($value)) {
+					unset($sortedOptions[$key]);
+				}
 			}
 			//Reverse the display of the list so Day is first and year is last
 			$timeSinceAddedFacet['list'] = $sortedOptions;

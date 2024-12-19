@@ -31,7 +31,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 
 	protected $lastSearchResults;
 
-	// Module and Action for building search results 
+	// Module and Action for building search results
 	protected $resultsModule = 'Search';
 	protected $resultsAction = 'Results';
 
@@ -84,11 +84,11 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 	protected $facets = [
 		'Author,or',
 		'ContentType,or,1,30',
-		'SubjectTerms,or,1,30',	
+		'SubjectTerms,or,1,30',
 		'Discipline,or,1,30',
 		'Language,or,1,30',
 		'DatabaseName,or,1,30',
-		'SourceType,or,1,30',	
+		'SourceType,or,1,30',
 	];
 
 	protected $limits = [
@@ -112,7 +112,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 		$this->resultsModule = 'Summon';
 		$this->resultsAction = 'Results';
 	}
-	 
+
 	/**
 	 * Initialise the object from the global
 	 *  search parameters in $_REQUEST.
@@ -272,7 +272,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 			//2 by default - max database reccomendations
 			's.rec.db.max' => $this->maxRecDb,
 			//allows access to records
-			's.role' =>  'authenticated',			
+			's.role' =>  'authenticated',
 		);
 		return $options;
 	}
@@ -294,7 +294,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 			}
 			return $recordData;
 	}
-	
+
 	public function splitFacets($combinedFacets) {
 		$splitFacets = [];
 		foreach($combinedFacets as $facet) {
@@ -416,7 +416,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 			$html[] = "Unable to find record";
 		}
 		return $html;
-	} 
+	}
 
 	//Assign properties to each of the sort options
 	public function getSortList() {
@@ -480,7 +480,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 				if ($facetId == 'IsScholarly' || $facetId == 'IsPeerReviewed') {
 					$availableFacets[$facetId]['multiSelect'] = false;
 				}
-				
+
 				$list = [];
 				foreach ($facetField['counts'] as $value) {
 					$facetValue = $value['value'];
@@ -513,7 +513,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 				$limitId = $limitOption['displayName'];
 				$parts = preg_split('/(?=[A-Z])/', $limitId, -1, PREG_SPLIT_NO_EMPTY);
 				$displayName = implode(' ', $parts);
-			
+
 				foreach($limitOption['counts'] as $value){
 					if ($value['value'] == 'true') {
 						$isApplied = isset($this->limiters[$limitId]) && $this->limiters[$limitId] == 'y' ? 1 : 0;
@@ -527,7 +527,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 						];
 					}
 				}
-			
+
 			}
 		}
 		return $availableLimits;
@@ -564,18 +564,18 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 		foreach ($this->filterList as $key => $value) {
 			if (is_array($value)) {
 				foreach ($value as $val) {
-					$encodedValue = urlencode($val); 
+					$encodedValue = urlencode($val);
 					$this->filters[] = urlencode($key) . ',' . $encodedValue . ',';
 				}
 			} else {
-				$encodedValue = urlencode($value); 
+				$encodedValue = urlencode($value);
 				$this->filters[] = urlencode($key) . ',' . $encodedValue . ',';
 			}
 		}
 		return $this->filters;
 	}
-	
-	
+
+
 	/**
 	 * Generate an HMAC hash for authentication
 	 *
@@ -822,7 +822,8 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 		return $this->resultsTotal;
 	}
 
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
+		 return new AspenError("Process Search not implemented for Summon Searcher");
 	}
 
 	public function __destruct() {

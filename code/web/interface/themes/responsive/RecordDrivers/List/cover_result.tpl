@@ -7,7 +7,7 @@
 			</a>
 		</div>
     {else}
-		{if $browseMode == '1'}
+		{if !empty($browseMode) && $browseMode == '1'}
 			<div class="browse-list grid-item {$coverStyle} col-tn-12 col-xs-6 col-sm-6 col-md-4 col-lg-3">
 				<a  href="{$summUrl}">
 					<img class="img-responsive {$coverStyle} browse-{$browseStyle}" src="{$bookCoverUrl}" alt="{$summTitle} by {$summAuthor}" title="{$summTitle} by {$summAuthor}">

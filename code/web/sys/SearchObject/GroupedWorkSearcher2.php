@@ -90,7 +90,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 	 *                                             a well formatted query
 	 * @return  array|AspenError
 	 */
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
 		global $timer;
 		global $solrScope;
 
@@ -629,7 +629,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 	 * @param $field
 	 * @return string
 	 */
-	protected function getScopedFieldName($field): string {
+	protected function getScopedFieldName(string $field): string {
 		global $solrScope;
 		if ($solrScope) {
 			if ($field === 'time_since_added') {
@@ -795,7 +795,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 				// Initialize the array of data about the current facet:
 				$currentSettings = [];
 				$facetValue = $facet[0];
-			
+
 				if ($isScopedField && strpos($facetValue, '#') !== false) {
 					$facetValue = substr($facetValue, strpos($facetValue, '#') + 1);
 				}

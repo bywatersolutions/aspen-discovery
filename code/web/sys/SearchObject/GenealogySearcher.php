@@ -518,9 +518,9 @@ class SearchObject_GenealogySearcher extends SearchObject_SolrSearcher {
 	}
 
 	/** @return PersonRecord */
-	public function getRecordDriverForResult($current) {
+	public function getRecordDriverForResult($record) {
 		require_once ROOT_DIR . '/RecordDrivers/PersonRecord.php';
-		return new PersonRecord($current);
+		return new PersonRecord($record);
 	}
 
 	public function getSearchesFile() {

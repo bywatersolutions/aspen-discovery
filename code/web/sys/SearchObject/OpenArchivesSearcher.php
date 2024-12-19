@@ -132,9 +132,9 @@ class SearchObject_OpenArchivesSearcher extends SearchObject_SolrSearcher {
 		return 'identifier';
 	}
 
-	public function getRecordDriverForResult($current) {
+	public function getRecordDriverForResult($record) {
 		require_once ROOT_DIR . '/RecordDrivers/OpenArchivesRecordDriver.php';
-		return new OpenArchivesRecordDriver($current);
+		return new OpenArchivesRecordDriver($record);
 	}
 
 	public function getSearchesFile() {

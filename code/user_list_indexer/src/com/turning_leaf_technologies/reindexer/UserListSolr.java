@@ -21,6 +21,7 @@ class UserListSolr {
 	private long owningLibrary;
 	private String owningLocation;
 	private boolean ownerCanShareListsInSearchResults = false;
+	private long dateUpdated;
 
 	UserListSolr(UserListIndexer userListIndexer) {
 		this.userListIndexer = userListIndexer;
@@ -35,7 +36,7 @@ class UserListSolr {
 
 		doc.addField("title", title);
 		doc.addField("title_display", title);
-		
+
 		doc.addField("title_sort", AspenStringUtils.makeValueSortable(title));
 
 		doc.addField("author", author);
@@ -51,6 +52,9 @@ class UserListSolr {
 
 		Date dateAdded = new Date(created * 1000);
 		doc.addField("days_since_added", DateUtils.getDaysSinceAddedForDate(dateAdded));
+
+		Date dateUpdatedDate = new Date(dateUpdated * 1000);
+		doc.addField("days_since_updated", DateUtils.getDaysSinceAddedForDate(dateUpdatedDate));
 
 		int numValidScopes = 0;
 		HashSet<String> relevantScopes = new HashSet<>();
@@ -75,6 +79,9 @@ class UserListSolr {
 				numValidScopes++;
 				doc.addField("local_time_since_added_" + scope.getScopeName(), DateUtils.getTimeSinceAddedForDate(dateAdded));
 				doc.addField("local_days_since_added_" + scope.getScopeName(), DateUtils.getDaysSinceAddedForDate(dateAdded));
+
+				doc.addField("local_time_since_updated_" + scope.getScopeName(), DateUtils.getTimeSinceAddedForDate(dateUpdatedDate));
+				doc.addField("local_days_since_updated_" + scope.getScopeName(), DateUtils.getDaysSinceAddedForDate(dateUpdatedDate));
 				relevantScopes.add(scope.getScopeName());
 			}
 		}
@@ -127,5 +134,13 @@ class UserListSolr {
 
 	long getNumTitles(){
 		return numTitles;
+	}
+
+	public void setDateUpdated(long dateUpdated) {
+		this.dateUpdated = dateUpdated;
+	}
+
+	public long getDateUpdated() {
+		return dateUpdated;
 	}
 }

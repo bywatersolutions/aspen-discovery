@@ -264,7 +264,7 @@
     </script>
     <style>
         @media print {
-            #footer-container, #header-wrapper, #horizontal-menu-bar-wrapper, #side-bar, #system-message-header, .breadcrumbs {
+            #footer-container, #header-wrapper, #horizontal-menu-bar-wrapper, #side-bar, #system-messages, .breadcrumbs {
                 display: none;
             }
 

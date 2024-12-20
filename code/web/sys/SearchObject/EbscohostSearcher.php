@@ -254,7 +254,18 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 				$current = &$this->lastSearchResults->SearchResults->records->rec[$x];
 				$interface->assign('recordIndex', $x + 1);
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
-
+				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($current->header->controlInfo->artinfo->ui)) {
+					$libKeyResult =  $this->getLibKeyResult($current->header->controlInfo->artinfo->ui);
+					if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
+						$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
+						$interface->assign('retracted', true);
+						break;
+					}
+					$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
+					$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
+					$interface->assign('retracted', false);
+					break;
+				}
 				require_once ROOT_DIR . '/RecordDrivers/EbscohostRecordDriver.php';
 				$record = new EbscohostRecordDriver($current);
 				if ($record->isValid()) {
@@ -283,7 +294,7 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 		global $interface;
 		$html = [];
 		//global $logger;
-		//$logger->log(print_r($this->lastSearchResults, true), Logger::LOG_WARNING);
+		//$logger->log(print_r($this->lastSearchResults, true), Logger::LOG_ERROR);
 		if (isset($this->lastSearchResults->SearchResults->records)) {
 			for ($x = 0; $x < count($this->lastSearchResults->SearchResults->records->rec); $x++) {
 				$current = &$this->lastSearchResults->SearchResults->records->rec[$x];
@@ -814,14 +825,13 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 	function getBrowseRecordHTML() {
 		global $interface;
 		$html = [];
-		//global $logger;
-		//$logger->log(print_r($this->lastSearchResults, true), Logger::LOG_WARNING);
+		global $logger;
+
 		if (isset($this->lastSearchResults->SearchResults->records)) {
 			for ($x = 0; $x < count($this->lastSearchResults->SearchResults->records->rec); $x++) {
 				$current = &$this->lastSearchResults->SearchResults->records->rec[$x];
 				$interface->assign('recordIndex', $x + 1);
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
-
 				require_once ROOT_DIR . '/RecordDrivers/EbscohostRecordDriver.php';
 				$record = new EbscohostRecordDriver($current);
 				if ($record->isValid()) {
@@ -951,5 +961,11 @@ class SearchObject_EbscohostSearcher extends SearchObject_BaseSearcher {
 			}
 		}
 		return $list;
+	}
+
+	private function getLibKeyResult($uniqueIdentifier) {
+		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
+		$libKeyDriver = new LibKeyDriver();
+		return $libKeyDriver->getLibKeyResult($uniqueIdentifier);
 	}
 }

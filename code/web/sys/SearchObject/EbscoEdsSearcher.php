@@ -310,6 +310,22 @@ BODY;
 				$current = &$this->lastSearchResults->Data->Records[$x];
 				$interface->assign('recordIndex', $x + 1);
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
+				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers)) {
+					foreach ($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers as $ui) {
+						if ($ui->Type == "doi") {
+							$libKeyResult =  $this->getLibKeyResult($ui->Value);
+							if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
+								$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
+								$interface->assign('retracted', true);
+								break;
+							}
+							$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
+							$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
+							$interface->assign('retracted', false);
+							break;
+						}
+					}
+				}
 
 				require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 				$record = new EbscoRecordDriver($current);
@@ -907,4 +923,11 @@ BODY;
 
 		return $researchStarters;
 	}
+
+	private function getLibKeyResult($uniqueIdentifierList) {
+		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
+		$libKeyDriver = new LibKeyDriver();
+		return $libKeyDriver->getLibKeyResult($uniqueIdentifierList);
+	}
+
 }

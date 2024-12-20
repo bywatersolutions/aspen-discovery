@@ -331,7 +331,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 				if ($subfields) {
 					foreach ($subfields as $subfield) {
 						//Add unless this is 655 subfield 2
-						if ($subfield->getCode() != 2) {
+						if ($subfield->getCode() != 2 && $subfield->getCode() != 1) {
 							$current[] = $subfield->getData();
 						}
 					}
@@ -1345,7 +1345,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 					'id' => "accessOnline_{$this->getId()}",
 					'target' => '_blank',
 				];
-	
+
 			} else {
 				$urlInfo = reset($relatedUrls);
 
@@ -1884,7 +1884,6 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 
 	public function loadSubjects() {
 		global $interface;
-		global $configArray;
 		global $library;
 		$marcRecord = $this->getMarcRecord();
 		$subjects = [];
@@ -1945,7 +1944,8 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 						$title = '';
 						foreach ($marcField->getSubFields() as $subField) {
 							/** @var File_MARC_Subfield $subField */
-							if ($subField->getCode() != '2' && $subField->getCode() != '0' && $subField->getCode() != '9') {
+							$subfieldCode = $subField->getCode();
+							if (!in_array($subfieldCode, ['0', '1', '2', '9'])) {
 								$subFieldData = $subField->getData();
 								if ($type == 'bisac' && $subField->getCode() == 'a') {
 									$subFieldData = ucwords(strtolower($subFieldData));

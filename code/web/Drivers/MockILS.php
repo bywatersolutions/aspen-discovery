@@ -50,7 +50,7 @@ class MockILS extends AbstractIlsDriver{
 		return null;
 	}
 
-	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		// TODO: Implement placeItemHold() method.
 	}
 

@@ -570,16 +570,17 @@ class Millennium extends AbstractIlsDriver {
 	 *
 	 * This is responsible for both placing item level holds.
 	 *
-	 * @param User $patron The User to place a hold for
-	 * @param string $recordId The id of the bib record
-	 * @param string $itemId The id of the item to hold
-	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
-	 * @param null|string $cancelDate The date to automatically cancel the hold if not filled
+	 * @param User $patron
+	 * @param string $recordId
+	 * @param string $itemId
+	 * @param string $pickupBranch
+	 * @param null $cancelDate
+	 * @param null $pickupSublocation
 	 * @return  mixed               True if successful, false if unsuccessful
 	 *                              If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null) {
+	function placeItemHold(User $patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
 		require_once ROOT_DIR . '/Drivers/marmot_inc/MillenniumHolds.php';
 		$millenniumHolds = new MillenniumHolds($this);
 		return $millenniumHolds->placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate);

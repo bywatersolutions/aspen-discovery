@@ -1486,7 +1486,7 @@ abstract class MarcRecordProcessor {
 		//auth_author2 = 700abcd
 		groupedWork.addAuthAuthor2(MarcUtil.getFieldList(record, "700abcd"));
 		//author2 = 110ab:111ab:700abcd:710ab:711ab:800a
-		groupedWork.addAuthor2(MarcUtil.getFieldList(record, "110ab:111ab:700abcd:710ab:711ab:800a"));
+		groupedWork.addAuthor2(MarcUtil.getFieldList(record, "110ab:111ab:700abcd:710ab:711ab:800ac"));
 		//author_additional = 505r:245c
 		groupedWork.addAuthorAdditional(MarcUtil.getFieldList(record, "505r:245c"));
 		//Load contributors with role
@@ -1511,7 +1511,7 @@ abstract class MarcRecordProcessor {
 		//author_display = 100a:110a:260b:710a:245c, first
 		//#ARL-95 Do not show display author from the 710 or from the 245c since neither are truly authors
 		//#ARL-200 Do not show display author from the 260b since it is also not the author
-		String displayAuthor = MarcUtil.getFirstFieldVal(record, "100a:110ab");
+		String displayAuthor = MarcUtil.getFirstFieldVal(record, "100ac:110ab");
 		if (displayAuthor != null && displayAuthor.indexOf(';') > 0){
 			displayAuthor = displayAuthor.substring(0, displayAuthor.indexOf(';') -1);
 		}

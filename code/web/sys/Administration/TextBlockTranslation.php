@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
 class TextBlockTranslation  extends DataObject {
 	public $__table = 'text_block_translation';
@@ -7,5 +7,6 @@ class TextBlockTranslation  extends DataObject {
 	public $objectType;
 	public $objectId;
 	public $languageId;
+	public $fieldName;
 	public $translation;
 }

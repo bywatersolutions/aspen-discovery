@@ -40,6 +40,18 @@ function getUpdates25_01_00(): array {
 			]
 		],
 		//syndetics_add_instance_number
+		'allow_multiple_translatable_blocks_per_object' => [
+			'title' => 'Allow Multiple Translatable Blocks Per Object',
+			'description' => 'Allow Multiple Translatable Blocks Per Object',
+			'sql' => [
+				'ALTER TABLE text_block_translation ADD COLUMN fieldName TINYTEXT',
+				'ALTER TABLE text_block_translation DROP INDEX objectType',
+				'ALTER TABLE text_block_translation ADD UNIQUE (objectType, objectId, fieldName, languageId)',
+				"UPDATE text_block_translation SET fieldName = 'instructionsForUsage' where objectType = 'PalaceProjectSetting'",
+				"UPDATE text_block_translation SET fieldName = 'paymentHistoryExplanation' where objectType = 'Library'",
+				"UPDATE text_block_translation SET fieldName = 'promoMessage' where objectType = 'YearInReviewSetting'",
+			]
+		], //allow_multiple_translatable_blocks_per_object
 
 		//katherine
 

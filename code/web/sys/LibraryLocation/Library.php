@@ -352,7 +352,9 @@ class Library extends DataObject {
 	public $optOutOfReadingHistoryUpdatesILS;
 	public $enableCostSavings;
 	/** @noinspection PhpUnused */
-	protected $_costSavingsExplanation;
+	protected $_costSavingsExplanationEnabled;
+	/** @noinspection PhpUnused */
+	protected $_costSavingsExplanationDisabled;
 	public $enableSavedSearches;
 	public /** @noinspection PhpUnused */
 		$newMaterialsRequestSummary;  // (Text at the top of the Materials Request Form.)

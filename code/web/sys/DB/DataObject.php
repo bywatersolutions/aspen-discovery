@@ -1305,6 +1305,7 @@ abstract class DataObject implements JsonSerializable {
 				$textBlockTranslation->objectType = get_class($this);
 				$textBlockTranslation->objectId = $this->getPrimaryKeyValue();
 				$textBlockTranslation->languageId = $languageId;
+				$textBlockTranslation->fieldName = $fieldName;
 				if ($textBlockTranslation->find(true)) {
 					$this->_data[$key] = $textBlockTranslation->translation;
 					return $this->_data[$key];
@@ -1332,7 +1333,7 @@ abstract class DataObject implements JsonSerializable {
 		return $this->_data[$key];
 	}
 
-	public function saveTextBlockTranslations($fieldName) {
+	public function saveTextBlockTranslations($fieldName) : void {
 		global $validLanguages;
 
 		require_once ROOT_DIR . '/sys/Administration/TextBlockTranslation.php';
@@ -1341,6 +1342,7 @@ abstract class DataObject implements JsonSerializable {
 		$textBlockTranslation = new TextBlockTranslation();
 		$textBlockTranslation->objectType = get_class($this);
 		$textBlockTranslation->objectId = $this->getPrimaryKeyValue();
+		$textBlockTranslation->fieldName = $fieldName;
 		$textBlockTranslation->find();
 		while ($textBlockTranslation->fetch()) {
 			$existingTranslations[$textBlockTranslation->languageId] = clone($textBlockTranslation);
@@ -1369,6 +1371,7 @@ abstract class DataObject implements JsonSerializable {
 							$textBlockTranslation = new TextBlockTranslation();
 							$textBlockTranslation->objectType = get_class($this);
 							$textBlockTranslation->objectId = $this->getPrimaryKeyValue();
+							$textBlockTranslation->fieldName = $fieldName;
 							$textBlockTranslation->languageId = $language->id;
 							$textBlockTranslation->translation = $translationForLanguage;
 							$textBlockTranslation->insert();

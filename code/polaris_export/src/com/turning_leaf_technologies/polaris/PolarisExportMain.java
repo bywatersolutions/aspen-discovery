@@ -182,6 +182,7 @@ public class PolarisExportMain {
 						loadPolarisVersion();
 						if (!extractSingleWork) {
 							updateBranchInfo(dbConn);
+							updateSublocationInfo(dbConn);
 							updatePatronCodes(dbConn);
 							updateTranslationMaps(dbConn);
 
@@ -334,10 +335,87 @@ public class PolarisExportMain {
 		}
 	}
 
+	private static void updateSublocationInfo(Connection dbConn) {
+		try {
+			//In Polaris, Sub locations can be connected to multiple locations so need to account for that when loading and saving
+			logEntry.addNote("Loading Pickup Areas into Sub-locations");
+			PreparedStatement existingAspenSublocationStmt = dbConn.prepareStatement("SELECT id, name, isValidHoldPickupAreaILS, weight from sublocation where locationId = ? AND ilsId = ?");
+			PreparedStatement updateAspenSublocationStmt = dbConn.prepareStatement("UPDATE sublocation SET name = ?, isValidHoldPickupAreaILS = ?, weight = ? where id = ?");
+			PreparedStatement addAspenSublocationStmt = dbConn.prepareStatement("INSERT INTO sublocation (locationId, name, ilsId, isValidHoldPickupAreaILS, isValidHoldPickupAreaAspen, weight) VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+			PreparedStatement getExistingAspenLocationsStmt = dbConn.prepareStatement("SELECT locationId, displayName, code from location", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			ResultSet allExistingLocationsRS = getExistingAspenLocationsStmt.executeQuery();
+			HashMap<String, ExistingLocation> existingLocations = new HashMap<>();
+			while (allExistingLocationsRS.next()) {
+				ExistingLocation existingLocation = new ExistingLocation();
+
+				existingLocation.setLocationId(allExistingLocationsRS.getLong("locationId"));
+				existingLocation.setName(allExistingLocationsRS.getString("displayName"));
+				existingLocation.setCode(allExistingLocationsRS.getString("code"));
+				existingLocations.put(existingLocation.getCode(), existingLocation);
+			}
+
+			//Lookup the sub-locations in Polaris. It does not look like filtering by orgID works in the API so we will just grab them all
+			String getPickupAreasUrl = "/PAPIService/REST/public/v1/1033/100/1/pickupareas";
+			WebServiceResponse pickupAreasResponse = callPolarisAPI(getPickupAreasUrl, null, "GET", "application/json", null);
+			if (pickupAreasResponse.isSuccess()){
+				JSONObject pickupAreas = pickupAreasResponse.getJSONResponse();
+				JSONArray pickupAreaRows = pickupAreas.getJSONArray("PickupAreasRows");
+				for (int i = 0; i < pickupAreaRows.length(); i++) {
+					JSONObject pickupAreaInfo = pickupAreaRows.getJSONObject(i);
+					String parentOrganizationId = Long.toString(pickupAreaInfo.getLong("OrganizationID"));
+					long pickupAreaId = pickupAreaInfo.getLong("PickupAreaID");
+					String name = pickupAreaInfo.getString("Description");
+					long sequence = pickupAreaInfo.getLong("SequenceID");
+					boolean selected = pickupAreaInfo.getBoolean("Selected");
+
+					//Get the parent location for the sublocation
+					ExistingLocation parentLocation = existingLocations.get(parentOrganizationId);
+					if (parentLocation != null) {
+						//See if we have an existing sublocation in Aspen
+						existingAspenSublocationStmt.setLong(1, parentLocation.getLocationId());
+						existingAspenSublocationStmt.setLong(2, pickupAreaId);
+						ResultSet existingAspenSublocationRS = existingAspenSublocationStmt.executeQuery();
+						if (existingAspenSublocationRS.next()) {
+							//We have an existing sublocation, make sure the name, sequence, and selection has not changed
+							long existingId = existingAspenSublocationRS.getLong("id");
+							String existingName = existingAspenSublocationRS.getString("name");
+							boolean existingSelected = existingAspenSublocationRS.getBoolean("isValidHoldPickupAreaILS");
+							long existingWeight = existingAspenSublocationRS.getLong("weight");
+							if (!existingName.equals(name)
+								|| existingSelected != selected
+								|| existingWeight != sequence){
+								updateAspenSublocationStmt.setString(1, name);
+								updateAspenSublocationStmt.setInt(2, selected ? 1 : 0);
+								updateAspenSublocationStmt.setLong(3, sequence);
+								updateAspenSublocationStmt.setLong(4, existingId);
+								updateAspenSublocationStmt.executeUpdate();
+							}
+						}else{
+							//This is a new sublocation
+							addAspenSublocationStmt.setLong(1, parentLocation.getLocationId());
+							addAspenSublocationStmt.setString(2, name);
+							addAspenSublocationStmt.setLong(3, pickupAreaId);
+							addAspenSublocationStmt.setInt(4, selected ? 1 : 0);
+							addAspenSublocationStmt.setInt(5, selected ? 1 : 0);
+							addAspenSublocationStmt.setLong(6, sequence);
+							addAspenSublocationStmt.executeUpdate();
+						}
+						existingAspenSublocationRS.close();
+					}
+				}
+			}
+			allExistingLocationsRS.close();
+			logEntry.addNote("Finished Loading Pickup Areas into Sub-locations");
+
+		} catch (Exception e) {
+			logEntry.incErrors("Error updating sublocation information from Polaris", e);
+		}
+	}
+
 	private static void updateBranchInfo(Connection dbConn) {
 		try{
-			PreparedStatement existingAspenLocationStmt = dbConn.prepareStatement("SELECT libraryId, locationId, isMainBranch from location where code = ?");
-			PreparedStatement existingAspenLibraryStmt = dbConn.prepareStatement("SELECT libraryId from library where ilsCode = ?");
+			PreparedStatement existingAspenLocationStmt = dbConn.prepareStatement("SELECT libraryId, locationId, isMainBranch from location where code = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			PreparedStatement existingAspenLibraryStmt = dbConn.prepareStatement("SELECT libraryId from library where ilsCode = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			PreparedStatement addAspenLibraryStmt = dbConn.prepareStatement("INSERT INTO library (subdomain, displayName, ilsCode, browseCategoryGroupId, groupedWorkDisplaySettingId) VALUES (?, ?, ?, 1, 1)", Statement.RETURN_GENERATED_KEYS);
 			PreparedStatement addAspenLocationStmt = dbConn.prepareStatement("INSERT INTO location (libraryId, displayName, code, browseCategoryGroupId, groupedWorkDisplaySettingId) VALUES (?, ?, ?, -1, -1)", Statement.RETURN_GENERATED_KEYS);
 			PreparedStatement addAspenLocationRecordsOwnedStmt = dbConn.prepareStatement("INSERT INTO location_records_to_include (locationId, indexingProfileId, location, subLocation, markRecordsAsOwned) VALUES (?, ?, ?, '', 1)");
@@ -345,8 +423,8 @@ public class PolarisExportMain {
 			PreparedStatement addAspenLibraryRecordsOwnedStmt = dbConn.prepareStatement("INSERT INTO library_records_to_include (libraryId, indexingProfileId, location, subLocation, markRecordsAsOwned) VALUES (?, ?, ?, '', 1) ON DUPLICATE KEY UPDATE location = CONCAT(location, '|', VALUES(location))");
 			PreparedStatement addAspenLibraryRecordsToIncludeStmt = dbConn.prepareStatement("INSERT INTO library_records_to_include (libraryId, indexingProfileId, location, subLocation, weight) VALUES (?, ?, '.*', '', 1)");
 			PreparedStatement createTranslationMapStmt = dbConn.prepareStatement("INSERT INTO translation_maps (name, indexingProfileId) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS);
-			PreparedStatement getTranslationMapStmt = dbConn.prepareStatement("SELECT id from translation_maps WHERE name = ? and indexingProfileId = ?");
-			PreparedStatement getExistingValuesForMapStmt = dbConn.prepareStatement("SELECT * from translation_map_values where translationMapId = ?");
+			PreparedStatement getTranslationMapStmt = dbConn.prepareStatement("SELECT id from translation_maps WHERE name = ? and indexingProfileId = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			PreparedStatement getExistingValuesForMapStmt = dbConn.prepareStatement("SELECT * from translation_map_values where translationMapId = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			PreparedStatement insertTranslationStmt = dbConn.prepareStatement("INSERT INTO translation_map_values (translationMapId, value, translation) VALUES (?, ?, ?)");
 
 			Long locationMapId = getTranslationMapId(createTranslationMapStmt, getTranslationMapStmt, "location");
@@ -388,10 +466,12 @@ public class PolarisExportMain {
 						existingAspenLocationStmt.setLong(1, ilsId);
 						ResultSet existingLocationRS = existingAspenLocationStmt.executeQuery();
 						if (!existingLocationRS.next()){
+							//This location has not been added before
 							//Get the library id for the parent
 							existingAspenLibraryStmt.setLong(1, parentOrganizationId);
 							ResultSet existingLibraryRS = existingAspenLibraryStmt.executeQuery();
 							if (existingLibraryRS.next()){
+								//We found a valid library for the location
 								long libraryId = existingLibraryRS.getLong("libraryId");
 
 								addAspenLocationStmt.setLong(1, libraryId);

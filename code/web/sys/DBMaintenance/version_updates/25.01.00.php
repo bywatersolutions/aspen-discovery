@@ -84,6 +84,16 @@ function getUpdates25_01_00(): array {
 			]
 		],
 		//sublocation_settings
+		'sublocation_non_unique_names' => [
+			'title' => 'Sublocation make names non unique',
+			'description' => 'CSublocation make names non unique ',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE sublocation CHANGE COLUMN name name VARCHAR(50) NOT NULL",
+				"ALTER TABLE sublocation DROP INDEX name",
+			]
+		],
+		//sublocation_non_unique_names
 		'sublocation_user_preferences' => [
 			'title' => 'Sublocation User Preferences',
 			'description' => 'Add new user preferences for sublocation functionality',

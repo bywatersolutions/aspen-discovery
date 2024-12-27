@@ -292,6 +292,7 @@ class Location extends DataObject {
 		require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 		$sublocationSettingsStructure = Sublocation::getObjectStructure('locations');
 		unset($sublocationSettingsStructure['weight']);
+		unset($sublocationSettingsStructure['locationId']);
 
 		$structure = [
 			'locationId' => [

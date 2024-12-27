@@ -479,16 +479,9 @@ class SirsiDynixROA extends HorizonAPI {
 				}
 			}
 
-			if (isset($lookupMyAccountInfoResponse->fields->holdRecordList)) {
-				foreach ($lookupMyAccountInfoResponse->fields->holdRecordList as $hold) {
-					//Get detailed info about the hold
-					if ($hold->fields->status == 'BEING_HELD') {
-						$summary->numAvailableHolds++;
-					} elseif ($hold->fields->status != 'EXPIRED') {
-						$summary->numUnavailableHolds++;
-					}
-				}
-			}
+			$holds = $this->getHolds($patron);
+			$summary->numAvailableHolds = count($holds['available']);
+			$summary->numUnavailableHolds = count($holds['unavailable']);
 
 			$finesVal = 0;
 			if (isset($lookupMyAccountInfoResponse->fields->blockList)) {

@@ -1278,6 +1278,12 @@ class SirsiDynixROA extends HorizonAPI {
 					} elseif (strcasecmp($curHold->status, "being_held") === 0) {
 						$holdAvailable = true;
 					}
+				}else{
+					if (strcasecmp($curHold->status, "being_held") === 0) {
+						$curHold->cancelable = false;
+						$curHold->canFreeze = false;
+						$curHold->locationUpdateable = false;
+					}
 				}
 
 				if (!$holdAvailable) {
@@ -1462,7 +1468,6 @@ class SirsiDynixROA extends HorizonAPI {
 
 			$userLibrary = $patron->getHomeLibrary();
 			$holdData['holdRange'] = $userLibrary->holdRange;
-			//$holdData['holdRange'] = 'SYSTEM';
 
 			if ($cancelIfNotFilledByDate) {
 				$holdData['fillByDate'] = date('Y-m-d', strtotime($cancelIfNotFilledByDate));
@@ -4156,6 +4161,7 @@ class SirsiDynixROA extends HorizonAPI {
 			$catalogKey = $_REQUEST['catalogKey'] ?? '';
 			$acceptFee = $_REQUEST['acceptFee'] ?? false;
 			$pickupLocation = $_REQUEST['pickupLocation'] ?? '';
+			$volumeId = $_REQUEST['volumeId'] ?? '';
 			$okToProcess = true;
 			if ($localIllForm ->requireAcceptFee) {
 				if (empty($acceptFee) || $acceptFee == 'false') {
@@ -4172,7 +4178,7 @@ class SirsiDynixROA extends HorizonAPI {
 				$okToProcess = false;
 			}
 			if ($okToProcess) {
-				$holdResult = $this->placeSirsiHold($patron, $catalogKey, '', '', $pickupLocation, 'request', null, false, true);
+				$holdResult = $this->placeSirsiHold($patron, $catalogKey, '', $volumeId, $pickupLocation, 'request', null, false, true);
 				if ($holdResult['success']) {
 					$result['success'] = true;
 					$result['title'] = translate(['text' => 'Success', 'isPublicFacing' => true]);

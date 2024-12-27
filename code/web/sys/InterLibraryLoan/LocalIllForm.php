@@ -169,7 +169,7 @@ class LocalIllForm extends DataObject {
 		}
 	}
 
-	public function getFormFields(?MarcRecordDriver $marcRecordDriver, ?string $volumeInfo = null): array {
+	public function getFormFields(?MarcRecordDriver $marcRecordDriver, ?string $volumeId = null): array {
 		$fields = [];
 		if ($this->introText) {
 			$fields['introText'] = [
@@ -182,13 +182,24 @@ class LocalIllForm extends DataObject {
 			];
 		}
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
+		$title = ($marcRecordDriver != null ? StringUtils::removeTrailingPunctuation($marcRecordDriver->getTitle()) : '');
+		$relatedRecord = $marcRecordDriver->getRelatedRecord();
+		$volumeData = $relatedRecord->getVolumeData();
+		if ($volumeId != null && $volumeData != null) {
+			foreach ($volumeData as $volume) {
+				if ($volume->volumeId == $volumeId) {
+					$title .= ' ' . $volume->displayLabel;
+					break;
+				}
+			}
+		}
 		$fields['title'] = [
 			'property' => 'title',
 			'type' => 'label',
 			'label' => 'Title',
 			'description' => '',
 			'maxLength' => 255,
-			'default' => ($marcRecordDriver != null ? StringUtils::removeTrailingPunctuation($marcRecordDriver->getTitle()) : ''),
+			'default' => $title,
 		];
 		if ($this->showAcceptFee) {
 			if (!empty($this->feeInformationText)) {
@@ -254,7 +265,7 @@ class LocalIllForm extends DataObject {
 			'label' => 'Note',
 			'description' => 'Any additional information you want us to have about this request (40 characters maximum)',
 			'required' => false,
-			'default' => ($volumeInfo == null) ? '' : $volumeInfo,
+			'default' => '',
 			'maxLength' => 40
 		];
 		$fields['catalogKey'] = [
@@ -266,6 +277,16 @@ class LocalIllForm extends DataObject {
 			'required' => false,
 			'default' => ($marcRecordDriver != null ? $marcRecordDriver->getId() : ''),
 		];
+		if (!empty($volumeId)) {
+			$fields['volumeId'] = [
+				'property' => 'volumeId',
+				'type' => 'hidden',
+				'label' => 'Volume Id',
+				'description' => 'The volume Id for the hold',
+				'required' => false,
+				'default' => $volumeId
+			];
+		}
 		return $fields;
 	}
 

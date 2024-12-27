@@ -1040,9 +1040,10 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return "/" . $this->getModule() . "/$recordId";
 	}
 
-	protected $_actions = [];
+	protected array $_actions = [];
 
-	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) {
+	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
+		require_once ROOT_DIR . '/RecordDrivers/RecordActionGenerator.php';
 		if (!array_key_exists($variationId, $this->_actions)) {
 			$this->_actions[$variationId] = [];
 			global $interface;
@@ -1084,158 +1085,118 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 				$showHoldButton = false;
 			}
 
+			$id = $this->id;
 			if ($isHoldable && $showHoldButton) {
 				$source = $this->profileType;
-				$id = $this->id;
 				if ($volumeData == null) {
 					$volumeData = $relatedRecord->getVolumeData();
 				}
 				//See if we have InterLibrary Loan integration. If so, we will either be placing a hold or requesting depending on if there is a copy local to the hold group (whether available or not)
 				$interLibraryLoanType = 'none';
-				$vdxGroupsForLocation = [];
+				$treatHoldAsInterLibraryLoanRequest = false;
+				$homeLocation = null;
+				$holdGroups = [];
 				try {
 					$homeLocation = Location::getDefaultLocationForUser();
 					if ($homeLocation != null) {
 						$interLibraryLoanType = $homeLocation->getInterlibraryLoanType();
 						if ($interLibraryLoanType != 'none') {
+							$treatHoldAsInterLibraryLoanRequest = true;
 							require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroup.php';
 							require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroupLocation.php';
 
 							//Get the VDX Group(s) that we will interact with
-							$vdxGroupsForLocation = new HoldGroupLocation();
-							$vdxGroupsForLocation->locationId = $homeLocation->locationId;
-							$vdxGroupIds = $vdxGroupsForLocation->fetchAll('holdGroupId');
-							$vdxGroups = [];
-							foreach ($vdxGroupIds as $vdxGroupId) {
-								$vdxGroup = new HoldGroup();
-								$vdxGroup->id = $vdxGroupId;
-								if ($vdxGroup->find(true)) {
-									$vdxGroups[] = clone $vdxGroup;
+							$holdGroupsForLocation = new HoldGroupLocation();
+							$holdGroupsForLocation->locationId = $homeLocation->locationId;
+							$holdGroupIds = $holdGroupsForLocation->fetchAll('holdGroupId');
+							foreach ($holdGroupIds as $holdGroupId) {
+								$holdGroup = new HoldGroup();
+								$holdGroup->id = $holdGroupId;
+								if ($holdGroup->find(true)) {
+									$holdGroups[] = clone $holdGroup;
 								}
 							}
 
 							//Check to see if we have any items that are owned by any of the records in any of the groups.
 							//If we do, we don't need to use VDX
-							if ($relatedRecord->getItems() != null) {
-								foreach ($relatedRecord->getItems() as $itemDetail) {
-									if ($itemDetail->variationId == $variationId || $variationId == 'any') {
-										//Only check holdable items
-										if ($itemDetail->holdable) {
-											//The patron's home location is always valid!
-											if ($itemDetail->locationCode == $homeLocation->code) {
-												$interLibraryLoanType = 'none';
-												break;
-											}
-
-											foreach ($vdxGroups as $vdxGroup) {
-												if (in_array($itemDetail->locationCode, $vdxGroup->getLocationCodes())) {
-													$interLibraryLoanType = 'none';
-													break;
-												}
-											}
-										}
-										if ($interLibraryLoanType == 'none') {
-											break;
-										}
-									}
-								}
+							if ($this->oneOrMoreHoldableItemsOwnedByPatronHoldGroups($relatedRecord->getItems(), $holdGroups, $variationId, $homeLocation->code)) {
+								$treatHoldAsInterLibraryLoanRequest = false;
 							}
 						}
 					}
 				} catch (Exception $e) {
 					//This happens if the tables are not installed yet
 				}
-				if ($interLibraryLoanType == 'none') {
-					if (!is_null($volumeData) && count($volumeData) > 0 && !$treatVolumeHoldsAsItemHolds) {
-						//Check the items to see which volumes are holdable
-						$hasItemsWithoutVolumes = false;
-						$holdableVolumes = [];
-						if ($relatedRecord->getItems() != null) {
-							foreach ($relatedRecord->getItems() as $itemDetail) {
-								if ($itemDetail->variationId == $variationId || $variationId == 'any') {
-									if ($itemDetail->holdable) {
-										if (!empty($itemDetail->volumeId)) {
-											$holdableVolumes[str_pad($itemDetail->volumeOrder, 10, '0', STR_PAD_LEFT) . $itemDetail->volumeId] = [
+
+				//Figure out what needs to happen with volumes (if anything)
+				$needsVolumeHold = false;
+				$holdableVolumes = [];
+				$itemsWithoutVolumes = [];
+				$itemsWithoutVolumesNeedIllRequest = false;
+				if (!is_null($volumeData) && count($volumeData) > 0 && !$treatVolumeHoldsAsItemHolds) {
+					//We do have volumes, check the items to see which volumes are holdable
+					$needsVolumeHold = true;
+					if ($relatedRecord->getItems() != null) {
+						foreach ($relatedRecord->getItems() as $itemDetail) {
+							if ($itemDetail->variationId == $variationId || $variationId == 'any') {
+								if ($itemDetail->holdable) {
+									if (!empty($itemDetail->volumeId)) {
+										$volumeKey = str_pad($itemDetail->volumeOrder, 10, '0', STR_PAD_LEFT) . $itemDetail->volumeId;
+										if (!array_key_exists($volumeKey, $holdableVolumes)) {
+											$holdableVolumes[$volumeKey] = [
 												'volumeName' => $itemDetail->volume,
 												'volumeId' => $itemDetail->volumeId,
+												'relatedItems' => [],
+												'needsIllRequest' => false,
 											];
-										} else {
-											$hasItemsWithoutVolumes = true;
 										}
+										$holdableVolumes[$volumeKey]['relatedItems'][] = $itemDetail;
+									} else {
+										$itemsWithoutVolumes[] = $itemDetail;
 									}
 								}
 							}
 						}
-						if (count($holdableVolumes) > 3 || $hasItemsWithoutVolumes) {
-							//Show a dialog to enable the patron to select a volume to place a hold on
-							$this->_actions[$variationId][] = [
-								'title' => translate([
-									'text' => 'Place Hold',
-									'isPublicFacing' => true,
-								]),
-								'url' => '',
-								'id' => "actionButton$id",
-								'onclick' => "return AspenDiscovery.Record.showPlaceHoldVolumes('{$this->getModule()}', '$source', '$id');",
-								'requireLogin' => false,
-								'type' => 'ils_hold',
-							];
-						} else {
-							ksort($holdableVolumes);
-							foreach ($holdableVolumes as $volumeId => $volumeInfo) {
-								$this->_actions[$variationId][] = [
-									'title' => translate([
-										'text' => 'Hold %1%',
-										1 => $volumeInfo['volumeName'],
-										'isPublicFacing' => true,
-									]),
-									'url' => '',
-									'id' => "actionButton$id",
-									'onclick' => "return AspenDiscovery.Record.showPlaceHold('{$this->getModule()}', '$source', '$id', '{$volumeInfo['volumeId']}');",
-									'requireLogin' => false,
-									'type' => 'ils_hold',
-								];
+						//Figure out which volumes require requests
+						if ($interLibraryLoanType != 'none' && $homeLocation != null) {
+							foreach ($holdableVolumes as &$holdableVolume) {
+								$holdableVolume['needsIllRequest'] = !$this->oneOrMoreHoldableItemsOwnedByPatronHoldGroups($holdableVolume['relatedItems'], $holdGroups, $variationId, $homeLocation->code);
+							}
+							$itemsWithoutVolumesNeedIllRequest = !$this->oneOrMoreHoldableItemsOwnedByPatronHoldGroups($itemsWithoutVolumes, $holdGroups, $variationId, $homeLocation->code);
+						}
+					}
+				}
+
+				//Figure out the actions to add
+				if ($needsVolumeHold) {
+					if (count($holdableVolumes) > 3 || count($itemsWithoutVolumes) > 0) {
+						//We will need to show a popup to select the volume
+						$interface->assign('itemsWithoutVolumesNeedIllRequest', $itemsWithoutVolumesNeedIllRequest);
+						$this->_actions[$variationId][] = getMultiVolumeHoldAction($this->getModule(), $source, $id);
+					}else{
+						//We show a button per volume
+						ksort($holdableVolumes);
+						foreach ($holdableVolumes as $volumeInfo) {
+							if ($volumeInfo['needsIllRequest']) {
+								if ($interLibraryLoanType == 'vdx') {
+									//VDX does not support volumes, we'll just prompt for a regular VDX
+									$this->_actions[$variationId][] = getVdxRequestAction($this->getModule(), $source, $id);
+								}elseif ($interLibraryLoanType == 'localIll') {
+									$this->_actions[$variationId][] = getSpecificVolumeLocalIllRequestAction($this->getModule(), $source, $id, $volumeInfo);
+								}
+							}else{
+								$this->_actions[$variationId][] = getSpecificVolumeHoldAction($this->getModule(), $source, $id, $volumeInfo);
 							}
 						}
-					} else {
-						$this->_actions[$variationId][] = [
-							'title' => translate([
-								'text' => 'Place Hold',
-								'isPublicFacing' => true,
-							]),
-							'url' => '',
-							'id' => "actionButton$id",
-							'onclick' => "return AspenDiscovery.Record.showPlaceHold('{$this->getModule()}', '$source', '$id', '', '$variationId');",
-							'requireLogin' => false,
-							'type' => 'ils_hold',
-						];
 					}
-				} else {
+				}else{
+					//No holds, just get the proper action based on interlibrary loan type required
 					if ($interLibraryLoanType == 'vdx') {
-						$this->_actions[$variationId][] = [
-							'title' => translate([
-								'text' => 'Request',
-								'isPublicFacing' => true,
-							]),
-							'url' => '',
-							'id' => "actionButton$id",
-							'onclick' => "return AspenDiscovery.Record.showVdxRequest('{$this->getModule()}', '$source', '$id');",
-							'requireLogin' => false,
-							'type' => 'vdx_request',
-							'btnType' => 'btn-vdx-request btn-action'
-						];
+						$this->_actions[$variationId][] = getVdxRequestAction($this->getModule(), $source, $id);
 					} else if ($interLibraryLoanType == 'localIll') {
-						$this->_actions[$variationId][] = [
-							'title' => translate([
-								'text' => 'Request',
-								'isPublicFacing' => true,
-							]),
-							'url' => '',
-							'id' => "actionButton$id",
-							'onclick' => "return AspenDiscovery.Record.showLocalIllRequest('{$this->getModule()}', '$source', '$id');",
-							'requireLogin' => false,
-							'type' => 'local_ill_request',
-							'btnType' => 'btn-local-ill-request btn-action'
-						];
+						$this->_actions[$variationId][] = getLocalIllRequestAction($this->getModule(), $source, $id);
+					} else {
+						$this->_actions[$variationId][] = getHoldRequestAction($this->getModule(), $source, $id, $variationId);
 					}
 				}
 			}
@@ -1245,39 +1206,11 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 			if (count($uploadedPDFs) > 0) {
 				if (count($uploadedPDFs) == 1) {
 					$recordFile = reset($uploadedPDFs);
-					$this->_actions[$variationId][] = [
-						'title' => translate([
-							'text' => 'View PDF',
-							'isPublicFacing' => true,
-						]),
-						'url' => "/Files/{$recordFile->id}/ViewPDF",
-						'requireLogin' => false,
-						'type' => 'view_pdf',
-					];
-					$this->_actions[$variationId][] = [
-						'title' => translate([
-							'text' => 'Download PDF',
-							'isPublicFacing' => true,
-						]),
-						'url' => "/Record/{$this->getId()}/DownloadPDF?fileId={$recordFile->id}",
-						'requireLogin' => false,
-						'type' => 'download_pdf',
-					];
+					$this->_actions[$variationId][] = getViewSinglePdfAction($recordFile->id);
+					$this->_actions[$variationId][] = getDownloadSinglePdfAction($id, $recordFile->id);
 				} else {
-					$this->_actions[$variationId][] = [
-						'title' => 'View PDF',
-						'url' => '',
-						'onclick' => "return AspenDiscovery.Record.selectFileToView('{$this->getId()}', 'RecordPDF');",
-						'requireLogin' => false,
-						'type' => 'view_pdf',
-					];
-					$this->_actions[$variationId][] = [
-						'title' => 'Download PDF',
-						'url' => '',
-						'onclick' => "return AspenDiscovery.Record.selectFileDownload('{$this->getId()}', 'RecordPDF');",
-						'requireLogin' => false,
-						'type' => 'download_pdf',
-					];
+					$this->_actions[$variationId][] = getViewMultiPdfAction($id);
+					$this->_actions[$variationId][] = getDownloadMultiPdfAction($this->getId());
 				}
 			}
 
@@ -1286,20 +1219,9 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 			if (count($supplementalFiles) > 0) {
 				if (count($supplementalFiles) == 1) {
 					$recordFile = reset($supplementalFiles);
-					$this->_actions[$variationId][] = [
-						'title' => 'Download Supplemental File',
-						'url' => "/Record/{$this->getId()}/DownloadSupplementalFile?fileId={$recordFile->id}",
-						'requireLogin' => false,
-						'type' => 'download_supplemental_file',
-					];
+					$this->_actions[$variationId][] = getDownloadSingleSupplementalFileAction($id, $recordFile->id);
 				} else {
-					$this->_actions[$variationId][] = [
-						'title' => 'Download Supplemental File',
-						'url' => '',
-						'onclick' => "return AspenDiscovery.Record.selectFileDownload('{$this->getId()}', 'RecordSupplementalFile');",
-						'requireLogin' => false,
-						'type' => 'download_supplemental_file',
-					];
+					$this->_actions[$variationId][] = getDownloadMultiSupplementalFileAction($id);
 				}
 			}
 
@@ -1308,6 +1230,40 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		}
 
 		return $this->_actions[$variationId];
+	}
+
+	/**
+	 * @param array $items - The items to check
+	 * @param HoldGroup[] $holdGroups - The valid hold groups for the patron's hold groups
+	 * @param int|string $variationId - The variation being loaded
+	 * @param string $patronHomeLocationCode - The location code for the patron's home location
+	 * @return bool
+	 */
+	private function oneOrMoreHoldableItemsOwnedByPatronHoldGroups(array $items, array $holdGroups, int|string $variationId, string $patronHomeLocationCode) : bool {
+		//If no hold groups exist, everything is valid
+		if (count($holdGroups) == 0) {
+			return true;
+		}
+		if ($items != null) {
+			foreach ($items as $itemDetail) {
+				if ($itemDetail->variationId == $variationId || $variationId == 'any') {
+					//Only check holdable items
+					if ($itemDetail->holdable) {
+						//The patron's home location is always valid!
+						if ($itemDetail->locationCode == $patronHomeLocationCode) {
+							return true;
+						}
+
+						foreach ($holdGroups as $holdGroup) {
+							if (in_array($itemDetail->locationCode, $holdGroup->getLocationCodes())) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	function createActionsFromUrls($relatedUrls, $itemInfo = null, $variationId = 'any') {

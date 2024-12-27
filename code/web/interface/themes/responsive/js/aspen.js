@@ -14222,10 +14222,13 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		showLocalIllRequest: function (module, source, id) {
+		showLocalIllRequest: function (module, source, id, volume) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getLocalIllRequestForm&recordSource=" + source;
+				if (volume !== undefined) {
+					url += "&volume=" + volume;
+				}
 				$.getJSON(url, function (data) {
 					document.body.style.cursor = "default";
 					if (data.success) {
@@ -14236,13 +14239,13 @@ AspenDiscovery.Record = (function () {
 				}).fail(AspenDiscovery.ajaxFail);
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showLocalIllRequest(module, source, id);
+					AspenDiscovery.Record.showLocalIllRequest(module, source, id, volume);
 				}, false);
 			}
 			return false;
 		},
 
-		submitLocalIllRequest: function (module, id) {
+		submitLocalIllRequest: function (module, id, volume) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				var acceptFeeField = $('#acceptFee');
@@ -14263,7 +14266,8 @@ AspenDiscovery.Record = (function () {
 					acceptFee: acceptFeeField.prop('checked'),
 					pickupLocation: $('#pickupLocationSelect').val(),
 					catalogKey: $('#catalogKey').val(),
-					note: $('#note').val()
+					note: $('#note').val(),
+					volumeId: $('#volume').val()
 				};
 				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitLocalIllRequest";
 				$.getJSON(url, params, function (data) {

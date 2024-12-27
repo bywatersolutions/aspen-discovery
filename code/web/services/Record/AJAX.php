@@ -279,23 +279,39 @@ class Record_AJAX extends Action {
 					} else {
 						$marcRecord = new MarcRecordDriver($id);
 
-						$interface->assign('localIllForm', $localIllForm);
-						$localIllFormFields = $localIllForm->getFormFields($marcRecord);
-						$interface->assign('structure', $localIllFormFields);
-						$interface->assign('localIllFormFields', $interface->fetch('DataObjectUtil/ajaxForm.tpl'));
+						if ($marcRecord->isValid()) {
+							$interface->assign('localIllForm', $localIllForm);
+							$volumeId = $_REQUEST['volume'] ?? null;
+							$localIllFormFields = $localIllForm->getFormFields($marcRecord, $volumeId);
+							$interface->assign('structure', $localIllFormFields);
+							$interface->assign('localIllFormFields', $interface->fetch('DataObjectUtil/ajaxForm.tpl'));
 
-						$results = [
-							'title' => translate([
-								'text' => 'Request Title',
-								'isPublicFacing' => true,
-							]),
-							'modalBody' => $interface->fetch("Record/local-ill-request-popup.tpl"),
-							'modalButtons' => '<a href="#" class="btn btn-primary" onclick="return AspenDiscovery.Record.submitLocalIllRequest(\'Record\', \'' . $id . '\')">' . translate([
-									'text' => 'Place Request',
+							$results = [
+								'title' => translate([
+									'text' => 'Request Title',
 									'isPublicFacing' => true,
-								]) . '</a>',
-							'success' => true,
-						];
+								]),
+								'modalBody' => $interface->fetch("Record/local-ill-request-popup.tpl"),
+								'modalButtons' => '<a href="#" class="btn btn-primary" onclick="return AspenDiscovery.Record.submitLocalIllRequest(\'Record\', \'' . $id . '\')">' . translate([
+										'text' => 'Place Request',
+										'isPublicFacing' => true,
+									]) . '</a>',
+								'success' => true,
+							];
+						}else{
+							$results = [
+								'title' => translate([
+									'text' => 'Error',
+									'isPublicFacing' => true,
+								]),
+								'modalBody' => translate([
+									'text' => 'Could not find the specified record, unable to place request.',
+									'isPublicFacing' => true,
+								]),
+								'modalButtons' => '',
+								'success' => true,
+							];
+						}
 					}
 				} else {
 					$results = [
@@ -718,7 +734,7 @@ class Record_AJAX extends Action {
 			$relatedRecord = $marcRecord->getGroupedWorkDriver()->getRelatedRecord($marcRecord->getIdWithSource());
 			$interface->assign('id', $marcRecord->getId());
 
-			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations)) {
+			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations, $rememberHoldPickupSublocation)) {
 				return [
 					'holdFormBypassed' => false,
 					'title' => 'Unable to place hold',
@@ -999,14 +1015,15 @@ class Record_AJAX extends Action {
 									$interface->assign('fromHoldError', true);
 									$marcRecord = new MarcRecordDriver($recordId);
 
-									$volumeInfo = null;
+									$volumeInfo = $_REQUEST['volume'];
+									$volumeLabel = '';
 									if (isset($_REQUEST['volume'])) {
 										//Get the name of the volume, so we can add it as a note
 										require_once ROOT_DIR . '/sys/ILS/IlsVolumeInfo.php';
 										$volumeDataDB = new IlsVolumeInfo();
 										$volumeDataDB->volumeId = $_REQUEST['volume'];
 										if ($volumeDataDB->find(true)) {
-											$volumeInfo = $volumeDataDB->displayLabel;
+											$volumeLabel = $volumeDataDB->displayLabel;
 										} else {
 											$volumeInfo = $_REQUEST['volume'];
 										}
@@ -1023,7 +1040,7 @@ class Record_AJAX extends Action {
 											if ($vdxForm->find(true)) {
 												$interface->assign('vdxForm', $vdxForm);
 
-												$vdxFormFields = $vdxForm->getFormFields($marcRecord, $volumeInfo);
+												$vdxFormFields = $vdxForm->getFormFields($marcRecord, $volumeLabel);
 												$interface->assign('structure', $vdxFormFields);
 												$interface->assign('vdxFormFields', $interface->fetch('DataObjectUtil/ajaxForm.tpl'));
 												return [
@@ -1775,7 +1792,7 @@ class Record_AJAX extends Action {
 
 		foreach ($locations as $locationKey => $location) {
 			if (is_object($location)) {
-				$pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);;
+				$pickupSublocations[$locationKey] = $user->getValidSublocations($location->locationId);
 			}
 		}
 		$interface->assign('pickupAt', $pickupAt);
@@ -2058,7 +2075,7 @@ class Record_AJAX extends Action {
 		];
 	}
 
-	private function getLibKeyUrl($doiUrl) {
+	private function getLibKeyUrl($doiUrl) : ?string {
 		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
 		$libKeyDriver = new LibKeyDriver();
 		return $libKeyDriver->getLibKeyLink($doiUrl);

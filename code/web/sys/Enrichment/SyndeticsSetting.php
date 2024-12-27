@@ -169,7 +169,7 @@ class SyndeticsSetting extends DataObject {
 	}
 
 	/**
-	 * @return bool
+	 * @return bool|int
 	 */
 	public function update($context = '') : bool|int {
 		$ret = parent::update();

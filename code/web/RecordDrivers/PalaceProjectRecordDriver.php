@@ -206,7 +206,7 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 
 	protected $_actions = null;
 
-	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) {
+	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		if ($this->_actions === null) {
 			$this->_actions = [];
 			// To start, we will just display an Access Online Link

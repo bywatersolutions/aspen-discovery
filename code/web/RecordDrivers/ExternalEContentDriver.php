@@ -211,7 +211,7 @@ class ExternalEContentDriver extends BaseEContentDriver {
 		return [];
 	}
 
-	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) {
+	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		$allItems = $relatedRecord->getItems();
 		$allItemUrls = [];
 		foreach ($allItems as $item) {

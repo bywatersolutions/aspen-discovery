@@ -190,7 +190,7 @@ class Axis360RecordDriver extends GroupedWorkSubDriver {
 
 	protected $_actions = null;
 
-	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) {
+	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		if ($this->_actions === null) {
 			$this->_actions = [];
 			//Check to see if the title is on hold or checked out to the patron.

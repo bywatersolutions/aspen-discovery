@@ -435,12 +435,12 @@ abstract class GroupedWorkSubDriver extends RecordInterface {
 	 * @param null|IlsVolumeInfo[] $volumeData
 	 * @return array
 	 */
-	public abstract function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null);
+	public abstract function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null): array ;
 
 	/**
 	 * Load Record actions when we don't have detailed information about the record yet
 	 */
-	public function getRecordActionsFromIndex() {
+	public function getRecordActionsFromIndex() : array {
 		$groupedWork = $this->getGroupedWorkDriver();
 		if ($groupedWork != null) {
 			$relatedRecords = $groupedWork->getRelatedRecords();

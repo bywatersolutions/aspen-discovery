@@ -595,7 +595,7 @@ class EbscohostRecordDriver extends RecordInterface {
 
 	protected $_actions = null;
 
-	public function getRecordActions() {
+	public function getRecordActions() : array {
 		if ($this->_actions === null) {
 			$this->_actions = [];
 			$this->_actions[] = [

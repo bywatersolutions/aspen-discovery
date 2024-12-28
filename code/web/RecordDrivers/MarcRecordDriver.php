@@ -1190,11 +1190,13 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 						}
 					}
 				}else{
-					//No holds, just get the proper action based on interlibrary loan type required
-					if ($interLibraryLoanType == 'vdx') {
-						$this->_actions[$variationId][] = getVdxRequestAction($this->getModule(), $source, $id);
-					} else if ($interLibraryLoanType == 'localIll') {
-						$this->_actions[$variationId][] = getLocalIllRequestAction($this->getModule(), $source, $id);
+					//No volumes, just get the proper action based on interlibrary loan type required
+					if ($treatHoldAsInterLibraryLoanRequest) {
+						if ($interLibraryLoanType == 'vdx') {
+							$this->_actions[$variationId][] = getVdxRequestAction($this->getModule(), $source, $id);
+						} else if ($interLibraryLoanType == 'localIll') {
+							$this->_actions[$variationId][] = getLocalIllRequestAction($this->getModule(), $source, $id);
+						}
 					} else {
 						$this->_actions[$variationId][] = getHoldRequestAction($this->getModule(), $source, $id, $variationId);
 					}

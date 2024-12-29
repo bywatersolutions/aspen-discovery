@@ -22,6 +22,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import java.io.StringReader;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
+import java.io.IOException;
+
 public class Axis360Extractor {
 	private final String serverName;
 	private final Axis360Setting setting;
@@ -493,10 +504,11 @@ public class Axis360Extractor {
 		}
 		headers.put("Authorization", getAxis360AccessToken(setting));
 		headers.put("Library", setting.getLibraryPrefix());
-		headers.put("Content-Type", "application/json");
-		headers.put("Accept", "application/json");
+		headers.put("Content-Type", "application/xml");
+		headers.put("Accept", "application/xml");
 
-		String availabilityUrl = setting.getBaseUrl() + "/Services/VendorAPI/titleInfo/v2?titleIds=" + axis360Id;
+		String availabilityUrl = setting.getBaseUrl() + "/Services/VendorAPI/availability/v2?titleIds=" + axis360Id;
+
 		int numTries = 0;
 		while (!availabilityResponse.callSucceeded && numTries < 3) {
 			if (numTries > 0) {
@@ -513,25 +525,45 @@ public class Axis360Extractor {
 				availabilityResponse.callSucceeded = false;
 			} else {
 				try {
-					JSONObject responseJSON = availabilityResponse.response.getJSONResponse();
-					JSONObject availabilityResponseStatus = responseJSON.getJSONObject("status");
-					if (availabilityResponseStatus.getString("Code").equals("0000")) {
+					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+					DocumentBuilder builder = factory.newDocumentBuilder();
+					Document doc = builder
+							.parse(new InputSource(new StringReader(availabilityResponse.response.getMessage())));
+					NodeList statusCode = doc.getElementsByTagName("code");
+					String code = statusCode.item(0).getTextContent();
+
+					if (code.equals("0000")) {
 						availabilityResponse.callSucceeded = true;
-						if (responseJSON.has("titles")) {
-							availabilityResponse.titleInformation = responseJSON.getJSONArray("titles").getJSONObject(0);
-						} else {
-							logEntry.incErrors("Did not get titles while getting availability");
+
+						NodeList titleList = doc.getElementsByTagName("title");
+						if (titleList.getLength() > 0) {
+							Element titleElement = (Element) titleList.item(0);
+							NodeList titleAvail = titleElement.getElementsByTagName("availability");
+							Element availabilityElement = (Element) titleAvail.item(0);
+
+							JSONObject availabilityInfo = new JSONObject();
+							int availableQty = Integer.parseInt(getElementTextContent(availabilityElement, "availableCopies"));
+							int totalHolds = Integer.parseInt(getElementTextContent(availabilityElement, "holdsQueueSize"));
+
+							JSONObject availability = new JSONObject();
+							availability.put("Available", availableQty > 0);
+							availability.put("TotalCopies", availableQty);
+							availability.put("HoldQueueSize", totalHolds);
+
+							JSONObject titleInfo = new JSONObject();
+							titleInfo.put("Availability", availability);
+							titleInfo.put("TitleId", getElementTextContent(titleElement, "titleId"));
+							
+							availabilityResponse.titleInformation = titleInfo;
 						}
-					} else if (availabilityResponseStatus.getString("Code").equals("3103")) {
-						//Invalid title, just delete availability for this title.
-						//This does not actually seem to be true, subsequent calls to the same URL work?!?
-						availabilityResponse.titleIsUnavailable = true;
-						availabilityResponse.callSucceeded = false;
 					} else {
-						logEntry.incErrors("Did not get a good status while calling titleInfo " + availabilityResponseStatus.getString("Code") + " " + availabilityResponseStatus.getString("Message"));
+						logEntry.incErrors("Did not get a good status while calling titleInfo " + code);
 					}
+				} catch (ParserConfigurationException | SAXException | IOException e) {
+					logEntry.incErrors("Error parsing XML response for title " + axis360Id + ": " + e);
+					availabilityResponse.callSucceeded = false;
 				} catch (JSONException e) {
-					logEntry.incErrors("Error parsing availability response for title " + axis360Id + " last response code was " + availabilityResponse.response.getResponseCode() + ": " + e);
+					logEntry.incErrors("Error parsing availability response for title " + axis360Id + e);
 				}
 			}
 			numTries++;
@@ -540,6 +572,14 @@ public class Axis360Extractor {
 			logEntry.incErrors("Did not get a successful API response after 3 tries for " + availabilityUrl);
 		}
 		return availabilityResponse;
+	}
+
+	private String getElementTextContent(Element parent, String tagName) {
+		NodeList nodeList = parent.getElementsByTagName(tagName);
+		if (nodeList.getLength() > 0) {
+			return nodeList.item(0).getTextContent();
+		}
+		return "0";
 	}
 
 	private void indexAxis360Record(String permanentId) {

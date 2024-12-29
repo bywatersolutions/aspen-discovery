@@ -1,6 +1,5 @@
 package org.aspen_discovery.format_classification;
 
-import com.ctc.wstx.util.StringUtil;
 import com.turning_leaf_technologies.indexing.BaseIndexingSettings;
 import com.turning_leaf_technologies.indexing.FormatMapValue;
 import com.turning_leaf_technologies.indexing.IndexingProfile;
@@ -436,7 +435,7 @@ public class MarcRecordFormatClassifier {
 						result.add("Playaway");
 					}else if (fieldData.contains("boxine")) {
 						//The 245a should also contain the word tonie
-						if (titleContainsText(record, "tonie")) {
+						if (titleMatchesPattern(record, toniePattern)) {
 							if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Adding bib level format Tonie based on 710 Added Entry and 245", 2);}
 							result.add("Tonies");
 						}
@@ -458,15 +457,6 @@ public class MarcRecordFormatClassifier {
 		String titleField = MarcUtil.getFirstFieldVal(record, "245a");
 		if (titleField != null) {
 			return patternToLookFor.matcher(titleField).matches();
-		}
-		return false;
-	}
-
-	private boolean titleContainsText(org.marc4j.marc.Record record, String textToLookFor) {
-		String titleField = MarcUtil.getFirstFieldVal(record, "245a");
-		if (titleField != null) {
-			//return titleField.toLowerCase().matches("\b" + textToLookFor.toLowerCase() + "\b");
-			return titleField.toLowerCase().contains(textToLookFor.toLowerCase());
 		}
 		return false;
 	}
@@ -552,7 +542,8 @@ public class MarcRecordFormatClassifier {
 		}
 	}
 
-	private Pattern yotoPattern = Pattern.compile(".*?\\byoto\\b.*?", Pattern.CASE_INSENSITIVE);
+	private final Pattern yotoPattern = Pattern.compile(".*?\\byoto\\b.*?", Pattern.CASE_INSENSITIVE);
+	private final Pattern toniePattern = Pattern.compile(".*?\\tonie\\b.*?", Pattern.CASE_INSENSITIVE);
 	public void getFormatFromPublicationInfo(AbstractGroupedWorkSolr groupedWork, org.marc4j.marc.Record record, Set<String> result) {
 		// check for playaway in 260|b
 		List<DataField> publicationFields = record.getDataFields(new int[]{260, 264});
@@ -567,7 +558,7 @@ public class MarcRecordFormatClassifier {
 					result.add("GoReader");
 				} else if (sysDetailsValue.contains("boxine")) {
 					//The 245a should also contain the word tonie
-					if (titleContainsText(record, "tonie")) {
+					if (titleMatchesPattern(record, toniePattern)) {
 						if (groupedWork != null && groupedWork.isDebugEnabled()) {
 							groupedWork.addDebugMessage("Adding bib level format Tonie based on 260/264", 2);
 						}

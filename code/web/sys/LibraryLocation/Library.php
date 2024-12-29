@@ -1325,7 +1325,7 @@ class Library extends DataObject {
 						'permissions' => ['Library ILS Options'],
 					],
 					'enableAddToReadingHistory' => [
-						'property' => 'enableReadingHistory',
+						'property' => 'enableAddToReadingHistory',
 						'type' => 'checkbox',
 						'label' => 'Enable Add To Reading History',
 						'description' => 'Whether or not users can add titles to their reading history within Aspen.',

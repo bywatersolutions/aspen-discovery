@@ -61,6 +61,56 @@ class WebBuilder_AJAX extends JSON_Action {
 
 				$customForm = new CustomForm();
 				$customForm->orderBy('title');
+				if (!UserAccount::userHasPermission('Administer All Custom Forms')) {
+					$libraryCustomForm = new LibraryCustomForm();
+					$userLibrary = Library::getPatronHomeLibrary();
+					$additionalAdminLocations = UserAccount::getActiveUserObj()->getAdditionalAdministrationLocations();
+
+					$validLibraryIds = [];
+
+					if ($userLibrary) {
+						$validLibraryIds[] = $userLibrary->libraryId;
+					}
+
+
+					if (!empty($additionalAdminLocations)) {
+						foreach ($additionalAdminLocations as $locationId => $locationName) {
+							$library = Library::getLibraryForLocation($locationId);
+							if ($library) {
+								$validLibraryIds[] = $library->libraryId;
+							}
+						}
+					}
+
+
+					if (count($validLibraryIds) > 0) {
+
+						$libraryCustomForm->whereAddIn('libraryId', $validLibraryIds, true);
+
+
+						$validCustomForms = [];
+						$libraryCustomForm->find();
+						while ($libraryCustomForm->fetch()) {
+							$validCustomForms[] = $libraryCustomForm->formId;
+						}
+
+						if (count($validCustomForms) > 0) {
+							$customForm->whereAddIn('id', $validCustomForms, true);
+						} else {
+							$result = [
+								'success' => true,
+								'values' => $list,
+							];
+							break;
+						}
+					} else {
+						$result = [
+							'success' => false,
+							'message' => 'Unable to determine the home library for this user.',
+						];
+						break;
+					}
+				}
 				$customForm->find();
 
 				while ($customForm->fetch()) {

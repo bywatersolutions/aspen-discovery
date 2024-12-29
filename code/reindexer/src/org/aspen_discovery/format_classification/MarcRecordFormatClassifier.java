@@ -440,9 +440,9 @@ public class MarcRecordFormatClassifier {
 							if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Adding bib level format Tonie based on 710 Added Entry and 245", 2);}
 							result.add("Tonies");
 						}
-					} else if (fieldData.contains("yoto")) {
+					} else if (yotoPattern.matcher(fieldData).matches()) {
 						//Also confirm the title has yoto
-						if (titleContainsText(record, "yoto")) {
+						if (titleMatchesPattern(record, yotoPattern)) {
 							if (groupedWork != null && groupedWork.isDebugEnabled()) {
 								groupedWork.addDebugMessage("Adding bib level format Yoto based on 710 Added Entry and 245", 2);
 							}
@@ -454,9 +454,18 @@ public class MarcRecordFormatClassifier {
 		}
 	}
 
+	private boolean titleMatchesPattern(org.marc4j.marc.Record record, Pattern patternToLookFor) {
+		String titleField = MarcUtil.getFirstFieldVal(record, "245a");
+		if (titleField != null) {
+			return patternToLookFor.matcher(titleField).matches();
+		}
+		return false;
+	}
+
 	private boolean titleContainsText(org.marc4j.marc.Record record, String textToLookFor) {
 		String titleField = MarcUtil.getFirstFieldVal(record, "245a");
 		if (titleField != null) {
+			//return titleField.toLowerCase().matches("\b" + textToLookFor.toLowerCase() + "\b");
 			return titleField.toLowerCase().contains(textToLookFor.toLowerCase());
 		}
 		return false;
@@ -543,6 +552,7 @@ public class MarcRecordFormatClassifier {
 		}
 	}
 
+	private Pattern yotoPattern = Pattern.compile(".*?\\byoto\\b.*?", Pattern.CASE_INSENSITIVE);
 	public void getFormatFromPublicationInfo(AbstractGroupedWorkSolr groupedWork, org.marc4j.marc.Record record, Set<String> result) {
 		// check for playaway in 260|b
 		List<DataField> publicationFields = record.getDataFields(new int[]{260, 264});
@@ -563,8 +573,8 @@ public class MarcRecordFormatClassifier {
 						}
 						result.add("Tonies");
 					}
-				} else if (sysDetailsValue.contains("yoto")) {
-					if (titleContainsText(record, "yoto")) {
+				} else if (yotoPattern.matcher(sysDetailsValue).matches()) {
+					if (titleMatchesPattern(record, yotoPattern)) {
 						if (groupedWork != null && groupedWork.isDebugEnabled()) {
 							groupedWork.addDebugMessage("Adding bib level format Yoto based on 260/264", 2);
 						}
@@ -1299,6 +1309,14 @@ public class MarcRecordFormatClassifier {
 			printFormats.add("Playaway");
 			return;
 		}
+		if (printFormats.contains("Tonies")){
+			printFormats.clear();
+			printFormats.add("Tonies");
+		}
+		if (printFormats.contains("Yoto")){
+			printFormats.clear();
+			printFormats.add("Yoto");
+		}
 		if (printFormats.contains("Kit")){
 			printFormats.clear();
 			printFormats.add("Kit");
@@ -1443,14 +1461,6 @@ public class MarcRecordFormatClassifier {
 		if (printFormats.contains("Zines")){
 			printFormats.clear();
 			printFormats.add("Zines");
-		}
-		if (printFormats.contains("Tonies")){
-			printFormats.clear();
-			printFormats.add("Tonies");
-		}
-		if (printFormats.contains("Yoto")){
-			printFormats.clear();
-			printFormats.add("Yoto");
 		}
 		if (printFormats.contains("Kinect") || printFormats.contains("XBox360")  || printFormats.contains("Xbox360")
 				|| printFormats.contains("XboxOne") || printFormats.contains("XBoxSeriesX") || printFormats.contains("PlayStation")

@@ -141,6 +141,7 @@ public class MarcRecordFormatClassifier {
 			}
 		}
 
+		getFormatFromDistributorNumber(groupedWork, record, printFormats);
 		getFormatFromPublicationInfo(groupedWork, record, printFormats);
 		getFormatFromNotes(groupedWork, record, printFormats);
 		getFormatFromEdition(groupedWork, record, printFormats);
@@ -538,6 +539,24 @@ public class MarcRecordFormatClassifier {
 			if (title.contains("book club kit")){
 				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Adding bib level format BookClubKit based on 245a", 2);}
 				printFormats.add("BookClubKit");
+			}
+		}
+	}
+
+	public Pattern whazoodlePattern = Pattern.compile("^WZ.*");
+	public Pattern playawayPattern = Pattern.compile("\\bplayaway\\b", Pattern.CASE_INSENSITIVE);
+	public void getFormatFromDistributorNumber(AbstractGroupedWorkSolr groupedWork, org.marc4j.marc.Record record, Set<String> result) {
+		List<DataField> distributorNumberFields = record.getDataFields(28);
+		for (DataField distributorNumberField : distributorNumberFields) {
+			Subfield subfieldA = distributorNumberField.getSubfield('a');
+			Subfield subfieldB = distributorNumberField.getSubfield('b');
+			if (subfieldA != null && subfieldB != null) {
+				if (playawayPattern.matcher(subfieldB.getData()).lookingAt()){
+					if (whazoodlePattern.matcher(subfieldA.getData()).matches()){
+						if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Adding bib level format WhaZoodle based on 028", 2);}
+						result.add("WhaZoodle");
+					}
+				}
 			}
 		}
 	}
@@ -1263,6 +1282,11 @@ public class MarcRecordFormatClassifier {
 		if (printFormats.contains("MusicRecording") && (printFormats.contains("CD") || printFormats.contains("CompactDisc") || printFormats.contains("SoundDisc"))){
 			printFormats.clear();
 			printFormats.add("MusicCD");
+			return;
+		}
+		if (printFormats.contains("WhaZoodle")){
+			printFormats.clear();
+			printFormats.add("WhaZoodle");
 			return;
 		}
 		if (printFormats.contains("PlayawayView")){

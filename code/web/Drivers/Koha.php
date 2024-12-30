@@ -1357,11 +1357,6 @@ class Koha extends AbstractIlsDriver {
 			$user->_state = $userFromDb['state'];
 			$user->_zip = $userFromDb['zipcode'];
 			$user->phone = $userFromDb['phone'];
-
-			$user_library = $user->getHomeLibrary();
-			if ($user_library !== null && $user_library->showOpacNotes) {
-				$user->_web_note = $userFromDb['opacnote'];
-			}
 		}
 	}
 
@@ -6942,6 +6937,14 @@ class Koha extends AbstractIlsDriver {
 		$results = mysqli_query($this->dbConnection, $sql);
 		if ($results !== false) {
 			if ($curRow = $results->fetch_assoc()) {
+				if ($library->showOpacNotes) {
+					if (!empty($curRow['opacnote'])) {
+						$messages[] = [
+							'message' => $curRow['opacnote'],
+							'messageStyle' => 'info',
+						];
+					}
+				}
 				if ($curRow['debarred'] != null) {
 					$message = '<strong>' . translate([
 							'text' => 'Please note: Your account has been frozen.',

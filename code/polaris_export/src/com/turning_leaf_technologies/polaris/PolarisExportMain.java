@@ -342,6 +342,7 @@ public class PolarisExportMain {
 			PreparedStatement existingAspenSublocationStmt = dbConn.prepareStatement("SELECT id, name, isValidHoldPickupAreaILS, weight from sublocation where locationId = ? AND ilsId = ?");
 			PreparedStatement updateAspenSublocationStmt = dbConn.prepareStatement("UPDATE sublocation SET name = ?, isValidHoldPickupAreaILS = ?, weight = ? where id = ?");
 			PreparedStatement addAspenSublocationStmt = dbConn.prepareStatement("INSERT INTO sublocation (locationId, name, ilsId, isValidHoldPickupAreaILS, isValidHoldPickupAreaAspen, weight) VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+			PreparedStatement activateSublocationForAllPTypesStmt = dbConn.prepareStatement("INSERT INTO sublocation_ptype (sublocationId, patronTypeId) SELECT ?, id from ptype");
 			PreparedStatement getExistingAspenLocationsStmt = dbConn.prepareStatement("SELECT locationId, displayName, code from location", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			ResultSet allExistingLocationsRS = getExistingAspenLocationsStmt.executeQuery();
 			HashMap<String, ExistingLocation> existingLocations = new HashMap<>();
@@ -399,6 +400,15 @@ public class PolarisExportMain {
 							addAspenSublocationStmt.setInt(5, selected ? 1 : 0);
 							addAspenSublocationStmt.setLong(6, sequence);
 							addAspenSublocationStmt.executeUpdate();
+
+							ResultSet addAspenSublocationRS = addAspenSublocationStmt.getGeneratedKeys();
+							if (addAspenSublocationRS.next()){
+								if (selected) {
+									long sublocationId = addAspenSublocationRS.getLong(1);
+									activateSublocationForAllPTypesStmt.setLong(1, sublocationId);
+									activateSublocationForAllPTypesStmt.executeUpdate();
+								}
+							}
 						}
 						existingAspenSublocationRS.close();
 					}

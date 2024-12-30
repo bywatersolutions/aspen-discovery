@@ -49,9 +49,21 @@
 								{elseif $subProperty.type=='multiSelect'}
 									<span id="{$propName}_{$subPropName}_{$subObject->id}" data-id="{$subObject->id}">
 										{if is_array($subPropValue) && count($subPropValue) > 0}
-											{foreach from=$subProperty.values item=propertyName key=propertyValue}
-												{if array_key_exists($propertyValue, $subPropValue)}{$propertyName|escape}<br/>{/if}
+											{* Show the first 3 values *}
+											{assign var=numShown value=0}
+											{assign var=numSelected value=0}
+											{foreach from=$subProperty.values item=propertyName key=propertyValue name="multiSelectValues"}
+												{if array_key_exists($propertyValue, $subPropValue)}
+													{assign var=numSelected value=$numSelected+1}
+													{if $numShown < 4}
+														{$propertyName|escape}<br/>
+														{assign var=numShown value=$numShown+1}
+													{/if}
+												{/if}
 											{/foreach}
+											{if $numSelected >= 4}
+												{translate text="and %1% more values" 1=count($subPropValue)-3 isAdminFacing='true'}
+											{/if}
 										{else}
 											{translate text="No values selected" isAdminFacing='true'}
 										{/if}

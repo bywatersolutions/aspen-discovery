@@ -126,6 +126,15 @@ function getUpdates25_01_00(): array {
 			]
 		],
 		//sublocation_ptype_restriction
+		'sublocation_ptype_uniqueness' => [
+			'title' => 'Add Index for sublocation ptype',
+			'description' => 'Add Index for sublocation ptype',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE sublocation_ptype ADD INDEX uniqueness(sublocationId, patronTypeId)",
+			]
+		],
+		//sublocation_ptype_uniqueness
 
 		//kodi
 

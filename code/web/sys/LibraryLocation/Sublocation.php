@@ -96,7 +96,7 @@ class Sublocation extends DataObject {
 				'label' => 'Eligible Patron Types',
 				'description' => 'Define what patron types should be able to use this sublocation',
 				'values' => $patronTypeList,
-				'hideInLists' => true,
+				'hideInLists' => false,
 			],
 		];
 	}

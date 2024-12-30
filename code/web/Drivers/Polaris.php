@@ -7,6 +7,7 @@
 class Polaris extends AbstractIlsDriver {
 	//Caching of sessionIds by patron for performance
 	private static $accessTokensForUsers = [];
+	private static $accessTokenForStaff = null;
 
 	/** @var CurlWrapper */
 	private $apiCurlWrapper;
@@ -96,7 +97,7 @@ class Polaris extends AbstractIlsDriver {
 		if (empty($messages)) {
 			$staffUserInfo = $this->getStaffUserInfo();
 			$polarisUrl = "/PAPIService/REST/protected/v1/1033/100/1/{$staffUserInfo['accessToken']}/circulation/patron/{$user->unique_ils_id}/renewblocks";
-			$renewBlocksResponse = $this->getWebServiceResponse($polarisUrl, 'GET', $staffUserInfo['accessSecret'], false, UserAccount::isUserMasquerading());
+			$renewBlocksResponse = $this->getWebServiceResponse($polarisUrl, 'GET', $staffUserInfo['accessSecret'] , false, UserAccount::isUserMasquerading());
 			ExternalRequestLogEntry::logRequest('polaris.getRenewBlocks', 'GET', $this->getWebServiceURL() . $polarisUrl, $this->apiCurlWrapper->getHeaders(), false, $this->lastResponseCode, $renewBlocksResponse, []);
 			if ($renewBlocksResponse && $this->lastResponseCode == 200) {
 				$renewBlocksResponse = json_decode($renewBlocksResponse);
@@ -1878,8 +1879,8 @@ class Polaris extends AbstractIlsDriver {
 		}
 	}
 
-	private function getStaffUserInfo() {
-		if (!array_key_exists($this->accountProfile->staffUsername, Polaris::$accessTokensForUsers)) {
+	private function getStaffUserInfo() : array|false {
+		if (is_null(Polaris::$accessTokenForStaff)) {
 			$polarisUrl = "/PAPIService/REST/protected/v1/1033/100/1/authenticator/staff";
 			$authenticationData = new stdClass();
 			$authenticationData->Domain = $this->accountProfile->domain;
@@ -1891,16 +1892,16 @@ class Polaris extends AbstractIlsDriver {
 			ExternalRequestLogEntry::logRequest('polaris.getStaffUserInfo', 'POST', $this->getWebServiceURL() . $polarisUrl, $this->apiCurlWrapper->getHeaders(), $encodedBody, $this->lastResponseCode, $response, ['staffPassword' => $this->accountProfile->staffPassword]);
 			if ($response) {
 				$jsonResponse = json_decode($response);
-				Polaris::$accessTokensForUsers[$this->accountProfile->staffUsername] = [
+				Polaris::$accessTokenForStaff = [
 					'accessToken' => $jsonResponse->AccessToken,
 					'accessSecret' => $jsonResponse->AccessSecret,
 					'polarisId' => $jsonResponse->PolarisUserID,
 				];
 			} else {
-				Polaris::$accessTokensForUsers[$this->accountProfile->staffUsername] = false;
+				Polaris::$accessTokenForStaff = false;
 			}
 		}
-		return Polaris::$accessTokensForUsers[$this->accountProfile->staffUsername];
+		return Polaris::$accessTokenForStaff;
 	}
 
 	public function findNewUser($patronBarcode, $patronUsername) {

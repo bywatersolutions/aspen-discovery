@@ -1938,7 +1938,7 @@ class Koha extends AbstractIlsDriver {
 		} else {
 			$apiUrl = $this->getWebServiceUrl() . "/api/v1/holds";
 			if ($this->getKohaVersion() >= 22.11) {
-				if ($volumeId != 0){
+				if (!empty($volumeId)){
 					$postParams = [
 						'patron_id' => $patron->unique_ils_id,
 						'pickup_library_id' => $pickupBranch,

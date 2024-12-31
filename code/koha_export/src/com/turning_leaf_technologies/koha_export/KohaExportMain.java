@@ -533,7 +533,9 @@ public class KohaExportMain {
 			getVolumeInfoStmt = kohaConn.prepareStatement("SELECT item_groups.* FROM item_groups LEFT JOIN item_group_items USING (item_group_id) GROUP BY item_group_id HAVING COUNT(item_id) > 0", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			getItemsForVolumeStmt = kohaConn.prepareStatement("SELECT * from item_group_items", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
-      PreparedStatement addVolumeStmt = dbConn.prepareStatement("INSERT INTO ils_volume_info (recordId, volumeId, displayLabel, relatedItems, displayOrder) VALUES (?,?,?,?, ?) ON DUPLICATE KEY update recordId = VALUES(recordId), displayLabel = VALUES(displayLabel), relatedItems = VALUES(relatedItems), displayOrder = VALUES(displayOrder)");
+			PreparedStatement selectVolumeStmt = dbConn.prepareStatement("SELECT * from ils_volume_info WHERE recordId = ? AND volumeId = ?");
+			PreparedStatement insertVolumeStmt = dbConn.prepareStatement("INSERT INTO ils_volume_info (recordId, volumeId, displayLabel, relatedItems, displayOrder) VALUES (?,?,?,?, ?)");
+			PreparedStatement updateVolumeStmt = dbConn.prepareStatement("UPDATE ils_volume_info SET displayLabel = ?, relatedItems = ?, displayOrder = ? WHERE recordId = ? AND volumeId = ?");
 			PreparedStatement deleteVolumeStmt = dbConn.prepareStatement("DELETE from ils_volume_info where volumeId = ?");
 
 			ResultSet volumeInfoRS = null;
@@ -586,18 +588,37 @@ public class KohaExportMain {
 						relatedItems = "";
 					}
 
-					try {
-						addVolumeStmt.setString(1, "ils:" + recordId);
-						addVolumeStmt.setLong(2, volumeId);
-						addVolumeStmt.setString(3, description);
-						addVolumeStmt.setString(4, relatedItems);
-						addVolumeStmt.setInt(5, displayOrder);
-						int numUpdates = addVolumeStmt.executeUpdate();
-						if (numUpdates > 0) {
-							numVolumesUpdated++;
+					int numUpdates = 0;
+					selectVolumeStmt.setString(1, "ils:" + recordId);
+					selectVolumeStmt.setLong(2, volumeId);
+					ResultSet volumeResultSet = selectVolumeStmt.executeQuery(); 
+
+					if (volumeResultSet.next()) {
+						// If record exists, just update
+						try {
+							updateVolumeStmt.setString(1, description);
+							updateVolumeStmt.setString(2, relatedItems);
+							updateVolumeStmt.setInt(3, displayOrder);
+							updateVolumeStmt.setString(4, "ils:" + recordId);
+							updateVolumeStmt.setLong(5, volumeId);
+							numUpdates = updateVolumeStmt.executeUpdate();
+						} catch (SQLException sqlException) {
+							logEntry.incErrors("Error updating volume", sqlException);
 						}
-					}catch (SQLException sqlException){
-						logEntry.incErrors("Error adding volume", sqlException);
+					} else {
+						try {
+							insertVolumeStmt.setString(1, "ils:" + recordId);
+							insertVolumeStmt.setLong(2, volumeId);
+							insertVolumeStmt.setString(3, description);
+							insertVolumeStmt.setString(4, relatedItems);
+							insertVolumeStmt.setInt(5, displayOrder);
+							numUpdates = insertVolumeStmt.executeUpdate();
+						}catch (SQLException sqlException) {
+							logEntry.incErrors("Error adding volume", sqlException);
+						}
+					}
+					if (numUpdates > 0) {
+						numVolumesUpdated++;
 					}
 				}
 				volumeInfoRS.close();

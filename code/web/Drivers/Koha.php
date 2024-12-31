@@ -1357,8 +1357,6 @@ class Koha extends AbstractIlsDriver {
 			$user->_state = $userFromDb['state'];
 			$user->_zip = $userFromDb['zipcode'];
 			$user->phone = $userFromDb['phone'];
-
-			$user->_web_note = $userFromDb['opacnote'];
 		}
 	}
 
@@ -6947,7 +6945,6 @@ class Koha extends AbstractIlsDriver {
 						];
 					}
 				}
-
 				if ($curRow['debarred'] != null) {
 					$message = '<strong>' . translate([
 							'text' => 'Please note: Your account has been frozen.',

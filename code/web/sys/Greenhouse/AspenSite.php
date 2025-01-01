@@ -5,37 +5,45 @@ class AspenSite extends DataObject {
 	protected $id;
 	protected $name;
 	protected $baseUrl;
+	/** @noinspection PhpUnused */
 	protected $internalServerName;
 	public $siteType;
+	/** @noinspection PhpUnused */
 	protected $libraryType;
+	/** @noinspection PhpUnused */
 	protected $libraryServes;
 	protected $timezone;
 	protected $implementationStatus;
 	protected $monitored;
+	/** @noinspection PhpUnused */
 	protected $hosting;
 	protected $appAccess;
 	protected $operatingSystem;
 	protected $ils;
 	protected $notes;
 	protected $version;
+	/** @noinspection PhpUnused */
 	protected $sendErrorNotificationsTo;
 	protected $lastNotificationTime;
+	/** @noinspection PhpUnused */
 	protected $contractSigningDate;
+	/** @noinspection PhpUnused */
 	protected $goLiveDate;
+	/** @noinspection PhpUnused */
 	protected $contactFrequency;
+	/** @noinspection PhpUnused */
 	protected $lastContacted;
+	/** @noinspection PhpUnused */
 	protected $nextMeetingDate;
+	/** @noinspection PhpUnused */
 	protected $nextMeetingPerson;
 	protected $activeTicketFeed;
 	protected $lastOfflineTime;
+	/** @noinspection PhpUnused */
 	protected $lastOnlineTime;
 	protected $lastOfflineNote;
 	protected $isOnline;
 	protected $optOutBatchUpdates;
-	//public $jointAspenKohaImplementation;
-	//public $ilsMigration;
-
-	//public $implementationSpecialist;
 
 	public static $_siteTypes = [
 		0 => 'Library Partner',
@@ -96,6 +104,7 @@ class AspenSite extends DataObject {
 		];
 	}
 
+	/** @noinspection PhpUnusedParameterInspection */
 	public static function getObjectStructure($context = ''): array {
 		return [
 			'id' => [
@@ -200,11 +209,13 @@ class AspenSite extends DataObject {
 			],
 			'baseUrl' => [
 				'property' => 'baseUrl',
-				'type' => 'url',
+				'type' => 'text',
 				'label' => 'Site URL',
 				'description' => 'The URL to the Website',
 				'maxLength' => 255,
 				'required' => false,
+				'validationPattern' => "^https?:\/\/[-a-zA-Z0-9_.]*(:[0-9]{1,4})?([-\/a-zA-Z0-9_?&=.]*)$",
+				'validationMessage' => 'Please enter a valid URL. The URL may include port number.'
 			],
 			'hosting' => [
 				'property' => 'hosting',
@@ -677,7 +688,9 @@ class AspenSite extends DataObject {
 		return $this->id;
 	}
 
-	public function getLastScheduledUpdate() {
+	/** @noinspection PhpUnused */
+	public function getLastScheduledUpdate() : array {
+		$lastUpdate = [];
 		$lastUpdate['time'] = 'Never';
 		$lastUpdate['id'] = null;
 		require_once ROOT_DIR . '/sys/Updates/ScheduledUpdate.php';
@@ -691,7 +704,9 @@ class AspenSite extends DataObject {
 		return $lastUpdate;
 	}
 
-	public function getLastRanUpdate() {
+	/** @noinspection PhpUnused */
+	public function getLastRanUpdate() : array {
+		$lastUpdate = [];
 		$lastUpdate['time'] = 'Never';
 		$lastUpdate['id'] = null;
 		require_once ROOT_DIR . '/sys/Updates/ScheduledUpdate.php';
@@ -707,19 +722,27 @@ class AspenSite extends DataObject {
 		return $lastUpdate;
 	}
 
-	private function setIsOnline(int $online) {
+	private function setIsOnline(int $online) : void {
 		$this->__set('isOnline', $online);
 	}
 
-	private function setLastOnlineTime(int $time) {
+	private function setLastOnlineTime(int $time) : void {
 		$this->__set('lastOnlineTime', $time);
 	}
 
-	private function setLastOfflineNote(string $note) {
+	/** @noinspection PhpSameParameterValueInspection */
+	private function setLastOfflineNote(string $note) : void {
 		$this->__set('lastOfflineNote', $note);
 	}
 
-	private function setLastOfflineTime(int $time) {
+	private function setLastOfflineTime(int $time) : void {
 		$this->__set('lastOfflineTime', $time);
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getId() : mixed{
+		return $this->id;
 	}
 }

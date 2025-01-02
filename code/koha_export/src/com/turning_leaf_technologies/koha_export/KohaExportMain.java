@@ -591,7 +591,7 @@ public class KohaExportMain {
 					int numUpdates = 0;
 					selectVolumeStmt.setString(1, "ils:" + recordId);
 					selectVolumeStmt.setLong(2, volumeId);
-					ResultSet volumeResultSet = selectVolumeStmt.executeQuery(); 
+					ResultSet volumeResultSet = selectVolumeStmt.executeQuery();
 
 					if (volumeResultSet.next()) {
 						// If record exists, just update
@@ -783,8 +783,15 @@ public class KohaExportMain {
 		while (kohaValuesRS.next()) {
 			String value = kohaValuesRS.getString("itemtype");
 			String translation = kohaValuesRS.getString("description");
-			if (existingValues.containsKey(value)) {
-				if (!existingValues.get(value).equals(translation)) {
+			String formatLower = value.toLowerCase();
+			String existingValue = null;
+			for (String key : existingValues.keySet()) {
+				if (key.toLowerCase().equals(formatLower)){
+					existingValue = existingValues.get(key);
+				}
+			}
+			if (existingValue != null) {
+				if (!existingValue.equals(translation)) {
 					logger.warn("Translation for " + value + " has changed from " + existingValues.get(value) + " to " + translation);
 				}
 			} else {
@@ -795,7 +802,11 @@ public class KohaExportMain {
 					insertFormatStmt.setLong(1, indexingProfileId);
 					insertFormatStmt.setString(2, value);
 					insertFormatStmt.setString(3, translation);
-					insertFormatStmt.executeUpdate();
+					try {
+						insertFormatStmt.executeUpdate();
+					}catch (SQLIntegrityConstraintViolationException e) {
+						logEntry.addNote("Unable to insert format map value " + value + " the value exists already");
+					}
 				}
 			}
 		}

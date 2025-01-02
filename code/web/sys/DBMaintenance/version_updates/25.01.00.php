@@ -86,7 +86,7 @@ function getUpdates25_01_00(): array {
 		//sublocation_settings
 		'sublocation_non_unique_names' => [
 			'title' => 'Sublocation make names non unique',
-			'description' => 'CSublocation make names non unique ',
+			'description' => 'Change sublocation to make names non unique ',
 			'continueOnError' => true,
 			'sql' => [
 				"ALTER TABLE sublocation CHANGE COLUMN name name VARCHAR(50) NOT NULL",

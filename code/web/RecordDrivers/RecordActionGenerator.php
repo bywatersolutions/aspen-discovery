@@ -56,7 +56,9 @@ function getSpecificVolumeLocalIllRequestAction($module, $source, $id, $volumeIn
 		'id' => "actionButton$id",
 		'onclick' => "return AspenDiscovery.Record.showLocalIllRequest('$module', '$source', '$id', '{$volumeInfo['volumeId']}');",
 		'requireLogin' => false,
-		'type' => 'ils_hold',
+		'type' => 'local_ill_request',
+		'volumeId' => $volumeInfo['volumeId'],
+		'volumeName' => $volumeInfo['volumeName']
 	];
 }
 

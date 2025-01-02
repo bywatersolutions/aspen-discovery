@@ -402,6 +402,21 @@ class LocalIllForm extends DataObject {
 			'maxLength' => 20,
 		];
 
+		$fields['volumeId'] = [
+			'type' => 'text',
+			'property' => 'volumeId',
+			'display' => 'hide',
+			'label' => translate([
+				'text' => 'Volume ID',
+				'isPublicFacing' => true,
+			]),
+			'description' => translate([
+				'text' => 'The volume to be requested',
+				'isPublicFacing' => true,
+			]),
+			'required' => false,
+		];
+
 		require_once ROOT_DIR . '/services/API/UserAPI.php';
 		$user = new UserAPI();
 

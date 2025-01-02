@@ -1789,11 +1789,11 @@ class UserAPI extends AbstractAPI {
 
 	/**
 	 * Renews all items that have been checked out to the user from the ILS.
-	 * Returns a count of the number of items that could be renewed.
+	 * Returns a count of the items that could be renewed.
 	 *
 	 * Parameters:
 	 * <ul>
-	 * <li>username - The barcode of the user.  Can be truncated to the last 7 or 9 digits.</li>
+	 * <li>username - The barcode of the user. Can be truncated to the last 7 or 9 digits.</li>
 	 * <li>password - The pin number for the user. </li>
 	 * </ul>
 	 *
@@ -1869,7 +1869,7 @@ class UserAPI extends AbstractAPI {
 	 *
 	 * Sample Call:
 	 * <code>
-	 * https://aspenurl/API/UserAPI?method=renewAll&username=userbarcode&password=userpin&bibId=1004012&pickupBranch=pa
+	 * https://aspenurl/API/UserAPI?method=placeHold&username=userbarcode&password=userpin&bibId=1004012&pickupBranch=pa
 	 * </code>
 	 *
 	 * Sample Response (successful hold):
@@ -1923,7 +1923,7 @@ class UserAPI extends AbstractAPI {
 				if ($source == 'ils' || $source == null) {
 					if (isset($_REQUEST['pickupBranch']) || isset($_REQUEST['campus'])) {
 						if (isset($_REQUEST['pickupBranch'])) {
-							if (is_null($_REQUEST['pickupBranch'])) {
+							if (empty($_REQUEST['pickupBranch'])) {
 								$location = new Location();
 								$userPickupLocations = $location->getPickupBranches($user);
 								foreach ($userPickupLocations as $tmpLocation) {
@@ -1970,6 +1970,7 @@ class UserAPI extends AbstractAPI {
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
+						$needsIllRequest = isset($hold_result['error_code']) && ($hold_result['error_code'] == 'hatErrorResponse.17286') || ($hold_result['error_code'] == 'hatErrorResponse.447');
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -1978,12 +1979,14 @@ class UserAPI extends AbstractAPI {
 							'confirmationNeeded' => $result['api']['confirmationNeeded'] ?? false,
 							'confirmationId' => $result['api']['confirmationId'] ?? null,
 							'shouldBeItemHold' => false,
+							'needsIllRequest' => $needsIllRequest
 						];
 					} elseif ($holdType == 'volume' && isset($_REQUEST['volumeId'])) {
 						$result = $user->placeVolumeHold($shortId, $_REQUEST['volumeId'], $pickupBranch);
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
+						$needsIllRequest = isset($result['error_code']) && ($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447');
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -1992,6 +1995,7 @@ class UserAPI extends AbstractAPI {
 							'confirmationNeeded' => $result['api']['confirmationNeeded'] ?? false,
 							'confirmationId' => $result['api']['confirmationId'] ?? null,
 							'shouldBeItemHold' => false,
+							'needsIllRequest' => $needsIllRequest
 						];
 					} else {
 						//Make sure that there are not volumes available
@@ -2154,6 +2158,7 @@ class UserAPI extends AbstractAPI {
 						$pickupLocationArray = $pickupLocation->toArray();
 						$pickupLocationArray['locationId'] = (string)$pickupLocationArray['locationId'];
 						$pickupLocationArray['libraryId'] = (string)$pickupLocationArray['libraryId'];
+						$pickupLocationArray['locationCode'] = (string)$pickupLocationArray['code'];
 						$pickupLocations[] = $pickupLocationArray;
 					}
 				}

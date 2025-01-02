@@ -148,6 +148,17 @@ function getUpdates25_01_00(): array {
 
 		//other
 
+		//yanjun - ByWater
+		'set_hoopla_index_by_day_to_default' => [
+			'title' => 'Set Hoopla Index By Day to to default',
+			'description' => 'Set Hoopla Index By Day to to default',
+			'continueOnError' => true,
+			'sql' => [
+				'UPDATE hoopla_settings set indexByDay = 1',
+			]
+		],	
+		//set_hoopla_index_by_day_to_default
+
 	];
 }
 

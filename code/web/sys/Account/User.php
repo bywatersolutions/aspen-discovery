@@ -2365,7 +2365,7 @@ class User extends DataObject {
 	 * message - the message to display
 	 * @access public
 	 */
-	function placeHold($recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+	function placeHold(string $recordId, string $pickupBranch, ?string $cancelDate = null, ?string  $pickupSublocation = null) : array {
 		$result = $this->getCatalogDriver()->placeHold($this, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
@@ -2392,7 +2392,7 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function placeVolumeHold($recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+	function placeVolumeHold($recordId, $volumeId, $pickupBranch, $pickupSublocation = null) : array {
 		$result = $this->getCatalogDriver()->placeVolumeHold($this, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
@@ -2457,11 +2457,10 @@ class User extends DataObject {
 	 * @param string $itemId The id of the item to hold
 	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
 	 * @param null|string $cancelDate The date to automatically cancel the hold if not filled
-	 * @return mixed True if successful, false if unsuccessful
-	 * If an error occurs, return a AspenError
+	 * @return array an array with the results of the hold
 	 * @access public
 	 */
-	function placeItemHold($recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+	function placeItemHold(string $recordId, string $itemId, string $pickupBranch, ?string $cancelDate = null, ?string  $pickupSublocation = null) : array {
 		$result = $this->getCatalogDriver()->placeItemHold($this, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
@@ -4841,7 +4840,7 @@ class User extends DataObject {
 		$selectedRequestCandidate = $materialsRequest->getSelectedHoldCandidate();
 		$source = $selectedRequestCandidate->source;
 		if ($source == 'ils' || $source == null) {
-			//Materials request stores the id of the pickup location
+			//The Materials request stores the id of the pickup location
 			$pickupBranchId = $materialsRequest->holdPickupLocation;
 			if (empty($pickupBranchId)) {
 				$pickupBranchId = $this->homeLocationId;

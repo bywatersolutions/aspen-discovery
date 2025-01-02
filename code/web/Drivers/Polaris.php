@@ -614,23 +614,25 @@ class Polaris extends AbstractIlsDriver {
 				if (!empty($holdInfo->Designation)) {
 					$curHold->callNumber .= ' ' . $holdInfo->Designation;
 				}
+
 				$curPickupBranch = new Location();
 				$curPickupBranch->code = $holdInfo->PickupBranchID;
 				if ($curPickupBranch->find(true)) {
-					$curPickupBranch->fetch();
 					$curHold->pickupLocationId = $curPickupBranch->locationId;
-					$curHold->pickupLocationName = $curPickupBranch->displayName;
+
+					//Polaris does not return the hold area for the hold, instead it updates the pickup branch name
+					// to include the name of the hold area. So if the selected location has hold areas, display the
+					// information from Polaris.
+					if (count($curPickupBranch->getPickupSublocations()) > 0){
+						//Polaris does not return the hold area for the hold, instead it updates the pickup branch name
+						// to include the name of the hold area.
+						$curHold->pickupLocationName = $holdInfo->PickupBranchName;
+					}else{
+						//We can display the name of the branch which includes any translations
+						$curHold->pickupLocationName = $curPickupBranch->displayName;
+					}
 				} else {
 					$curHold->pickupLocationName = $holdInfo->PickupBranchName;
-				}
-
-				require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
-				$curPickupHoldArea = new Sublocation();
-				$curPickupHoldArea->ilsId = ''; // where can we get this for the hold?
-				if ($curPickupHoldArea->find(true)) {
-					$curPickupHoldArea->fetch();
-					$curHold->pickupSublocationId = $curPickupHoldArea->id;
-					$curHold->pickupSublocationName = $curPickupHoldArea->name;
 				}
 
 				$curHold->expirationDate = $this->parsePolarisDate($holdInfo->PickupByDate);
@@ -793,6 +795,11 @@ class Polaris extends AbstractIlsDriver {
 			}
 		}
 		$body->PickupOrgID = (int)$pickupBranch;
+
+		if ($pickupSublocation) {
+			$body->HoldPickupAreaID = (int)$pickupSublocation;
+		}
+
 		//Need to set the Workstation
 		$body->WorkstationID = $this->getWorkstationID($patron);
 		//Get the ID of the staff user

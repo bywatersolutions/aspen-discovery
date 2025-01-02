@@ -972,43 +972,87 @@ class WebBuilder_AJAX extends JSON_Action {
 	}
 	function saveAsTemplate(){
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
-		$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
-		  $templateId = $newGrapesPageContent['templateId'];
-		  $html = $newGrapesPageContent['html'];
-		  $css = $newGrapesPageContent['css'];
-		  $projectData = json_encode($newGrapesPageContent['projectData']);
+
+		try {
+			$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
+			$templateId = $newGrapesPageContent['templateId'];
+			$html = $newGrapesPageContent['html'];
+			$css = $newGrapesPageContent['css'];
+			$projectData = json_encode($newGrapesPageContent['projectData']);
+
+			$template = new GrapesTemplate();
+			$template->id = $templateId;
+
+			if (!$template->find(true)) {
+				return [
+					'success' => false,
+					'message' => "Template with ID $templateId not found. Unable to update."
+				];
+			}
+			$template->templateContent = $projectData;
+			$template->htmlData = $html;
+			$template->cssData = $css;
+
+			if(!$template->update()) {
+				return [
+					'success' => false,
+					'message' => 'Failed to update the template.'
+				];
+			}
+			return [ 
+				'success' => true,
+				'message' => 'Template saved successfully.'
+			];
+		} catch (Exception $e) {
+			return [
+				'success' => false,
+				'message' => 'an unexpected error occurred: ' . $e->getMessage()
+			];
+		}
+	}
   
-		  $template = new GrapesTemplate();
-		  $template->id = $templateId;
-  
-		  if ($template->find(true)) {
-			  $template->templateContent = $projectData;
-			  $template->htmlData = $html;
-			  $template->cssData = $css;
-		  }
-		  $template->update();
-	  }
-  
-	  function saveAsPage() {
-		  require_once ROOT_DIR .  '/sys/WebBuilder/GrapesPage.php';
-		  $newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
-		  $grapesPageId = $newGrapesPageContent['grapesPageId'];
-		  $grapesGenId = $newGrapesPageContent['grapesGenId'];
-		  $templateId = $newGrapesPageContent['templateId'];
-		  $html = $newGrapesPageContent['html'];
-		  $css = $newGrapesPageContent['css'];
-		  $grapesPage = new GrapesPage();
-		  $grapesPage->id = $grapesPageId;
-		  $projectData = json_encode($newGrapesPageContent['projectData']);
-  
-		  if ($grapesPage->find(true)) {
-			  $grapesPage->grapesGenId = $grapesGenId;
-			  $grapesPage->templateContent = $projectData;
-			  $grapesPage->htmlData = $html;
-			  $grapesPage->cssData = $css;
-		  }
-		  $grapesPage->update();
-	  }
+	function saveAsPage() {
+		require_once ROOT_DIR .  '/sys/WebBuilder/GrapesPage.php';
+
+		try {
+			$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
+			$grapesPageId = $newGrapesPageContent['grapesPageId'];
+			$grapesGenId = $newGrapesPageContent['grapesGenId'];
+			$templateId = $newGrapesPageContent['templateId'];
+			$html = $newGrapesPageContent['html'];
+			$css = $newGrapesPageContent['css'];
+			$grapesPage = new GrapesPage();
+			$grapesPage->id = $grapesPageId;	
+			$projectData = json_encode($newGrapesPageContent['projectData']);
+
+			if (!$grapesPage->find(true)) {
+				return [ 
+					'success' =>false,
+					'message' => "Page with ID $grapesPageId not found. Unable to update."
+				];
+			}
+			$grapesPage->grapesGenId = $grapesGenId;
+			$grapesPage->templateContent = $projectData;
+			$grapesPage->htmlData = $html;
+			$grapesPage->cssData = $css;
+
+			if (!$grapesPage->update()) {
+				return [
+					'success ' => false,
+					'message' => 'Failed to update the page.'
+				];
+			}
+			return [
+				'success' => true,
+				'message' => 'Page saved successfully.'
+			];
+		} catch (Exception $e) {
+			return [
+				'success' => false,
+				'message' => 'An unexpected error occurred: ' . $e->getMessage()
+			];
+		}
+	}
   
 	  function loadGrapesPage() {
 		  require_once ROOT_DIR . '/sys/WebBuilder/GrapesPage.php';

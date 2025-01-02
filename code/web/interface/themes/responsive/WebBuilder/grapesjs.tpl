@@ -106,10 +106,19 @@
                     }),
                     contentType: "application/json",
                     success: function (response) {
-                        console.log('Saved as Grapes Page');
+                      if (response.success) {
+                        AspenDiscovery.showMessage('Success', response.message);
+                      } else {
+                        AspenDiscovery.showMessage('Error', response.message || 'Failed to save page.');
+                      }
                     },
                     error: function (xhr, status, error) {
                         console.error('Error saving page: ', error);
+                        let errorMessage = 'Failed to save page. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message){
+                          errorMessage = xhr.responseJSON.message;
+                        }
+                        AspenDiscovery.showMessage('Error', errorMessage);
                     }
                 });
             }

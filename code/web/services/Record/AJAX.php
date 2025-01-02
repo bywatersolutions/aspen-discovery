@@ -2075,7 +2075,7 @@ class Record_AJAX extends Action {
 		];
 	}
 
-	private function getLibKeyUrl($doiUrl) : ?string {
+	private function getLibKeyUrl($uniqueIdentifierList) : ?string {
 		require_once ROOT_DIR . "/Drivers/LibKeyDriver.php";
 		$libKeyDriver = new LibKeyDriver();
 		return $libKeyDriver->getLibKeyResult($uniqueIdentifierList)["data"]["bestIntegratorLink"]["bestLink"];

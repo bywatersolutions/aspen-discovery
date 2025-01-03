@@ -14245,7 +14245,7 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		submitLocalIllRequest: function (module, id, volume) {
+		submitLocalIllRequest: function (module, id) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				var acceptFeeField = $('#acceptFee');
@@ -14267,7 +14267,7 @@ AspenDiscovery.Record = (function () {
 					pickupLocation: $('#pickupLocationSelect').val(),
 					catalogKey: $('#catalogKey').val(),
 					note: $('#note').val(),
-					volumeId: $('#volume').val()
+					volumeId: $('#volumeId').val()
 				};
 				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitLocalIllRequest";
 				$.getJSON(url, params, function (data) {

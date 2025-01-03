@@ -21,6 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.Date;
 import java.util.zip.CRC32;
@@ -50,6 +52,9 @@ public class HooplaExportMain {
 
 	//For Checksums
 	private static final CRC32 checksumCalculator = new CRC32();
+
+	//For 32 hours catch up
+	private static int numRetries32HoursAfter = 0;
 
 	public static void main(String[] args){
 		boolean extractSingleWork = false;
@@ -360,29 +365,40 @@ public class HooplaExportMain {
 					PreparedStatement updateSettingsStmt = aspenConn.prepareStatement("UPDATE hoopla_settings set runFullUpdate = 0 where id = ?");
 					updateSettingsStmt.setLong(1, settingsId);
 					updateSettingsStmt.executeUpdate();
-				}else if (indexByDay ) {
-					//We only want to index once a day at 1 am UTC
-					SimpleDateFormat f = new SimpleDateFormat("HH");
-					f.setTimeZone(TimeZone.getTimeZone("UTC"));
-					Date now = new Date();
-					String curHourUTC = f.format(now);
-					Calendar nowCal = GregorianCalendar.getInstance();
-					nowCal.setTime(now);
-					nowCal.add(Calendar.HOUR, -32);
-					long twentyFiveHoursAgo = nowCal.getTimeInMillis() / 1000;
-					if (curHourUTC.equals("01")){
-						//Set last update time to 32 hours ago (go bigger to get more updates)
-						if (twentyFiveHoursAgo < lastUpdate){
-							lastUpdate = twentyFiveHoursAgo;
-						}
-					}else{
-						//It's not 1 am UTC, skip for now.
-						//Figure out when we last indexed this collection.
-						if (lastUpdateOfChangedRecords < twentyFiveHoursAgo) {
-							//Go ahead and index even if we are off schedule
-						} else {
+				} else if (indexByDay ) {
+					//We only want to index once a day at 1 am Local Time
+					ZonedDateTime nowLocalTime = ZonedDateTime.now(); 
+					int curHour = nowLocalTime.getHour();
+					ZonedDateTime startOfToday = nowLocalTime.truncatedTo(ChronoUnit.DAYS);
+					long startOfTodaySeconds = startOfToday.toEpochSecond();
+					ZonedDateTime thirtyTwoHoursAgoTime = nowLocalTime.minusHours(32);
+					long thirtyTwoHoursAgo = thirtyTwoHoursAgoTime.toInstant().getEpochSecond();
+
+					if (curHour == 1){
+						if (lastUpdateOfChangedRecords >= startOfTodaySeconds) {
+							logger.warn("Already completed today's extraction at 1 AM. Skipping until tomorrow.");
 							continue;
 						}
+						//Set last update time to 32 hours ago (go bigger to get more updates)
+						if (thirtyTwoHoursAgo < lastUpdate){
+							lastUpdate = thirtyTwoHoursAgo;
+						}
+						numRetries32HoursAfter = 0;
+					}else{
+						//It's not 1 am Local time, skip for now.
+						//Figure out when we last indexed this collection.
+						if (lastUpdate >= thirtyTwoHoursAgo) {
+							//Go ahead and index even if we are off schedule
+							continue;
+						}
+						// If we don't have updates for 32 hours, we will try 3 times
+						// If we exceed 3 times and fail, we will wait until 1 AM
+						if (numRetries32HoursAfter >= 3){
+							logger.warn("Exceeded 3 retries for 32 hours catch up, waiting until 1 AM");
+							continue;
+						}
+						numRetries32HoursAfter++;
+						logEntry.addNote("Retrying extraction after 32 hours " + numRetries32HoursAfter + " of 3");
 					}
 				}
 
@@ -404,7 +420,9 @@ public class HooplaExportMain {
 					//Give a 2-minute buffer for the extract
 					lastUpdate -= 120;
 					logEntry.addNote("Extracting records since " + new Date(lastUpdate * 1000));
-					url += "?startTime=" + lastUpdate;
+					url += "?startTime=" + lastUpdate + "&limit=500";
+				} else {
+					url += "?limit=500";
 				}
 
 				HashMap<String, String> headers = new HashMap<>();
@@ -431,9 +449,9 @@ public class HooplaExportMain {
 						int numTries = 0;
 						while (startToken != null) {
 							if (!doFullReload && lastUpdate > 0) {
-								url = hooplaAPIBaseURL + "/api/v1/libraries/" + hooplaLibraryId + "/content?startTime=" + lastUpdate + "&startToken=" + startToken;
+								url = hooplaAPIBaseURL + "/api/v1/libraries/" + hooplaLibraryId + "/content?startTime=" + lastUpdate + "&startToken=" + startToken + "&limit=500";
 							}else {
-								url = hooplaAPIBaseURL + "/api/v1/libraries/" + hooplaLibraryId + "/content?startToken=" + startToken;
+								url = hooplaAPIBaseURL + "/api/v1/libraries/" + hooplaLibraryId + "/content?startToken=" + startToken + "&limit=500";
 							}
 							response = NetworkUtils.getURL(url, logger, headers);
 							if (response.isSuccess()){
@@ -453,7 +471,7 @@ public class HooplaExportMain {
 								if (response.getResponseCode() == 401 || response.getResponseCode() == 504 || response.getResponseCode() == 503){
 									numTries++;
 									if (numTries >= 3){
-										logEntry.incErrors("Error loading data from " + url + " " + response.getResponseCode() + " " + response.getMessage());
+										logEntry.incErrors("Error loading data after 3 attempts from" + url + " " + response.getResponseCode() + " " + response.getMessage());
 										startToken = null;
 									}else{
 										Thread.sleep(1000 * 60 * 2); //Wait for 2 minutes before trying again
@@ -488,12 +506,16 @@ public class HooplaExportMain {
 						reactiveFullUpdateStmt.executeUpdate();
 					}
 				}else{
-					updateSettingsStmt = aspenConn.prepareStatement("UPDATE hoopla_settings set lastUpdateOfChangedRecords = ? where id = ?");
+					// Update the lastUpdateOfChangedRecords if we have a successful response
+					if (response.isSuccess()){
+						updateSettingsStmt = aspenConn.prepareStatement("UPDATE hoopla_settings set lastUpdateOfChangedRecords = ? where id = ?");
+					}
 				}
 				if (updateSettingsStmt != null) {
 					updateSettingsStmt.setLong(1, startTimeForLogging);
 					updateSettingsStmt.setLong(2, settingsId);
 					updateSettingsStmt.executeUpdate();
+					numRetries32HoursAfter = 0;
 				}
 			}
 			if (numSettings == 0){

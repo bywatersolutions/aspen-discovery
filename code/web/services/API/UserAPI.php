@@ -1970,7 +1970,7 @@ class UserAPI extends AbstractAPI {
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
-						$needsIllRequest = isset($hold_result['error_code']) && ($hold_result['error_code'] == 'hatErrorResponse.17286') || ($hold_result['error_code'] == 'hatErrorResponse.447');
+						$needsIllRequest = isset($hold_result['error_code']) && (($hold_result['error_code'] == 'hatErrorResponse.17286') || ($hold_result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -1986,7 +1986,7 @@ class UserAPI extends AbstractAPI {
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
-						$needsIllRequest = isset($result['error_code']) && ($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447');
+						$needsIllRequest = isset($result['error_code']) && (($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -2020,6 +2020,7 @@ class UserAPI extends AbstractAPI {
 						if(isset($result['items'])) {
 							$hasItems = (bool)$result['items'];
 						}
+						$needsIllRequest = isset($result['error_code']) && (($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -2029,6 +2030,7 @@ class UserAPI extends AbstractAPI {
 							'confirmationId' => $result['api']['confirmationId'] ?? null,
 							'shouldBeItemHold' => $hasItems,
 							'items' => $result['items'] ?? null,
+							'needsIllRequest' => $needsIllRequest
 						];
 					}
 				} elseif ($source == 'overdrive') {

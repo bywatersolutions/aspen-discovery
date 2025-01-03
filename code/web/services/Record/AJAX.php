@@ -1025,8 +1025,8 @@ class Record_AJAX extends Action {
 									$interface->assign('fromHoldError', true);
 									$marcRecord = new MarcRecordDriver($recordId);
 
-									$volumeInfo = $_REQUEST['volume'];
 									$volumeLabel = '';
+									$volumeInfo = null;
 									if (isset($_REQUEST['volume'])) {
 										//Get the name of the volume, so we can add it as a note
 										require_once ROOT_DIR . '/sys/ILS/IlsVolumeInfo.php';

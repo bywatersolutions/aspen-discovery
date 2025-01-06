@@ -259,7 +259,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 	 * @param bool $preventQueryModification Should we allow the search engine to modify the query or is it already a well-formatted query
 	 * @return  AspenError|array solr result structure (for now)
 	 */
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array|null {
 		// Our search has already been processed in init()
 		$search = $this->searchTerms;
 

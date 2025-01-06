@@ -822,7 +822,7 @@ class SearchObject_SummonSearcher extends SearchObject_BaseSearcher{
 		return $this->resultsTotal;
 	}
 
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array {
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array|null {
 		 return new AspenError("Process Search not implemented for Summon Searcher");
 	}
 

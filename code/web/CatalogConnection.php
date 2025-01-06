@@ -896,7 +896,7 @@ class CatalogConnection {
 	 *                                If an error occurs, return a AspenError
 	 * @access  public
 	 */
-	function placeHold($patron, $recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+	function placeHold(User $patron, string $recordId, string $pickupBranch, ?string $cancelDate = null, ?string $pickupSublocation = null) : array {
 		$result = $this->driver->placeHold($patron, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		if ($result['success'] == true) {
 			$indexingProfileId = $this->driver->getIndexingProfile()->id;

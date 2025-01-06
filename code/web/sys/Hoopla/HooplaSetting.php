@@ -73,7 +73,9 @@ class HooplaSetting extends DataObject {
 				'type' => 'checkbox',
 				'label' => 'Index By Day',
 				'description' => 'Whether or hoopla indexing should only occur once a day',
-				'default' => 0,
+				'default' => 1,
+				'readOnly' => true,
+				'note' => 'This setting is defaulted to true for all Hoopla instances',  
 			],
 			'lastUpdateOfChangedRecords' => [
 				'property' => 'lastUpdateOfChangedRecords',

@@ -406,7 +406,7 @@ class Record_AJAX extends Action {
 			$isOnHold = $user->isRecordOnHold($recordSource, $id);
 			$interface->assign('isOnHold', $isOnHold);
 
-			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations, $rememberHoldPickupSublocation)) {
+			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations)) {
 				return [
 					'holdFormBypassed' => false,
 					'title' => translate([
@@ -734,7 +734,7 @@ class Record_AJAX extends Action {
 			$relatedRecord = $marcRecord->getGroupedWorkDriver()->getRelatedRecord($marcRecord->getIdWithSource());
 			$interface->assign('id', $marcRecord->getId());
 
-			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations, $rememberHoldPickupSublocation)) {
+			if (!$this->setupHoldForm($recordSource, $rememberHoldPickupLocation, $marcRecord, $locations)) {
 				return [
 					'holdFormBypassed' => false,
 					'title' => 'Unable to place hold',
@@ -891,7 +891,17 @@ class Record_AJAX extends Action {
 				//Rather than asking the user for this explicitly, we do it based on the pickup location
 				$pickupBranch = $_REQUEST['pickupBranch'];
 
-				$pickupSublocation = $_REQUEST['pickupSublocation'] ?? false;
+				$pickupSublocationId = $_REQUEST['pickupSublocation'] ?? false;
+				$pickupSublocation = null;
+				if ($pickupSublocationId) {
+					//In the form this is set as the id of the sublocation in Aspen, but we want to pass the ILS ID
+					require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+					$pickupSublocationObject = new Sublocation();
+					$pickupSublocationObject->id = $pickupSublocationId;
+					if ($pickupSublocationObject->find(true)) {
+						$pickupSublocation = $pickupSublocationObject->ilsId;
+					}
+				}
 
 				$patron = null;
 				if (!empty($_REQUEST['selectedUser'])) {
@@ -1015,8 +1025,8 @@ class Record_AJAX extends Action {
 									$interface->assign('fromHoldError', true);
 									$marcRecord = new MarcRecordDriver($recordId);
 
-									$volumeInfo = $_REQUEST['volume'];
 									$volumeLabel = '';
+									$volumeInfo = null;
 									if (isset($_REQUEST['volume'])) {
 										//Get the name of the volume, so we can add it as a note
 										require_once ROOT_DIR . '/sys/ILS/IlsVolumeInfo.php';
@@ -1730,12 +1740,11 @@ class Record_AJAX extends Action {
 	/**
 	 * @param string $recordSource
 	 * @param bool $rememberHoldPickupLocation
-	 * @param bool $rememberHoldPickupSublocation
 	 * @param MarcRecordDriver $marcRecord
 	 * @param Location[] $locations
 	 * @return bool
 	 */
-	function setupHoldForm(string $recordSource, ?bool &$rememberHoldPickupLocation, MarcRecordDriver $marcRecord, ?array &$locations, ?bool &$rememberHoldPickupSublocation): bool {
+	function setupHoldForm(string $recordSource, ?bool &$rememberHoldPickupLocation, MarcRecordDriver $marcRecord, ?array &$locations): bool {
 		global $interface;
 		$user = UserAccount::getLoggedInUser();
 		if ($user->getCatalogDriver() == null) {
@@ -1817,11 +1826,6 @@ class Record_AJAX extends Action {
 					break;
 				}
 			}
-			if ($preferredPickupLocationIsValid) {
-				$rememberHoldPickupLocation = $user->rememberHoldPickupLocation;
-			} else {
-				$rememberHoldPickupLocation = false;
-			}
 
 			require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 			require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
@@ -1838,14 +1842,15 @@ class Record_AJAX extends Action {
 					$preferredPickupSublocationIsValid = true;
 				}
 			}
-			if ($preferredPickupSublocationIsValid) {
-				$rememberHoldPickupSublocation = $user->rememberHoldPickupSublocation;
-			}
-		} else {
+
+			if ($preferredPickupLocationIsValid && $preferredPickupSublocationIsValid) {
+				$rememberHoldPickupLocation = $user->rememberHoldPickupLocation;
+			} else {
+				$rememberHoldPickupLocation = false;
+			}		} else {
 			$rememberHoldPickupLocation = false;
 		}
 		$interface->assign('rememberHoldPickupLocation', $rememberHoldPickupLocation);
-		$interface->assign('rememberHoldPickupSublocation', $rememberHoldPickupSublocation);
 
 		$interface->assign('pickupLocations', $locations);
 		$interface->assign('pickupSublocations', $pickupSublocations);

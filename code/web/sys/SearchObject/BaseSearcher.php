@@ -2356,7 +2356,7 @@ abstract class SearchObject_BaseSearcher {
 	 * @param bool $preventQueryModification Should we make sure the query doesn't change
 	 * @return  object   Search results (format may vary from class to class).
 	 */
-	abstract public function processSearch(bool $returnIndexErrors = false, bool $recommendations = false, bool $preventQueryModification = false) : AspenError|array;
+	abstract public function processSearch(bool $returnIndexErrors = false, bool $recommendations = false, bool $preventQueryModification = false) : AspenError|array|null;
 
 	/**
 	 * Get error message from index response, if any.  This will only work if

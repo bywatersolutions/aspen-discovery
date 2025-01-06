@@ -666,14 +666,14 @@ class UserAccount {
 	 * Validate the account information (username and password are correct).
 	 * Returns the account, but does not set the global user variable.
 	 *
-	 * @param $username       string
+	 * @param $username       ?string
 	 * @param $password       ?string
 	 * @param $accountSource  ?string The source of the user account if known or null to test all sources
 	 * @param $parentAccount  ?User   The parent user if any
 	 *
 	 * @return User|false
 	 */
-	public static function validateAccount(string $username, ?string $password, ?string $accountSource = null, ?User $parentAccount = null) {
+	public static function validateAccount(?string $username, ?string $password, ?string $accountSource = null, ?User $parentAccount = null) {
 		if (array_key_exists($username . $password, UserAccount::$validatedAccounts)) {
 			return UserAccount::$validatedAccounts[$username . $password];
 		}

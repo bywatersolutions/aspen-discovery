@@ -89,7 +89,7 @@ class SearchObject_GroupedWorkSearcher extends SearchObject_AbstractGroupedWorkS
 	 * @param bool $preventQueryModification Should we allow the search engine to modify the query or is it already a well formatted query
 	 * @return  AspenError|array
 	 */
-	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array{
+	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array|null{
 		global $timer;
 		global $solrScope;
 

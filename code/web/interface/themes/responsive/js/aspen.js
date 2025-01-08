@@ -8357,11 +8357,10 @@ AspenDiscovery.Account = (function () {
 				locationCode: locationCode,
 				context: 'updatePickupLocation'
 			};
+			selectPlaceholder.innerHTML = '';
 			$.getJSON(url, params, function (data) {
 				if (data.success) {
 					selectPlaceholder.innerHTML = data.selectHtml;
-				} else {
-					selectPlaceholder.innerHTML = '';
 				}
 			});
 			return false;

@@ -1427,6 +1427,9 @@ class Polaris extends AbstractIlsDriver {
 		// Todo: Add HoldPickupAreaID value to update hold area ($newPickupSublocation) ??
 		$staffInfo = $this->getStaffUserInfo();
 		$polarisUrl = "/PAPIService/REST/public/v1/1033/100/1/patron/{$patron->getBarcode()}/holdrequests/$itemToUpdateId/pickupbranch?wsid={$this->getWorkstationID($patron)}&userid={$staffInfo['polarisId']}&pickupbranchid=$newPickupLocation";
+		if (!empty($newPickupSublocation)) {
+			$polarisUrl .= "&holdpickupareaid=$newPickupSublocation";
+		}
 		$body = new stdClass();
 		$body->UserID = $staffInfo['polarisId'];
 		$response = $this->getWebServiceResponse($polarisUrl, 'PUT', $this->getAccessToken($patron->getBarcode(), $patron->getPasswordOrPin()), false, UserAccount::isUserMasquerading());

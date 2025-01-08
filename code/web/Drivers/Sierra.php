@@ -1167,9 +1167,7 @@ class Sierra extends Millennium {
 	}
 
 	public function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
-		//return parent::placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate);
-		return $this->placeHold($patron, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
-		//return $this->placeHold($patron, $itemId, $pickupBranch, $cancelDate);
+		return $this->placeHold($patron, $itemId, $pickupBranch, $cancelDate);
 	}
 
 	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {

@@ -889,11 +889,11 @@ class CatalogConnection {
 	 *
 	 * @param User $patron The User to place a hold for
 	 * @param string $recordId The id of the bib record
-	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
-	 * @param string $cancelDate
-	 * @param string $pickupSublocation The sublocation where the user wants to pickup the item when available
+	 * @param string $pickupBranch The branch where the user wants to pick up the item when available
+	 * @param ?string $cancelDate
+	 * @param ?string $pickupSublocation The sublocation within the location where the user wants to pick up the item
 	 * @return  mixed                 True if successful, false if unsuccessful
-	 *                                If an error occurs, return a AspenError
+	 *                                If an error occurs, return an AspenError
 	 * @access  public
 	 */
 	function placeHold(User $patron, string $recordId, string $pickupBranch, ?string $cancelDate = null, ?string $pickupSublocation = null) : array {

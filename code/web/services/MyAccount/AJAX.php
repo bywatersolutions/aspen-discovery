@@ -1971,7 +1971,7 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getChangeHoldLocationForm() {
+	function getChangeHoldLocationForm() : array {
 		global $interface;
 		/** @var $interface UInterface
 		 * @var $user User
@@ -2097,6 +2097,16 @@ class MyAccount_AJAX extends JSON_Action {
 			$holdId = $_REQUEST['holdId'];
 			$newPickupLocation = $_REQUEST['newLocation'];
 			$newPickupSublocation = $_REQUEST['newSublocation'] ?? null;
+			$pickupSublocation = null;
+			if (!empty($newPickupSublocation)) {
+				//In the form this is set as the id of the sublocation in Aspen, but we want to pass the ILS ID
+				require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+				$pickupSublocationObject = new Sublocation();
+				$pickupSublocationObject->id = $newPickupSublocation;
+				if ($pickupSublocationObject->find(true)) {
+					$pickupSublocation = $pickupSublocationObject->ilsId;
+				}
+			}
 
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getLoggedInUser();
@@ -2104,7 +2114,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$patronOwningHold = $user->getUserReferredTo($patronId);
 				if ($patronOwningHold != false) {
 					if ($patronOwningHold->validatePickupBranch($newPickupLocation)) {
-						return $patronOwningHold->changeHoldPickUpLocation($holdId, $newPickupLocation, $newPickupSublocation);
+						return $patronOwningHold->changeHoldPickUpLocation($holdId, $newPickupLocation, $pickupSublocation);
 					} else {
 						return [
 							'result' => false,
@@ -8996,14 +9006,12 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getSublocationsSelect() {
-		global $interface;
+	function getSublocationsSelect() : array {
 		$html = '';
 		$success = false;
 		$context = $_REQUEST['context'] ?? '';
 		if (UserAccount::isLoggedIn()) {
 			$patron = UserAccount::getActiveUserObj();
-			$patronType = $patron->getPTypeObj();
 			if (isset($_REQUEST['locationCode'])) {
 				$location = new Location();
 				if ($context === 'myPreferences') {
@@ -9013,24 +9021,12 @@ class MyAccount_AJAX extends JSON_Action {
 				}
 				if ($location->find(true)) {
 					$sublocations = [];
-					require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
-					require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-					$object = new Sublocation();
-					$object->locationId = $location->locationId;
-					$object->isValidHoldPickupAreaILS = 1;
-					$object->isValidHoldPickupAreaAspen = 1;
-					$object->orderBy('weight');
-					$object->find();
-					while ($object->fetch()) {
-						$sublocationPType = new SublocationPatronType();
-						$sublocationPType->patronTypeId = $patronType->id;
-						$sublocationPType->sublocationId = $object->id;
-						if ($sublocationPType->find(true)) {
-							$sublocations[$object->id] = $object->name;
-						}
+					$allSublocations = $location->getPickupSublocations($patron);
+					foreach ($allSublocations as $sublocation) {
+						$sublocations[$sublocation->id] = $sublocation->name;
 					}
 
-					if (count($sublocations) > 0) {
+					if (count($sublocations) > 1) {
 						$success = true;
 						if ($context === 'myPreferences') {
 							$labelText = 'Preferred Pickup Location';

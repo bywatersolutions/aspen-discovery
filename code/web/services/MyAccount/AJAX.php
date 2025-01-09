@@ -1567,14 +1567,14 @@ class MyAccount_AJAX extends JSON_Action {
 							$groupedWork = new GroupedWork();
 							$groupedWork->permanent_id = $userListEntry->sourceId;
 							if ($groupedWork->find(true)) {
-								$userListEntry->title = substr($groupedWork->full_title, 0, 50);
+								$userListEntry->title = mb_substr($groupedWork->full_title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Lists') {
 							require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 							$list = new UserList();
 							$list->id = $userListEntry->sourceId;
 							if ($list->find(true)) {
-								$userListEntry->title = substr($list->title, 0, 50);
+								$userListEntry->title = mb_substr($list->title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Events') {
 							if (preg_match('`^communico`', $userListEntry->sourceId)) {
@@ -1582,28 +1582,28 @@ class MyAccount_AJAX extends JSON_Action {
 								$recordDriver = new CommunicoEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 								$recordDriver = new SpringshareLibCalEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^assabet`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 								$recordDriver = new AssabetEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} else {
 								require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
 								$recordDriver = new LibraryCalendarEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							}
 						} elseif ($userListEntry->source == 'OpenArchives') {
@@ -1611,35 +1611,35 @@ class MyAccount_AJAX extends JSON_Action {
 							$recordDriver = new OpenArchivesRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Genealogy') {
 							require_once ROOT_DIR . '/sys/Genealogy/Person.php';
 							$person = new Person();
 							$person->personId = $userListEntry->sourceId;
 							if ($person->find(true)) {
-								$userListEntry->title = substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
+								$userListEntry->title = mb_substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'EbscoEds') {
 							require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 							$recordDriver = new EbscoRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Ebscohost') {
 							require_once ROOT_DIR . '/RecordDrivers/EbscohostRecordDriver.php';
 							$recordDriver = new EbscohostRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Summon') {
 							require_once ROOT_DIR . '/RecordDrivers/SummonRecordDriver.php';
 							$recordDriver = new SummonRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						}
 						$userListEntry->insert();
@@ -7000,7 +7000,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new CommunicoEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7017,7 +7017,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new SpringshareLibCalEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7034,7 +7034,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new LibraryCalendarEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7051,7 +7051,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new AssabetEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7274,14 +7274,14 @@ class MyAccount_AJAX extends JSON_Action {
 							$groupedWork = new GroupedWork();
 							$groupedWork->permanent_id = $userListEntry->sourceId;
 							if ($groupedWork->find(true)) {
-								$userListEntry->title = substr($groupedWork->full_title, 0, 50);
+								$userListEntry->title = mb_substr($groupedWork->full_title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Lists') {
 							require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 							$list = new UserList();
 							$list->id = $userListEntry->sourceId;
 							if ($list->find(true)) {
-								$userListEntry->title = substr($list->title, 0, 50);
+								$userListEntry->title = mb_substr($list->title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Events') {
 							if (preg_match('`^communico`', $userListEntry->sourceId)) {
@@ -7289,28 +7289,28 @@ class MyAccount_AJAX extends JSON_Action {
 								$recordDriver = new CommunicoEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 								$recordDriver = new SpringshareLibCalEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^lc_`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
 								$recordDriver = new LibraryCalendarEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^assabet_`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 								$recordDriver = new AssabetEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							}
 						} elseif ($userListEntry->source == 'OpenArchives') {
@@ -7318,28 +7318,28 @@ class MyAccount_AJAX extends JSON_Action {
 							$recordDriver = new OpenArchivesRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Genealogy') {
 							require_once ROOT_DIR . '/sys/Genealogy/Person.php';
 							$person = new Person();
 							$person->personId = $userListEntry->sourceId;
 							if ($person->find(true)) {
-								$userListEntry->title = substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
+								$userListEntry->title = mb_substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'EbscoEds') {
 							require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 							$recordDriver = new EbscoRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Summon') {
 							require_once ROOT_DIR . '/RecordDrivers/SummonRecordDriver.php';
 							$recordDriver = new SummonRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						}
 						$existingEntry = false;
@@ -7421,8 +7421,8 @@ class MyAccount_AJAX extends JSON_Action {
 					$groupedWork->permanent_id = $sourceId;
 					if ($groupedWork->find(true)) {
 						$groupedWorkDriver = new GroupedWorkDriver($sourceId);
-						$readingHistoryEntry->title = substr($groupedWorkDriver->getTitle(), 0, 150);
-						$readingHistoryEntry->author = substr($groupedWorkDriver->getPrimaryAuthor(), 0, 75);
+						$readingHistoryEntry->title = mb_substr($groupedWorkDriver->getTitle(), 0, 150);
+						$readingHistoryEntry->author = mb_substr($groupedWorkDriver->getPrimaryAuthor(), 0, 75);
 						//Leave the format blank
 						$readingHistoryEntry->format = '';
 						$checkoutDate = mktime(0, 0, 0, $month, 1, $year);

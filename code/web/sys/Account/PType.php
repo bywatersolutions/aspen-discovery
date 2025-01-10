@@ -6,6 +6,7 @@ class PType extends DataObject {
 	public $__table = 'ptype';   // table name
 	public $id;
 	public $pType;                //varchar(45)
+	public $accountProfileId;
 	public $description;
 	public $maxHolds;            //int(11)
 	public $assignedRoleId;
@@ -53,6 +54,12 @@ class PType extends DataObject {
 		while ($twoFactorAuthSetting->fetch()) {
 			$twoFactorAuthSettings[$twoFactorAuthSetting->id] = $twoFactorAuthSetting->name;
 		}
+		require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
+		$accountProfile = new AccountProfile();
+		$accountProfile->whereAdd("name <> 'admin'");
+		$accountProfile->orderBy('name');
+		$accountProfileOptions = $accountProfile->fetchAll('id', 'name');
+
 		$structure = [
 			'id' => [
 				'property' => 'id',
@@ -60,6 +67,14 @@ class PType extends DataObject {
 				'label' => 'Id',
 				'description' => 'The unique id of the p-type within the database',
 				'hideInLists' => false,
+			],
+			'accountProfileId' => [
+				'property' => 'accountProfileId',
+				'type' => 'enum',
+				'values' => $accountProfileOptions,
+				'label' => 'Account Profile Id',
+				'description' => 'Account Profile to apply to this interface',
+				'permissions' => ['Administer Account Profiles'],
 			],
 			'pType' => [
 				'property' => 'pType',

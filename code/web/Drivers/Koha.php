@@ -4122,6 +4122,10 @@ class Koha extends AbstractIlsDriver {
 			}
 		}
 
+		if($library->ilsConsentEnabled) {
+			$fields['privacySection'] = $this->getSelfRegistrationFormPrivacySection();
+		}
+
 		if ($type == 'selfReg') {
 			$passwordLabel = $library->loginFormPasswordLabel;
 			$passwordNotes = $library->selfRegistrationPasswordNotes;
@@ -4567,6 +4571,7 @@ class Koha extends AbstractIlsDriver {
 
 			} else {
 				$jsonResponse = json_decode($response);
+				$result['patronId'] = $jsonResponse->patron_id;
 				$result['username'] = $jsonResponse->userid;
 				$result['success'] = true;
 				$result['sendWelcomeMessage'] = false;
@@ -8410,6 +8415,42 @@ class Koha extends AbstractIlsDriver {
 			];
 		}
 		return $formattedConsentTypes;
+	}
+
+	public function getSelfRegistrationFormPrivacySection(): array {
+		$consentTypes = $this->getConsentTypes();
+		if (empty($consentTypes)) {
+			return [];
+		}
+		$privacySection = [
+			'property' => 'privacySection',
+			'type' => 'section',
+			'label' => 'Privacy',
+			'hideInLists' => true,
+			'expandByDefault' => true,
+			'properties' => []
+		];
+
+		foreach ($consentTypes as $key => $consentType) {
+			if (strtolower($key) == 'gdpr_processing') {
+				continue;
+			}
+			$privacySection['properties'][strtolower($key)] = [
+				'property' => 'privacy_consent_' . strtolower($key),
+				'type' => 'section',
+				'label' => $consentType['title']['en'],
+				'properties' => [
+					strtolower($key) => [
+						'property' => 'privacy_consent_' . strtolower($key),
+						'type' => 'checkbox',
+						'default' => false,
+						'label' => $consentType['description']['en'],
+						'description' => $consentType['description']['en'],
+					],
+				],
+			];
+		}
+		return $privacySection;
 	}
 
 	public function updatePatronConsent(int $patronIlsId, string $consentType, $consentEnabled = false) {

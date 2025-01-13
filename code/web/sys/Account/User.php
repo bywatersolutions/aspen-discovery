@@ -2354,9 +2354,9 @@ class User extends DataObject {
 	public function getValidSublocations(int $locationId): array {
 		require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 		require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-		$patronType = $this->getPTypeObj();
 		$sublocations = [];
-		if ($patronType != null) {
+		$patronType = $this->getPTypeObj();
+		if ($patronType !== null) {
 			$object = new Sublocation();
 			$object->locationId = $locationId;
 			$object->isValidHoldPickupAreaILS = 1;
@@ -2371,9 +2371,10 @@ class User extends DataObject {
 					$sublocations[$object->id] = clone($object);
 				}
 			}
+
+			ksort($sublocations);
 		}
 
-		ksort($sublocations);
 		return $sublocations;
 	}
 

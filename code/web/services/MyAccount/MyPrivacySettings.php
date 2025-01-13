@@ -110,6 +110,13 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 			$result = $myCookiePreferences->updateCookiePreferences($patronRefferedTo);
 		}
 		
+		if ($_POST['updateScope'] === 'userILSIssuedConsent') {
+			if ($ilsConsentEnabled) {
+				foreach ($consentTypes as $consentType) {
+					$result = $driver->updatePatronConsent($patronRefferedTo->unique_ils_id, $consentType['allCapsCode'], isset($_POST['userNewsletter']));
+				}
+			}
+		}
 		if (isset($result['message'])) {
 			$user->updateMessage .= ' ' . $result['message'];
 		}

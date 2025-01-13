@@ -137,6 +137,11 @@
 							</div>
 						</section>
 					{/foreach}
+					{if empty($offline) && $edit == true}
+						<div class="form-group propertyRow">
+							<button type="submit" name="updateMyILSIssuedConsents" class="btn btn-sm btn-primary">{translate text="Update Consent" isPublicFacing=true}</button>
+						</div>
+					{/if}
 				</form>
 			{/if}
 		<script type="text/javascript">

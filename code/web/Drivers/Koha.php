@@ -4500,8 +4500,21 @@ class Koha extends AbstractIlsDriver {
 					}
 				}
 			}
-
+			
 			$result = $this->postSelfRegistrationToKoha($postVariables);
+
+			if ($result) {
+				$consentTypes = $this->getConsentTypes();
+				if (!empty($consentTypes)) {
+					foreach ($consentTypes as $key => $consentType) {
+						if (strtolower($key) == 'gdpr_processing') {
+							continue;
+						}
+						$this->updatePatronConsent($result['patronId'], strtolower($key), isset($_REQUEST['privacy_consent_' . strtolower($key)]));
+					}
+				}
+			}
+			
 		}
 		return $result;
 	}
@@ -8397,6 +8410,55 @@ class Koha extends AbstractIlsDriver {
 			];
 		}
 		return $formattedConsentTypes;
+	}
+
+	public function updatePatronConsent(int $patronIlsId, string $consentType, $consentEnabled = false) {
+		$result = ['success' => false,];
+
+		$oauthToken = $this->getOAuthToken();
+		if (!$oauthToken) {
+			$result['message'] = translate([
+				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'isPublicFacing' => true,
+			]);
+			return $result;
+		}
+
+		$url = $this->getWebServiceURL() . '/api/v1/contrib/newsletterconsent/consents/' . $patronIlsId;
+		$body = [ strtoupper($consentType) => $consentEnabled ? 1 : false ];
+
+		$customHeaders = [];
+
+		$headers = implode($this->apiCurlWrapper->getHeaders());
+		if(strpos($headers, 'Authorization: Bearer ') === false) {
+			$customHeaders[] = 'Authorization: Bearer ' . $oauthToken;
+		};
+		if(strpos($headers, 'Content-type: application/json') === false) {
+			$customHeaders[] = 'Content-type: application/json';
+		};
+		if(strpos($headers, 'User-Agent: Aspen Discovery') === false) {
+			$customHeaders[] = 'User-Agent: Aspen Discovery';
+		};
+		if(strpos($headers, 'Host: ') === false) {
+			$customHeaders[] = 'Host: ' . preg_replace('~http[s]?://~', '', $this->getWebServiceURL());
+		};
+		
+		if ($customHeaders) {
+			$this->apiCurlWrapper->addCustomHeaders($customHeaders, false);
+		}
+
+		$this->apiCurlWrapper->curl_connect($url);
+		$this->apiCurlWrapper->curlSendPage($url, 'PUT' , json_encode($body));
+
+		if ($this->apiCurlWrapper->getResponseCode() == 200) {
+			$result['success'] = true;
+			$result['message'] ='Newsletter content updated successfully.';
+		} else {
+			$result['message'] = "Failed to update newsletter consent.";
+			$result['success'] = false;
+		}
+
+		return $result;
 	}
 
 	public function getPatronConsents($patron) {

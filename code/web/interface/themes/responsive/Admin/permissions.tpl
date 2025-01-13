@@ -4,27 +4,6 @@
 	{else}
 	<h1>{translate text="Permissions" isAdminFacing=true}</h1>
 	{/if}
-<form class='alert alert-info'role="form">
-			<div class="form-group">
-				<label for="settingsSearch">{translate text="Search for a Permission" isAdminFacing=true}</label>
-				<div class="input-group">
-					<input  type="text" name="searchPermissions" id="searchPermissions"
-							onkeyup="return AspenDiscovery.Admin.searchPermissions();" class="form-control" />
-					<span class="input-group-btn"><button class="btn btn-default" type="button" onclick="$('#searchPermissions').val('');return AspenDiscovery.Admin.searchPermissions();" title="{translate text="Clear" inAttribute=true isAdminFacing=true}"><i class="fas fa-times-circle" role="presentation"></i></button></span>
-					<script type="text/javascript">
-                        {literal}
-						$(document).ready(function() {
-							$("#searchPermissions").keydown("keydown", function (e) {
-								if (e.which === 13) {
-									e.preventDefault();
-								}
-							});
-						});
-                        {/literal}
-					</script>
-				</div>
-			</div>
-		</form>
 
 	<form class="form-inline row" id="selectRoleForm" style="margin: 0; padding-bottom: 2em;">
 		<div class="form-group">
@@ -41,6 +20,27 @@
 		</div>
 	</form>
 
+	<form class='alert alert-info'role="form">
+		<div class="form-group">
+			<label for="settingsSearch">{translate text="Search for a Permission" isAdminFacing=true}</label>
+			<div class="input-group">
+				<input  type="text" name="searchPermissions" id="searchPermissions"
+						onkeyup="return AspenDiscovery.Admin.searchPermissions();" class="form-control" />
+				<span class="input-group-btn"><button class="btn btn-default" type="button" onclick="$('#searchPermissions').val('');return AspenDiscovery.Admin.searchPermissions();" title="{translate text="Clear" inAttribute=true isAdminFacing=true}"><i class="fas fa-times-circle" role="presentation"></i></button></span>
+				<script type="text/javascript">
+                    {literal}
+					$(document).ready(function() {
+						$("#searchPermissions").keydown("keydown", function (e) {
+							if (e.which === 13) {
+								e.preventDefault();
+							}
+						});
+					});
+                    {/literal}
+				</script>
+			</div>
+		</div>
+	</form>
 
 	<form>
 		<input type="hidden" name="roleId" value="{$selectedRole->roleId}" />

@@ -1111,12 +1111,16 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function insert($context = '') {
+	function insert($context = '') : int {
 		if ($this->firstname === null) {
 			$this->firstname = '';
 		}
 		if ($context == 'development') {
 			$this->source = 'development';
+			$this->homeLocationId = 0;
+			$this->displayName = $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.';
+		} elseif ($context == 'localAdministrator') {
+			$this->source = 'admin';
 			$this->homeLocationId = 0;
 			$this->displayName = $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.';
 		} else {
@@ -1158,13 +1162,13 @@ class User extends DataObject {
 		return $ret;
 	}
 
-	function hasRole($roleName) {
+	function hasRole($roleName) : bool {
 		$myRoles = $this->__get('roles');
 		return in_array($roleName, $myRoles);
 	}
 
 	static function getObjectStructure($context = ''): array {
-		//Lookup available roles in the system
+		//Lookup the available roles in the system
 		require_once ROOT_DIR . '/sys/Administration/Role.php';
 		$roleList = Role::getLookup();
 
@@ -1201,6 +1205,12 @@ class User extends DataObject {
 				'type' => 'label',
 				'label' => 'Last Name',
 				'description' => 'The last name of the user.',
+			],
+			'displayName' => [
+				'property' => 'displayName',
+				'type' => 'label',
+				'label' => 'Display Name',
+				'description' => 'The display name of the user.',
 			],
 			'email' => [
 				'property' => 'email',
@@ -1251,10 +1261,17 @@ class User extends DataObject {
 			$structure['firstname']['type'] = 'text';
 			$structure['lastname']['type'] = 'text';
 			unset($structure['homeLibraryName']);
-			unset($structure['homeLocation']);
+			$structure['homeLocation']['label'] = 'Primary Location';
 			unset($structure['barcode']);
 			unset($structure['roles']);
 			unset($structure['additionalAdministrationLocations']);
+		}else if ($context == 'localAdministrator') {
+			$structure['firstname']['type'] = 'text';
+			$structure['lastname']['type'] = 'text';
+			$structure['email']['required'] = true;
+			unset($structure['homeLibraryName']);
+			unset($structure['homeLocation']);
+			unset($structure['barcode']);
 		} else {
 			unset($structure['username']);
 			unset($structure['password']);
@@ -3956,7 +3973,8 @@ class User extends DataObject {
 		}
 		$sections['system_admin'] = new AdminSection('System Administration');
 		$sections['system_admin']->addAction(new AdminAction('Modules', 'Enable and disable sections of Aspen Discovery.', '/Admin/Modules'), 'Administer Modules');
-		$sections['system_admin']->addAction(new AdminAction('Administration Users', 'Define who should have administration privileges.', '/Admin/Administrators'), 'Administer Users');
+		$sections['system_admin']->addAction(new AdminAction('ILS Based Administrators', 'Define users from the ILS who should have administration privileges.', '/Admin/Administrators'), 'Administer Users');
+		$sections['system_admin']->addAction(new AdminAction('Local Administrators', 'Define local Aspen users who should have administration privileges.', '/Admin/LocalAdministrators'), 'Manage Local Administrators');
 		$sections['system_admin']->addAction(new AdminAction('Permissions', 'Define who what each role in the system can do.', '/Admin/Permissions'), 'Administer Permissions');
 		$sections['system_admin']->addAction(new AdminAction('DB Maintenance', 'Update the database when new versions of Aspen Discovery are released.', '/Admin/DBMaintenance'), 'Run Database Maintenance');
 		$sections['system_admin']->addAction(new AdminAction('Optional Updates', 'Recommended updates that can be optionally applied when new versions of Aspen Discovery are released.', '/Admin/OptionalUpdates'), 'Run Optional Updates');
@@ -4535,7 +4553,7 @@ class User extends DataObject {
 			} else {
 				$sections['aspen_lida']->addAction($notificationReportAction, 'View Notifications Reports');
 			}
-			if (false && $allowILSMessaging) {
+			if (false /* $allowILSMessaging*/) {
 				$sections['aspen_lida']->addAction(new AdminAction('ILS Notification Settings', 'Define settings for ILS notifications in Aspen LiDA.', '/AspenLiDA/ILSNotificationSettings'), 'Administer Aspen LiDA Settings');
 			}
 			$sections['aspen_lida']->addAction(new AdminAction('LiDA Notifications', 'LiDA Notifications allow you to send custom alerts to your patrons via the app.', '/Admin/LiDANotifications'), [
@@ -5847,6 +5865,19 @@ class User extends DataObject {
 		} else {
 			return json_decode($this->_yearInReviewResults->wrappedResults);
 		}
+	}
+
+	public function canActiveUserEdit() : bool {
+		if ($this->source == 'admin') {
+			if ($this->username == 'aspen_admin' || $this->username == 'nyt_user') {
+				return false;
+			}else{
+				return UserAccount::userHasPermission('Manage Local Administrators');
+			}
+		}elseif ($this->source == 'development') {
+			return UserAccount::getActiveUserObj()->isAspenAdminUser();
+		}
+		return true;
 	}
 }
 

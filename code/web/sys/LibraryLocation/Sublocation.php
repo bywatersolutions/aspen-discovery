@@ -89,6 +89,12 @@ class Sublocation extends DataObject {
 				'description' => 'Whether or not this sublocation is a valid hold pickup area for Aspen',
 				'note' => 'Requires an ILS Id and Valid Hold Pickup Area (ILS) to be checked',
 			],
+			'isValidEventLocation' => [
+				'property' => 'isValidEventLocation',
+				'type' => 'checkbox',
+				'label' => 'Valid Event Location',
+				'description' => 'Whether or not this sublocation is valid for events',
+			],
 			'patronTypes' => [
 				'property' => 'patronTypes',
 				'type' => 'multiSelect',

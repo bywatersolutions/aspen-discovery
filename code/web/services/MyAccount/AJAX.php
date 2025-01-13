@@ -85,76 +85,89 @@ class MyAccount_AJAX extends JSON_Action {
 
 				if ($accountToLink->id != $user->id) {
 					$linkeePtype = $accountToLink->getPType();
+					if ($linkeePtype != null) {
+						require_once ROOT_DIR . '/sys/Account/PType.php';
+						$linkingSettingUser = PType::getAccountLinkingSetting($userPtype);
+						$linkingSettingLinkee = PType::getAccountLinkingSetting($linkeePtype);
 
-					require_once ROOT_DIR . '/sys/Account/PType.php';
-					$linkingSettingUser = PType::getAccountLinkingSetting($userPtype);
-					$linkingSettingLinkee = PType::getAccountLinkingSetting($linkeePtype);
-
-					if (($accountToLink->disableAccountLinking == 0) && ($linkingSettingUser != '1' && $linkingSettingUser != '3') && ($linkingSettingLinkee != '2' && $linkingSettingLinkee != '3')) {
-						$addResult = $user->addLinkedUser($accountToLink);
-						if ($addResult === true) {
-							$result = [
-								'success' => true,
-								'title' => translate([
-									'text' => 'Success',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Successfully linked accounts.',
-									'isPublicFacing' => true,
-								]),
-							];
-						} else { // insert failure or user is blocked from linking account or account & account to link are the same account
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, we could not link to that account.  Accounts cannot be linked if all libraries do not allow account linking.  Please contact your local library if you have questions.',
-									'isPublicFacing' => true,
-								]),
-							];
-						}
-					} else {
-						if ($linkingSettingUser == '1' || $linkingSettingUser == '3') {
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, you are not permitted to link to others.',
-									'isPublicFacing' => true,
-								]),
-							];
-						} else if ($linkingSettingLinkee == '2' || $linkingSettingLinkee == '3') {
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, that account cannot be linked to.',
-									'isPublicFacing' => true,
-								]),
-							];
+						if (($accountToLink->disableAccountLinking == 0) && ($linkingSettingUser != '1' && $linkingSettingUser != '3') && ($linkingSettingLinkee != '2' && $linkingSettingLinkee != '3')) {
+							$addResult = $user->addLinkedUser($accountToLink);
+							if ($addResult === true) {
+								$result = [
+									'success' => true,
+									'title' => translate([
+										'text' => 'Success',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Successfully linked accounts.',
+										'isPublicFacing' => true,
+									]),
+								];
+							} else { // insert failure or user is blocked from linking account or account & account to link are the same account
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, we could not link to that account.  Accounts cannot be linked if all libraries do not allow account linking.  Please contact your local library if you have questions.',
+										'isPublicFacing' => true,
+									]),
+								];
+							}
 						} else {
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, this user does not allow account linking.',
-									'isPublicFacing' => true,
-								]),
-							];
+							if ($linkingSettingUser == '1' || $linkingSettingUser == '3') {
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, you are not permitted to link to others.',
+										'isPublicFacing' => true,
+									]),
+								];
+							} else if ($linkingSettingLinkee == '2' || $linkingSettingLinkee == '3') {
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, that account cannot be linked to.',
+										'isPublicFacing' => true,
+									]),
+								];
+							} else {
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, this user does not allow account linking.',
+										'isPublicFacing' => true,
+									]),
+								];
+							}
 						}
+					}else{
+						$result = [
+							'success' => false,
+							'title' => translate([
+								'text' => 'Unable to link accounts',
+								'isPublicFacing' => true,
+							]),
+							'message' => translate([
+								'text' => 'Sorry, this user type cannot be linked to.',
+								'isPublicFacing' => true,
+							]),
+						];
 					}
 				} else {
 					$result = [

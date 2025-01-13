@@ -1230,7 +1230,7 @@ abstract class DataObject implements JsonSerializable {
 
 	/**
 	 * Modify the structure of the object based on the object currently being edited.
-	 * This can be used to change enums or other values based on the object being edited so we know relationships
+	 * This can be used to change enums or other values based on the object being edited, so we know relationships
 	 *
 	 * @param $structure
 	 * @return array

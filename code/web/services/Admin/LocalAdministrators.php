@@ -70,8 +70,9 @@ class admin_LocalAdministrators extends ObjectEditor {
 
 	function getBreadcrumbs(): array {
 		$breadcrumbs = [];
-		$breadcrumbs[] = new Breadcrumb('/Greenhouse/Home', 'Greenhouse Home');
-		$breadcrumbs[] = new Breadcrumb('/Development/Users', 'Users');
+		$breadcrumbs[] = new Breadcrumb('/Admin/Home', 'Administration Home');
+		$breadcrumbs[] = new Breadcrumb('/Admin/Home#system_admin', 'System Administration');
+		$breadcrumbs[] = new Breadcrumb('/Admin/LocalAdministrators', 'Local Administrators');
 		return $breadcrumbs;
 	}
 

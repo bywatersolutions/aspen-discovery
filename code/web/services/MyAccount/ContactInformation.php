@@ -32,6 +32,7 @@ class MyAccount_ContactInformation extends MyAccount {
 				$showAlternateLibraryOptionsInProfile = false;
 				$allowAccountLinking = true;
 				$passwordLabel = 'Library Card Number';
+				$symphonyDefaultPhoneField = null;
 			} else {
 				$canUpdateContactInfo = ($patronHomeLibrary->allowProfileUpdates == 1);
 				$canUpdateAddress = ($patronHomeLibrary->allowPatronAddressUpdates == 1);

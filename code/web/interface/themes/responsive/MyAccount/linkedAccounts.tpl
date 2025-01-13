@@ -16,6 +16,8 @@
 			<h1>{translate text='Linked Accounts' isPublicFacing=true}</h1>
 			{if !empty($offline)}
 				<div class="alert alert-warning"><strong>{translate text=$offlineMessage isPublicFacing=true}</strong></div>
+			{elseif !empty($invalidSource)}
+				<div class="alert alert-danger"><strong>{translate text="Sorry, this functionality is only available to ILS users." isPublicFacing=true}</strong></div>
 			{else}
 				{if $profile->disableAccountLinking==0 && $linkSetting != 3}
 					<p class="alert alert-info">

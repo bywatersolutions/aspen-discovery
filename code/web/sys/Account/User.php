@@ -1181,6 +1181,12 @@ class User extends DataObject {
 				'label' => 'Id',
 				'description' => 'The unique id of the in the system',
 			],
+			'source' => [
+				'property' => 'source',
+				'type' => 'label',
+				'label' => 'Source Account Profile',
+				'description' => 'The source of the user in the system',
+			],
 			'username' => [
 				'property' => 'username',
 				'type' => 'text',
@@ -2350,18 +2356,20 @@ class User extends DataObject {
 		require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
 		$patronType = $this->getPTypeObj();
 		$sublocations = [];
-		$object = new Sublocation();
-		$object->locationId = $locationId;
-		$object->isValidHoldPickupAreaILS = 1;
-		$object->isValidHoldPickupAreaAspen = 1;
-		$object->orderBy('weight');
-		$object->find();
-		while ($object->fetch()) {
-			$sublocationPType = new SublocationPatronType();
-			$sublocationPType->patronTypeId = $patronType->id;
-			$sublocationPType->sublocationId = $object->id;
-			if ($sublocationPType->find(true)) {
-				$sublocations[$object->id] = clone($object);
+		if ($patronType != null) {
+			$object = new Sublocation();
+			$object->locationId = $locationId;
+			$object->isValidHoldPickupAreaILS = 1;
+			$object->isValidHoldPickupAreaAspen = 1;
+			$object->orderBy('weight');
+			$object->find();
+			while ($object->fetch()) {
+				$sublocationPType = new SublocationPatronType();
+				$sublocationPType->patronTypeId = $patronType->id;
+				$sublocationPType->sublocationId = $object->id;
+				if ($sublocationPType->find(true)) {
+					$sublocations[$object->id] = clone($object);
+				}
 			}
 		}
 
@@ -3973,7 +3981,7 @@ class User extends DataObject {
 		}
 		$sections['system_admin'] = new AdminSection('System Administration');
 		$sections['system_admin']->addAction(new AdminAction('Modules', 'Enable and disable sections of Aspen Discovery.', '/Admin/Modules'), 'Administer Modules');
-		$sections['system_admin']->addAction(new AdminAction('ILS Based Administrators', 'Define users from the ILS who should have administration privileges.', '/Admin/Administrators'), 'Administer Users');
+		$sections['system_admin']->addAction(new AdminAction('Administrators', 'Define users from the ILS who should have administration privileges.', '/Admin/Administrators'), 'Administer Users');
 		$sections['system_admin']->addAction(new AdminAction('Local Administrators', 'Define local Aspen users who should have administration privileges.', '/Admin/LocalAdministrators'), 'Manage Local Administrators');
 		$sections['system_admin']->addAction(new AdminAction('Permissions', 'Define who what each role in the system can do.', '/Admin/Permissions'), 'Administer Permissions');
 		$sections['system_admin']->addAction(new AdminAction('DB Maintenance', 'Update the database when new versions of Aspen Discovery are released.', '/Admin/DBMaintenance'), 'Run Database Maintenance');
@@ -5869,7 +5877,9 @@ class User extends DataObject {
 
 	public function canActiveUserEdit() : bool {
 		if ($this->source == 'admin') {
-			if ($this->username == 'aspen_admin' || $this->username == 'nyt_user') {
+			if ($this->username == 'aspen_admin') {
+				return UserAccount::getActiveUserObj()->isAspenAdminUser();
+			}elseif ($this->username == 'nyt_user') {
 				return false;
 			}else{
 				return UserAccount::userHasPermission('Manage Local Administrators');
@@ -5878,6 +5888,28 @@ class User extends DataObject {
 			return UserAccount::getActiveUserObj()->isAspenAdminUser();
 		}
 		return true;
+	}
+
+	public function canActiveUserDelete() : bool {
+		if ($this->source == 'admin') {
+			if ($this->username == 'aspen_admin' || $this->username == 'nyt_user') {
+				return false;
+			}
+		}
+		return $this->canActiveUserEdit();
+	}
+
+	public function updateStructureForEditingObject($structure) : array {
+		if ($this->source == 'admin' && $this->username == 'aspen_admin') {
+			$structure['username']['readOnly'] = true;
+			$structure['password']['readOnly'] = true;
+			$structure['firstname']['readOnly'] = true;
+			$structure['lastname']['readOnly'] = true;
+			$structure['email']['readOnly'] = true;
+			unset($structure['additionalAdministrationLocations']);
+		}
+
+		return $structure;
 	}
 }
 

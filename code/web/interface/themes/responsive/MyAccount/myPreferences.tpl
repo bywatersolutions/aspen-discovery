@@ -221,14 +221,17 @@
 						</div>
 					{/if}
 
-					<div class="form-group propertyRow">
-						<label for="disableCirculationActions" class="control-label">{translate text='Show Checkouts and Holds in Results' isPublicFacing=true}</label>&nbsp;
-						{if $edit == true}
-							<input type="checkbox" class="form-control" name="disableCirculationActions" id="disableCirculationActions" {if $profile->disableCirculationActions==0}checked='checked'{/if} data-switch="">
-						{else}
-							&nbsp;{if $profile->disableCirculationActions==1} {translate text='No' isPublicFacing=true}{else} {translate text='Yes' isPublicFacing=true}{/if}
-						{/if}
-					</div>
+					{if !empty($isAssociatedWithILS)}
+						<div class="form-group propertyRow">
+							<label for="disableCirculationActions" class="control-label">{translate text='Show Checkouts and Holds in Results' isPublicFacing=true}</label>&nbsp;
+							{if $edit == true}
+								<input type="checkbox" class="form-control" name="disableCirculationActions" id="disableCirculationActions" {if $profile->disableCirculationActions==0}checked='checked'{/if} data-switch="">
+							{else}
+								&nbsp;{if $profile->disableCirculationActions==1} {translate text='No' isPublicFacing=true}{else} {translate text='Yes' isPublicFacing=true}{/if}
+							{/if}
+						</div>
+					{/if}
+
 					{if $enableCostSavingsForLibrary}
 						<div class="form-group propertyRow">
 							<label for="enableCostSavings" class="control-label">{translate text='Display Library Savings' isPublicFacing=true}</label>&nbsp;

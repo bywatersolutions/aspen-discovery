@@ -113,6 +113,33 @@
 				{/if}
 				</form>
 			{/if}
+			{if !empty($ilsConsentEnabled)}
+				<form action="" method="post" role="form">
+					<input type="hidden" name="updateScope" value="userILSIssuedConsent">
+					<input type="hidden" name="patronId" value={$profile->id|escape}>
+					{foreach $consentTypes as $consentType}
+						<section id="{$consentType['lowercaseCode']}ConsentSection">
+							{$consentCode = $consentType['capitalisedCode']}
+							<h2>{translate text={$consentType['label']} isPublicFacing=true}</h2>
+							<div class="form-group #propertyRow" style="margin-bottom:10px;">
+								<strong class="control-label" style="margin-bottom:10px;">{translate text={$consentType['description']} isPublicFacing=true}</strong>&nbsp;
+								<div class="padding:0.5em 1em;">
+									<div class="col-xs-6 col-sm-4">
+										<label for="user{$consentCode}" class="control-label">{translate text={$consentType['label']} isPublicFacing=true}</label>&nbsp;<i class="fas fa-question-circle" onclick="return displayMyConsentExplanation('{$consentCode}')"></i>
+									</div>
+									<div class="col-xs-6 col-sm-8">
+										<input type="checkbox" class="form-control" name="user{$consentCode}" id="user{$consentCode}" {if isset($consentType['enabledForUser']) && $consentType['enabledForUser'] == true}checked="checked"{/if} data-switch="">
+									</div>
+								</div>
+							</div>
+							<div id="my{$consentCode}ConsentExplanation" style="display:none; margin-top: 10px;">
+									{translate text="By checking this box you are giving your consent to our {$consentType['label']}. Aspen Discovery will send your consent information to Koha, where it will be stored. You can return to this page to update your consent at any point."}
+							</div>
+						</section>
+					{/foreach}
+				</form>
+			{/if}
+		<script type="text/javascript">
 			{* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
 			{literal}
 			function displayMyConsentExplanation (type) {

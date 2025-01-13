@@ -41,6 +41,7 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 
 		$action = $this->assignAction();
 		$driver = $user->getCatalogDriver();
+		$consentTypes = $library->ilsConsentEnabled ? $driver->getFormattedConsentTypes() : null;
 
 		if ($action == 'save') {
 			$this->updatePrivacySettings($user, $patronRefferedTo, $driver, $library->ilsConsentEnabled, $consentTypes);
@@ -59,6 +60,21 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 			$user->updateMessageIsError = 0;
 		}
 		
+		if (!$library->ilsConsentEnabled) {
+			$this->display('myPrivacySettings.tpl', 'My Privacy Settings');
+			return;
+		}
+
+		// Handles cases where the patron has already given their consent on Koha
+		$userConsents = $driver->getPatronConsents($user);
+		if (!empty($userConsents)) {
+			foreach($userConsents as $userConsent) {
+				if ($userConsent['given_on']) {
+					$consentTypes[$userConsent['type']]['enabledForUser'] = true;
+				}
+			}
+		}
+		$interface->assign('consentTypes', $consentTypes);
 		$this->display('myPrivacySettings.tpl', 'My Privacy Settings');
 	}
 

@@ -8377,4 +8377,109 @@ class Koha extends AbstractIlsDriver {
 
 		return $result;
 	}
+
+	public function getFormattedConsentTypes(): array {
+		$consentTypes = $this->getConsentTypes();
+		if (empty($consentTypes)) {
+			return [];
+		}
+		$formattedConsentTypes = [];
+		foreach ($consentTypes as $key => $consentType) {
+			if (strtolower($key) == 'gdpr_processing') {
+				continue;
+			}
+			$formattedConsentTypes[$key] = [
+				'lowercaseCode' => strtolower($key),
+				'capitalisedCode' => ucfirst(strtolower($key)),
+				'allCapsCode' => $key,
+				'label' => $consentType['title']['en'],
+				'description' => $consentType['description']['en'],
+			];
+		}
+		return $formattedConsentTypes;
+	}
+
+	public function getPatronConsents($patron) {
+		$oauthToken = $this->getOAuthToken();
+		if (!$oauthToken) {
+			$result['message'] = translate([
+				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'isPublicFacing' => true,
+			]);
+			return $result;
+		}
+		
+		$url = $this->getWebServiceURL() . '/api/v1/contrib/newsletterconsent/consents/' . $patron->unique_ils_id;
+		
+		$customHeaders = [];
+
+		$headers = implode($this->apiCurlWrapper->getHeaders());
+		if(strpos($headers, 'Authorization: Bearer ') === false) {
+			$customHeaders[] = 'Authorization: Bearer ' . $oauthToken;
+		};
+		if(strpos($headers, 'User-Agent: Aspen Discovery') === false) {
+			$customHeaders[] = 'User-Agent: Aspen Discovery';
+		};
+		if(strpos($headers, 'Host: ') === false) {
+			$customHeaders[] = 'Host: ' . preg_replace('~http[s]?://~', '', $this->getWebServiceURL());
+		};
+		
+		if ($customHeaders) {
+			$this->apiCurlWrapper->addCustomHeaders($customHeaders, false);
+		}
+
+		$this->apiCurlWrapper->curl_connect($url);
+		$response = $this->apiCurlWrapper->curlGetPage($url);
+
+		if ($this->apiCurlWrapper->getResponseCode() == 200) {
+			return json_decode($response, true);
+		} else {
+			return translate([
+				'text' => 'Error getting a list of consents for this patron from Koha.',
+				'isPublicFacing' => true,
+			]);
+		}
+
+	}
+
+	private function getConsentTypes() {
+		$oauthToken = $this->getOAuthToken();
+		if (!$oauthToken) {
+			return translate([
+				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'isPublicFacing' => true,
+			]);
+		}
+		
+		$url = $this->getWebServiceURL() . '/api/v1/contrib/newsletterconsent/consents/';
+
+		$customHeaders = [];
+
+		$headers = implode($this->apiCurlWrapper->getHeaders());
+		if(strpos($headers, 'Authorization: Bearer ') === false) {
+			$customHeaders[] = 'Authorization: Bearer ' . $oauthToken;
+		};
+		if(strpos($headers, 'User-Agent: Aspen Discovery') === false) {
+			$customHeaders[] = 'User-Agent: Aspen Discovery';
+		};
+		if(strpos($headers, 'Host: ') === false) {
+			$customHeaders[] = 'Host: ' . preg_replace('~http[s]?://~', '', $this->getWebServiceURL());
+		};
+		
+		if ($customHeaders) {
+			$this->apiCurlWrapper->addCustomHeaders($customHeaders, false);
+		}
+		
+		$this->apiCurlWrapper->curl_connect($url);
+		$response = $this->apiCurlWrapper->curlGetPage($url);
+
+		if ($this->apiCurlWrapper->getResponseCode() == 200) {
+			return json_decode($response, true);
+		} else {
+			return translate([
+				'text' => 'There was an error while getting existing consent types from Koha.',
+				'isPublicFacing' => true,
+			]);
+		}
+	}
 }

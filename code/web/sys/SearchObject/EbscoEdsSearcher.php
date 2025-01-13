@@ -314,19 +314,18 @@ BODY;
 					foreach ($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers as $ui) {
 						if ($ui->Type == "doi") {
 							$libKeyResult =  $this->getLibKeyResult($ui->Value);
-							if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
-								$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
-								$interface->assign('retracted', true);
-								break;
+							if ($libKeyResult && isset($libKeyResult['data'])) {
+								if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
+									$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
+									$interface->assign('retracted', true);
+								}
+								$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
+								$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
+								$interface->assign('retracted', false);
 							}
-							$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
-							$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
-							$interface->assign('retracted', false);
-							break;
 						}
 					}
 				}
-
 				require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 				$record = new EbscoRecordDriver($current);
 				if ($record->isValid()) {

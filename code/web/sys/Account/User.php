@@ -2331,24 +2331,27 @@ class User extends DataObject {
 	public function getValidSublocations(int $locationId): array {
 		require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 		require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-		$patronType = $this->getPTypeObj();
 		$sublocations = [];
-		$object = new Sublocation();
-		$object->locationId = $locationId;
-		$object->isValidHoldPickupAreaILS = 1;
-		$object->isValidHoldPickupAreaAspen = 1;
-		$object->orderBy('weight');
-		$object->find();
-		while ($object->fetch()) {
-			$sublocationPType = new SublocationPatronType();
-			$sublocationPType->patronTypeId = $patronType->id;
-			$sublocationPType->sublocationId = $object->id;
-			if ($sublocationPType->find(true)) {
-				$sublocations[$object->id] = clone($object);
+		$patronType = $this->getPTypeObj();
+		if ($patronType !== null) {
+			$object = new Sublocation();
+			$object->locationId = $locationId;
+			$object->isValidHoldPickupAreaILS = 1;
+			$object->isValidHoldPickupAreaAspen = 1;
+			$object->orderBy('weight');
+			$object->find();
+			while ($object->fetch()) {
+				$sublocationPType = new SublocationPatronType();
+				$sublocationPType->patronTypeId = $patronType->id;
+				$sublocationPType->sublocationId = $object->id;
+				if ($sublocationPType->find(true)) {
+					$sublocations[$object->id] = clone($object);
+				}
 			}
+
+			ksort($sublocations);
 		}
 
-		ksort($sublocations);
 		return $sublocations;
 	}
 

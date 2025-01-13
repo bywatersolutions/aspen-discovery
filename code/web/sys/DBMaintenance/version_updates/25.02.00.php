@@ -38,7 +38,7 @@ function getUpdates25_02_00(): array {
 			'description' => 'Add new permission to manage local administrators',
 			'continueOnError' => true,
 			'sql' => [
-				"UPDATE account_profiles set vendorOpacUrl = '', patronApiUrl = '', ils = 'na', driver = '' recordSource = '' where name = 'admin'",
+				"UPDATE account_profiles set vendorOpacUrl = '', patronApiUrl = '', ils = 'na', driver = '', recordSource = '' where name = 'admin'",
 			],
 		], //account_profile_admin_updates
 

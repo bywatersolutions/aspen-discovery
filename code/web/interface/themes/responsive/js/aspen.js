@@ -10197,6 +10197,21 @@ AspenDiscovery.Admin = (function () {
 			}
 		},
 
+		toggleAccountProfileIlsFields: function () {
+			var selectedIls = $("#ilsSelect").val();
+			var propertyRows = $(".propertyRow");
+			propertyRows.each(function () {
+				if ($(this).attr("data-related-ils") !== undefined){
+					var relatedIls = $(this).data("related-ils");
+					if (relatedIls.includes("~" + selectedIls + "~")) {
+						$(this).show();
+					}else{
+						$(this).hide();
+					}
+				}
+			});
+		},
+
 		searchSettings: function () {
 			var searchValue = $("#settingsSearch").val();
 			var searchRegex = new RegExp(searchValue, 'i');

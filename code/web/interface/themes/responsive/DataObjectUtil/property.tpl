@@ -16,7 +16,7 @@
 {/if}
 {strip}
 {if ((!isset($property.storeDb) || $property.storeDb == true) && !($property.type == 'oneToManyAssociation' || $property.type == 'hidden' || $property.type == 'method'))}
-	<div {if !isset($addFormGroupToProperty) || $addFormGroupToProperty !== false}class="form-group propertyRow"{/if} id="propertyRow{$propName}" {if !empty($property.hiddenByDefault) && $property.hiddenByDefault}style="display:none" {/if}>
+	<div {if !isset($addFormGroupToProperty) || $addFormGroupToProperty !== false}class="form-group propertyRow"{/if} id="propertyRow{$propName}" {if !empty($property.hiddenByDefault) && $property.hiddenByDefault}style="display:none" {/if} {if !empty($property.relatedIls)}data-related-ils="~{implode subject=$property.relatedIls glue='~'}~"{/if}>
 		{* Output the label *}
 		{if $property.type == 'enum'}
 			{if !empty($property.renderAsHeading)}

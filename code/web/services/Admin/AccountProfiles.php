@@ -66,6 +66,6 @@ class Admin_AccountProfiles extends ObjectEditor {
 	}
 
 	function getInitializationJs(): string {
-		return 'AspenDiscovery.Admin.toggleSSOSettingsInAccountProfile();';
+		return 'AspenDiscovery.Admin.toggleSSOSettingsInAccountProfile();AspenDiscovery.Admin.toggleAccountProfileIlsFields();';
 	}
 }

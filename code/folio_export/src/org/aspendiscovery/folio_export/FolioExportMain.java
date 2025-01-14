@@ -345,7 +345,7 @@ public class FolioExportMain {
 									groupedWorkIndexer.processGroupedWork(result.permanentId);
 								} else if (result.deleteWork) {
 									//Delete the work from solr and the database
-									groupedWorkIndexer.deleteRecord(result.permanentId);
+									groupedWorkIndexer.deleteRecord(result.permanentId, result.groupedWorkId);
 								}
 								logEntry.incDeleted();
 								if (logEntry.getNumDeleted() % 250 == 0) {

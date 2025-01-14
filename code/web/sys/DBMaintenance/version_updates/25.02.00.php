@@ -41,6 +41,16 @@ function getUpdates25_02_00(): array {
 				"UPDATE account_profiles set vendorOpacUrl = '', patronApiUrl = '', ils = 'na', driver = '', recordSource = '' where name = 'admin'",
 			],
 		], //account_profile_admin_updates
+		'two_factor_authentication' => [
+			'title' => 'Two Factor Authentication Updates',
+			'description' => 'Remove unused settings and add new link to account profile for two factor authentication',
+			'continueOnError' => true,
+			'sql' => [
+				'ALTER TABLE two_factor_auth_settings DROP COLUMN authMethods',
+				'ALTER TABLE two_factor_auth_settings ADD COLUMN accountProfileId INT',
+				"UPDATE two_factor_auth_settings set accountProfileId = (SELECT MIN(id) from account_profiles where ils <> 'na' and name <> 'admin')"
+			]
+		]
 
 		//katherine
 

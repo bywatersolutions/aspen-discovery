@@ -36,7 +36,6 @@ class PType extends DataObject {
 		];
 	}
 
-	/** @noinspection PhpUnusedParameterInspection */
 	static function getObjectStructure($context = ''): array {
 		$roles = [];
 		$roles[-1] = 'None';
@@ -46,14 +45,10 @@ class PType extends DataObject {
 		while ($role->fetch()) {
 			$roles[$role->roleId] = $role->name;
 		}
-		$twoFactorAuthSettings = [];
-		$twoFactorAuthSettings[-1] = 'None';
-		$twoFactorAuthSetting = new TwoFactorAuthSetting();
-		$twoFactorAuthSetting->orderBy('name');
-		$twoFactorAuthSetting->find();
-		while ($twoFactorAuthSetting->fetch()) {
-			$twoFactorAuthSettings[$twoFactorAuthSetting->id] = $twoFactorAuthSetting->name;
-		}
+
+		require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
+		$twoFactorAuthSettings = TwoFactorAuthSetting::getTwoFactorAuthSettingsList(true);
+
 		require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
 		$accountProfile = new AccountProfile();
 		$accountProfile->whereAdd("name <> 'admin'");
@@ -75,6 +70,7 @@ class PType extends DataObject {
 				'label' => 'Account Profile Id',
 				'description' => 'Account Profile to apply to this interface',
 				'permissions' => ['Administer Account Profiles'],
+				'readOnly' => $context != 'addNew'
 			],
 			'pType' => [
 				'property' => 'pType',
@@ -137,7 +133,6 @@ class PType extends DataObject {
 			'vdxClientCategory' => [
 				'property' => 'vdxClientCategory',
 				'type' => 'text',
-				'values' => $twoFactorAuthSettings,
 				'label' => 'VDX Client Category',
 				'description' => 'The client category to be used when sending requests to VDX',
 				'maxLength' => 10,
@@ -192,14 +187,28 @@ class PType extends DataObject {
 		return $structure;
 	}
 
+	public function updateStructureForEditingObject($structure) : array {
+		if (isset($structure['twoFactorAuthSettingId'])) {
+			require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
+			$settingsList = TwoFactorAuthSetting::getTwoFactorAuthSettingsList(true, $this->accountProfileId);
+			$structure['twoFactorAuthSettingId']['values'] = $settingsList;
+		}
+
+		return $structure;
+	}
+
 	/**
-	 * @param boolean $addEmpty whether or not an empty value should be returned first
-	 * @param boolean $valueIsPType whether or not the value returned is the pType or database id (default)
+	 * @param boolean $addEmpty whether an empty value should be returned first
+	 * @param boolean $valueIsPType whether the value returned is the pType or database id (default)
+	 * @param int|string $accountProfileId the account profile id to restrict account profiles by
 	 * @return array
 	 */
-	static function getPatronTypeList(bool $addEmpty = false, bool $valueIsPType = false): array {
+	static function getPatronTypeList(bool $addEmpty = false, bool $valueIsPType = false, int|string $accountProfileId = -1): array {
 		$patronType = new pType();
 		$patronType->orderBy('pType');
+		if ($accountProfileId != -1 && !empty($accountProfileId)) {
+			$patronType->accountProfileId = $accountProfileId;
+		}
 		$patronType->find();
 		$patronTypeList = [];
 		if ($addEmpty) {

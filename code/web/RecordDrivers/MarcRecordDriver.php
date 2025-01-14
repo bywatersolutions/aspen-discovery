@@ -1040,7 +1040,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return "/" . $this->getModule() . "/$recordId";
 	}
 
-	protected array $_actions = [];
+	protected ?array $_actions = [];
 
 	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		require_once ROOT_DIR . '/RecordDrivers/RecordActionGenerator.php';

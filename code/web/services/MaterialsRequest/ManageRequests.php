@@ -137,7 +137,9 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				$locationsForLibrary[] = $locations->locationId;
 			}
 
-			$materialsRequests->whereAdd('user.homeLocationId IN (' . implode(', ', $locationsForLibrary) . ')');
+			if (count($locationsForLibrary) > 0) {
+				$materialsRequests->whereAdd('user.homeLocationId IN (' . implode(', ', $locationsForLibrary) . ')');
+			}
 
 			if (count($availableStatuses) > count($statusesToShow)) {
 				$materialsRequests->whereAddIn('status', $statusesToShow, false);
@@ -234,14 +236,14 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				while ($rolePermissions->fetch()) {
 					// Get Available Assignees
 					$materialsRequestManagers = new User();
-
-					if ($materialsRequestManagers->query("SELECT * from user WHERE id IN (SELECT userId FROM user_roles WHERE roleId = $rolePermissions->roleId) AND homeLocationId IN (" . implode(', ', $locationsForLibrary) . ")")) {
-
-						while ($materialsRequestManagers->fetch()) {
-							if (empty($materialsRequestManagers->displayName)) {
-								$assignees[$materialsRequestManagers->id] = $materialsRequestManagers->firstname . ' ' . $materialsRequestManagers->lastname;
-							} else {
-								$assignees[$materialsRequestManagers->id] = $materialsRequestManagers->getDisplayName();
+					if (count($locationsForLibrary) > 0) {
+						if ($materialsRequestManagers->query("SELECT * from user WHERE id IN (SELECT userId FROM user_roles WHERE roleId = $rolePermissions->roleId) AND homeLocationId IN (" . implode(', ', $locationsForLibrary) . ")")) {
+							while ($materialsRequestManagers->fetch()) {
+								if (empty($materialsRequestManagers->displayName)) {
+									$assignees[$materialsRequestManagers->id] = $materialsRequestManagers->firstname . ' ' . $materialsRequestManagers->lastname;
+								} else {
+									$assignees[$materialsRequestManagers->id] = $materialsRequestManagers->getDisplayName();
+								}
 							}
 						}
 					}

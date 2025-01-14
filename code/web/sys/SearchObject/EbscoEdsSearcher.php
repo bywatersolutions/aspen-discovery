@@ -312,17 +312,20 @@ BODY;
 				$interface->assign('resultIndex', $x + 1 + (($this->page - 1) * $this->limit));
 				if (Library::getActiveLibrary()->libKeySettingId != -1 && !empty($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers)) {
 					foreach ($this->lastSearchResults->Data->Records[$x]->RecordInfo->BibRecord->BibEntity->Identifiers as $ui) {
-						if ($ui->Type == "doi") {
-							$libKeyResult =  $this->getLibKeyResult($ui->Value);
-							if ($libKeyResult && isset($libKeyResult['data'])) {
-								if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
-									$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
-									$interface->assign('retracted', true);
-								}
-								$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
-								$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
-								$interface->assign('retracted', false);
-							}
+						if ($ui->Type != "doi") {
+							continue;
+						}
+						$libKeyResult =  $this->getLibKeyResult($ui->Value);
+						if (!$libKeyResult || !isset($libKeyResult['data'])) {
+							continue;
+						}
+						if (isset($libKeyResult['data']['retractionNoticeUrl'])) {
+							$interface->assign('libKeyUrl', $libKeyResult['data']['retractionNoticeUrl']);
+							$interface->assign('retracted', true);
+						} else {
+							$interface->assign('libKeyUrl', $libKeyResult["data"]["bestIntegratorLink"]["bestLink"]);
+							$interface->assign('retracted', false);
+							$interface->assign('libKeyCoverImageUrl', $libKeyResult['included'][0]['coverImageUrl']);
 						}
 					}
 				}

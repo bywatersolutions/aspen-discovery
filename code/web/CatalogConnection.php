@@ -427,7 +427,7 @@ class CatalogConnection {
 		if (!$userToResetPin->find(true)) {
 			$userToResetPin = $this->driver->findNewUser($barcode, '');
 		}
-		if ($userToResetPin == false) {
+		if ($userToResetPin === false) {
 			$result['error'] = translate([
 				'text' => "Could not find a patron with that barcode, please contact the library.",
 				'isPublicFacing' => true,
@@ -1423,7 +1423,7 @@ class CatalogConnection {
 		}
 	}
 
-	function processEmailResetPinForm() {
+	function processEmailResetPinForm() : array {
 		if ($this->getForgotPasswordType() == 'emailAspenResetLink') {
 			$result = [
 				'success' => false,

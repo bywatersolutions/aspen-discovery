@@ -65,7 +65,7 @@
 		{if !empty($allowSearchingProperties)}
 			<form role="form" class="searchForm">
 				<div class="alert alert-info">
-					<label for="settingsSearch">{translate text="Search for a Property" isAdminFacing=true}</label>
+					<label for="propertySearch">{translate text="Search for a Property" isAdminFacing=true}</label>
 					<div class="input-group input-group-sm">
 						<input  type="text" name="propertySearch" id="propertySearch"
 								onkeyup="return AspenDiscovery.Admin.searchProperties();" class="form-control" />

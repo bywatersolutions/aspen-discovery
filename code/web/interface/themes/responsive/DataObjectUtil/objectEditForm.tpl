@@ -64,15 +64,21 @@
 						<button type="submit" name="submit" value="{$saveButtonText}" class="btn btn-primary">{translate text=$saveButtonText isAdminFacing=true}</button>
 					{/if}
 				{else}
-					<div id="objectEditorSaveButtons" class="btn-group">
-					<button type="submit" name="submitReturnToList" value="Save Changes and Return" class="btn btn-primary"><i class="fas fa-save"></i> {translate text="Save Changes and Return" isAdminFacing=true}</button>
-					{if !empty($id)}
-						<button type="submit" name="submitStay" value="Save Changes and Stay Here" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Stay Here" isAdminFacing=true}</button>
+					{if !empty($objectAction) && $objectAction == 'addNew' && $hasMultiStepAddNew}
+						<div id="objectEditorSaveButtons" class="btn-group">
+							<button type="submit" name="submitStay" value="Next" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Next" isAdminFacing=true}</button>
+						</div>
 					{else}
-						<button type="submit" name="submitStay" value="Save Changes and Continue Editing" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Continue Editing" isAdminFacing=true}</button>
-						<button type="submit" name="submitAddAnother" value="Save Changes and Add Another" class="btn btn-default"><i class="fas fa-plus"></i> {translate text="Save Changes and Add Another" isAdminFacing=true}</button>
+						<div id="objectEditorSaveButtons" class="btn-group">
+						<button type="submit" name="submitReturnToList" value="Save Changes and Return" class="btn btn-primary"><i class="fas fa-save"></i> {translate text="Save Changes and Return" isAdminFacing=true}</button>
+						{if !empty($id)}
+							<button type="submit" name="submitStay" value="Save Changes and Stay Here" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Stay Here" isAdminFacing=true}</button>
+						{else}
+							<button type="submit" name="submitStay" value="Save Changes and Continue Editing" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Continue Editing" isAdminFacing=true}</button>
+							<button type="submit" name="submitAddAnother" value="Save Changes and Add Another" class="btn btn-default"><i class="fas fa-plus"></i> {translate text="Save Changes and Add Another" isAdminFacing=true}</button>
+						{/if}
+						</div>
 					{/if}
-					</div>
 				{/if}
 			</div>
 		{/if}

@@ -137,7 +137,9 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				$locationsForLibrary[] = $locations->locationId;
 			}
 
-			$materialsRequests->whereAdd('user.homeLocationId IN (' . implode(', ', $locationsForLibrary) . ')');
+			if (count($locationsForLibrary) > 0) {
+				$materialsRequests->whereAdd('user.homeLocationId IN (' . implode(', ', $locationsForLibrary) . ')');
+			}
 
 			if (count($availableStatuses) > count($statusesToShow)) {
 				$materialsRequests->whereAddIn('status', $statusesToShow, false);

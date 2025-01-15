@@ -2779,6 +2779,7 @@ CREATE TABLE `library` (
   `eCommerceFee` varchar(11) DEFAULT '0',
   `eCommerceTerms` mediumtext DEFAULT NULL,
   `cookieStorageConsent` tinyint(1) DEFAULT 0,
+  `ilsConsentEnabled` tinyint(1) DEFAULT 0,
   `cookiePolicyHTML` text DEFAULT NULL,
   `openArchivesFacetSettingId` int(11) DEFAULT 1,
   `websiteIndexingFacetSettingId` int(11) DEFAULT 1,

@@ -23,10 +23,11 @@
 		{if !empty($offline)}
 			<div class="alert alert-warning"><strong>{translate text=$offlineMessage isPublicFacing=true}</strong></div>
 		{else}
+			{if !empty($cookieConsentEnabled)}
+			<h2>{translate text="Cookies and analytics" isPublicFacing=true}</h2>
 			<form action="" method="post" role="form">
 				<input type="hidden" name="updateScope" value="userCookiePreference">
 				<input type="hidden" name="patronId" value={$profile->id|escape}>
-				{if !empty($loggedIn) && !empty($cookieConsentEnabled)}
 					{*Essential Cookies*}
 					<div class="form-group #propertyRow" style="margin-bottom:10px;">
 						<strong class="control-label" style="margin-bottom:10px;">{translate text="Essential Cookies" isPublicFacing=true}:</strong>&nbsp;
@@ -56,13 +57,13 @@
 					<strong class="control-label" style="margin-bottom:10px;">{translate text="Local Analytics" isPublicFacing=true}:</strong>&nbsp;
 					<div class="padding:0.5em 1em;">
 						<div class="col-xs-6 col-sm-4">
-							<label for="userCookieUserLocalAnalytics" class="control-label">{translate text="Local Analytics" isPublicFacing=true}</label>&nbsp;<i class="fas fa-question-circle" onclick="return displayMyCookieExplanation()"></i>
+							<label for="userCookieUserLocalAnalytics" class="control-label">{translate text="Local Analytics" isPublicFacing=true}</label>&nbsp;<i class="fas fa-question-circle" onclick="return displayMyConsentExplanation('localAnalytics')"></i>
 						</div>
 						<div class="col-xs-6 col-sm-8">
 							<input type="checkbox" class="form-control" name="userCookieUserLocalAnalytics" id="userCookieLocalAnalytics" {if $profile->userCookiePreferenceLocalAnalytics==1}checked="checked"{/if} data-switch="">
 						</div>
 					</div>
-					<div id="myCookieExplanation" style="display:none; margin-top: 10px;">
+					<div id="myCookieConsentExplanation" style="display:none; margin-top: 10px;">
 							{translate text="By checking this box you are giving consent to local analytics tracking. Aspen will collect information about your usage of the following services: "}
 							<ul>
 								{if array_key_exists('Axis 360', $enabledModules)}
@@ -105,18 +106,49 @@
                     		{translate text="For more information, please see our "}<a  style="cursor:pointer;" onclick="window.location = '/Help/CookieConsentPrivacyPolicy';">{translate text=" Cookie Consent Privacy Policy"}</a>
 					</div>
 				</div>
-				{/if}
 				{if empty($offline) && $edit == true}
 					<div class="form-group propertyRow">
-						<button type="submit" name="updateMyCookiePreferences" class="btn btn-sm btn-primary">{translate text="Update My Preferences" isPublicFacing=true}</button>
+						<button type="submit" name="updateMyConsentPreferences" class="btn btn-sm btn-primary">{translate text="Update My Preferences" isPublicFacing=true}</button>
 					</div>
 				{/if}
-			</form>
-			<script type="text/javascript">
+				</form>
+			{/if}
+			{if !empty($ilsConsentEnabled)}
+				<form action="" method="post" role="form">
+					<input type="hidden" name="updateScope" value="userILSIssuedConsent">
+					<input type="hidden" name="patronId" value={$profile->id|escape}>
+					{foreach $consentTypes as $consentType}
+						<section id="{$consentType['lowercaseCode']}ConsentSection">
+							{$consentCode = $consentType['capitalisedCode']}
+							<h2>{translate text={$consentType['label']} isPublicFacing=true}</h2>
+							<div class="form-group #propertyRow" style="margin-bottom:10px;">
+								<strong class="control-label" style="margin-bottom:10px;">{translate text={$consentType['description']} isPublicFacing=true}</strong>&nbsp;
+								<div class="padding:0.5em 1em;">
+									<div class="col-xs-6 col-sm-4">
+										<label for="user{$consentCode}" class="control-label">{translate text={$consentType['label']} isPublicFacing=true}</label>&nbsp;<i class="fas fa-question-circle" onclick="return displayMyConsentExplanation('{$consentCode}')"></i>
+									</div>
+									<div class="col-xs-6 col-sm-8">
+										<input type="checkbox" class="form-control" name="user{$consentCode}" id="user{$consentCode}" {if isset($consentType['enabledForUser']) && $consentType['enabledForUser'] == true}checked="checked"{/if} data-switch="">
+									</div>
+								</div>
+							</div>
+							<div id="my{$consentCode}ConsentExplanation" style="display:none; margin-top: 10px;">
+									{translate text="By checking this box you are giving your consent to our {$consentType['label']}. Aspen Discovery will send your consent information to Koha, where it will be stored. You can return to this page to update your consent at any point."}
+							</div>
+						</section>
+					{/foreach}
+					{if empty($offline) && $edit == true}
+						<div class="form-group propertyRow">
+							<button type="submit" name="updateMyILSIssuedConsents" class="btn btn-sm btn-primary">{translate text="Update Consent" isPublicFacing=true}</button>
+						</div>
+					{/if}
+				</form>
+			{/if}
+		<script type="text/javascript">
 			{* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
 			{literal}
-			function displayMyCookieExplanation () {
-				var explanationDiv = document.getElementById("myCookieExplanation");
+			function displayMyConsentExplanation (type) {
+				var explanationDiv = type === 'localAnalytics'? document.getElementById("myCookieConsentExplanation") : document.getElementById(`my${type}ConsentExplanation`)
 				if (explanationDiv.style.display === "none") {
 					explanationDiv.style.display = "block";
 				} else {
@@ -139,7 +171,6 @@
 			{/literal}
 		</script>
 		{/if}
-
 	{/if}
 	</div>
 {/strip}

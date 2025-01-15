@@ -436,6 +436,9 @@ class Library extends DataObject {
 	//cookieConsent
 	public $cookieStorageConsent;
 	public $cookiePolicyHTML;
+	
+	// ILS privacy consent
+	public $ilsConsentEnabled;
 
 	//SHAREit
 	public $repeatInShareIt;
@@ -907,6 +910,20 @@ class Library extends DataObject {
 		$quipuECardSettings = new QuipuECardSetting();
 		if ($quipuECardSettings->find(true) && $quipuECardSettings->hasERenew) {
 			$validCardRenewalOptions[3] = 'Quipu eRenewal';
+		}
+
+		// prevent administrators from enabling the ILS consent integration if their ILS does not allow for it
+		$driverAllowsForIlsConsentTypes = true;
+		if (
+			$catalog == null ||
+			$catalog->driver == null ||
+			!method_exists($catalog->driver, 'getConsentTypes') || 
+			!method_exists($catalog->driver, 'getFormattedConsentTypes') || 
+			!method_exists($catalog->driver, 'getPatronConsents') || 
+			!method_exists($catalog->driver, 'getSelfRegistrationFormPrivacySection') ||
+			!method_exists($catalog->driver, 'updatePatronConsent')
+		) {
+			$driverAllowsForIlsConsentTypes = false;
 		}
 
 		/** @noinspection HtmlRequiredAltAttribute */
@@ -3595,6 +3612,13 @@ class Library extends DataObject {
 						'default' => 'This body has not yet set a cookie storage policy, please check back later.',
 						'hideInLists' => true,
 					],
+					'ilsConsentEnabled' => [
+						'property' => 'ilsConsentEnabled',
+						'type' => 'checkbox',
+						'label' => 'Enable ILS-issued consents',
+						'description' => 'Enable patrons to give and rescind consent through the Your Account / Privacy Page for consent types issued from the ILS',
+						'default' => false,
+					],
 				]
 			],
 			'messagingSection' => [
@@ -4158,6 +4182,9 @@ class Library extends DataObject {
 		}
 		if (!array_key_exists('Single sign-on', $enabledModules)) {
 			unset($structure['ssoSection']);
+		}
+		if (!$driverAllowsForIlsConsentTypes) {
+			unset($structure['dataProtectionRegulations']['properties']['ilsConsentEnabled']);
 		}
 
 		return $structure;

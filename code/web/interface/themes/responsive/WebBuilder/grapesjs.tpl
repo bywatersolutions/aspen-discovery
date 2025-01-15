@@ -106,15 +106,19 @@
                     }),
                     contentType: "application/json",
                     success: function (response) {
+                      var title = response.title;
+                      var message;
                       if (response.success) {
-                        AspenDiscovery.showMessage('Success', response.message);
+                        message = response.message || 'Page Saved.';
+                        AspenDiscovery.showMessage(title, message);
                       } else {
-                        AspenDiscovery.showMessage('Error', response.message || 'Failed to save page.');
+                        message = response.message || 'Failed to save page.';
+                        AspenDiscovery.showMessage(title, message);
                       }
                     },
                     error: function (xhr, status, error) {
                         console.error('Error saving page: ', error);
-                        let errorMessage = 'Failed to save page. Please try again.';
+                        var errorMessage = 'Failed to save page. Please try again.';
                         if (xhr.responseJSON && xhr.responseJSON.message){
                           errorMessage = xhr.responseJSON.message;
                         }

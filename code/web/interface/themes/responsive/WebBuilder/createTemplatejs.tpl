@@ -108,15 +108,20 @@
                     }),
                     contentType: "application/json",
                     success: function (response) {
+                        var title = response.title;
+                        var message;
+
                         if (response.success) {
-                            AspenDiscovery.showMessage('Success', response.message);
+                            message = response.message || 'Template updated successfully.';
+                            AspenDiscovery.showMessage(title, message);
                         } else {
-                            AspenDiscovery.showMessage('Error', response.message || 'Failed to save template.');
+                            message = response.message || 'Failed to save template.'
+                            AspenDiscovery.showMessage(title, message);
                         }
                     },
                     error: function (xhr, status, error) {
                         console.error('Error saving template: ', error);
-                        let errorMessage = 'Failed to save template. Please try again.';
+                        var errorMessage = 'Failed to save template. Please try again.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
                         }

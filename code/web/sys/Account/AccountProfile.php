@@ -77,6 +77,20 @@ class AccountProfile extends DataObject {
 			];
 		}
 
+		if ($context == 'addNew') {
+			$accountProfile = new AccountProfile();
+			$accountProfile->selectAdd(null);
+			$accountProfile->selectAdd("MAX(weight) as maxWeight");
+			if ($accountProfile->find(true)) {
+				/** @noinspection PhpUndefinedFieldInspection */
+				$defaultWeight = $accountProfile->maxWeight + 1;
+			}else{
+				$defaultWeight = 0;
+			}
+		}else{
+			$defaultWeight = 0;
+		}
+
 		$structure = [
 			'id' => [
 				'property' => 'id',
@@ -89,7 +103,7 @@ class AccountProfile extends DataObject {
 				'type' => 'integer',
 				'label' => 'Weight',
 				'description' => 'The sort order',
-				'default' => 0,
+				'default' => $defaultWeight,
 			],
 			'name' => [
 				'property' => 'name',
@@ -118,8 +132,8 @@ class AccountProfile extends DataObject {
 				],
 				'description' => 'The ils of the account profile',
 				'required' => true,
-				'default' => 'koha',
-				'onchange' => 'return AspenDiscovery.Admin.toggleAccountProfileIlsFields();',
+				'default' => 'na',
+				'onchange' => 'AspenDiscovery.Admin.setDefaultsByIls();AspenDiscovery.Admin.toggleAccountProfileIlsFields();return false;',
 			],
 			'driver' => [
 				'property' => 'driver',
@@ -171,6 +185,7 @@ class AccountProfile extends DataObject {
 						'description' => 'The method of authentication to use',
 						'required' => true,
 						'onchange' => 'return AspenDiscovery.Admin.toggleSSOSettingsInAccountProfile();',
+						'default' => 'db'
 					],
 					'ssoSettingId' => [
 						'property' => 'ssoSettingId',

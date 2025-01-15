@@ -1843,6 +1843,31 @@ AspenDiscovery.Admin = (function () {
 			});
 		},
 
+		setDefaultsByIls: function () {
+			var selectedIls = $("#ilsSelect").val();
+			if (selectedIls === 'na') {
+				$("#driver").val('');
+				$("#authenticationMethodSelect").val('db') ;
+			}else {
+				$("#authenticationMethodSelect").val('ils') ;
+				if (selectedIls === 'carlx') {
+					$("#driver").val('CarlX');
+				}else if (selectedIls === 'evergreen') {
+					$("#driver").val('Evergreen');
+				}else if (selectedIls === 'evolve') {
+					$("#driver").val('Evolve');
+				}else if (selectedIls === 'koha') {
+					$("#driver").val('Koha');
+				}else if (selectedIls === 'polaris') {
+					$("#driver").val('Polaris');
+				}else if (selectedIls === 'sierra') {
+					$("#driver").val('Sierra');
+				}else if (selectedIls === 'symphony') {
+					$("#driver").val('SirsiDynixROA');
+				}
+			}
+		},
+
 		searchSettings: function () {
 			var searchValue = $("#settingsSearch").val();
 			var searchRegex = new RegExp(searchValue, 'i');

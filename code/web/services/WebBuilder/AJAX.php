@@ -986,7 +986,14 @@ class WebBuilder_AJAX extends JSON_Action {
 			if (!$template->find(true)) {
 				return [
 					'success' => false,
-					'message' => "Template with ID $templateId not found. Unable to update."
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => "Template with ID $templateId not found. Unable to update.",
+						'isPublicFacing' => true
+					])
 				];
 			}
 			$template->templateContent = $projectData;
@@ -996,17 +1003,38 @@ class WebBuilder_AJAX extends JSON_Action {
 			if(!$template->update()) {
 				return [
 					'success' => false,
-					'message' => 'Failed to update the template.'
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => 'Failed to update the template.',
+						'isPublicFacing' => true
+					])
 				];
 			}
 			return [ 
 				'success' => true,
-				'message' => 'Template saved successfully.'
+				'title' => translate([
+					'text' => 'Success',
+					'isPublicFacing' => true
+				]),
+					'message' => translate([
+					'text' => 'Template saved successfully.',
+					'isPublicFacing' => true
+				])
 			];
 		} catch (Exception $e) {
 			return [
 				'success' => false,
-				'message' => 'an unexpected error occurred: ' . $e->getMessage()
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true
+				]),
+				'message' => translate([
+					'text' => 'An unexpected error occurred: ' . $e->getMessage(),
+					'isPublicFacing' => true
+				])
 			];
 		}
 	}
@@ -1028,7 +1056,14 @@ class WebBuilder_AJAX extends JSON_Action {
 			if (!$grapesPage->find(true)) {
 				return [ 
 					'success' =>false,
-					'message' => "Page with ID $grapesPageId not found. Unable to update."
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => "Page with ID $grapesPageId not found. Unable to update.",
+						'isPublicFacing' => true
+					])
 				];
 			}
 			$grapesPage->grapesGenId = $grapesGenId;
@@ -1038,18 +1073,39 @@ class WebBuilder_AJAX extends JSON_Action {
 
 			if (!$grapesPage->update()) {
 				return [
-					'success ' => false,
-					'message' => 'Failed to update the page.'
+					'success' => false,
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => 'Failed to update the page.',
+						'isPublicFacing' => true
+					])
 				];
 			}
 			return [
 				'success' => true,
-				'message' => 'Page saved successfully.'
+				'title' => translate([
+					'text' => 'Success',
+					'isPublicFacing' => true
+				]),
+					'message' => translate([
+					'text' => 'Page saved successfully.',
+					'isPublicFacing' => true
+				])
 			];
 		} catch (Exception $e) {
 			return [
 				'success' => false,
-				'message' => 'An unexpected error occurred: ' . $e->getMessage()
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true
+				]),
+				'message' => translate([
+					'text' => 'An unexpected error occurred: ' . $e->getMessage(),
+					'isPublicFacing' => true
+				])
 			];
 		}
 	}

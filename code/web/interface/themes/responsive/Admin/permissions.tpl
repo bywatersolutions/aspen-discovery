@@ -24,11 +24,10 @@
 		<div class="form-group">
 			<label for="settingsSearch">{translate text="Search for a Permission" isAdminFacing=true}</label>
 			<div class="input-group">
-				<input  type="text" name="searchPermissions" id="searchPermissions"
-						onkeyup="return AspenDiscovery.Admin.searchPermissions();" class="form-control" />
+				<input  type="text" name="searchPermissions" id="searchPermissions" onkeyup="return AspenDiscovery.Admin.searchPermissions();" class="form-control" />
 				<span class="input-group-btn"><button class="btn btn-default" type="button" onclick="$('#searchPermissions').val('');return AspenDiscovery.Admin.searchPermissions();" title="{translate text="Clear" inAttribute=true isAdminFacing=true}"><i class="fas fa-times-circle" role="presentation"></i></button></span>
 				<script type="text/javascript">
-                    {literal}
+					{literal}
 					$(document).ready(function() {
 						$("#searchPermissions").keydown("keydown", function (e) {
 							if (e.which === 13) {
@@ -36,7 +35,7 @@
 							}
 						});
 					});
-                    {/literal}
+					{/literal}
 				</script>
 			</div>
 		</div>
@@ -63,11 +62,11 @@
 									<tr class="permissionRow">
 										<th id='permissionLabel' style="vertical-align: middle;"><strong>{translate text="Permissions for" isAdminFacing=true}</strong> {translate text=$selectedRole->name isAdminFacing=true isAdminEnteredData=true}</th>
 										<th style="min-width: 100px">
-                                            <label class="btn btn-default btn-sm pull-right">
-                                                <input style="position: absolute; clip: rect(0,0,0,0); pointer-events: none;" type="checkbox" name="permission[{$sectionName}]" id="allPermissions{$panelId}" title="{translate text="Toggle all permissions in %1 for %2%" 1=$sectionName 2=$selectedRole->name inAttribute=true isAdminFacing=true}" onclick="AspenDiscovery.toggleCheckboxes('.selectedPermission{$panelId}', '#allPermissions{$panelId}');" />
-                                                {translate text="Select All" isAdminFacing=true}
-                                            </label>
-                                        </th>
+											<label class="btn btn-default btn-sm pull-right">
+												<input style="position: absolute; clip: rect(0,0,0,0); pointer-events: none;" type="checkbox" name="permission[{$sectionName}]" id="allPermissions{$panelId}" title="{translate text="Toggle all permissions in %1 for %2%" 1=$sectionName 2=$selectedRole->name inAttribute=true isAdminFacing=true}" onclick="AspenDiscovery.toggleCheckboxes('.selectedPermission{$panelId}', '#allPermissions{$panelId}');" />
+												{translate text="Select All" isAdminFacing=true}
+											</label>
+										</th>
 									</tr>
 								</thead>
 								<tbody>

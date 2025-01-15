@@ -1,11 +1,11 @@
 <div id="main-content">
-    {if !empty($loggedIn)}
+	{if !empty($loggedIn)}
 		<table class="table table-bordered table-striped" style="width: auto; margin: 0 auto">
-            {foreach from=$backupCodes item=code name="backupCodes"}
+			{foreach from=$backupCodes item=code name="backupCodes"}
 				<tr>
 					<td><samp>{$code}</samp></td>
 				</tr>
-            {/foreach}
+			{/foreach}
 		</table>
-    {/if}
+	{/if}
 </div>

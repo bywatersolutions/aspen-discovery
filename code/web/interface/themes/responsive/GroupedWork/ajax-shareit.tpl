@@ -16,7 +16,6 @@
 			<td>
 				<a href="{$shareItTitle.link}" rel="external" onclick="window.open (this.href, 'child'); return false"><h5>{$shareItTitle.title|removeTrailingPunctuation|escape}</h5></a>
 			</td>
-
 			<td>
 				{if !empty($shareItTitle.author)}<small>{$shareItTitle.author|escape}</small>{/if}
 			</td>

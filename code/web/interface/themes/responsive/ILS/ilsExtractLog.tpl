@@ -5,7 +5,7 @@
 			{translate text="The ILS Export log shows MARC records extracted from the ILS.  For most ILSs, this is done on a continuous basis as we detect changes within the ILS. A full extract can be done by selecting <b>Run Full Update</b> within the Indexing Profile." isAdminFacing=true}
 		</p>
 
-        {include file='Admin/exportLogFilters.tpl'}
+		{include file='Admin/exportLogFilters.tpl'}
 		<div class="adminTableRegion fixed-height-table">
 			<table class="adminTable table table-condensed table-hover table-condensed smallText table-sticky">
 				<thead>

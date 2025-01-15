@@ -6,7 +6,7 @@
 		</div>
 	</div>
 
-    {if !empty($innReachResults)}
+	{if !empty($innReachResults)}
 		<div class="row" id="innReachSearchResultsSection">
 			<div class="col-tn-12">
 
@@ -25,7 +25,7 @@
 
 			</div>
 		</div>
-    {/if}
+	{/if}
 
 	<div class="row" id="innReachLinkSection">
 		<div class="col-tn-12">

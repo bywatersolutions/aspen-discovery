@@ -61,7 +61,7 @@
 
 		<div class="row">
 			<div class="col-xs-12">
-                {include file='Websites/result-tools-horizontal.tpl' showMoreInfo=true}
+				{include file='Websites/result-tools-horizontal.tpl' showMoreInfo=true}
 			</div>
 		</div>
 	</div>

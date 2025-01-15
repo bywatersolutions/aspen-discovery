@@ -13,7 +13,7 @@
 				<select class="form-control" name="updateBrowseCategorySelect" id="updateBrowseCategorySelect">
 					<option value="null"></option>
 					{foreach from=$browseCategories item="browseCategory" key="resultIndex"}
-							<option value="{$browseCategory->textId}">{translate text=$browseCategory->label isAdminFacing=true isAdminEnteredData=true} ({$browseCategory->textId})</option>
+						<option value="{$browseCategory->textId}">{translate text=$browseCategory->label isAdminFacing=true isAdminEnteredData=true} ({$browseCategory->textId})</option>
 					{/foreach}
 				</select>
 			</div>

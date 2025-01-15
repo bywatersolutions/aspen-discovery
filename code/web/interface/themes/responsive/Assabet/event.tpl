@@ -10,69 +10,69 @@
 <div class="row">
 	{*Left Panel Content*}
 	<div class="col-tn-12 col-xs-12 col-sm-4 col-md-3 col-lg-3">
-			{if !empty($recordDriver->getEventCoverUrl())}
-				<div class="panel active">
-					<div class="panel-body" style="display:flex; justify-content:center">
-						<a href="{$recordDriver->getLinkUrl()}"><img class="img-responsive img-thumbnail {$coverStyle}" src="{$recordDriver->getEventCoverUrl()}" alt="{$recordDriver->getTitle()|escape}" style="max-height: 280px; width: auto"></a>
-					</div>
+		{if !empty($recordDriver->getEventCoverUrl())}
+			<div class="panel active">
+				<div class="panel-body" style="display:flex; justify-content:center">
+					<a href="{$recordDriver->getLinkUrl()}"><img class="img-responsive img-thumbnail {$coverStyle}" src="{$recordDriver->getEventCoverUrl()}" alt="{$recordDriver->getTitle()|escape}" style="max-height: 280px; width: auto"></a>
 				</div>
-			{/if}
-			{if !empty($recordDriver->getAudiences())}
-				<div class="panel active">
-					<div class="panel-heading">
-						{translate text="Audience" isPublicFacing=true}
-					</div>
-					<div class="panel-body">
-						{foreach from=$recordDriver->getAudiences() item=audience}
-							<div class="col-xs-12">
-								<a href='/Events/Results?filter[]=age_group_facet%3A"{$audience|escape:'url'}"'>{$audience}</a>
-							</div>
-						{/foreach}
-					</div>
+			</div>
+		{/if}
+		{if !empty($recordDriver->getAudiences())}
+			<div class="panel active">
+				<div class="panel-heading">
+					{translate text="Audience" isPublicFacing=true}
 				</div>
-			{/if}
-			{if !empty($recordDriver->getProgramTypes())}
-				<div class="panel active">
-					<div class="panel-heading">
-						{translate text="Program Type" isPublicFacing=true}
-					</div>
-					<div class="panel-body">
-						{foreach from=$recordDriver->getProgramTypes() item=type}
-							<div class="col-xs-12">
-								<a href='/Events/Results?filter[]=program_type_facet%3A"{$type|escape:'url'}"'>{$type}</a>
-							</div>
-						{/foreach}
-					</div>
+				<div class="panel-body">
+					{foreach from=$recordDriver->getAudiences() item=audience}
+						<div class="col-xs-12">
+							<a href='/Events/Results?filter[]=age_group_facet%3A"{$audience|escape:'url'}"'>{$audience}</a>
+						</div>
+					{/foreach}
 				</div>
-			{/if}
-		</div>
+			</div>
+		{/if}
+		{if !empty($recordDriver->getProgramTypes())}
+			<div class="panel active">
+				<div class="panel-heading">
+					{translate text="Program Type" isPublicFacing=true}
+				</div>
+				<div class="panel-body">
+					{foreach from=$recordDriver->getProgramTypes() item=type}
+						<div class="col-xs-12">
+							<a href='/Events/Results?filter[]=program_type_facet%3A"{$type|escape:'url'}"'>{$type}</a>
+						</div>
+					{/foreach}
+				</div>
+			</div>
+		{/if}
+	</div>
 
 	{*Content Right of Panel*}
 	<div class="col-tn-12 col-xs-12 col-sm-8 col-md-9 col-lg-9">
 		{*Row for Information and Registration/Your Events Button*}
 		<div class="row">
 			<div class="col-xs-8">
-			<ul>
-				{if $recordDriver->isAllDayEvent()}
-					<li>{translate text="Date: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%A %B %e, %Y"}</li>
-					<li>{translate text="Time: All Day Event" isPublicFacing=true}</li>
-				{elseif $recordDriver->isMultiDayEvent()}
-					<li>{translate text="Start Date: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%a %b %e, %Y %l:%M%p"}</li>
-					<li>{translate text="End Date: " isPublicFacing=true}{$recordDriver->getEndDate()|date_format:"%a %b %e, %Y %l:%M%p"}</li>
-				{else}
-					<li>{translate text="Date: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%A %B %e, %Y"}</li>
-					<li>{translate text="Time: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%l:%M %p"} to {$recordDriver->getEndDate()|date_format:"%l:%M %p"}</li>
-				{/if}
-				<li>{translate text="Branch: " isPublicFacing=true}{$recordDriver->getBranch()}</li>
-				{if !empty($recordDriver->getRoom())}
-					<li>{translate text="Room: " isPublicFacing=true}{$recordDriver->getRoom()}</li>
-				{/if}
-				{if !empty($recordDriver->getType())}
-					<li>{translate text="Event Type: " isPublicFacing=true}{$recordDriver->getType()}</li>
-				{/if}
-			</ul>
-		</div>
-		<div class="col-tn-4" style="display:flex; justify-content:center;">
+				<ul>
+					{if $recordDriver->isAllDayEvent()}
+						<li>{translate text="Date: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%A %B %e, %Y"}</li>
+						<li>{translate text="Time: All Day Event" isPublicFacing=true}</li>
+					{elseif $recordDriver->isMultiDayEvent()}
+						<li>{translate text="Start Date: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%a %b %e, %Y %l:%M%p"}</li>
+						<li>{translate text="End Date: " isPublicFacing=true}{$recordDriver->getEndDate()|date_format:"%a %b %e, %Y %l:%M%p"}</li>
+					{else}
+						<li>{translate text="Date: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%A %B %e, %Y"}</li>
+						<li>{translate text="Time: " isPublicFacing=true}{$recordDriver->getStartDate()|date_format:"%l:%M %p"} to {$recordDriver->getEndDate()|date_format:"%l:%M %p"}</li>
+					{/if}
+					<li>{translate text="Branch: " isPublicFacing=true}{$recordDriver->getBranch()}</li>
+					{if !empty($recordDriver->getRoom())}
+						<li>{translate text="Room: " isPublicFacing=true}{$recordDriver->getRoom()}</li>
+					{/if}
+					{if !empty($recordDriver->getType())}
+						<li>{translate text="Event Type: " isPublicFacing=true}{$recordDriver->getType()}</li>
+					{/if}
+				</ul>
+			</div>
+			<div class="col-tn-4" style="display:flex; justify-content:center;">
 			{if $recordDriver->inEvents()}
 				{if $recordDriver->isRegistrationRequired()}
 					<div class="btn-group btn-group-vertical btn-block">
@@ -133,23 +133,23 @@
 
 {*Staff View Div*}
 {if !empty($loggedIn) && (in_array('Administer Assabet Settings', $userPermissions))}
-    <div class="row">
-        <div id="more-details-accordion" class="panel-group">
-            <div class="panel" id="staffPanel">
-                <a data-toggle="collapse" href="#staffPanelBody">
-                    <div class="panel-heading">
-                        <div class="panel-title">
-                            <h2>{translate text=Staff isPublicFacing=true}</h2>
-                        </div>
-                    </div>
-                </a>
-                <div id="staffPanelBody" class="panel-collapse collapse">
-                    <div class="panel-body">
-                        <h3>{translate text="Assabet Event API response" isPublicFacing=true}</h3>
-                        <pre>{$recordDriver->getStaffView()|print_r}</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row">
+		<div id="more-details-accordion" class="panel-group">
+			<div class="panel" id="staffPanel">
+				<a data-toggle="collapse" href="#staffPanelBody">
+					<div class="panel-heading">
+						<div class="panel-title">
+							<h2>{translate text=Staff isPublicFacing=true}</h2>
+						</div>
+					</div>
+				</a>
+				<div id="staffPanelBody" class="panel-collapse collapse">
+					<div class="panel-body">
+						<h3>{translate text="Assabet Event API response" isPublicFacing=true}</h3>
+						<pre>{$recordDriver->getStaffView()|print_r}</pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 {/if}

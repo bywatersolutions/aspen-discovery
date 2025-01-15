@@ -55,7 +55,7 @@
 		{if !empty($showWikipedia)}
 			AspenDiscovery.Wikipedia.getWikipediaArticle('{$wikipediaAuthorName}');
 		{/if}
-        AspenDiscovery.Authors.loadEnrichmentInfo('{$firstWorkId}');
+		AspenDiscovery.Authors.loadEnrichmentInfo('{$firstWorkId}');
 
 		{if empty($onInternalIP)}
 			{* Because content is served on the page, have to set the mode that was used, even if the user didn't chose the mode. *}

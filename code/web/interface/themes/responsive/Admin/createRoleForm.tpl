@@ -14,16 +14,16 @@
 			</div>
 		</div>
 	<div class="form-group">
-        <label for="roleCopySelector" class="col-sm-4">{translate text="Copy permissions from" isAdminFacing=true}</label>
-        <div class="col-sm-8">
-	        <select id="roleCopySelector" name="roleCopySelector" class="form-control">
-	            <option value="-1">{translate text="None" isAdminFacing=true}</option>
-	            {foreach from=$permissionRoles item=role}
-	                <option value="{$role.roleId}">{translate text=$role.name isAdminFacing=true}</option>
-	            {/foreach}
-	        </select>
-        </div>
-    </div>
+		<label for="roleCopySelector" class="col-sm-4">{translate text="Copy permissions from" isAdminFacing=true}</label>
+		<div class="col-sm-8">
+			<select id="roleCopySelector" name="roleCopySelector" class="form-control">
+				<option value="-1">{translate text="None" isAdminFacing=true}</option>
+				{foreach from=$permissionRoles item=role}
+					<option value="{$role.roleId}">{translate text=$role.name isAdminFacing=true}</option>
+				{/foreach}
+			</select>
+		</div>
+	</div>
 	</form>
 	<script type="text/javascript">
 		$(function(){ldelim}

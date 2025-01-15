@@ -21,6 +21,6 @@
 			</div>
 		</div>
 	{/foreach}
-    {assign var=addFormGroupToProperty value=true}
+	{assign var=addFormGroupToProperty value=true}
 
 </form>

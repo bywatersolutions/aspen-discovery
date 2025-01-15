@@ -53,11 +53,11 @@
 							</label>
 						</div>
 						<div class="checkbox">
-	                        {foreach from=$libraries item=propertyName key=propertyValue}
+							{foreach from=$libraries item=propertyName key=propertyValue}
 								<label for="libraries_{$propertyValue|escapeCSS}">
 									<input class="libraries" id="libraries_{$propertyValue|escapeCSS}" name='libraries[]' type="checkbox" value='{$propertyValue}'> {translate text=$propertyName isAdminFacing=true}<br>
 								</label>
-	                        {/foreach}
+							{/foreach}
 						</div>
 					</div>
 				</div>
@@ -75,11 +75,11 @@
 							</label>
 						</div>
 						<div class="checkbox">
-	                        {foreach from=$locations item=propertyName key=propertyValue}
+							{foreach from=$locations item=propertyName key=propertyValue}
 								<label for="locations_{$propertyValue|escapeCSS}">
 									<input class="locations" id="locations_{$propertyValue|escapeCSS}" name='locations[]' type="checkbox" value='{$propertyValue}'> {translate text=$propertyName isAdminFacing=true}<br>
 								</label>
-	                        {/foreach}
+							{/foreach}
 						</div>
 					</div>
 				</div>
@@ -96,11 +96,11 @@
 							</label>
 						</div>
 						<div class="checkbox">
-                            {foreach from=$instances item=propertyName key=propertyValue}
+							{foreach from=$instances item=propertyName key=propertyValue}
 								<label for="instances_{$propertyValue|escapeCSS}">
 									<input class="instances" id="instances_{$propertyValue|escapeCSS}" name='instances[]' type="checkbox" value='{$propertyValue}'> {translate text=$propertyName isAdminFacing=true}<br>
 								</label>
-                            {/foreach}
+							{/foreach}
 						</div>
 					</div>
 				</div>

@@ -56,7 +56,7 @@
 				{if count($collectionSpotlight->lists) > 1}
 					{assign var="showViewMoreListTitle" value=$list->name}
 				{/if}
-				
+
 				{if count($collectionSpotlight->lists) == 1}
 					{assign var="scrollerTitle" value=$collectionSpotlight->name}
 					{assign var="showCollectionSpotlightTitle" value=$collectionSpotlight->showSpotlightTitle}
@@ -104,7 +104,7 @@
 		<script type="text/javascript">
 			{* Load title scrollers *}
 
-            {foreach from=$collectionSpotlight->lists item=list}
+			{foreach from=$collectionSpotlight->lists item=list}
 				{if $list->displayFor == 'all' || ($list->displayFor == 'loggedIn' && $loggedIn) || ($list->displayFor == 'notLoggedIn' && !$loggedIn)}
 					var listScroller{$list->id};
 				{/if}

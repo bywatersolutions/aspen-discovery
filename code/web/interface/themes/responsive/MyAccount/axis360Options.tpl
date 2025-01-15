@@ -26,25 +26,25 @@
 					</div>
 					<div class="form-group propertyRow">
 						<label for="promptForAxis360Email" class="control-label">{translate text='Prompt for Boundless email' isPublicFacing=true}</label>&nbsp;
-                        {if $edit == true}
+						{if $edit == true}
 							<input type="checkbox" name="promptForAxis360Email" id="promptForAxis360Email" {if $profile->promptForAxis360Email==1}checked='checked'{/if} data-switch="">
-                        {else}
-                            {if $profile->promptForAxis360Email==0}{translate text="No" isPublicFacing=true}{else}{translate text="Yes" isPublicFacing=true}{/if}
-                        {/if}
-                    </div>
+						{else}
+							{if $profile->promptForAxis360Email==0}{translate text="No" isPublicFacing=true}{else}{translate text="Yes" isPublicFacing=true}{/if}
+						{/if}
+					</div>
 					{if empty($offline) && $edit == true}
-                        <div class="form-group propertyRow">
-                            <button type="submit" name="updateAxis360" class="btn btn-sm btn-primary">{translate text="Update Options" isPublicFacing=true}</button>
-                        </div>
-                    {/if}
-                    </form>
+						<div class="form-group propertyRow">
+							<button type="submit" name="updateAxis360" class="btn btn-sm btn-primary">{translate text="Update Options" isPublicFacing=true}</button>
+						</div>
+					{/if}
+					</form>
 
-	                <script type="text/javascript">
-	                    {* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
-	                    {literal}
-	                    $(function(){ $('input[type="checkbox"][data-switch]').bootstrapSwitch()});
-	                    {/literal}
-	                </script>
+					<script type="text/javascript">
+						{* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
+						{literal}
+						$(function(){ $('input[type="checkbox"][data-switch]').bootstrapSwitch()});
+						{/literal}
+					</script>
 
 					</div>
 			{/if}

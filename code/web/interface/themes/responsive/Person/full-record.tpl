@@ -81,7 +81,7 @@
 				{if !empty($userIsAdmin)}
 					<div class="btn-toolbar">
 						<a href='/Admin/Marriages?objectAction=edit&amp;id={$marriage.marriageId}' title='Edit this Marriage' class='btn btn-xs btn-default'>
-		                    {translate text="Edit" isAdminFacing=true}
+							{translate text="Edit" isAdminFacing=true}
 						</a>
 						<a href='/Admin/Marriages?objectAction=delete&amp;id={$marriage.marriageId}' title='Delete this Marriage' onclick='return confirm("{translate text="Removing this marriage will permanently remove it from the system.	Are you sure?" isAdminFacing=true}")' class='btn btn-xs btn-danger'>
 							{translate text="Delete" isAdminFacing=true}

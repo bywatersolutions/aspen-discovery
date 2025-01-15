@@ -11,15 +11,15 @@
 	{/if}
 	{if $ssoIsEnabled}
 		{if (!(empty($ssoService)) && $ssoService !== 'ldap')&& !$ssoStaffOnly && !$isPrimaryAccountAuthenticationSSO && $canLoginSSO}
-            {include file='MyAccount/sso-login.tpl'}
-            {if $ssoLoginOptions == 0}
-	            <div class="hr-label">
-	                <span class="text">{translate text="or" isPublicFacing=true}</span>
-	            </div>
-            {/if}
-        {/if}
-    {/if}
-    {if $ssoLoginOptions == 0 || ($ssoIsEnabled && $ssoService == 'ldap')}
+			{include file='MyAccount/sso-login.tpl'}
+			{if $ssoLoginOptions == 0}
+				<div class="hr-label">
+					<span class="text">{translate text="or" isPublicFacing=true}</span>
+				</div>
+			{/if}
+		{/if}
+	{/if}
+	{if $ssoLoginOptions == 0 || ($ssoIsEnabled && $ssoService == 'ldap')}
 	<form method="post" action="/MyAccount/Home" id="loginForm" class="form-horizontal" role="form" onsubmit="return AspenDiscovery.Account.processAjaxLogin()">
 		<div id="missingLoginPrompt" style="display: none">{translate text="Please enter both %1% and %2%." 1=$usernameLabel 2=$passwordLabel isPublicFacing=true translateParameters=true}</div>
 		<div id="loginUsernameRow" class="form-group">
@@ -44,11 +44,11 @@
 						{/if}
 					</p>
 				{/if}
-                {if $enableForgotBarcode}
-                     <p class="text-muted help-block">
-                        <strong>{translate text="Forgot %1%?" 1=$usernameLabel isPublicFacing=true}</strong>&nbsp;&nbsp;<a href="/MyAccount/ForgotBarcode">{translate text="Send My %1% by Text" 1=$usernameLabel isPublicFacing=true}</a>
-                     </p>
-                {/if}
+				{if $enableForgotBarcode}
+					 <p class="text-muted help-block">
+						<strong>{translate text="Forgot %1%?" 1=$usernameLabel isPublicFacing=true}</strong>&nbsp;&nbsp;<a href="/MyAccount/ForgotBarcode">{translate text="Send My %1% by Text" 1=$usernameLabel isPublicFacing=true}</a>
+					 </p>
+				{/if}
 				{if $enableSelfRegistration == 1}
 					<p class="help-block">
 						{translate text="Don't have a library card?" isPublicFacing=true} {if !empty($tos) && $tos}<a href="/MyAccount/SelfRegTerms">{else}<a href="/MyAccount/SelfReg">{/if}{translate text="Register for a new Library Card" isPublicFacing=true}</a>.

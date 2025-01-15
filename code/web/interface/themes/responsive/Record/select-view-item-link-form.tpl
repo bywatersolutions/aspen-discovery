@@ -4,12 +4,12 @@
 		<div class="form-group">
 			<div class="form-group">
 				<label for="selectedItem">
-                    {translate text="Select a link to view" isPublicFacing=true}
+					{translate text="Select a link to view" isPublicFacing=true}
 				</label>
 				<select name="selectedItem" id="selectedItem" class="form-control">
-                    {foreach from=$items item=item}
+					{foreach from=$items item=item}
 						<option value="{$item->itemId}">{$item->shelfLocation}</option>
-                    {/foreach}
+					{/foreach}
 				</select>
 			</div>
 		</div>

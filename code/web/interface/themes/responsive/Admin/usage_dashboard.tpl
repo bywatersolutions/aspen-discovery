@@ -602,7 +602,7 @@
 		{if $webResourceUsage|@count > 0}
 		<h2>{translate text="Web Resources" isAdminFacing=true}</h2>
 			<div class="row">
-		        {foreach from=$webResourceUsage item=resource name="webResourceLoop"}
+			    {foreach from=$webResourceUsage item=resource name="webResourceLoop"}
 			        <div class="dashboardCategory col-sm-6">
 			            <h3 class="dashboardCategoryLabel">{$resource.name}</h3>
 				        <div class="table-responsive">

@@ -4,10 +4,10 @@
 	</div>
 {/if}
 {if !empty($accountMessages)}
-    {include file='systemMessages.tpl' messages=$accountMessages}
+	{include file='systemMessages.tpl' messages=$accountMessages}
 {/if}
 {if !empty($ilsMessages)}
-    {include file='ilsMessages.tpl' messages=$ilsMessages}
+	{include file='ilsMessages.tpl' messages=$ilsMessages}
 {/if}
 
 <h1>{translate text='Donation Payment Cancelled' isPublicFacing=true}</h1>

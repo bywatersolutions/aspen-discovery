@@ -6,7 +6,7 @@
 		</div>
 	</div>
 
-    {if !empty($shareItResults)}
+	{if !empty($shareItResults)}
 		<div class="row" id="shareItSearchResultsSection">
 			<div class="col-tn-12">
 
@@ -25,7 +25,7 @@
 
 			</div>
 		</div>
-    {/if}
+	{/if}
 
 	<div class="row" id="shareItLinkSection">
 		<div class="col-tn-12">

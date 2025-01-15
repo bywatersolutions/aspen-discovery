@@ -18,8 +18,8 @@
 					<div class="input-group input-group-lg">
 						<input type="text" class="form-control" id="username">
 						<span class="input-group-btn">
-				        <button class="btn btn-default" type="button" onclick="return AspenDiscovery.Admin.createRecovery2FACode()">{translate text="Generate Code" isAdminFacing=true}</button>
-				      </span>
+						<button class="btn btn-default" type="button" onclick="return AspenDiscovery.Admin.createRecovery2FACode()">{translate text="Generate Code" isAdminFacing=true}</button>
+					  </span>
 					</div>
 				</div>
 			</div>

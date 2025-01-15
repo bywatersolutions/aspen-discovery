@@ -95,7 +95,7 @@
 											</a>
 										</li>
 									{/if}
-                                    {if $user->getInterlibraryLoanType() == 'vdx'}
+									{if $user->getInterlibraryLoanType() == 'vdx'}
 										<li class="myAccountLink">
 											&nbsp;&nbsp;&raquo;&nbsp;
 											<a href="/MyAccount/Holds?tab=interlibrary_loan" id="holdsInterlibraryLoan" title="View Interlibrary Loan Requests">
@@ -115,7 +115,7 @@
 										<li class="myAccountLink">
 											&nbsp;&nbsp;&raquo;&nbsp;
 											<a href="/MyAccount/Holds?tab=palace_project" id="holdsPalaceProject" title="View holds from Palace Project">
-                                                {translate text="Palace Project" isPublicFacing=true} {if empty($offline)}<span class="badge"><span class="palace_project-holds-placeholder">??</span></span> <span class="palace_project-available-holds" style="display: none"> <span class="label label-success"><span class="palace_project-available-holds-placeholder"></span> {translate text="Available Now" isPublicFacing=true}</span></span>{/if}
+												{translate text="Palace Project" isPublicFacing=true} {if empty($offline)}<span class="badge"><span class="palace_project-holds-placeholder">??</span></span> <span class="palace_project-available-holds" style="display: none"> <span class="label label-success"><span class="palace_project-available-holds-placeholder"></span> {translate text="Available Now" isPublicFacing=true}</span></span>{/if}
 											</a>
 										</li>
 									{/if}
@@ -157,7 +157,7 @@
 										<div class="myAccountLink" title="Notification History">
 											<a href="/MyAccount/NotificationHistory">{translate text='Notification History' isPublicFacing=true}</a>
 										</div>
-                                    {/if}
+									{/if}
 								{/if}
 							{/if}
 							{if $user->canSuggestMaterials()}

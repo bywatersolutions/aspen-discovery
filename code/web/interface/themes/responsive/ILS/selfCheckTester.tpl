@@ -44,12 +44,12 @@
 
 		<h2>{translate text="Test Check Ins" isAdminFacing=true}</h2>
 		<form name="checkInTester" id="checkInTester" method="post">
-            {if !empty($checkinResult)}
+			{if !empty($checkinResult)}
 				<div class="alert {if $checkinResult.success}alert-success{else}alert-danger{/if}">
 					<div><strong>{$checkinResult.title}</strong></div>
 					<div>{$checkinResult.message}</div>
 				</div>
-            {/if}
+			{/if}
 			<div class="row">
 				<div class="form-group col-tn-12">
 					<label for="patronBarcode" class="control-label">{translate text="Patron Barcode" isAdminFacing=true}</label>&nbsp;<span class="label label-danger" style="margin-right: .5em">{translate text="Required" isAdminFacing=true}</span>

@@ -4,11 +4,11 @@
 		<hr>
 		{if $error}
 			<div class="alert alert-danger">
-                {translate text="There was an error submitting your ticket." isAdminFacing=true}
+				{translate text="There was an error submitting your ticket." isAdminFacing=true}
 			</div>
-			{else}
+		{else}
 			<div class="alert alert-info">
-                {translate text="Your ticket was submitted successfully." isAdminFacing=true}
+				{translate text="Your ticket was submitted successfully." isAdminFacing=true}
 			</div>
 		{/if}
 	</div>

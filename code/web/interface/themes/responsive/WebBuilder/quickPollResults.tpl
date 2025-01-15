@@ -10,12 +10,12 @@
 	{if !empty($submissionError)}
 		{foreach from=$submissionError item=$error}
 			<div class="alert alert-danger">
-                {$error}
+				{$error}
 			</div>
 		{/foreach}
 	{elseif !empty($submissionResultText)}
 		<div class="alert alert-success">
-            {translate text=$submissionResultText isPublicFacing=true}
+			{translate text=$submissionResultText isPublicFacing=true}
 		</div>
 		<div class="row">
 			<div class="col-xs-12">

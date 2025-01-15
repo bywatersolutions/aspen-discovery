@@ -131,23 +131,23 @@
 
 {*Staff View Div*}
 {if !empty($loggedIn) && (in_array('Administer Communico Settings', $userPermissions))}
-    <div class="row">
-        <div id="more-details-accordion" class="panel-group">
-            <div class="panel" id="staffPanel">
-                <a data-toggle="collapse" href="#staffPanelBody">
-                    <div class="panel-heading">
-                        <div class="panel-title">
-                            <h2>{translate text=Staff isPublicFacing=true}</h2>
-                        </div>
-                    </div>
-                </a>
-                <div id="staffPanelBody" class="panel-collapse collapse">
-                    <div class="panel-body">
-                        <h3>{translate text="Communico Event API response" isPublicFacing=true}</h3>
-                        <pre>{$recordDriver->getStaffView()|print_r}</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row">
+		<div id="more-details-accordion" class="panel-group">
+			<div class="panel" id="staffPanel">
+				<a data-toggle="collapse" href="#staffPanelBody">
+					<div class="panel-heading">
+						<div class="panel-title">
+							<h2>{translate text=Staff isPublicFacing=true}</h2>
+						</div>
+					</div>
+				</a>
+				<div id="staffPanelBody" class="panel-collapse collapse">
+					<div class="panel-body">
+						<h3>{translate text="Communico Event API response" isPublicFacing=true}</h3>
+						<pre>{$recordDriver->getStaffView()|print_r}</pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 {/if},

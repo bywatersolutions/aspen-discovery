@@ -29,7 +29,7 @@
 						onfocus="$(this).select()"
 						autocomplete="off"
 						aria-labelledby="lookfor-label"
-					       aria-required="true"
+						aria-required="true"
 						{if !empty($lookfor)}value="{$lookfor|escape:"html"}"{/if}
 					{strip}>
 						{*<span class="input-group-btn">

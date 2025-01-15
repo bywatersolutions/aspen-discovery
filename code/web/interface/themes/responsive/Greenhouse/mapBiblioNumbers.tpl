@@ -30,7 +30,6 @@
 				</div>
 			</div>
 			<small id="mappingFileHelp" class="form-text text-muted">{translate text="A CSV file should be uploaded with the first column the old id and the second column the new id." isAdminFacing=true}</small>
-			</div>
 			<div class="form-group">
 				<button type="submit" name="submit" value="mapBiblios" class="btn btn-primary">{translate text="Map Biblio Numbers" isAdminFacing=true}</button>
 			</div>

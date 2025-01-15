@@ -4,7 +4,7 @@
 			<h1 id="pageTitle">{$pageTitleShort}</h1>
 		</div>
 	</div>
-    {if isset($reloadResults)}
+	{if isset($reloadResults)}
 		<div class="row">
 			<div class="col-xs-12">
 				<h2>{translate text="Reload Results" isAdminFacing=true}</h2>

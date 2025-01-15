@@ -101,8 +101,8 @@
 								{if array_key_exists('Web Indexer', $enabledModules)}
 									<li>{translate text="Library Website" isPublicFacing=true}</li>
 								{/if}
-                    		</ul>
-                    		{translate text="For more information, please see our "}<a  style="cursor:pointer;" onclick="window.location = '/Help/CookieConsentPrivacyPolicy';">{translate text=" Cookie Consent Privacy Policy"}</a>
+							</ul>
+							{translate text="For more information, please see our "}<a  style="cursor:pointer;" onclick="window.location = '/Help/CookieConsentPrivacyPolicy';">{translate text=" Cookie Consent Privacy Policy"}</a>
 					</div>
 				</div>
 				{/if}

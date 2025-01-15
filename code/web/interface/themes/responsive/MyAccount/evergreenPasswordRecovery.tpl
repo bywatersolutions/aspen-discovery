@@ -42,7 +42,7 @@
 	</div>
 {/strip}
 <script type="text/javascript">
-    {literal}
+	{literal}
 	$(function () {
 		$("#passwordRecovery").validate({
 			rules: {
@@ -52,5 +52,5 @@
 			}
 		});
 	});
-    {/literal}
+	{/literal}
 </script>

@@ -191,8 +191,8 @@
 					</div>
 				</div>
 				<script type="text/javascript">
-                    {* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
-                    {literal}
+					{* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
+					{literal}
 					$("#panelToggle_{/literal}{$property.property}{literal}").click(function() {
 						var toggleButton = $(this);
 						$(this).toggleClass('expanded');
@@ -209,16 +209,16 @@
 						}
 						return false;
 					})
-                    {/literal}
+					{/literal}
 				</script>
 			{/if}
-        {elseif $property.type == 'foreignKey' && !empty($property.editLink)}
+		{elseif $property.type == 'foreignKey' && !empty($property.editLink)}
 			<div class="row">
 				<div class="col-sm-12">
 					<a class="btn btn-default btn-sm" href="{$property.editLink|replace:'propertyValue':$propValue}">Edit {$property.label}</a>
 				</div>
 			</div>
-        {elseif $property.type == 'text' || $property.type == 'regularExpression' || $property.type == 'folder'}
+		{elseif $property.type == 'text' || $property.type == 'regularExpression' || $property.type == 'folder'}
 			<input type='text' name='{$propName}' id='{$propName}' value='{$propValue|escape}' {if !empty($property.accessibleLabel)}aria-label="{$property.accessibleLabel}"{/if} {if !empty($property.maxLength)}maxlength='{$property.maxLength}'{/if} {if !empty($property.size)}size='{$property.size}'{/if} class='form-control {if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if}{if !empty($property.validationGroupName)} {$property.validationGroupName}-validation-group{/if}' {if !empty($property.autocomplete)}autocomplete="{$property.autocomplete}"{/if} {if !empty($property.readOnly)}readonly{/if}  {if !empty($property.forcesReindex)}aria-describedby="{$propName}HelpBlock"{/if} >
 			{if !empty($property.forcesReindex)}<span id="{$propName}HelpBlock" class="help-block" style="margin-top:0"><small class="text-warning"><i class="fas fa-exclamation-triangle"></i> {translate text="Updating this setting causes a nightly reindex" isAdminFacing=true}</small></span>{/if}
 			{if !empty($property.affectsLiDA)}<span id="{$propName}HelpBlock" class="help-block" style="margin-top:0"><small class="text-info"><i class="fas fa-info-circle"></i> {translate text="Aspen LiDA also uses this setting" isAdminFacing=true}</small></span>{/if}
@@ -275,12 +275,12 @@
 		{elseif  $property.type == 'zip_prefill'}
 			<input type='text' name='{$propName}' id='{$propName}' value='{if !empty($user)}{if !empty({$user->_zip})}{$user->_zip}{/if}{/if}' {if !empty($property.accessibleLabel)}aria-label="{$property.accessibleLabel}"{/if} {if !empty($property.maxLength)}maxlength='{$property.maxLength}'{/if} {if !empty($property.size)}size='{$property.size}'{/if} class='form-control {if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if}' {if !empty($property.readOnly)}readonly{/if} {if !empty($property.autocomplete)}autocomplete="{$property.autocomplete}"{/if}>
 		{elseif $property.type == 'color'}
-            {assign var=defaultVariableName value="`$propName`Default"}
-            {if is_null($object->$defaultVariableName)}
-                {assign var=useDefault value=true}
-            {else}
-                {assign var=useDefault value=$object->$defaultVariableName}
-            {/if}
+			{assign var=defaultVariableName value="`$propName`Default"}
+			{if is_null($object->$defaultVariableName)}
+				{assign var=useDefault value=true}
+			{else}
+				{assign var=useDefault value=$object->$defaultVariableName}
+			{/if}
 			<div class="row">
 				<div class="col-tn-3">
 					<input type='color' name='{$propName}' id='{$propName}' value='{if $useDefault == '1'}{$property.default|escape}{else}{$propValue|escape}{/if}'  aria-label='{$property.label} color picker' class='form-control{if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if}' size="7" maxlength="7" onchange="$('#{$propName}Hex').val(this.value);$('#{$propName}-default').prop('checked',false);{if !empty($property.checkContrastWith)}AspenDiscovery.Admin.checkContrast('{$propName}', '{$property.checkContrastWith}', false, '{$contrastRatio}');{/if}" {if !empty($property.readOnly)}disabled{/if}>
@@ -300,13 +300,13 @@
 								if($('#{$propName}-default').is(':checked')) {ldelim}
 									$('#{$propName}Hex').prop('value','{$property.default|escape}');
 									$('#{$propName}').prop('value','{$property.default|escape}');
-                                    {rdelim} else {ldelim}
+									{rdelim} else {ldelim}
 									$('#{$propName}Hex').prop('value','{$propValue|escape}');
 									$('#{$propName}').prop('value','{$propValue|escape}')
-                                    {rdelim}
-                                {if !empty($property.checkContrastWith)}AspenDiscovery.Admin.checkContrast('{$propName}', '{$property.checkContrastWith}', false, '{$contrastRatio}');{/if}
-                                {rdelim})
-                            {rdelim});
+									{rdelim}
+								{if !empty($property.checkContrastWith)}AspenDiscovery.Admin.checkContrast('{$propName}', '{$property.checkContrastWith}', false, '{$contrastRatio}');{/if}
+								{rdelim})
+							{rdelim});
 					</script>
 				</div>
 				<div class="col-tn-3">
@@ -375,7 +375,7 @@
 				<script type="text/javascript">
 					$().ready(function () {ldelim}
 						AspenDiscovery.Admin.loadGoogleFontPreview('{$propName}');
-                    {rdelim});
+					{rdelim});
 				</script>
 			</div>
 		{elseif $property.type == 'uploaded_font'}
@@ -497,8 +497,8 @@
 					</label>
 				</div>
 			{/if}
-            {if !empty($property.note)}<span id="{$propName}HelpBlock" class="help-block" style="margin-top:0"><small><i class="fas fa-info-circle"></i> {$property.note}</small></span>{/if}
-            {if !empty($property.affectsLiDA)}<span id="{$propName}HelpBlock" class="help-block" style="margin-top:0"><small class="text-info"><i class="fas fa-info-circle"></i> {translate text="Aspen LiDA also uses this setting" isAdminFacing=true}</small></span>{/if}
+			{if !empty($property.note)}<span id="{$propName}HelpBlock" class="help-block" style="margin-top:0"><small><i class="fas fa-info-circle"></i> {$property.note}</small></span>{/if}
+			{if !empty($property.affectsLiDA)}<span id="{$propName}HelpBlock" class="help-block" style="margin-top:0"><small class="text-info"><i class="fas fa-info-circle"></i> {translate text="Aspen LiDA also uses this setting" isAdminFacing=true}</small></span>{/if}
 			<script type="application/javascript">
 				{literal}
 				$(document).on('change', '#{/literal}{$propName}{literal}:file', function() {

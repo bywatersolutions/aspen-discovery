@@ -3,7 +3,7 @@
 	<div class="row" style="margin-left: .25em; margin-right: .25em">
 			<div class="panel panel-info col-tn-12" style="padding-left: 0; padding-right: 0">
 				<div class="panel-heading">
-                    {translate text="Pay Online" isPublicFacing=true}
+					{translate text="Pay Online" isPublicFacing=true}
 				</div>
 				<div class="panel-body">
 					<div id="stripe-container" class="row">

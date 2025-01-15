@@ -4,32 +4,32 @@
 		{if !empty($showRatings)}
 			{if !empty($ratingData.user)}
 				<div class="your-rating row rater"
-								{* AJAX rater data fields *}
-             data-user_rating="{$ratingData.user}" data-average_rating="{$ratingData.average}" data-id="{$recordDriver->getPermanentId()}"
-             data-show_review="{if !empty($showComments) && !$user->noPromptForUserReviews}1{else}0{/if}"
-								>
+					{* AJAX rater data fields *}
+					data-user_rating="{$ratingData.user}" data-average_rating="{$ratingData.average}" data-id="{$recordDriver->getPermanentId()}"
+					data-show_review="{if !empty($showComments) && !$user->noPromptForUserReviews}1{else}0{/if}"
+				>
 					<div class="rating-label col-xs-12 col-sm-5">{translate text="Your Rating" isPublicFacing=true}</div>
 					<div class="col-xs-12 col-sm-6">
-				<span class="ui-rater-starsOff" style="width:90px">
-					<span class="ui-rater-starsOn userRated" style="width:{math equation="90*rating/5" rating=$ratingData.user}px"></span>
-				</span>
+						<span class="ui-rater-starsOff" style="width:90px">
+							<span class="ui-rater-starsOn userRated" style="width:{math equation="90*rating/5" rating=$ratingData.user}px"></span>
+						</span>
 					</div>
 				</div>
 			{/if}
 
 			<div class="average-rating row{if empty($ratingData.user)} rater{/if}"
-							{if empty($ratingData.user)} {* When user is not logged in or has not rated the work *}
-								{* AJAX rater data fields *}
-								data-average_rating="{$ratingData.average}" data-id="{$recordDriver->getPermanentId()}"
-								data-show_review="{if $showComments  && (empty($user) || !$user->noPromptForUserReviews)}1{else}0{/if}"
-								{*  Show Reviews is enabled and the user hasn't opted out or user hasn't logged in yet. *}
-							{/if}
-							>
+				{if empty($ratingData.user)} {* When user is not logged in or has not rated the work *}
+					{* AJAX rater data fields *}
+					data-average_rating="{$ratingData.average}" data-id="{$recordDriver->getPermanentId()}"
+					data-show_review="{if $showComments  && (empty($user) || !$user->noPromptForUserReviews)}1{else}0{/if}"
+					{*  Show Reviews is enabled and the user hasn't opted out or user hasn't logged in yet. *}
+				{/if}
+			>
 				<div class="rating-label col-xs-12 col-sm-5">{translate text="Average Rating"  isPublicFacing=true}</div>
 				<div class="col-xs-12 col-sm-6">
-			<span class="ui-rater-starsOff" style="width:90px">
-					<span class="ui-rater-starsOn" style="width:{math equation="90*rating/5" rating=$ratingData.average}px"></span>
-				</span>
+					<span class="ui-rater-starsOff" style="width:90px">
+						<span class="ui-rater-starsOn" style="width:{math equation="90*rating/5" rating=$ratingData.average}px"></span>
+					</span>
 				</div>
 			</div>
 

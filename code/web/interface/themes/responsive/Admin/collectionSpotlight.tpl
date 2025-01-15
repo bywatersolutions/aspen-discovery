@@ -77,7 +77,7 @@
 	<h4>{translate text="Integration notes" isAdminFacing=true}</h4>
 	<div class="well">
 		<p>
-            {translate text="To have a collection spotlight which adjusts it's height based on the html content within the spotlight use the following source url." isAdminFacing=true}
+			{translate text="To have a collection spotlight which adjusts it's height based on the html content within the spotlight use the following source url." isAdminFacing=true}
 		</p>
 		<blockquote class="alert-info">
 		{$url}/API/SearchAPI?method=getCollectionSpotlight&amp;id={$object->id}<span style="font-weight: bold;">&resizeIframe=on</span>

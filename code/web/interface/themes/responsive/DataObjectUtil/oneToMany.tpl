@@ -110,7 +110,7 @@
 					<td>
 						{if $subObject->canActiveUserEdit()}
 							{if !empty($property.editLink)}
-						    <div class="btn-group btn-group-vertical" style="padding-top: 0">
+							<div class="btn-group btn-group-vertical" style="padding-top: 0">
 								<a href='{$property.editLink}?objectAction=edit&widgetListId={$subObject->id}&widgetId={$widgetid}' class="btn btn-sm btn-default" title="edit">
 									<i class="fas fa-pencil-alt"></i> {translate text="Edit" isAdminFacing=true}
 								</a>
@@ -133,7 +133,7 @@
 								{* On delete action, also remove class 'required' to turn off form validation of the deleted input; so that the form can be submitted by the user  *}
 								<i class="fas fa-trash"></i> {translate text="Delete" isAdminFacing=true}
 							</a>
-                        {/if}
+						{/if}
 						{if !empty($property.editLink) || method_exists($subObject, 'getEditLink')}</div>{/if}
 					</td>
 				</tr>

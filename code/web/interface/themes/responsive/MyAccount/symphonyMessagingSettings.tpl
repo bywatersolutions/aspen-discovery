@@ -47,7 +47,7 @@
 						<td>
 							<input type="hidden" name="phoneNumberDeleted[{$phoneIndex}]" id="phoneNumberDeleted{$phoneIndex}">
 							<input type="hidden" name="phoneNumberKey[{$phoneIndex}]" id="phoneNumberKey{$phoneIndex}" value="{$phone.key}">
-                            {if !empty($canSave)}<input type="text" class="form-control form-control-sm" name="phoneLabel[{$phoneIndex}]" value="{$phone.label}" aria-label="Phone Label {$phoneIndex}"/>{else}{$phone.label}{/if}
+							{if !empty($canSave)}<input type="text" class="form-control form-control-sm" name="phoneLabel[{$phoneIndex}]" value="{$phone.label}" aria-label="Phone Label {$phoneIndex}"/>{else}{$phone.label}{/if}
 						</td>
 						<td>{if !empty($canSave)}<input type="text" class="form-control form-control-sm" name="phoneNumber[{$phoneIndex}]" value="{$phone.number}" aria-label="Phone Number {$phoneIndex}"/>{else}{$phone.number}{/if}</td>
 						<td>
@@ -79,7 +79,7 @@
 				<button type="submit" class="btn btn-sm btn-primary" name="submit">{translate text="Update Settings" isPublicFacing=true}</button>
 			{/if}
 		</form>
-    {/if}
+	{/if}
 </div>
 {literal}
 <script type="application/javascript">

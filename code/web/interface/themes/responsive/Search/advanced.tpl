@@ -169,7 +169,7 @@
 																	<input type="text" size="4" maxlength="4" class="yearbox form-control" name="accelerated_reader_point_valueto" id="accelerated_reader_point_valueto" value="" aria-label="Accelerated Reader Points To">
 																</div>
 															</div>
-                                                        {elseif $facetInfo.facetName == "accelerated_reader_reading_level"}
+														{elseif $facetInfo.facetName == "accelerated_reader_reading_level"}
 															<div class="row">
 																<div class="col-xs-6 col-md-4 col-lg-3">
 																	<label for="accelerated_reader_reading_levelfrom" class="yearboxlabel">{translate text="From" isPublicFacing=true} </label>
@@ -180,7 +180,7 @@
 																	<input type="text" size="4" maxlength="4" class="yearbox form-control" name="accelerated_reader_reading_levelto" id="accelerated_reader_reading_levelto" value="" aria-label="Accelerated Reader Level To">
 																</div>
 															</div>
-                                                        {else}
+														{else}
 															<select name="filter[]" class="form-control" aria-label="{translate text=$facetInfo.facetLabel inAttribute=true isPublicFacing=true}">
 																{foreach from=$facetInfo.values item="value" key="display"}
 																	{if strlen($display) > 0}
@@ -224,11 +224,11 @@
 		,NOT:"{translate text="No Terms (NOT)" inAttribute=true isPublicFacing=true}"
 		{rdelim};
 	var addSearchString = "{translate text="Add Search Field" inAttribute=true isPublicFacing=true}";
-	var searchLabel     = "{translate text="Search for" inAttribute=true isPublicFacing=true}";
+	var searchLabel = "{translate text="Search for" inAttribute=true isPublicFacing=true}";
 	var searchFieldLabel = "{translate text="in" inAttribute=true isPublicFacing=true}";
 	var deleteSearchGroupString = "{translate text="Remove Search Group" inAttribute=true isPublicFacing=true}";
-	var searchMatch     = "{translate text="Match" inAttribute=true isPublicFacing=true}";
-	var searchFormId    = 'advSearchForm';
+	var searchMatch = "{translate text="Match" inAttribute=true isPublicFacing=true}";
+	var searchFormId = 'advSearchForm';
 	{*  Build the form *}
 	$(function(){ldelim}
 		{if !empty($searchDetails)}

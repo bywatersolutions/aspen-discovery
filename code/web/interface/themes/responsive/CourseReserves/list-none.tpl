@@ -31,9 +31,9 @@
 			</div>
 		{/if}
 
-        {include file="Search/searchSuggestions.tpl"}
+		{include file="Search/searchSuggestions.tpl"}
 
-        {include file="Search/spellingSuggestions.tpl"}
+		{include file="Search/spellingSuggestions.tpl"}
 
 		{if !empty($showExploreMoreBar)}
 			<div id="explore-more-bar-placeholder"></div>

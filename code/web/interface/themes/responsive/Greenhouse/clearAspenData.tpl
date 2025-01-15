@@ -4,15 +4,15 @@
 			<h1 id="pageTitle">{$pageTitleShort}</h1>
 		</div>
 	</div>
-    {if isset($submissionResults)}
+	{if isset($submissionResults)}
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="alert {if !empty($submissionResults.success)}alert-success{else}alert-danger{/if}">
-                    {$submissionResults.message}
+					{$submissionResults.message}
 				</div>
 			</div>
 		</div>
-    {else}
+	{else}
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="alert alert-info">{translate text="This tool can be used to clear existing Aspen Data.  Useful for migrations and setting up test servers." isAdminFacing=true}</div>
@@ -78,5 +78,5 @@
 				</div>
 			</div>
 		</form>
-    {/if}
+	{/if}
 {/strip}

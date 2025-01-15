@@ -11,6 +11,6 @@
 			<p class="alert alert-warning">
 				{translate text="If you do not receive an text within a few minutes, please contact your library to have them retrieve your barcode." isPublicFacing=true}
 			</p>
-        {/if}
+		{/if}
 	</div>
 {/strip}

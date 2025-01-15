@@ -18,16 +18,16 @@
 		{/if}
 
 		{if !empty($promptForEmail)}
-            <div class="form-group">
-                <label for="axis360Email" class="control-label">{translate text="Enter an email to be notified when the title is ready for you." isPublicFacing=true}</label>
-                <input type="text" class="email form-control required" name="axis360Email" id="axis360Email" value="{$axis360Email}" size="40" maxlength="250" required/>
-            </div>
-            <div class="checkbox">
-                <label for="promptForAxis360Email" class="control-label"><input type="checkbox" name="promptForAxis360Email" id="promptForAxis360Email"/> {translate text="Remember these settings" isPublicFacing=true}</label>
-            </div>
-        {else}
-            <input type="hidden" name="axis360Email" value="{$axis360Email}"/>
-        {/if}
+			<div class="form-group">
+				<label for="axis360Email" class="control-label">{translate text="Enter an email to be notified when the title is ready for you." isPublicFacing=true}</label>
+				<input type="text" class="email form-control required" name="axis360Email" id="axis360Email" value="{$axis360Email}" size="40" maxlength="250" required/>
+			</div>
+			<div class="checkbox">
+				<label for="promptForAxis360Email" class="control-label"><input type="checkbox" name="promptForAxis360Email" id="promptForAxis360Email"/> {translate text="Remember these settings" isPublicFacing=true}</label>
+			</div>
+		{else}
+			<input type="hidden" name="axis360Email" value="{$axis360Email}"/>
+		{/if}
 	</div>
 </form>
 <script type="text/javascript">

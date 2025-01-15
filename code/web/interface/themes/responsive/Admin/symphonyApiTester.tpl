@@ -33,10 +33,10 @@
 				</div>
 			</div>
 		</form>
-        {if !empty($getRequestResults)}
+		{if !empty($getRequestResults)}
 			<pre>
 				{$getRequestResults|print_r}
 			</pre>
-        {/if}
+		{/if}
 	</div>
 {/strip}

@@ -13,22 +13,22 @@
 				{translate text=Sunday isPublicFacing=true}
 			</div>
 			<div class="calendar-header-cell">
-	            {translate text=Monday isPublicFacing=true}
+				{translate text=Monday isPublicFacing=true}
 			</div>
 			<div class="calendar-header-cell">
-	            {translate text=Tuesday isPublicFacing=true}
+				{translate text=Tuesday isPublicFacing=true}
 			</div>
 			<div class="calendar-header-cell">
-	            {translate text=Wednesday isPublicFacing=true}
+				{translate text=Wednesday isPublicFacing=true}
 			</div>
 			<div class="calendar-header-cell">
-	            {translate text=Thursday isPublicFacing=true}
+				{translate text=Thursday isPublicFacing=true}
 			</div>
 			<div class="calendar-header-cell">
-	            {translate text=Friday isPublicFacing=true}
+				{translate text=Friday isPublicFacing=true}
 			</div>
 			<div class="calendar-header-cell">
-	            {translate text=Saturday isPublicFacing=true}
+				{translate text=Saturday isPublicFacing=true}
 			</div>
 		</div>
 		{foreach from=$weeks item=week}

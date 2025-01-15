@@ -77,7 +77,7 @@
 							{translate text=$siteStatus.implementationStatus isAdminFacing=true}
 						</td>
 						<td>
-                            {translate text=$siteStatus.timezone isAdminFacing=true}
+							{translate text=$siteStatus.timezone isAdminFacing=true}
 						</td>
 						<td>
 							{$siteStatus.version}

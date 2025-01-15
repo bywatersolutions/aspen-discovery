@@ -9,10 +9,7 @@
 				<div class='controls'>
 					<select name="patronId" id="patronId" class="form-control">
 						{foreach from=$users item=tmpUser}
-							<option
-									value="{$tmpUser->id}"
-									data-valid-card="{in_array($tmpUser, $validCards)}"
-							>
+							<option value="{$tmpUser->id}" data-valid-card="{in_array($tmpUser, $validCards)}">
 								{$tmpUser->displayName|escape} - {$tmpUser->getHomeLibrarySystemName()|escape}
 							</option>
 						{/foreach}

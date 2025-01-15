@@ -11,7 +11,7 @@
 						<th>{translate text="Description" isAdminFacing=true}</th>
 						<th>{translate text="Already Run?" isAdminFacing=true}</th>
 						{if !empty($showStatus)}
-						<th>{translate text="Status" isAdminFacing=true}</th>
+							<th>{translate text="Status" isAdminFacing=true}</th>
 						{/if}
 					</tr>
 				</thead>
@@ -29,7 +29,7 @@
 						<td>{$update.description}</td>
 						<td>{if !empty($update.alreadyRun)}{translate text="Yes" isAdminFacing=true}{else}{translate text="No" isAdminFacing=true}{/if}</td>
 						{if !empty($showStatus)}
-						<td>{if !empty($update.status)}{$update.status}{/if}</td>
+							<td>{if !empty($update.status)}{$update.status}{/if}</td>
 						{/if}
 					</tr>
 					{/foreach}
@@ -54,8 +54,7 @@
 				<div class="form-group checkbox checkbox-inline">
 					&nbsp; &nbsp;
 					<label for="hideUpdatesThatWereRun">
-						<input type="checkbox" name="hideUpdatesThatWereRun" id="hideUpdatesThatWereRun" checked="checked"
-						       onclick="$('.updateRun').toggle();"> {translate text="Hide updates that have been run" isAdminFacing=true}
+						<input type="checkbox" name="hideUpdatesThatWereRun" id="hideUpdatesThatWereRun" checked="checked" onclick="$('.updateRun').toggle();"> {translate text="Hide updates that have been run" isAdminFacing=true}
 					</label>
 				</div>
 			</div>

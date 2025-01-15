@@ -5,10 +5,10 @@
 		</div>
 	{/if}
 	{if !empty($accountMessages)}
-	    {include file='systemMessages.tpl' messages=$accountMessages}
+		{include file='systemMessages.tpl' messages=$accountMessages}
 	{/if}
 	{if !empty($ilsMessages)}
-	    {include file='ilsMessages.tpl' messages=$ilsMessages}
+		{include file='ilsMessages.tpl' messages=$ilsMessages}
 	{/if}
 
 	<h1>{translate text='Payment Completed' isPublicFacing=true}</h1>
@@ -34,14 +34,14 @@
 	</div>
 
 	{strip}
-    <script>
-        var pollStatus = setInterval(checkStatus, 2000);
-        function checkStatus() {ldelim}
-            return AspenDiscovery.Account.checkWorldPayStatus({$paymentId},{$currentStatus})
-        {rdelim}
-        checkStatus();
-    </script>
-    {/strip}
+	<script>
+		var pollStatus = setInterval(checkStatus, 2000);
+		function checkStatus() {ldelim}
+			return AspenDiscovery.Account.checkWorldPayStatus({$paymentId},{$currentStatus})
+		{rdelim}
+		checkStatus();
+	</script>
+	{/strip}
 {else}
 	{translate text="You must sign in to view this information." isPublicFacing=true}<a href='/MyAccount/Login' class="btn btn-primary">{translate text="Sign In" isPublicFacing=true}</a>
 {/if}

@@ -59,13 +59,13 @@
 						totalOutstandingAmt += fineAmount * 1;
 						if(lineItems === '') {ldelim}
 							lineItems = lineItems.concat(lineItem);
-                            {rdelim} else {ldelim}
+							{rdelim} else {ldelim}
 							lineItems = lineItems.concat(",", lineItem);
-                            {rdelim}
-                        {rdelim}
+							{rdelim}
+						{rdelim}
 				);
 				document.getElementById("{$userId}FineAmount").value = totalFineAmt;
-                {if !empty($useLineItems)}
+				{if !empty($useLineItems)}
 				document.getElementById("{$userId}LineItems").value = lineItems;
 				{/if}
 
@@ -80,10 +80,10 @@
 				document.getElementById("{$userId}ReturnUrl").value = returnUrl;
 				document.getElementById("PaymentId").value = paymentId;
 
-                {rdelim});
+				{rdelim});
 		</script>
 	{/if}
-    {if $finesToPay == 2}
+	{if $finesToPay == 2}
 	<script>
 		$('#fines{$userId}').submit(function() {ldelim}
 			var totalFineAmt = 0;
@@ -101,16 +101,16 @@
 					totalOutstandingAmt += fineAmountInput.val() * 1;
 						if(lineItems === '') {ldelim}
 							lineItems = lineItems.concat(lineItem);
-	                    {rdelim} else {ldelim}
+						{rdelim} else {ldelim}
 							lineItems = lineItems.concat(",", lineItem);
-	                    {rdelim}
-                    {rdelim}
+						{rdelim}
+					{rdelim}
 			);
 			document.getElementById("{$userId}FineAmount").value = totalFineAmt;
 
-            {if !empty($useLineItems)}
+			{if !empty($useLineItems)}
 			document.getElementById("{$userId}LineItems").value = lineItems;
-            {/if}
+			{/if}
 
 
 			var paymentId = AspenDiscovery.Account.createWorldPayOrder('#fines{$userId}', '#formattedTotal{$userId}', 'fine');
@@ -124,9 +124,9 @@
 			document.getElementById("{$userId}ReturnUrl").value = returnUrl;
 			document.getElementById("PaymentId").value = paymentId;
 
-            {rdelim});
+			{rdelim});
 	</script>
-    {/if}
+	{/if}
 {/strip}
 
 

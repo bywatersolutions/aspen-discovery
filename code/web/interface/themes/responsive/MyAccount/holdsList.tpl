@@ -18,11 +18,11 @@
 		{/if}
 	</p>
 	{if is_array($recordList.$sectionKey) && count($recordList.$sectionKey) > 0}
-        {if $source == 'ils' && $sectionKey == 'available' && $showCurbsidePickups}
+		{if $source == 'ils' && $sectionKey == 'available' && $showCurbsidePickups}
 			<div id="curbsidePickupButton" style="margin-bottom: 1em">
 				<a href="/MyAccount/CurbsidePickups" class="btn btn-primary">{translate text="Schedule a Curbside Pickup" isPublicFacing=true}</a>
 			</div>
-        {/if}
+		{/if}
 
 		<div id="pager" class="navbar form-inline">
 			<label for="{$sectionKey}HoldSort_{$source}" class="control-label">{translate text='Sort by' isPublicFacing=true}&nbsp;</label>

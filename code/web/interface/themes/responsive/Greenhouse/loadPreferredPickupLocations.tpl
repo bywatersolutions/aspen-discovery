@@ -4,15 +4,15 @@
 			<h1 id="pageTitle">{$pageTitleShort}</h1>
 		</div>
 	</div>
-    {if isset($results)}
+	{if isset($results)}
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="alert {if !empty($results.success)}alert-success{else}alert-danger{/if}">
-                    {$results.message}
+					{$results.message}
 				</div>
 			</div>
 		</div>
-    {else}
+	{else}
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="alert alert-info">{translate text="This tool can be used to preload preferred pickup locations during migration.  A CSV File must be provided where the second column is the barcode, the third is the preferred pickup location, and the fourth is the home location." isAdminFacing=true}</div>
@@ -29,21 +29,21 @@
 					<input type="text" class="form-control" id="selected-file-label" readonly>
 				</div>
 			</div>
+
 			<small id="preferredPickupLocationFileHelp" class="form-text text-muted">{translate text="A CSV file should be uploaded where the second column is the barcode, the third is the preferred pickup location, and the fourth is the home location." isAdminFacing=true}</small>
-			</div>
 			<div class="form-group">
 				<button type="submit" name="submit" value="mapBiblios" class="btn btn-primary">{translate text="Load Preferred Pickup Locations" isAdminFacing=true}</button>
 			</div>
 		</form>
-    {/if}
+	{/if}
 	<script type="application/javascript">
-        {literal}
+		{literal}
 		$("#mapBiblioNumbersForm").validate();
 		$(document).on('change', ':file', function() {
 			var input = $(this);
 			var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
 			$("#selected-file-label").val(label);
 		});
-        {/literal}
+		{/literal}
 	</script>
 {/strip}

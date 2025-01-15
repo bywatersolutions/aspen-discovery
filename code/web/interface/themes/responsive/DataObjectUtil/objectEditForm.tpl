@@ -24,9 +24,9 @@
 		{if !empty($id)}
 		<input type='hidden' name='id' value='{$id}' id="id" />
 		{/if}
-	    {if !empty($sourceId)}
+		{if !empty($sourceId)}
 			<input type='hidden' name='sourceId' value='{$sourceId}' id="sourceId" />
-	    {/if}
+		{/if}
 		{if !empty($patronIdCheck)}
 			<input type="hidden" name="patronIdCheck" value={$patronIdCheck|escape}>
 		{else}
@@ -87,13 +87,13 @@
 {if !empty($captcha)}
 	{literal}
 	<script type="text/javascript">
-      var onloadCallback = function() {
-          var captchas = document.getElementsByClassName("g-recaptcha");
-          for(var i = 0; i < captchas.length; i++) {
-              grecaptcha.render(captchas[i], {'sitekey' : '{/literal}{$captchaKey}{literal}'});
-          }
-      };
-    </script>
+		var onloadCallback = function() {
+			var captchas = document.getElementsByClassName("g-recaptcha");
+			for(var i = 0; i < captchas.length; i++) {
+				grecaptcha.render(captchas[i], {'sitekey' : '{/literal}{$captchaKey}{literal}'});
+			}
+		};
+	</script>
 	{/literal}
 {/if}
 	{if !empty($tos)}

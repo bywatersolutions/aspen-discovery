@@ -8,60 +8,60 @@
 	<form class="form well" id="aspenLiDABuildTracker" style="padding-bottom:1em">
 		<div class="row align-middle">
 			<div class="col-xs-12 col-md-2">
-		        <div class="btn-group form-check form-switch" id="showUnsupportedOnlySwitch">
-		              <input class="form-check-input" type="checkbox" id="showUnsupportedOnly" name="showUnsupportedOnly" {if $showUnsupportedOnly}checked{/if} style="position: relative; top: -3px">
-		              <label class="form-check-label" style="line-height: 18px" for="showUnsupportedOnly">{translate text='Show Unsupported Only' isPublicFacing=true}</label>
-		        </div>
-                <div class="btn-group form-check form-switch" id="showSubmittedOnlySwitch">
-                      <input class="form-check-input" type="checkbox" id="showSubmittedOnly" name="showSubmittedOnly" {if $showSubmittedOnly}checked{/if} style="position: relative; top: -3px">
-                      <label class="form-check-label" style="line-height: 18px" for="showSubmittedOnly">{translate text='Show Submitted Only' isPublicFacing=true}</label>
-                </div>
-		    </div>
-			<div class="col-xs-12 col-md-2">
-                <div class="form-group">
-					<label for="appToShow">{translate text='Application to Show' isAdminFacing=true}</label>
-					<select name="appToShow" id="appToShowSelect" class="form-control input-sm">
-                      {foreach from=$appToShowOptions item=propertyName key=propertyValue}
-                        <option value='{$propertyValue}' {if !empty($appToShow) && ($appToShow == $propertyValue)} selected='selected'{/if}>{translate text=$propertyName inAttribute=true isAdminFacing=true}</option>
-                      {/foreach}
-                    </select>
-                </div>
+				<div class="btn-group form-check form-switch" id="showUnsupportedOnlySwitch">
+					  <input class="form-check-input" type="checkbox" id="showUnsupportedOnly" name="showUnsupportedOnly" {if $showUnsupportedOnly}checked{/if} style="position: relative; top: -3px">
+					  <label class="form-check-label" style="line-height: 18px" for="showUnsupportedOnly">{translate text='Show Unsupported Only' isPublicFacing=true}</label>
+				</div>
+				<div class="btn-group form-check form-switch" id="showSubmittedOnlySwitch">
+					  <input class="form-check-input" type="checkbox" id="showSubmittedOnly" name="showSubmittedOnly" {if $showSubmittedOnly}checked{/if} style="position: relative; top: -3px">
+					  <label class="form-check-label" style="line-height: 18px" for="showSubmittedOnly">{translate text='Show Submitted Only' isPublicFacing=true}</label>
+				</div>
 			</div>
 			<div class="col-xs-12 col-md-2">
-                <div class="form-group">
+				<div class="form-group">
+					<label for="appToShow">{translate text='Application to Show' isAdminFacing=true}</label>
+					<select name="appToShow" id="appToShowSelect" class="form-control input-sm">
+					  {foreach from=$appToShowOptions item=propertyName key=propertyValue}
+						<option value='{$propertyValue}' {if !empty($appToShow) && ($appToShow == $propertyValue)} selected='selected'{/if}>{translate text=$propertyName inAttribute=true isAdminFacing=true}</option>
+					  {/foreach}
+					</select>
+				</div>
+			</div>
+			<div class="col-xs-12 col-md-2">
+				<div class="form-group">
 					<label for="channelToShow">{translate text='Channel to Show' isAdminFacing=true}</label>
 					<select name="channelToShow" id="channelToShowSelect" class="form-control input-sm">
-                      {foreach from=$channelToShowOptions item=propertyName key=propertyValue}
-                        <option value='{$propertyValue}' {if !empty($channelToShow) && ($channelToShow == $propertyValue)} selected='selected'{/if}>{translate text=$propertyName inAttribute=true isAdminFacing=true}</option>
-                      {/foreach}
-                    </select>
-                </div>
-            </div>
+					  {foreach from=$channelToShowOptions item=propertyName key=propertyValue}
+						<option value='{$propertyValue}' {if !empty($channelToShow) && ($channelToShow == $propertyValue)} selected='selected'{/if}>{translate text=$propertyName inAttribute=true isAdminFacing=true}</option>
+					  {/foreach}
+					</select>
+				</div>
+			</div>
 			<div class="col-xs-12 col-md-2">
-                <div class="form-group">
+				<div class="form-group">
 					<label for="platformToShow">{translate text='Platform to Show' isAdminFacing=true}</label>
 					<select name="platformToShow" id="platformToShowSelect" class="form-control input-sm">
-                      {foreach from=$platformToShowOptions item=propertyName key=propertyValue}
-                        <option value='{$propertyValue}' {if !empty($platformToShow) && ($platformToShow == $propertyValue)} selected='selected'{/if}>{translate text=$propertyName inAttribute=true isAdminFacing=true}</option>
-                      {/foreach}
-                    </select>
-                </div>
-            </div>
-            <div class="col-xs-12 col-md-2">
-                <div class="form-group">
-                    <label for="versionToShow">{translate text='Version to Show' isAdminFacing=true}</label>
-                    <input class="form-control input-sm" type='text' name='versionToShow' id='versionToShow' value="{$versionToShow}"/>
-                </div>
-            </div>
+					  {foreach from=$platformToShowOptions item=propertyName key=propertyValue}
+						<option value='{$propertyValue}' {if !empty($platformToShow) && ($platformToShow == $propertyValue)} selected='selected'{/if}>{translate text=$propertyName inAttribute=true isAdminFacing=true}</option>
+					  {/foreach}
+					</select>
+				</div>
+			</div>
+			<div class="col-xs-12 col-md-2">
+				<div class="form-group">
+					<label for="versionToShow">{translate text='Version to Show' isAdminFacing=true}</label>
+					<input class="form-control input-sm" type='text' name='versionToShow' id='versionToShow' value="{$versionToShow}"/>
+				</div>
+			</div>
 			<div class="col-xs-12 col-md-2">
 				<div class="btn-group btn-group-sm btn-group-justified" role="group">
 				<div class="btn-group" role="group">
 					<button class="btn btn-primary" type="submit">{translate text="Apply" isAdminFacing=true}</button>
-                </div>
-                <div class="btn-group" role="group">
-                    <a class="btn btn-default" href="{$url}/Greenhouse/AspenLiDABuildTracker">{translate text="Reset" isAdminFacing=true}</a>
-                </div>
-                </div>
+				</div>
+				<div class="btn-group" role="group">
+					<a class="btn btn-default" href="{$url}/Greenhouse/AspenLiDABuildTracker">{translate text="Reset" isAdminFacing=true}</a>
+				</div>
+				</div>
 			</div>
 		</div>
 		<script type="text/javascript">
@@ -111,10 +111,10 @@
 							{/if}
 						</td>
 						<td style="vertical-align: middle">
-                            {if $build.isEASUpdate}
-                                <i class="fas fa-check-square"></i> {translate text="Yes" isAdminFacing=true}
-                            {/if}
-                        </td>
+							{if $build.isEASUpdate}
+								<i class="fas fa-check-square"></i> {translate text="Yes" isAdminFacing=true}
+							{/if}
+						</td>
 						<td style="vertical-align: middle">
 							{if $build.isSupported}
 								<i class="fas fa-check-square"></i> {translate text="Yes" isAdminFacing=true}
@@ -132,11 +132,11 @@
 						<td style="vertical-align: middle">
 							{if $build.storeUrl}
 								{if $build.platform == 'android'}
-		                            <a class="btn btn-default btn-sm" href="{$build.storeUrl}"><i class="fab fa-android"></i> {translate text="Play Store" isAdminFacing=true}</a>
-		                        {else}
-		                            <a class="btn btn-default btn-sm" href="{$build.storeUrl}"><i class="fab fa-apple"></i> {translate text="App Store" isAdminFacing=true}</a>
-		                        {/if}
-	                        {/if}
+									<a class="btn btn-default btn-sm" href="{$build.storeUrl}"><i class="fab fa-android"></i> {translate text="Play Store" isAdminFacing=true}</a>
+								{else}
+									<a class="btn btn-default btn-sm" href="{$build.storeUrl}"><i class="fab fa-apple"></i> {translate text="App Store" isAdminFacing=true}</a>
+								{/if}
+							{/if}
 						</td>
 					</tr>
 				{/foreach}

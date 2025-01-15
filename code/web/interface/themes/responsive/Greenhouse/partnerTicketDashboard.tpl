@@ -254,7 +254,7 @@
 									{$ticket->dateClosed|date_format:"%D"}
 								</div>
 								<div class="col-xs-2">
-				                    {$ticket->queue}
+									{$ticket->queue}
 								</div>
 								<div class="col-xs-6">
 									<a href="/Greenhouse/Tickets?objectAction=edit&id={$ticket->id}">{$ticket->ticketId} {$ticket->title}</a>

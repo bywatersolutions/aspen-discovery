@@ -195,7 +195,7 @@
 		</tr>
 		</thead>
 		<tbody>
-        {foreach from=$recordData item=row}
+		{foreach from=$recordData item=row}
 			<tr>
 				<th>{$row.id}</th>
 				<th>{$row.recordIdentifier}</th>
@@ -213,7 +213,7 @@
 				<th>{if !empty($row.hasParentRecord)}{translate text="Yes" isAdminFacing=true}{else}{translate text="No" isAdminFacing=true}{/if}</th>
 				<th>{if !empty($row.hasChildRecord)}{translate text="Yes" isAdminFacing=true}{else}{translate text="No" isAdminFacing=true}{/if}</th>
 			</tr>
-        {/foreach}
+		{/foreach}
 		</tbody>
 	</table>
 {/if}

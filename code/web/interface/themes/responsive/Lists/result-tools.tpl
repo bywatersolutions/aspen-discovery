@@ -12,6 +12,6 @@
 	{/if}
 
 	<div class="btn-group btn-group-sm">
-        {include file="Lists/share-tools.tpl"}
+		{include file="Lists/share-tools.tpl"}
 	</div>
 </div>

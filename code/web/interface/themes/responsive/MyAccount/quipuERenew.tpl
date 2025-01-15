@@ -1,12 +1,6 @@
 {strip}
 <div class="page">
 	{if !empty($eCardSettings)}
-{*		{if !empty($selfRegistrationFormMessage)}*}
-{*			<div id="selfRegistrationMessage">*}
-{*				{translate text=$selfRegistrationFormMessage isPublicFacing=true isAdminEnteredData=true}*}
-{*			</div>*}
-{*		{/if}*}
-
 		<div id="eRenewParent">
 			{if !empty($patronId)}
 				<input type="hidden" id="patronID" value="{$patronId}">

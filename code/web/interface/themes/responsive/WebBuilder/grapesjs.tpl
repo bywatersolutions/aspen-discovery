@@ -118,7 +118,7 @@
                     },
                     error: function (xhr, status, error) {
                         console.error('Error saving page: ', error);
-                        let errorMessage = 'Failed to save page. Please try again.';
+                        var errorMessage = 'Failed to save page. Please try again.';
                         if (xhr.responseJSON && xhr.responseJSON.message){
                           errorMessage = xhr.responseJSON.message;
                         }

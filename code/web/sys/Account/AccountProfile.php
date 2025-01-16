@@ -47,7 +47,6 @@ class AccountProfile extends DataObject {
 
 	private $_libraries;
 
-	/** @noinspection PhpUnusedParameterInspection */
 	static function getObjectStructure($context = ''): array {
 		$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
 
@@ -79,7 +78,7 @@ class AccountProfile extends DataObject {
 
 		if ($context == 'addNew') {
 			$accountProfile = new AccountProfile();
-			$accountProfile->selectAdd(null);
+			$accountProfile->selectAdd();
 			$accountProfile->selectAdd("MAX(weight) as maxWeight");
 			if ($accountProfile->find(true)) {
 				/** @noinspection PhpUndefinedFieldInspection */
@@ -133,7 +132,7 @@ class AccountProfile extends DataObject {
 				'description' => 'The ils of the account profile',
 				'required' => true,
 				'default' => 'na',
-				'onchange' => 'AspenDiscovery.Admin.setDefaultsByIls();AspenDiscovery.Admin.toggleAccountProfileIlsFields();return false;',
+				'onchange' => 'AspenDiscovery.Admin.setAccountProfileDefaultsByIls();AspenDiscovery.Admin.toggleAccountProfileIlsFields();return false;',
 			],
 			'driver' => [
 				'property' => 'driver',

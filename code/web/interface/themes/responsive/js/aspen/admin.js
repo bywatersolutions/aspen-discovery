@@ -1460,7 +1460,32 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowformatMap").show();
 				$("#propertyRowcheckRecordForLargePrint").hide();
 			}
-			AspenDiscovery.IndexingClass.indexingClassSelect();
+		},
+		setIndexingProfileDefaultsByIndexingClass: function () {
+			var selectedIndexingClass = $("#indexingClassSelect").val();
+			if (selectedIndexingClass === '') {
+				$("#catalogDriver").val('AbstractIlsDriver');
+			}else {
+				if (selectedIndexingClass === 'ArlingtonKoha') {
+					$("#catalogDriver").val('Koha');
+				}else if (selectedIndexingClass === 'CarlX') {
+					$("#catalogDriver").val('CarlX');
+				}else if (selectedIndexingClass === 'Evergreen') {
+					$("#catalogDriver").val('Evergreen');
+				}else if (selectedIndexingClass === 'Evolve') {
+					$("#catalogDriver").val('Evolve');
+				}else if (selectedIndexingClass === 'III') {
+					$("#catalogDriver").val('Sierra');
+				}else if (selectedIndexingClass === 'Koha') {
+					$("#catalogDriver").val('Koha');
+				}else if (selectedIndexingClass === 'NashvilleCarlX') {
+					$("#catalogDriver").val('Nashville');
+				}else if (selectedIndexingClass === 'Polaris') {
+					$("#catalogDriver").val('Polaris');
+				}else if (selectedIndexingClass === 'Symphony') {
+					$("#catalogDriver").val('SirsiDynixROA');
+				}
+			}
 		},
 		updateLayoutSettingsFields: function () {
 			var useHomeLink = $('#useHomeLinkSelect').val();
@@ -1843,7 +1868,22 @@ AspenDiscovery.Admin = (function () {
 			});
 		},
 
-		setDefaultsByIls: function () {
+		toggleIlsSpecificFields: function () {
+			var activeIls = $("#activeIls").val();
+			var propertyRows = $(".propertyRow");
+			propertyRows.each(function () {
+				if ($(this).attr("data-related-ils") !== undefined){
+					var relatedIls = $(this).data("related-ils");
+					if (relatedIls.includes("~" + activeIls + "~")) {
+						$(this).show();
+					}else{
+						$(this).hide();
+					}
+				}
+			});
+		},
+
+		setAccountProfileDefaultsByIls: function () {
 			var selectedIls = $("#ilsSelect").val();
 			if (selectedIls === 'na') {
 				$("#driver").val('');

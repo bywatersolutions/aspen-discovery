@@ -32,8 +32,8 @@ UNLOCK TABLES;
 
 LOCK TABLES `indexing_profiles` WRITE;
 /*!40000 ALTER TABLE `indexing_profiles` DISABLE KEYS */;
-INSERT INTO `indexing_profiles` (id, name, marcPath, marcEncoding, groupingClass, indexingClass, recordDriver, recordUrlComponent, formatSource, recordNumberTag, recordNumberSubfield, itemTag, itemRecordNumber, useItemBasedCallNumbers, callNumber, location, shelvingLocation, collection, volume, barcode, iType, dateCreated, dateCreatedFormat, format, catalogDriver, filenamesToInclude, doAutomaticEcontentSuppression, recordNumberPrefix, lastCheckinFormat, status, lastCheckinDate)
-                         VALUES (1,'ils','/data/aspen-discovery/{sitename}/ils/marc','UTF8','MarcRecordGrouper','Polaris','MarcRecordDriver','Record','bib','001', 'a','952','9',1,'o','b','c','8','h','p','y','e','yyyy-MM-dd','y','Polaris','.*\\.ma?rc',1, '', 'MM/dd/yyyy', 's', 'd');
+INSERT INTO `indexing_profiles` (id, name, marcPath, marcEncoding, indexingClass, recordUrlComponent, formatSource, recordNumberTag, recordNumberSubfield, itemTag, itemRecordNumber, useItemBasedCallNumbers, callNumber, location, shelvingLocation, collection, volume, barcode, iType, dateCreated, dateCreatedFormat, format, catalogDriver, filenamesToInclude, doAutomaticEcontentSuppression, recordNumberPrefix, lastCheckinFormat, status, lastCheckinDate)
+                         VALUES (1,'ils','/data/aspen-discovery/{sitename}/ils/marc','UTF8','Polaris','Record','bib','001', 'a','952','9',1,'o','b','c','8','h','p','y','e','yyyy-MM-dd','y','Polaris','.*\\.ma?rc',1, '', 'MM/dd/yyyy', 's', 'd');
 /*!40000 ALTER TABLE `indexing_profiles` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -5,7 +5,7 @@ require_once ROOT_DIR . '/CatalogConnection.php';
 require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
 class Security extends MyAccount {
-	function launch() {
+	function launch() : void {
 		global $interface;
 
 		$twoFactor = UserAccount::has2FAEnabledForPType();
@@ -13,33 +13,27 @@ class Security extends MyAccount {
 		$user = new User();
 		$user->id = UserAccount::getActiveUserId();
 		if ($user->find(true)) {
-			require_once ROOT_DIR . '/sys/Account/PType.php';
-			$patronType = new PType();
-			$patronType->pType = $user->patronType;
-			if ($patronType->find(true)) {
-				require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
-				$twoFactorAuthSetting = new TwoFactorAuthSetting();
-				$twoFactorAuthSetting->id = $patronType->twoFactorAuthSettingId;
-				if ($twoFactorAuthSetting->find(true)) {
-					$isEnabled = $twoFactorAuthSetting->isEnabled;
-					if ($isEnabled != 'notAvailable') {
-						$interface->assign('twoFactorStatus', $user->twoFactorStatus);
-						$interface->assign('showBackupCodes', false);
-						$interface->assign('enableDeactivation', true);
-						if ($user->twoFactorStatus == '1') {
-							$interface->assign('showBackupCodes', true);
-							require_once ROOT_DIR . '/sys/TwoFactorAuthCode.php';
-							$backupCode = new TwoFactorAuthCode();
-							$backupCodes = $backupCode->getBackups();
-							$numBackupCodes = count($backupCodes);
-							$interface->assign('backupCodes', $backupCodes);
-							$interface->assign('numBackupCodes', $numBackupCodes);
-							if ($isEnabled == 'mandatory') {
-								$interface->assign('enableDeactivation', false);
-							}
-						}
 
+			$twoFactorAuthSetting = $user->getTwoFactorAuthenticationSetting();
+			if ($twoFactorAuthSetting != null) {
+				$isEnabled = $twoFactorAuthSetting->isEnabled;
+				if ($isEnabled != 'notAvailable') {
+					$interface->assign('twoFactorStatus', $user->twoFactorStatus);
+					$interface->assign('showBackupCodes', false);
+					$interface->assign('enableDeactivation', true);
+					if ($user->twoFactorStatus == '1') {
+						$interface->assign('showBackupCodes', true);
+						require_once ROOT_DIR . '/sys/TwoFactorAuthCode.php';
+						$backupCode = new TwoFactorAuthCode();
+						$backupCodes = $backupCode->getBackups();
+						$numBackupCodes = count($backupCodes);
+						$interface->assign('backupCodes', $backupCodes);
+						$interface->assign('numBackupCodes', $numBackupCodes);
+						if ($isEnabled == 'mandatory') {
+							$interface->assign('enableDeactivation', false);
+						}
 					}
+
 				}
 			}
 		}

@@ -146,6 +146,7 @@ public class CarlXExportMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
+				SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
 
 				// Connect to the CARL.X database and get information about API
 				CarlXInstanceInformation carlXInstanceInformation = initializeCarlXConnection();

@@ -972,8 +972,10 @@ class WebBuilder_AJAX extends JSON_Action {
 	}
 	function saveAsTemplate(){
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
+
+		$activeUser = UserAccount::getActiveUserObj();
 		
-		if (!UserAccount::isLoggedIn()) {
+		if (!$activeUser) {
 			return [
 				'success' => false,
 				'title' => translate([
@@ -1071,7 +1073,9 @@ class WebBuilder_AJAX extends JSON_Action {
 	function saveAsPage() {
 		require_once ROOT_DIR .  '/sys/WebBuilder/GrapesPage.php';
 
-		if (!UserAccount::isLoggedIn()) {
+		$activeUser = UserAccount::getActiveUserObj();
+
+		if (!$activeUser) {
 			return [
 				'success' => false,
 				'title' => translate([

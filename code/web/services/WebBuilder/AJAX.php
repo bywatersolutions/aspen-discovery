@@ -984,6 +984,22 @@ class WebBuilder_AJAX extends JSON_Action {
 					'text' => 'You must be logged in to save grapes templates.',
 					'isPublicFacing' => true
 				])
+			];
+		}
+		if (!UserAccount::userHasPermission([
+			'Administer All Grapes Pages',
+			'Administer Library Custom Pages',
+		])) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' =>'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You do not have the correct permissions to save grapes templates.',
+					'isPublicFacing' => true
+				])
 				];
 		}
 		try {
@@ -1066,7 +1082,23 @@ class WebBuilder_AJAX extends JSON_Action {
 					'text' => 'You must be logged in to save grapes pages.',
 					'isPublicFacing' => true
 				])
-				];
+			];
+		}
+		if (!UserAccount::userHasPermission([
+			'Administer All Grapes Pages',
+			'Administer Library Custom Pages',
+		])) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' =>'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You do not have the correct permissions to save grapes templates.',
+					'isPublicFacing' => true
+				])
+			];
 		}
 
 		try {

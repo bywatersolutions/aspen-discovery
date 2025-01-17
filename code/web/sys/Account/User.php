@@ -4478,6 +4478,8 @@ class User extends DataObject {
 			$sections['events']->addAction(new AdminAction('Library Market - Calendar Settings', 'Define collections to be loaded into Aspen Discovery.', '/Events/LMLibraryCalendarSettings'), 'Administer LibraryMarket LibraryCalendar Settings');
 			$sections['events']->addAction(new AdminAction('Springshare - LibCal Settings', 'Define collections to be loaded into Aspen Discovery.', '/Events/SpringshareLibCalSettings'), 'Administer Springshare LibCal Settings');
 			$sections['events']->addAction(new AdminAction('Event Facet Settings', 'Define facets for event searches.', '/Events/EventsFacets'), 'Administer Events Facet Settings');
+			$sections['events']->addAction(new AdminAction('Event Fields', 'Define event fields for native events.', '/Events/EventFields'), 'Administer Field Sets');
+			$sections['events']->addAction(new AdminAction('Event Field Sets', 'Define sets of event fields to use for native events.', '/Events/EventFieldSets'), 'Administer Field Sets');
 			$sections['events']->addAction(new AdminAction('Indexing Log', 'View the indexing log for Events.', '/Events/IndexingLog'), [
 				'View System Reports',
 				'View Indexing Logs',

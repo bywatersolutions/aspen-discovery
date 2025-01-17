@@ -143,7 +143,7 @@ public class EvergreenExportMain {
 				}else{
 					if(logEntry == null)
 					{
-						String fallbackIndexingProfile = "ils";
+						String fallbackIndexingProfile = "evergreen";
 						logEntry = new IlsExtractLogEntry(dbConn, fallbackIndexingProfile, logger);
 					}
 					logEntry.incErrors("Could not load Evergreen account profile");

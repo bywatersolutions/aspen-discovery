@@ -133,8 +133,14 @@ public class EvolveExportMain {
 					staffUsername = accountProfileRS.getString("staffUsername");
 					staffPassword = accountProfileRS.getString("staffPassword");
 				}else{
+					if(logEntry == null)
+					{
+						String fallbackIndexingProfile = "evolve";
+						logEntry = new IlsExtractLogEntry(dbConn, fallbackIndexingProfile, logger);
+					}
 					logEntry.incErrors("Could not load Evolve account profile");
 					accountProfileRS.close();
+					SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
 					continue;
 				}
 				accountProfileRS.close();
@@ -148,6 +154,7 @@ public class EvolveExportMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
+				SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
 
 				indexingProfile = IndexingProfile.loadIndexingProfile(serverName, dbConn, profileToLoad, logger, logEntry);
 				if (indexingProfile == null){

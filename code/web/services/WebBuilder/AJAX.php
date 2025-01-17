@@ -1000,7 +1000,7 @@ class WebBuilder_AJAX extends JSON_Action {
 					'text' => 'You do not have the correct permissions to save grapes templates.',
 					'isPublicFacing' => true
 				])
-				];
+			];
 		}
 		try {
 			$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
@@ -1095,7 +1095,7 @@ class WebBuilder_AJAX extends JSON_Action {
 					'isPublicFacing' => true,
 				]),
 				'message' => translate([
-					'text' => 'You do not have the correct permissions to save grapes templates.',
+					'text' => 'You do not have the correct permissions to save grapes pages.',
 					'isPublicFacing' => true
 				])
 			];

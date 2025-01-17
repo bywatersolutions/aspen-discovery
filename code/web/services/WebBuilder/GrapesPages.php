@@ -83,8 +83,8 @@ class WebBuilder_GrapesPages extends ObjectEditor {
 
 	function canView(): bool {
 		return UserAccount::userHasPermission([
-			'Administer All Basic Pages',
-			'Administer Library Basic Pages',
+			'Administer All Grapes Pages',
+			'Administer Library Grapes Pages',
 		]);
 	}
 

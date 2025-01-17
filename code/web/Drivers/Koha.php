@@ -8585,4 +8585,8 @@ class Koha extends AbstractIlsDriver {
 			]);
 		}
 	}
+
+	public function hasIlsConsentSupport(): bool {
+		return true;
+	}
 }

@@ -297,7 +297,7 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 			updateGroupedWorkSolrDataBasedOnStandardMarcData(groupedWork, record, recordInfo.getRelatedItems(), identifier, primaryFormat, primaryFormatCategory, firstParentId != null);
 
 			//Special processing for ILS Records
-			String fullDescription = Util.getCRSeparatedString(MarcUtil.getFieldList(record, "520a"));
+			String fullDescription = Util.getCRSeparatedString(MarcUtil.getFieldList(record, "520ac"));
 			for (RecordInfo ilsRecord : allRelatedRecords) {
 				String primaryFormatCategoryForRecord = ilsRecord.getPrimaryFormatCategory();
 				if (primaryFormatCategoryForRecord == null){

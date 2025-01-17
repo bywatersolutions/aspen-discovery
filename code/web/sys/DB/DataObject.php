@@ -668,12 +668,12 @@ abstract class DataObject implements JsonSerializable {
 		return $this->__N > 0;
 	}
 
-	public function escape($variable) {
+	public function escape($variable) : string {
 		global $aspen_db;
 		return $aspen_db->quote($variable);
 	}
 
-	public function selectAdd($condition = null) {
+	public function selectAdd($condition = null) : void  {
 		if ($condition == null) {
 			$this->__selectAllColumns = false;
 			$this->__additionalSelects = [];

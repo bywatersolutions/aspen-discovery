@@ -50,7 +50,23 @@ function getUpdates25_02_00(): array {
 				'ALTER TABLE two_factor_auth_settings ADD COLUMN accountProfileId INT',
 				"UPDATE two_factor_auth_settings set accountProfileId = (SELECT MIN(id) from account_profiles where ils <> 'na' and name <> 'admin')"
 			]
-		]
+		], //two_factor_authentication
+		'indexing_profile_remove_unused_properties' => [
+			'title' => 'Indexing Profile remove unused properties',
+			'description' => 'Remove unused properties from indexing profiles',
+			'sql' => [
+				'ALTER TABLE indexing_profiles DROP column groupingClass',
+				'ALTER TABLE indexing_profiles DROP column recordDriver',
+			]
+		], //indexing_profile_remove_unused_properties
+		'sideload_remove_unused_properties' => [
+			'title' => 'SideLoad remove unused properties',
+			'description' => 'Remove unused properties from sideloads',
+			'sql' => [
+				'ALTER TABLE sideloads DROP column groupingClass',
+				'ALTER TABLE sideloads DROP column recordDriver',
+			]
+		], //sideload_remove_unused_properties
 
 		//katherine
 

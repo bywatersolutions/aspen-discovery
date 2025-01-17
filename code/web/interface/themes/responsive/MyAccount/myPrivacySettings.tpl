@@ -119,6 +119,7 @@
 					<input type="hidden" name="patronId" value={$profile->id|escape}>
 					{foreach $consentTypes as $consentType}
 						<section id="{$consentType['lowercaseCode']}ConsentSection">
+						<input type="hidden" name="updateScopeSection" value="{$consentType['lowercaseCode']}">
 							{$consentCode = $consentType['capitalisedCode']}
 							<h2>{translate text={$consentType['label']} isPublicFacing=true}</h2>
 							<div class="form-group #propertyRow" style="margin-bottom:10px;">

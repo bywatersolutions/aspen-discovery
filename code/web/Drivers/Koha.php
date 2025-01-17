@@ -4122,7 +4122,7 @@ class Koha extends AbstractIlsDriver {
 			}
 		}
 
-		if($library->ilsConsentEnabled) {
+		if($library->ilsConsentEnabled && $this->areAnyConsentPluginsEnabled()) {
 			$fields['privacySection'] = $this->getSelfRegistrationFormPrivacySection();
 		}
 
@@ -4507,19 +4507,25 @@ class Koha extends AbstractIlsDriver {
 			
 			$result = $this->postSelfRegistrationToKoha($postVariables);
 
-			if ($result) {
-				$consentTypes = $this->getConsentTypes();
-				if (!empty($consentTypes)) {
-					foreach ($consentTypes as $key => $consentType) {
-						if (strtolower($key) == 'gdpr_processing') {
-							continue;
-						}
-						$this->updatePatronConsent($result['patronId'], strtolower($key), isset($_REQUEST['privacy_consent_' . strtolower($key)]));
+			if (!$library->ilsConsentEnabled) {
+				return $result;
+			}
+
+			if (!$this->areAnyConsentPluginsEnabled()) {
+				return $result;
+			}
+
+			$consentTypes = $this->getConsentTypes();
+			if (!empty($consentTypes)) {
+				foreach ($consentTypes as $key => $consentType) {
+					if (strtolower($key) == 'gdpr_processing') {
+						continue;
 					}
+					$this->updatePatronConsent($result['patronId'], strtolower($key), isset($_REQUEST['privacy_consent_' . strtolower($key)]));
 				}
 			}
-			
 		}
+
 		return $result;
 	}
 
@@ -6786,6 +6792,10 @@ class Koha extends AbstractIlsDriver {
 		/** @noinspection SqlResolve */
 		$sql = "SELECT * FROM plugin_data WHERE plugin_class LIKE '%$pluginName';";
 		$results = mysqli_query($this->dbConnection, $sql);
+		$plugin = [
+			'installed' => 0,
+			'enabled' => 0,
+		];
 
 		if ($results !== false) {
 			while ($curRow = $results->fetch_assoc()) {
@@ -8396,6 +8406,44 @@ class Koha extends AbstractIlsDriver {
 		return $result;
 	}
 
+	public function areAnyConsentPluginsEnabled(): bool {
+		global $library;
+		$anyConsentPluginsEnabled = true;
+		$consentPluginNames = $this->getPluginNamesByMethodName('patron_consent_type');
+		foreach($consentPluginNames as $pluginName) {
+			$pluginStatus = $this->getPluginStatus($pluginName);
+			if ($library->ilsConsentEnabled && !$pluginStatus['enabled']) {
+				global $logger;
+				$statusDescription = $pluginStatus['installed'] ? 'disabled' : 'not installed';
+				$logger->log("Consent options could not be presented or recorded because the $pluginName plugin is $statusDescription", Logger::LOG_ERROR);
+				$anyConsentPluginsEnabled = false;
+				break;
+			} 
+		}
+		return $anyConsentPluginsEnabled;
+	}
+
+	public function getPluginNamesByMethodName(string $methodName): array|bool {
+		$this->initDatabaseConnection();
+		/** @noinspection SqlResolve */
+		$sql = 'SELECT plugin_class FROM plugin_methods WHERE plugin_method = "' . $methodName . '"';
+		$results = mysqli_query($this->dbConnection, $sql);
+		$pluginNames = [];
+
+		if ($results === false) {
+			global $logger;
+			$logger->log("Error loading plugins " . mysqli_error($this->dbConnection), Logger::LOG_ERROR);
+			return false;
+		}
+		while ($curRow = $results->fetch_assoc()) {
+			$pluginNames[] = $curRow['plugin_class'];
+		}
+		$results->close();
+
+		return $pluginNames;
+	}
+
+
 	public function getFormattedConsentTypes(): array {
 		$consentTypes = $this->getConsentTypes();
 		if (empty($consentTypes)) {
@@ -8459,7 +8507,7 @@ class Koha extends AbstractIlsDriver {
 		$oauthToken = $this->getOAuthToken();
 		if (!$oauthToken) {
 			$result['message'] = translate([
-				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'text' => 'Unable to authenticate with the ILS. Please try again later or contact the library.',
 				'isPublicFacing' => true,
 			]);
 			return $result;
@@ -8502,7 +8550,7 @@ class Koha extends AbstractIlsDriver {
 		return $result;
 	}
 
-	public function getPatronConsents($patron) {
+	public function getPatronConsents($patron) {	
 		$oauthToken = $this->getOAuthToken();
 		if (!$oauthToken) {
 			$result['message'] = translate([

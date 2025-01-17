@@ -174,6 +174,7 @@ public class PolarisExportMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
+				SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
 
 				if (loadAccountProfile(dbConn)){
 					indexingProfile = IndexingProfile.loadIndexingProfile(serverName, dbConn, profileToLoad, logger, logEntry);

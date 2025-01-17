@@ -24,6 +24,12 @@ function getUpdates25_02_00(): array {
 		//alexander - PTFS-Europe
 
 		//chloe - PTFS-Europe
+		'save_library_ils_consent_feature_toggle_value' => [
+			'title' => 'Save Library ILS Consent Feature Toggle Value',
+			'description' => 'Allows to record whether a library has enabled the ILS Consent feature or not',
+			'continueOnError' => false,
+			'sql' => ['ALTER TABLE library ADD COLUMN ilsConsentEnabled tinyint(1) DEFAULT 0'],
+		], //'save_library_ils_consent_feature_toggle_value'
 
 		//James Staub - Nashville Public Library
 

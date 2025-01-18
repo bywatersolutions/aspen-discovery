@@ -735,7 +735,16 @@ class UInterface extends Smarty {
 		$this->assign('showNotInterested', true);
 
 		$this->assign('showRatings', $library->getGroupedWorkDisplaySettings()->showRatings);
-		$this->assign('allowPinReset', $library->allowPinReset);
+		if (UserAccount::isLoggedIn()) {
+			if (UserAccount::getActiveUserObj()->hasIlsConnection()) {
+				$this->assign('allowPinReset', $library->allowPinReset);
+			}else{
+				//If we are not connected to an ILS, we will always allow PIN Reset
+				$this->assign('allowPinReset', true);
+			}
+		}else{
+			$this->assign('allowPinReset', $library->allowPinReset);
+		}
 		$this->assign('allowAccountLinking', ($library->allowLinkedAccounts == 1));
 		$this->assign('librarySystemName', $library->displayName);
 		$this->assign('showLibraryHoursAndLocationsLink', $library->getLayoutSettings()->showLibraryHoursAndLocationsLink);

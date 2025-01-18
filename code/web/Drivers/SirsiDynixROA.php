@@ -2356,7 +2356,7 @@ class SirsiDynixROA extends HorizonAPI {
 		return 'emailResetPinResults.tpl';
 	}
 
-	function processEmailResetPinForm() {
+	function processEmailResetPinForm() : array {
 		$barcode = $_REQUEST['barcode'];
 
 		$patron = new User;

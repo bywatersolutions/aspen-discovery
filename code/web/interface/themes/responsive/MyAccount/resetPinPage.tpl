@@ -13,7 +13,7 @@
 				{include file='ilsMessages.tpl' messages=$ilsMessages}
 			{/if}
 
-			<h1>{translate text='Reset PIN/Password' isPublicFacing=true}</h1>
+			<h1>{translate text='Reset %1%' 1=$passwordLabel isPublicFacing=true}</h1>
 			{if !empty($offline)}
 				<div class="alert alert-warning"><strong>{translate text=$offlineMessage isPublicFacing=true}</strong></div>
 			{else}
@@ -29,9 +29,9 @@
 				{/if}
 				<div class="alert alert-info">
 					{if !empty($pinValidationRules.onlyDigitsAllowed)}
-						{translate text="PINs must be between %1% and %2% digits." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength}
+						{translate text="%3% must be between %1% and %2% digits." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength 3=$passwordLabel}
 					{else}
-						{translate text="PINs must be between %1% and %2% characters." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength}
+						{translate text="%3% must be between %1% and %2% characters." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength 3=$passwordLabel}
 					{/if}
 				</div>
 

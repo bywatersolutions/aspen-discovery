@@ -10,9 +10,8 @@ class Security extends MyAccount {
 
 		$twoFactor = UserAccount::has2FAEnabledForPType();
 		$interface->assign('twoFactorEnabled', $twoFactor);
-		$user = new User();
-		$user->id = UserAccount::getActiveUserId();
-		if ($user->find(true)) {
+		if (UserAccount::isLoggedIn()) {
+			$user = UserAccount::getActiveUserObj();
 
 			$twoFactorAuthSetting = $user->getTwoFactorAuthenticationSetting();
 			if ($twoFactorAuthSetting != null) {

@@ -961,7 +961,7 @@ class User extends DataObject {
 	 *
 	 * @return boolean
 	 */
-	function addLinkedUser(User $linkedUser) {
+	function addLinkedUser(User $linkedUser) : bool {
 		/* var Library $library */ global $library;
 		if ($library->allowLinkedAccounts && $linkedUser->id != $this->id) { // library allows linked accounts and the account to link is not itself
 			$linkedUsers = $this->getLinkedUsers();
@@ -1001,7 +1001,7 @@ class User extends DataObject {
 		return false;
 	}
 
-	function removeLinkedUser($userId) {
+	function removeLinkedUser($userId) : bool {
 		/* var Library $library */ global $library;
 		if ($library->allowLinkedAccounts) {
 			require_once ROOT_DIR . '/sys/Account/UserLink.php';
@@ -1197,7 +1197,7 @@ class User extends DataObject {
 				'type' => 'storedPassword',
 				'label' => 'Password',
 				'description' => 'The password for the user.',
-				'hideInLists' => true
+				'hideInLists' => true,
 			],
 			'firstname' => [
 				'property' => 'firstname',
@@ -3124,11 +3124,20 @@ class User extends DataObject {
 				'message' => "Please enter your current pin number",
 			];
 		}
-		if ($this->cat_password != $oldPin) {
-			return [
-				'success' => false,
-				'message' => "The old pin number is incorrect",
-			];
+		if ($this->hasIlsConnection()) {
+			if ($this->cat_password != $oldPin) {
+				return [
+					'success' => false,
+					'message' => "The old pin number is incorrect",
+				];
+			}
+		}else{
+			if ($this->password != $oldPin) {
+				return [
+					'success' => false,
+					'message' => "The old pin number is incorrect",
+				];
+			}
 		}
 		if (!empty($_REQUEST['pin1'])) {
 			$newPin = $_REQUEST['pin1'];
@@ -3152,9 +3161,18 @@ class User extends DataObject {
 				'message' => "New PINs do not match. Please try again.",
 			];
 		}
-		$result = $this->getCatalogDriver()->updatePin($this, $oldPin, $newPin);
+		if ($this->hasIlsConnection()) {
+			$result = $this->getCatalogDriver()->updatePin($this, $oldPin, $newPin);
+		}else{
+			$result = [
+				'success' => true,
+				'message' => 'Your password was updated successfully.'
+			];
+		}
 		if ($result['success']) {
-			$this->__set('cat_password', $newPin);
+			if ($this->hasIlsConnection()) {
+				$this->__set('cat_password', $newPin);
+			}
 			$this->__set('password', $newPin);
 			$this->update();
 			$this->clearCache();
@@ -4860,7 +4878,11 @@ class User extends DataObject {
 		if ($this->hasIlsConnection()) {
 			return $this->getCatalogDriver()->getPasswordPinValidationRules();
 		} else {
-			return [];
+			return [
+				'minLength' => 12,
+				'maxLength' => 50,
+				'onlyDigitsAllowed' => false,
+			];
 		}
 	}
 
@@ -5174,18 +5196,22 @@ class User extends DataObject {
 	private false|null|TwoFactorAuthSetting $_twoFactorAuthenticationSetting = false;
 	public function getTwoFactorAuthenticationSetting() : ?TwoFactorAuthSetting {
 		if ($this->_twoFactorAuthenticationSetting === false) {
-			require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
-			$this->_twoFactorAuthenticationSetting = new TwoFactorAuthSetting();
-			//If the user has a patron type, we will use that to determine the two factor authentication settings.
-			//Otherwise, we can use the account profile.
-			$patronType = $this->getPTypeObj();
-			if (!empty($patronType)) {
-				$this->_twoFactorAuthenticationSetting->id = $patronType->twoFactorAuthSettingId;
-			}else{
-				$this->_twoFactorAuthenticationSetting->accountProfileId = $this->getAccountProfile()->id;
-			}
-			if (!$this->_twoFactorAuthenticationSetting->find(true)) {
+			if ($this->isAspenAdminUser()) {
 				$this->_twoFactorAuthenticationSetting = null;
+			}else{
+				require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
+				$this->_twoFactorAuthenticationSetting = new TwoFactorAuthSetting();
+				//If the user has a patron type, we will use that to determine the two factor authentication settings.
+				//Otherwise, we can use the account profile.
+				$patronType = $this->getPTypeObj();
+				if (!empty($patronType)) {
+					$this->_twoFactorAuthenticationSetting->id = $patronType->twoFactorAuthSettingId;
+				}else{
+					$this->_twoFactorAuthenticationSetting->accountProfileId = $this->getAccountProfile()->id;
+				}
+				if (!$this->_twoFactorAuthenticationSetting->find(true)) {
+					$this->_twoFactorAuthenticationSetting = null;
+				}
 			}
 		}
 		return $this->_twoFactorAuthenticationSetting;

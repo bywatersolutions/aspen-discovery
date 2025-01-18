@@ -2141,9 +2141,10 @@ class Evergreen extends AbstractIlsDriver {
 		return $this->apiCurlWrapper->curlPostPage($evergreenUrl, $request);
 	}
 
-	function processEmailResetPinForm() {
+	function processEmailResetPinForm() : array {
 		$result = [
 			'success' => false,
+			'patronFound' => false,
 			'error' => translate([
 				'text' => "Unknown error sending password reset.",
 				'isPublicFacing' => true,
@@ -2185,6 +2186,7 @@ class Evergreen extends AbstractIlsDriver {
 				// that somebody is trying to abuse the reset API
 			} elseif ($apiResponse->payload[0] == 1) {
 				$result['error'] = null;
+				'patronFound' => true,
 				$result['success'] = true;
 			}
 		}

@@ -673,9 +673,6 @@ class CarlX extends AbstractIlsDriver {
 			if (!empty($result->OverdueItems->OverdueItem)) {
 				$itemsToLoad = array_merge($itemsToLoad, $result->OverdueItems->OverdueItem);
 			}
-			if (!empty($result->LostItems->LostItem)) {
-				$itemsToLoad = array_merge($itemsToLoad, $result->LostItems->LostItem);
-			}
 
 			foreach ($itemsToLoad as $chargeItem) {
 				$curTitle = new Checkout();
@@ -2326,9 +2323,7 @@ class CarlX extends AbstractIlsDriver {
 		if (!empty($patronSummaryResponse) && is_object($patronSummaryResponse)) {
 			$summary->numCheckedOut += $patronSummaryResponse->ChargedItemsCount;
 			$summary->numCheckedOut += $patronSummaryResponse->OverdueItemsCount;
-			$summary->numCheckedOut += $patronSummaryResponse->LostItemsCount;
 			$summary->numOverdue = $patronSummaryResponse->OverdueItemsCount;
-			$summary->numOverdue += $patronSummaryResponse->LostItemsCount;
 			$summary->numAvailableHolds = $patronSummaryResponse->HoldItemsCount;
 			$summary->numUnavailableHolds = $patronSummaryResponse->UnavailableHoldsCount;
 

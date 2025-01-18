@@ -817,6 +817,7 @@ class Evergreen extends AbstractIlsDriver {
 		$offset = 0;
 		$hasMoreHistory = true;
 
+		set_time_limit(0);
 		while ($hasMoreHistory) {
 			$authToken = $this->getAPIAuthToken($patron, false);
 			if ($authToken != null) {
@@ -876,18 +877,20 @@ class Evergreen extends AbstractIlsDriver {
 							}
 						} else {
 							$checkout = $this->loadCheckoutData($patron, $circEntryMapped['source_circ'], $authToken);
-							$curTitle = [];
-							$curTitle['id'] = $checkout->recordId;
-							$curTitle['shortId'] = $checkout->recordId;
-							$curTitle['recordId'] = $checkout->recordId;
-							$curTitle['title'] = $checkout->title;
-							$curTitle['author'] = $checkout->author;
-							$curTitle['format'] = $checkout->format;
-							$curTitle['checkout'] = $checkout->checkoutDate;
-							if (!empty($circEntryMapped['checkin_time'])) {
-								$curTitle['checkin'] = strtotime($circEntryMapped['checkin_time']);
-							} else {
-								$curTitle['checkin'] = null;
+							if ($checkout != null) {
+								$curTitle = [];
+								$curTitle['id'] = $checkout->recordId;
+								$curTitle['shortId'] = $checkout->recordId;
+								$curTitle['recordId'] = $checkout->recordId;
+								$curTitle['title'] = $checkout->title;
+								$curTitle['author'] = $checkout->author;
+								$curTitle['format'] = $checkout->format;
+								$curTitle['checkout'] = $checkout->checkoutDate;
+								if (!empty($circEntryMapped['checkin_time'])) {
+									$curTitle['checkin'] = strtotime($circEntryMapped['checkin_time']);
+								} else {
+									$curTitle['checkin'] = null;
+								}
 							}
 						}
 						$readingHistoryTitles[] = $curTitle;
@@ -898,7 +901,6 @@ class Evergreen extends AbstractIlsDriver {
 			$offset += 100;
 		}
 
-		set_time_limit(20 * count($readingHistoryTitles));
 		$systemVariables = SystemVariables::getSystemVariables();
 		global $aspen_db;
 		require_once ROOT_DIR . '/RecordDrivers/GroupedWorkDriver.php';
@@ -2407,6 +2409,7 @@ class Evergreen extends AbstractIlsDriver {
 												$listEntry = new UserListEntry();
 												$listEntry->source = 'GroupedWork';
 												$listEntry->sourceId = $groupedWork->permanent_id;
+												$listEntry->title = StringUtils::trimStringToLengthAtWordBoundary($groupedWork->full_title, 50, true);
 												$listEntry->listId = $newList->id;
 												$listEntry->notes = '';
 												$listEntry->dateAdded = strtotime($createTime);

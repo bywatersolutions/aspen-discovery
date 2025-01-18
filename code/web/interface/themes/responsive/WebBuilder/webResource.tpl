@@ -1,6 +1,6 @@
 <div class="col-xs-12">
 	<h1>{$title}</h1>
-    {if !empty($loggedIn) && (array_key_exists('Administer All Web Resources', $userPermissions) || array_key_exists('Administer Library Web Resources', $userPermissions))}
+	{if !empty($loggedIn) && (array_key_exists('Administer All Web Resources', $userPermissions) || array_key_exists('Administer Library Web Resources', $userPermissions))}
 		<div class="row">
 			<div class="col-xs-12">
 				<a href="/WebBuilder/WebResources?id={$id}&objectAction=edit" class="btn btn-default btn-sm">{translate text=Edit isAdminFacing=true}</a>
@@ -13,7 +13,7 @@
 		<div class="col-sm-2">
 			<img class="img-responsive img-thumbnail" src="{$logo}" alt="{$title|escape}" onclick="return AspenDiscovery.WebBuilder.getWebResource('{$webResource->id}');">
 		</div>
-        {/if}
+		{/if}
 		<div class="{if empty($logo)}col-sm-12 col-md-9{else}col-sm-10 col-md-7{/if}">
 			{$description}
 

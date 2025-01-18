@@ -1631,10 +1631,10 @@ class Location extends DataObject {
 
 	/**
 	 * Get a list of sublocations where a user can pick up from
-	 **
+	 * @param ?User $patron The patron to filter valid sublocations by
 	 * @return Sublocation[]
 	 */
-	function getPickupSublocations(): array {
+	function getPickupSublocations(?User $patron = null): array {
 		require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 		$sublocations = [];
 		$object = new Sublocation();
@@ -1643,8 +1643,27 @@ class Location extends DataObject {
 		$object->isValidHoldPickupAreaAspen = 1;
 		$object->orderBy('weight');
 		$object->find();
+
+		if ($patron != null) {
+			$patronPType = $patron->getPTypeObj();
+		}else{
+			$patronPType = null;
+		}
+	
 		while ($object->fetch()) {
-			$sublocations[$object->id] = clone($object);
+			$isValid = true;
+			if ($patron != null && $patronPType != null) {
+				require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+				$sublocationPType = new SublocationPatronType();
+				$sublocationPType->patronTypeId = $patronPType->id;
+				$sublocationPType->sublocationId = $object->id;
+				if ($sublocationPType->find(true)) {
+					$isValid = true;
+				}
+			}
+			if ($isValid) {
+				$sublocations[$object->id] = clone($object);
+			}
 		}
 
 		return $sublocations;

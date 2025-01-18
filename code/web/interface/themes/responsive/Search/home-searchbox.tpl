@@ -30,7 +30,7 @@
 							onfocus="$(this).select()"
 							autocomplete="off"
 							aria-labelledby="lookfor-label"
-						    aria-required="true"
+							aria-required="true"
 							{if !empty($lookfor)}value="{$lookfor|escape:"html"}"{/if}
 						{strip}>
 					</div>
@@ -79,11 +79,11 @@
 					</div>
 				{/if}
 				<div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">
-                    <button class="form-control btn btn-default" type="submit">
-                        <i class="fas fa-search fas-lg" role="presentation"></i>
-                        <span id="home-search-box-submit-text">&nbsp;{translate text='Search' isPublicFacing=true}</span>
-                    </button>
-                </div>
+					<button class="form-control btn btn-default" type="submit">
+						<i class="fas fa-search fas-lg" role="presentation"></i>
+						<span id="home-search-box-submit-text">&nbsp;{translate text='Search' isPublicFacing=true}</span>
+					</button>
+				</div>
 			</div>
 		</div>
 

@@ -202,7 +202,9 @@ class DataObjectUtil {
 					$object->setProperty($propertyName, $newValue, $property);
 				}
 			} else {
-				$object->setProperty($propertyName, "", $property);
+				if (empty($property['readOnly'])) {
+					$object->setProperty($propertyName, "", $property);
+				}
 			}
 
 		} elseif (in_array($property['type'], [

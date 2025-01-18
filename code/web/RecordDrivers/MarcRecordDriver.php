@@ -41,7 +41,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 			//Full MARC record
 			$this->marcRecord = $recordData;
 			$this->valid = true;
-		} elseif (is_string($recordData)) {
+		} elseif (is_string($recordData) || is_numeric($recordData)) {
 			//Just the id
 			require_once ROOT_DIR . '/sys/MarcLoader.php';
 			if (strpos($recordData, ':') !== false) {
@@ -786,6 +786,10 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 				foreach ($summaryFields as $summaryField) {
 					//Check to make sure we don't have an exact duplicate of this field
 					$curSummary = $this->getSubfieldData($summaryField, 'a');
+					$summarySource = $this->getSubfieldData($summaryField, 'c');
+					if (!empty($summarySource)) {
+						$curSummary .= $summarySource;
+					}
 					$okToAdd = true;
 					foreach ($summaries as $existingSummary) {
 						if ($existingSummary == $curSummary) {
@@ -876,8 +880,13 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 			/** @var File_MARC_Data_Field $descriptionField */
 			if ($descriptionField = $marcRecord->getField('520')) {
 				if ($descriptionSubfield = $descriptionField->getSubfield('a')) {
-					$description = trim($descriptionSubfield->getData());
-					$marcDescription = $this->trimDescription($description);
+					$description = $descriptionSubfield->getData();
+					if ($descriptionSourceSubfield = $descriptionField->getSubfield('c')) {
+						$marcDescription = $description . $descriptionSourceSubfield;
+					}else{
+						$marcDescription = $this->trimDescription($description);
+					}
+					$description = trim($description);
 				}
 			}
 
@@ -1040,7 +1049,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return "/" . $this->getModule() . "/$recordId";
 	}
 
-	protected array $_actions = [];
+	protected ?array $_actions = [];
 
 	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		require_once ROOT_DIR . '/RecordDrivers/RecordActionGenerator.php';
@@ -2174,7 +2183,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 					/** @var File_MARC_Subfield $subfield */
 					$noteText[] = $subfield->getData();
 				}
-				$note = implode(',', $noteText);
+				$note = implode(' ', $noteText);
 				if (strlen($note) > 0) {
 					$notes[] = [
 						'label' => $label,

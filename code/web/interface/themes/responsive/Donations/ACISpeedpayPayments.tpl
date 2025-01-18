@@ -2,7 +2,7 @@
 	<input type="hidden" name="patronId" value="{$userId}"/>
 	<div class="row">
 		<div class="col-tn-12 col-sm-8 col-md-6 col-lg -3">
-            {if (empty($aciError))}
+			{if (empty($aciError))}
 				<script data-aci-speedpay src="https://{$sdkUrl}/js-sdk/1.5.0/speedpay.js?billerId={$billerId}" integrity="{$sriHash}" crossorigin="anonymous" referrerpolicy="strict-origin"></script>
 
 				<div class="form-group">
@@ -54,41 +54,41 @@
 									background: '#ffffff',
 									width: {ldelim}
 										all: '100%'
-                                        {rdelim},
+										{rdelim},
 									focus: {ldelim}
 										boxshadow: '0px',
 										outline: '0px',
 										bordercolor: '#ffffff',
-                                        {rdelim}
-                                    {rdelim},
+										{rdelim}
+									{rdelim},
 								iframe: {ldelim}
 									height: '2.5em'
-                                    {rdelim}
-                                {rdelim}
-                            {rdelim},
+									{rdelim}
+								{rdelim}
+							{rdelim},
 						(onValidate = function(event) {ldelim}
 							if(event.kind === 'ValidationError')
 								console.log(event.message.default);
-                            {rdelim}),
+							{rdelim}),
 						(onCreateToken = function(event) {ldelim}
 							if(event.token.id) {ldelim}
 								console.log('Funding account has been created.');
-                                {rdelim}
-                            {rdelim}),
+								{rdelim}
+							{rdelim}),
 						(onGetToken = function(event) {ldelim}
 							if(event.token.id) {ldelim}
 								console.log('Funding account has been obtained successfully.');
-                                {rdelim}
-                            {rdelim}),
+								{rdelim}
+							{rdelim}),
 						(onUpdatedToken = function(event) {ldelim}
 							if(event) {ldelim}
 								console.log(event);
-                                {rdelim}
-                            {rdelim}),
+								{rdelim}
+							{rdelim}),
 						(onError = function(event)
 							{ldelim}
 								AspenDiscovery.Account.handleACIError(event.message.default);
-                                {rdelim}
+							{rdelim}
 						)
 					);
 
@@ -102,17 +102,17 @@
 								{ldelim}
 									var paymentId = AspenDiscovery.Account.createACIOrder('#donation{$userId}', 'donation', tokenDetails.token.id, '{$accessToken}');
 									return AspenDiscovery.Account.completeACIOrder(tokenDetails.token.id, {$userId}, 'donation', paymentId, '{$accessToken}', '{$billerAccountId}');
-                                    {rdelim})
+									{rdelim})
 								.catch((error) =>
 								{ldelim}
 									AspenDiscovery.Account.handleACIError(error.message.default);
-                                    {rdelim});
-                            {rdelim})
-                        {rdelim});
+									{rdelim});
+							{rdelim})
+						{rdelim});
 				</script>
-            {else}
+			{else}
 				<div class="alert alert-warning"><strong>{translate text=$aciError isPublicFacing=true}</strong></div>
-            {/if}
+			{/if}
 		</div>
 	</div>
 {/strip}

@@ -2,8 +2,7 @@
 	{if !empty($loggedIn) && !empty($adminActions)}
 		<div id="account-menu-label" class="sidebar-label row">
 			<div class="col-xs-12">{translate text='Administration Options' isAdminFacing=true}</div>
-			<a class='searchSettings searchSettingsColor' onClick="return AspenDiscovery.Admin.showSearch();"
-			   id='showSearchButton'><i class="fas fa-search" role="presentation"></i> {translate text="Search" isAdminFacing=true}</a>
+			<a class='searchSettings searchSettingsColor' onClick="return AspenDiscovery.Admin.showSearch();" id='showSearchButton'><i class="fas fa-search" role="presentation"></i> {translate text="Search" isAdminFacing=true}</a>
 		</div>
 		<form id='adminSearchBox' role="form" class="form-horizontal" style='display:none'>
 			<div class="form-group">
@@ -47,13 +46,11 @@
 								 class="panel-collapse collapse admin-search-collapse {if $adminSectionKey==$activeAdminSection}in{/if}">
 								<div class="panel-body">
 									{foreach from=$adminSection->actions item=adminAction key=adminActionKey}
-										<div class="adminMenuLink "><a class='adminLink'
-																	   href="{$adminAction->link}">{translate text=$adminAction->label isAdminFacing=true}</a>
+										<div class="adminMenuLink "><a class='adminLink' href="{$adminAction->link}">{translate text=$adminAction->label isAdminFacing=true}</a>
 										</div>
 										{if !empty($adminAction->subActions)}
 											{foreach from=$adminAction->subActions item=adminSubAction}
-												<div class="adminMenuLink ">&nbsp;&raquo;&nbsp;<a
-															href="{$adminSubAction->link}">{translate text=$adminSubAction->label isAdminFacing=true}</a>
+												<div class="adminMenuLink ">&nbsp;&raquo;&nbsp;<a href="{$adminSubAction->link}">{translate text=$adminSubAction->label isAdminFacing=true}</a>
 												</div>
 											{/foreach}
 										{/if}

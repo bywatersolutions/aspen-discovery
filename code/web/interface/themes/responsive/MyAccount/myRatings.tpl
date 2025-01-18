@@ -1,8 +1,3 @@
-{*{if (isset($title)) }*}
-	{*<script type="text/javascript">*}
-		{*alert("{$title}");*}
-	{*</script>*}
-{*{/if}*}
 {if !empty($loggedIn)}
 
 	{if !empty($profile->_web_note)}
@@ -59,8 +54,8 @@
 					</tbody>
 				</table>
 				{if !empty($pageLinks.all)}
-                    <div class="text-center">{$pageLinks.all}</div>
-                {/if}
+					<div class="text-center">{$pageLinks.all}</div>
+				{/if}
 			{else}
 			{translate text="You have not rated any titles yet." isPublicFacing=true}
 			{/if}

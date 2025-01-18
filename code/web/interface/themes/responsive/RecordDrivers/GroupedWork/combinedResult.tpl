@@ -56,7 +56,7 @@
 					{/foreach}
 
 					<div class="result-label col-tn-3">
-                        {if count($relatedManifestations) > 1}{translate text="Formats" isPublicFacing=true}{else}{translate text="Format" isPublicFacing=true}{/if}:
+						{if count($relatedManifestations) > 1}{translate text="Formats" isPublicFacing=true}{else}{translate text="Format" isPublicFacing=true}{/if}:
 					</div>
 					<div class="result-value col-tn-8">
 						{implode subject=$relatedManifestations|@array_keys glue=", " translate=true isPublicFacing=true}

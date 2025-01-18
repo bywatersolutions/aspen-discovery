@@ -1,5 +1,5 @@
 <div id="page-content" class="row">
-    {if !empty($error)}<p class="alert alert-danger">{$error}</p>{/if}
+	{if !empty($error)}<p class="alert alert-danger">{$error}</p>{/if}
 	<div id="main-content" class="col-tn-12">
 		<h1>{translate text='Oops' isAdminFacing=true isPublicFacing=true}</h1>
 		<div class="page">

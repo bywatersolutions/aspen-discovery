@@ -52,7 +52,7 @@
 					<div role="tabpanel" class="tab-pane{if $tab=='all'} active{/if}" id="all"><div id="allHoldsPlaceholder" aria-label="All Holds List">{translate text="Loading holds from all sources" isPublicFacing=true}</div></div>
 					<div role="tabpanel" class="tab-pane{if $tab=='ils'} active{/if}" id="ils"><div id="ilsHoldsPlaceholder" aria-label="List of Holds on Physical Materials">{translate text="Loading holds of physical materials" isPublicFacing=true}</div></div>
 				{/if}
-                {if $user->getInterlibraryLoanType() == 'vdx'}
+				{if $user->getInterlibraryLoanType() == 'vdx'}
 					<div role="tabpanel" class="tab-pane{if $tab=='interlibrary_loan'} active{/if}" id="interlibrary_loan" aria-label="List of Interlibrary Loan Requests"><div id="interlibrary_loanHoldsPlaceholder">{translate text="Loading Interlibrary Loan Requests" isPublicFacing=true}</div></div>
 				{/if}
 				{if $user->isValidForEContentSource('overdrive')}

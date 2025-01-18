@@ -45,7 +45,7 @@
 		{include file="cssAndJsIncludes.tpl"}
 		{$themeCss}
 		{if !empty($loadRecaptcha)}
-		    <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+			<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 		{/if}
 	{/strip}
 </head>
@@ -114,7 +114,7 @@
 				</div>
 			</div>
 		</div>
-        {/if}
+		{/if}
 	{if !empty($fullWidthTheme)}<div class="container {if !empty($showContentAsFullWidth)}full-width-container{/if}">{/if}
 		<div id="content-container">
 			<div class="row">
@@ -158,12 +158,12 @@
 	{if !empty($fullWidthTheme)}</div>{/if}
 
 		{if empty($minimalInterface)}
-		<div {if !empty($fullWidthTheme)}class="container-fluid"{/if} id="page-footer" role="contentinfo">
-			<div id="footer-container" class="row {if !empty($fullWidthTheme)}row-no-gutters{/if}">
-				{include file="footer_responsive.tpl"}
+			<div {if !empty($fullWidthTheme)}class="container-fluid"{/if} id="page-footer" role="contentinfo">
+				<div id="footer-container" class="row {if !empty($fullWidthTheme)}row-no-gutters{/if}">
+					{include file="footer_responsive.tpl"}
+				</div>
 			</div>
-		</div>
-        {/if}
+		{/if}
 
 	</div>
 	{include file="modal_dialog.tpl"}
@@ -178,7 +178,7 @@
 		{$customJavascript}
 	{/if}
 	{if !empty($cookieStorageConsent)}
-		{include file = "cookie-consent.tpl"}
+		{include file="cookie-consent.tpl"}
 	{/if}
 {/strip}
 </body>

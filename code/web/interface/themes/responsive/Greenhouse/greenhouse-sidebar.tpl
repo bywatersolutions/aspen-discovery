@@ -1,6 +1,6 @@
 {strip}
-    {* Account Menu *}
+	{* Account Menu *}
 	<div id="greenhouseSidebar">
-        {include file="Greenhouse/greenhouseMenu.tpl"}
+		{include file="Greenhouse/greenhouseMenu.tpl"}
 	</div>
 {/strip}

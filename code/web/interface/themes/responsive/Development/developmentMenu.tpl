@@ -1,5 +1,5 @@
 {strip}
-    {if !empty($loggedIn)}
+	{if !empty($loggedIn)}
 		<div id="account-menu-label" class="sidebar-label row">
 			<div class="col-xs-12">{translate text='Aspen Developments' isAdminFacing=true}</div>
 		</div>
@@ -46,7 +46,7 @@
 					<a href="#ticketStatsGroup" data-toggle="collapse" data-parent="#adminMenuAccordion" aria-label="{translate text="Ticket Stats Menu" inAttribute=true isAdminFacing=true}">
 						<div class="panel-heading">
 							<div class="panel-title">
-                                {translate text="Ticket Stats" isAdminFacing=true}
+								{translate text="Ticket Stats" isAdminFacing=true}
 							</div>
 						</div>
 					</a>
@@ -72,7 +72,7 @@
 					<a href="#partnersUsersGroup" data-toggle="collapse" data-parent="#adminMenuAccordion" aria-label="{translate text="Partners & Users Menu" inAttribute=true isAdminFacing=true}">
 						<div class="panel-heading">
 							<div class="panel-title">
-                                {translate text="Partners & Users" isAdminFacing=true}
+								{translate text="Partners & Users" isAdminFacing=true}
 							</div>
 						</div>
 					</a>
@@ -85,5 +85,5 @@
 				</div>
 			</div>
 		</div>
-    {/if}
+	{/if}
 {/strip}

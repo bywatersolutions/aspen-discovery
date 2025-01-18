@@ -52,6 +52,7 @@ abstract class ObjectEditor extends Admin_Admin {
 		$interface->assign('showHistoryLinks', $this->showHistoryLinks());
 		$interface->assign('canShareToCommunity', $this->canShareToCommunity());
 		$interface->assign('canFetchFromCommunity', $this->canFetchFromCommunity());
+		$interface->assign('hasMultiStepAddNew', $this->hasMultiStepAddNew());
 
 		$interface->assign('objectType', $this->getObjectType());
 		$interface->assign('toolName', $this->getToolName());
@@ -1275,5 +1276,9 @@ abstract class ObjectEditor extends Admin_Admin {
 
 	function getHiddenFields() {
 		return [];
+	}
+
+	public function hasMultiStepAddNew() : bool {
+		return false;
 	}
 }

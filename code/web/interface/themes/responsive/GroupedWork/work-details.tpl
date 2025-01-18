@@ -33,6 +33,6 @@
 				</div>
 			</div>
 		{/if}
-       {include file="GroupedWork/relatedManifestations.tpl" relatedManifestations=$recordDriver->getRelatedManifestations() inPopUp=true id=$recordDriver->getPermanentId() summTitle=$recordDriver->getTitle()}
+		{include file="GroupedWork/relatedManifestations.tpl" relatedManifestations=$recordDriver->getRelatedManifestations() inPopUp=true id=$recordDriver->getPermanentId() summTitle=$recordDriver->getTitle()}
 	</div>
 {/strip}

@@ -20,7 +20,7 @@
 					<div class="accordion-inner ">
 						<table class="table table-striped">
 							{assign var=counter value=1}
-                            {assign var=hiddenCopy value=false}
+							{assign var=hiddenCopy value=false}
 							{include file="Record/copiesTableHeader.tpl"}
 							{foreach from=$section.holdings item=holding name=tableLoop}
 								{if !$holding.isEContent}

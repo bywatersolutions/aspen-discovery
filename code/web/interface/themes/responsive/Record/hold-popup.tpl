@@ -71,11 +71,6 @@
 
 						{if $onlyOnePickupSublocation}
 							<input type="hidden" name="pickupSublocation" id="pickupSublocation" value="{$user->getPickupSublocationCode()}">
-							{if ($rememberHoldPickupSublocation)}
-									<input type="hidden" name="rememberHoldPickupSublocation" id="rememberHoldPickupSublocation" value="true">
-								{else}
-									<input type="hidden" name="rememberHoldPickupSublocation" id="rememberHoldPickupSublocation" value="off">
-							{/if}
 						{/if}
 						<input type="hidden" name="user" id="user" value="{$user->id}">
 					{else}

@@ -1,7 +1,7 @@
 {strip}
 <div class="col-xs-12">
 	<h1>{$poll->title}</h1>
-    {if !empty($loggedIn) && (array_key_exists('Administer All Quick Polls', $userPermissions) || array_key_exists('Administer Library Quick Polls', $userPermissions))}
+	{if !empty($loggedIn) && (array_key_exists('Administer All Quick Polls', $userPermissions) || array_key_exists('Administer Library Quick Polls', $userPermissions))}
 		<div class="row">
 			<div class="col-xs-12">
 				<a href="/WebBuilder/QuickPolls?id={$id}&objectAction=edit" class="btn btn-default btn-sm">{translate text=Edit isAdminFacing=true}</a>
@@ -12,12 +12,12 @@
 	{if $poll->status == 3}
 		{* Poll is closed *}
 		<div class="alert alert-info">
-            {translate text='This poll is no longer accepting submissions.' isPublicFacing=true}
+			{translate text='This poll is no longer accepting submissions.' isPublicFacing=true}
 		</div>
 	{elseif $poll->status == 1 && !$poll->userCanAccess()}
-        {* Poll is being created *}
+		{* Poll is being created *}
 		<div class="alert alert-info">
-            {translate text='This poll is not yet accepting submissions.' isPublicFacing=true}
+			{translate text='This poll is not yet accepting submissions.' isPublicFacing=true}
 		</div>
 	{else}
 		{if !empty($introText)}
@@ -29,7 +29,7 @@
 			<div class="alert alert-danger">
 				{$submissionError}
 			</div>
-	    {/if}
+		{/if}
 		<form id="quickPoll{$id}" class="form-horizontal" role="form" action="/WebBuilder/SubmitQuickPoll"  onsubmit="setFormSubmitting();" method="post">
 			<input type="hidden" name="id" id="id" value="{$id}">
 			{if !empty($patronIdCheck)}
@@ -63,12 +63,12 @@
 				<input type="email" class="form-control {if $poll->requireEmail == 1}required{/if}" name="email" id="email" value="">
 			</div>
 
-            {if !empty($captcha)}
-                {* Show Recaptcha spam control if set. *}
+			{if !empty($captcha)}
+				{* Show Recaptcha spam control if set. *}
 				<div class="form-group">
-                    {$captcha}
+					{$captcha}
 				</div>
-            {/if}
+			{/if}
 
 			<div class="form-group">
 				<div class="col-xs-12">
@@ -77,7 +77,7 @@
 			</div>
 
 		</form>
-    {/if}
+	{/if}
 </div>
 {/strip}
 

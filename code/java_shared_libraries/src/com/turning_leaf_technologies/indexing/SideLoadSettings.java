@@ -19,7 +19,6 @@ public class SideLoadSettings extends BaseIndexingSettings {
 		this.lastUpdateOfChangedRecords = settings.getLong("lastUpdateOfChangedRecords");
 		this.lastUpdateOfAllRecords = settings.getLong("lastUpdateOfAllRecords");
 		this.runFullUpdate = settings.getBoolean("runFullUpdate");
-		this.groupingClass = settings.getString("groupingClass");
 		this.marcPath = settings.getString("marcPath");
 		this.filenamesToInclude = settings.getString("filenamesToInclude");
 		this.marcEncoding = settings.getString("marcEncoding");

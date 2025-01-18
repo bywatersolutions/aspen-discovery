@@ -3,11 +3,11 @@
 		{if $browseStyle == 'masonry'}
 			<div class="masonry grid">
 				<div class="grid-col grid-col--1"></div>
-	            <div class="grid-col grid-col--2"></div>
-	            <div class="grid-col grid-col--3"></div>
-	            <div class="grid-col grid-col--4"></div>
-	            <div class="grid-col grid-col--5"></div>
-	            <div class="grid-col grid-col--6"></div>
+				<div class="grid-col grid-col--2"></div>
+				<div class="grid-col grid-col--3"></div>
+				<div class="grid-col grid-col--4"></div>
+				<div class="grid-col grid-col--5"></div>
+				<div class="grid-col grid-col--6"></div>
 		{/if}
 		{foreach from=$recordSet item=record name="recordLoop"}
 			{* This is raw HTML -- do not escape it: *}

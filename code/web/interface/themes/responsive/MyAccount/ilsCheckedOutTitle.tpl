@@ -90,14 +90,14 @@
 						</div>
 					{/if}
 
-                    {if !empty($record->callNumber)}
+					{if !empty($record->callNumber)}
 						<div class="row">
 							<div class="result-label col-sm-12 col-md-5">{translate text='Call Number' isPublicFacing=true}</div>
 							<div class="col-sm-12 col-md-7 result-value">
-                                {$record->callNumber}
+								{$record->callNumber}
 							</div>
 						</div>
-                    {/if}
+					{/if}
 
 					{if !empty($showOut)}
 						<div class="row">
@@ -190,12 +190,12 @@
 							<div class="col-sm-12 col-md-7 result-value">
 								{if empty($record->maxRenewals)}
 									{if $record->renewCount}
-                                        {translate text="%1% times" 1=$record->renewCount isPublicFacing=true}
+										{translate text="%1% times" 1=$record->renewCount isPublicFacing=true}
 									{else}
-                                        {translate text="%1% times" 1="0" isPublicFacing=true}
+										{translate text="%1% times" 1="0" isPublicFacing=true}
 									{/if}
 								{else}
-                                    {translate text="%1% of %2% times" 1=$record->renewCount 2=$record->maxRenewals isPublicFacing=true}
+									{translate text="%1% of %2% times" 1=$record->renewCount 2=$record->maxRenewals isPublicFacing=true}
 								{/if}
 							</div>
 						</div>

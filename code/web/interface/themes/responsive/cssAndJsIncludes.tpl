@@ -2,7 +2,7 @@
 	{* All CSS should be come before javascript for better browser performance *}
 	{* TODO: Fix minification of css *}
 	{if !empty($debugCss) || true}
-    	{css filename="main.css"}
+		{css filename="main.css"}
 	{else}
 		{css filename="main.min.css"}
 	{/if}
@@ -64,9 +64,9 @@
 			{if array_key_exists('OverDrive', $enabledModules)}
 				Globals.hasOverDriveConnection = true;
 			{/if}
-            {if array_key_exists('Palace Project', $enabledModules)}
+			{if array_key_exists('Palace Project', $enabledModules)}
 				Globals.hasPalaceProjectConnection = true;
-            {/if}
+			{/if}
 			{if !empty($hasInterlibraryLoanConnection)}
 				Globals.hasInterlibraryLoanConnection = true;
 			{/if}

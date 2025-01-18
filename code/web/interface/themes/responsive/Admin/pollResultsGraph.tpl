@@ -6,7 +6,7 @@
 			<canvas id="chart"></canvas>
 		</div>
 	</div>
-    {/if}
+	{/if}
 	{if $canViewResults || $showResultsToPatrons == 2 || $showResultsToPatrons == 3}
 	<h2>{translate text="Data"  isAdminFacing=true}</h2>
 	<div class="adminTableRegion fixed-height-table">
@@ -14,20 +14,20 @@
 			<thead>
 			<tr>
 				<th>{translate text="Option" isAdminFacing=true}</th>
-                <th>{translate text="Count" isAdminFacing=true}</th>
+				<th>{translate text="Count" isAdminFacing=true}</th>
 			</tr>
 			</thead>
 			<tbody>
-            {foreach from=$dataSeries item=seriesData}
+			{foreach from=$dataSeries item=seriesData}
 				<tr>
 					<td>{if !empty($translateColumnLabels)}{translate text=$seriesData.displayLabel isAdminFacing=true}{else}{$seriesData.displayLabel}{/if}</td>
 						<td>{if (empty($seriesData.displayCount))}0{else}{$seriesData.displayCount|number_format}{/if}</td>
 				</tr>
-            {/foreach}
+			{/foreach}
 			</tbody>
 		</table>
 	</div>
-    {/if}
+	{/if}
 {/strip}
 {literal}
 <script>
@@ -36,37 +36,37 @@
 		type: 'bar',
 		data: {
 			labels: [
-                {/literal}
-                {foreach from=$columnLabels item=columnLabel}
+				{/literal}
+				{foreach from=$columnLabels item=columnLabel}
 				'{$columnLabel}',
-                {/foreach}
-                {literal}
+				{/foreach}
+				{literal}
 			],
 			datasets: [
-                {/literal}
+				{/literal}
 					{
 					label: "{translate text="Results" isAdminFacing=true}",
 					data: [
-                        {foreach from=$dataSeries key=seriesLabel item=seriesData}
-                        {foreach from=$seriesData.data item=curValue}
-                        {$curValue},
-                        {/foreach}
-                        {/foreach}
+						{foreach from=$dataSeries key=seriesLabel item=seriesData}
+							{foreach from=$seriesData.data item=curValue}
+								{$curValue},
+							{/foreach}
+						{/foreach}
 					],
 					borderWidth: 1,
 					borderColor: [
-                        {foreach from=$dataSeries key=seriesLabel item=seriesData}
+						{foreach from=$dataSeries key=seriesLabel item=seriesData}
 						'{$seriesData.borderColor}',
 						{/foreach}
 					],
 					backgroundColor: [
-                        {foreach from=$dataSeries key=seriesLabel item=seriesData}
+						{foreach from=$dataSeries key=seriesLabel item=seriesData}
 						'{$seriesData.backgroundColor}',
-                        {/foreach}
+						{/foreach}
 					],
 
-                    }
-                {literal}
+					}
+				{literal}
 			]
 		},
 		options: {

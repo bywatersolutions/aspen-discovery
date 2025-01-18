@@ -1,6 +1,6 @@
 {assign var=propName value=$property.property}
 {if $property.type != 'section'}
-    {strip}
+	{strip}
 	{if !empty($property.validationPattern)}
 		$("#{$propName}").rules("add", {ldelim}
 			regex: "{$property.validationPattern}"

@@ -82,15 +82,15 @@
 		</thead>
 		{foreach from=$primaryIdentifiers item="groupedRecord"}
 			<tr>
-                {if $groupedRecord->type == "overdrive"}
-	                <td>{$readerName}</td>
-                {elseif $groupedRecord->type == "axis360"}
-	                <td>Boundless</td>
-                {else}
-	                <td>{$groupedRecord->type}</td>
+				{if $groupedRecord->type == "overdrive"}
+					<td>{$readerName}</td>
+				{elseif $groupedRecord->type == "axis360"}
+					<td>Boundless</td>
+				{else}
+					<td>{$groupedRecord->type}</td>
 				{/if}
 				<td>{$groupedRecord->identifier}</td>
-                {if !empty($loggedIn) && in_array('Upload Covers', $userPermissions)}
+				{if !empty($loggedIn) && in_array('Upload Covers', $userPermissions)}
 					<td>
 						<button onclick="return AspenDiscovery.GroupedWork.getPreviewRelatedCover('{$groupedRecord->identifier}', '{$recordDriver->getPermanentId()}', '{$groupedRecord->type|escape:javascript}')" class="btn btn-sm {if !empty($bookCoverInfo) && strpos($bookcoverInfo->__get('imageSource'), $groupedRecord->identifier) == true}btn-info{else}btn-default{/if}">
 						{if !empty($bookCoverInfo) && strpos($bookcoverInfo->__get('imageSource'), $groupedRecord->identifier) == true}{translate text="Using this Cover" isPublicFacing=true}{else}{translate text="Preview Cover" isPublicFacing=true}{/if}</button>{if !empty($bookCoverInfo) && strpos($bookcoverInfo->__get('imageSource'), $groupedRecord->identifier) == true} <button onclick="return AspenDiscovery.GroupedWork.clearRelatedCover('{$recordDriver->getPermanentId()}')" class="btn btn-sm btn-warning">{translate text="Reset" isPublicFacing=true}</button>{/if}

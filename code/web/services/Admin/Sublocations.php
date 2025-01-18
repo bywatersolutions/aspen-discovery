@@ -80,4 +80,8 @@ class Admin_Sublocations extends ObjectEditor {
 			'Administer Home Library',
 		]);
 	}
+
+	function showReturnToList() : bool {
+		return false;
+	}
 }

@@ -1,5 +1,5 @@
 {strip}
-    <div>
-        {$cookieConsentPolicyHTML}
-    </div>
+	<div>
+		{$cookieConsentPolicyHTML}
+	</div>
 {/strip}

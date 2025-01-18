@@ -17,7 +17,7 @@
 
 		{if count($allActiveThemes) > 1}
 			<div class="form-group">
-				<label for="preferredLanguage" class="control-label">{translate text='Display Mode' isPublicFacing=true}</label>
+				<label for="preferredTheme" class="control-label">{translate text='Display Mode' isPublicFacing=true}</label>
 				<select id="preferredTheme" name="preferredTheme" class="form-control">
 					{foreach from=$allActiveThemes key=themeId item=themeName}
 						<option value="{$themeId}"{if $activeThemeId==$themeId} selected="selected"{/if}>

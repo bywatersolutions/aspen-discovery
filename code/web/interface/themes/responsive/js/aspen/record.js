@@ -136,7 +136,7 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		submitLocalIllRequest: function (module, id, volume) {
+		submitLocalIllRequest: function (module, id) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				var acceptFeeField = $('#acceptFee');
@@ -158,7 +158,7 @@ AspenDiscovery.Record = (function () {
 					pickupLocation: $('#pickupLocationSelect').val(),
 					catalogKey: $('#catalogKey').val(),
 					note: $('#note').val(),
-					volumeId: $('#volume').val()
+					volumeId: $('#volumeId').val()
 				};
 				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitLocalIllRequest";
 				$.getJSON(url, params, function (data) {
@@ -237,11 +237,14 @@ AspenDiscovery.Record = (function () {
 			var module = $('#module').val();
 			var volume = $('#volume');
 			var variationId = $('#variationId');
+			var pickupSublocation = $('#pickupSublocation');
+			var cancelDateInput = $('#cancelDate');
 			var params = {
 				'method': 'placeHold',
 				pickupBranch: $('#pickupBranch').val(),
+				pickupSublocation: pickupSublocation === undefined ? '' : pickupSublocation.val(),
 				selectedUser: $('#user').val(),
-				cancelDate: $('#cancelDate').val(),
+				cancelDate: cancelDateInput.val(),
 				recordSource: $('#recordSource').val(),
 				account: $('#account').val(),
 				rememberHoldPickupLocation: $('#rememberHoldPickupLocation').prop('checked')
@@ -297,7 +300,7 @@ AspenDiscovery.Record = (function () {
 			}
 			params = this.loadHoldNotificationOptions(params);
 
-			var cancelDate = $('#cancelDate').val();
+			var cancelDate = cancelDateInput.val();
 			if (cancelDate) {
 				var today = new Date().getTime();
 				var cancelOn = new Date(cancelDate).getTime();

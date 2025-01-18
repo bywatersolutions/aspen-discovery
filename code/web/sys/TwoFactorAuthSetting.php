@@ -1,17 +1,22 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
 class TwoFactorAuthSetting extends DataObject {
 	public $__table = 'two_factor_auth_settings';
 	public $id;
+	public $accountProfileId;
 	public $name;
 	public $isEnabled;
-	public $authMethod;
 	public $deniedMessage;
 
 	private $_libraries;
 	private $_ptypes;
 
 	static function getObjectStructure($context = ''): array {
+		require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
+		$accountProfile = new AccountProfile();
+		$accountProfile->orderBy('name');
+		$accountProfileOptions = $accountProfile->fetchAll('id', 'name');
+
 		$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
 		$ptypeList = PType::getPatronTypeList();
 
@@ -21,16 +26,21 @@ class TwoFactorAuthSetting extends DataObject {
 			'mandatory' => 'Yes, and mandatory',
 		];
 
-		$authMethods = [
-			'email' => 'Email',
-		];
-
 		$structure = [
 			'id' => [
 				'property' => 'id',
 				'type' => 'label',
 				'label' => 'Id',
 				'description' => 'The unique id',
+			],
+			'accountProfileId' => [
+				'property' => 'accountProfileId',
+				'type' => 'enum',
+				'values' => $accountProfileOptions,
+				'label' => 'Account Profile Id',
+				'description' => 'Account Profile to apply to this interface',
+				'permissions' => ['Administer Account Profiles'],
+				'readOnly' => $context != 'addNew'
 			],
 			'name' => [
 				'property' => 'name',
@@ -51,29 +61,43 @@ class TwoFactorAuthSetting extends DataObject {
 				'label' => 'Denied access message',
 				'note' => 'Instructions for accessing their account if the user is unable to authenticate',
 				'hideInLists' => true,
-			],
-			'libraries' => [
+			]
+		];
+		if ($context != 'addNew') {
+			$structure['libraries'] = [
 				'property' => 'libraries',
 				'type' => 'multiSelect',
 				'listStyle' => 'checkboxSimple',
 				'label' => 'Libraries',
 				'description' => 'Define libraries that use these settings',
 				'values' => $libraryList,
-			],
-
-			'ptypes' => [
+			];
+			$structure['ptypes'] = [
 				'property' => 'ptypes',
 				'type' => 'multiSelect',
 				'listStyle' => 'checkboxSimple',
 				'label' => 'Patron Types',
 				'values' => $ptypeList,
 				'description' => 'Define patron types that use these settings',
-			],
-		];
+			];
+		}
 
 		if (!UserAccount::userHasPermission('Administer Two-Factor Authentication')) {
 			unset($structure['libraries']);
 		}
+		return $structure;
+	}
+
+	public function updateStructureForEditingObject($structure) : array {
+		if (isset($structure['libraries'])) {
+			$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'), $this->accountProfileId);
+			$structure['libraries']['values'] = $libraryList;
+		}
+		if (isset($structure['ptypes'])) {
+			$ptypeList = PType::getPatronTypeList(false, false, $this->accountProfileId);
+			$structure['ptypes']['values'] = $ptypeList;
+		}
+
 		return $structure;
 	}
 
@@ -115,27 +139,27 @@ class TwoFactorAuthSetting extends DataObject {
 		}
 	}
 
-	public function update($context = '') {
+	public function update($context = '') : bool {
 		$ret = parent::update();
 		if ($ret !== FALSE) {
 			$this->saveLibraries();
-			$this->savePatrons();
-		}
-		return true;
-	}
-
-	public function insert($context = '') {
-		$ret = parent::insert();
-		if ($ret !== FALSE) {
-			$this->saveLibraries();
-			$this->savePatrons();
+			$this->savePatronTypes();
 		}
 		return $ret;
 	}
 
-	public function saveLibraries() {
+	public function insert($context = '') : bool|int {
+		$ret = parent::insert();
+		if ($ret !== FALSE) {
+			$this->saveLibraries();
+			$this->savePatronTypes();
+		}
+		return $ret;
+	}
+
+	public function saveLibraries() : void {
 		if (isset ($this->_libraries) && is_array($this->_libraries)) {
-			$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
+			$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'), $this->accountProfileId);
 			foreach ($libraryList as $libraryId => $displayName) {
 				$library = new Library();
 				$library->libraryId = $libraryId;
@@ -158,28 +182,43 @@ class TwoFactorAuthSetting extends DataObject {
 		}
 	}
 
-	public function savePatrons() {
+	public function savePatronTypes() : void {
 		if (isset ($this->_ptypes) && is_array($this->_ptypes)) {
-			$ptypeList = PType::getPatronTypeList();
-			foreach ($ptypeList as $ptype) {
-				$patron = new PType();
-				$patron->pType = $ptype;
-				$patron->find(true);
-				if (in_array($patron->id, $this->_ptypes)) {
-					//We want to apply the scope to this patron
-					if ($patron->twoFactorAuthSettingId != $this->id) {
-						$patron->twoFactorAuthSettingId = $this->id;
-						$patron->update();
+			$ptypeList = PType::getPatronTypeList(false, false, $this->accountProfileId);
+			foreach ($ptypeList as $id => $ptype) {
+				$patronType = new PType();
+				$patronType->id = $id;
+				$patronType->find(true);
+				if (in_array($patronType->id, $this->_ptypes)) {
+					//We want to apply the scope to this Patron Type
+					if ($patronType->twoFactorAuthSettingId != $this->id) {
+						$patronType->twoFactorAuthSettingId = $this->id;
+						$patronType->update();
 					}
 				} else {
-					//It should not be applied to this scope. Only change if it was applied to the scope
-					if ($patron->twoFactorAuthSettingId == $this->id) {
-						$patron->twoFactorAuthSettingId = -1;
-						$patron->update();
+					//It should not be applied to this Patron Type. Only change if it was applied to the Patron Type
+					if ($patronType->twoFactorAuthSettingId == $this->id) {
+						$patronType->twoFactorAuthSettingId = -1;
+						$patronType->update();
 					}
 				}
 			}
 			unset($this->_ptypes);
 		}
+	}
+
+	public static function getTwoFactorAuthSettingsList(bool $addEmpty, int $accountProfileId = -1) : array {
+		$setting = new TwoFactorAuthSetting();
+		$setting->orderBy('name');
+		if ($accountProfileId != -1 && !empty($accountProfileId)) {
+			$setting->accountProfileId = $accountProfileId;
+		}
+		$settingsList = [];
+		if ($addEmpty) {
+			$settingsList[-1] = "";
+		}
+		$settingsList += $setting->fetchAll('id', 'name');
+
+		return $settingsList;
 	}
 }

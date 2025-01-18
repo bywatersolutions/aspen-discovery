@@ -7,7 +7,7 @@
 					{if empty($newMaterialsRequestSummary)}
 						{translate text="<p>Please fill out this form to make a purchase suggestion. You will receive an email when the library processes your suggestion.</p><p>Only certain fields are required, but the more information you enter the easier it will be for the librarians to find the title you're requesting. The Notes field can be used to provide any additional information.</p>" isPublicFacing=true}
 					{else}
-					    {translate text=$newMaterialsRequestSummary isPublicFacing=true isAdminEnteredData=true}
+						{translate text=$newMaterialsRequestSummary isPublicFacing=true isAdminEnteredData=true}
 					{/if}
 				</div>
 				<div id="materialsRequestFormContainer">

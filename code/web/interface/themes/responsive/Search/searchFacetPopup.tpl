@@ -1,6 +1,6 @@
 {if !$isMultiSelect && !empty($appliedFacetValues)}
 	<div id="facetSearchResultsAppliedValues">
-	    {translate text="The following values are already applied to your search." isPublicFacing=true}
+		{translate text="The following values are already applied to your search." isPublicFacing=true}
 	</div>
 	<div class="container-12" id="existingFacetValues">
 		<div class="row moreFacetPopup">

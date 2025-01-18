@@ -8357,11 +8357,10 @@ AspenDiscovery.Account = (function () {
 				locationCode: locationCode,
 				context: 'updatePickupLocation'
 			};
+			selectPlaceholder.innerHTML = '';
 			$.getJSON(url, params, function (data) {
 				if (data.success) {
 					selectPlaceholder.innerHTML = data.selectHtml;
-				} else {
-					selectPlaceholder.innerHTML = '';
 				}
 			});
 			return false;
@@ -9830,7 +9829,32 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowformatMap").show();
 				$("#propertyRowcheckRecordForLargePrint").hide();
 			}
-			AspenDiscovery.IndexingClass.indexingClassSelect();
+		},
+		setIndexingProfileDefaultsByIndexingClass: function () {
+			var selectedIndexingClass = $("#indexingClassSelect").val();
+			if (selectedIndexingClass === '') {
+				$("#catalogDriver").val('AbstractIlsDriver');
+			}else {
+				if (selectedIndexingClass === 'ArlingtonKoha') {
+					$("#catalogDriver").val('Koha');
+				}else if (selectedIndexingClass === 'CarlX') {
+					$("#catalogDriver").val('CarlX');
+				}else if (selectedIndexingClass === 'Evergreen') {
+					$("#catalogDriver").val('Evergreen');
+				}else if (selectedIndexingClass === 'Evolve') {
+					$("#catalogDriver").val('Evolve');
+				}else if (selectedIndexingClass === 'III') {
+					$("#catalogDriver").val('Sierra');
+				}else if (selectedIndexingClass === 'Koha') {
+					$("#catalogDriver").val('Koha');
+				}else if (selectedIndexingClass === 'NashvilleCarlX') {
+					$("#catalogDriver").val('Nashville');
+				}else if (selectedIndexingClass === 'Polaris') {
+					$("#catalogDriver").val('Polaris');
+				}else if (selectedIndexingClass === 'Symphony') {
+					$("#catalogDriver").val('SirsiDynixROA');
+				}
+			}
 		},
 		updateLayoutSettingsFields: function () {
 			var useHomeLink = $('#useHomeLinkSelect').val();
@@ -10195,6 +10219,61 @@ AspenDiscovery.Admin = (function () {
 				$('#propertyRowssoSettingId').show();
 			} else {
 				$('#propertyRowssoSettingId').hide();
+			}
+		},
+
+		toggleAccountProfileIlsFields: function () {
+			var selectedIls = $("#ilsSelect").val();
+			var propertyRows = $(".propertyRow");
+			propertyRows.each(function () {
+				if ($(this).attr("data-related-ils") !== undefined){
+					var relatedIls = $(this).data("related-ils");
+					if (relatedIls.includes("~" + selectedIls + "~")) {
+						$(this).show();
+					}else{
+						$(this).hide();
+					}
+				}
+			});
+		},
+
+		toggleIlsSpecificFields: function () {
+			var activeIls = $("#activeIls").val();
+			var propertyRows = $(".propertyRow");
+			propertyRows.each(function () {
+				if ($(this).attr("data-related-ils") !== undefined){
+					var relatedIls = $(this).data("related-ils");
+					if (relatedIls.includes("~" + activeIls + "~")) {
+						$(this).show();
+					}else{
+						$(this).hide();
+					}
+				}
+			});
+		},
+
+		setAccountProfileDefaultsByIls: function () {
+			var selectedIls = $("#ilsSelect").val();
+			if (selectedIls === 'na') {
+				$("#driver").val('');
+				$("#authenticationMethodSelect").val('db') ;
+			}else {
+				$("#authenticationMethodSelect").val('ils') ;
+				if (selectedIls === 'carlx') {
+					$("#driver").val('CarlX');
+				}else if (selectedIls === 'evergreen') {
+					$("#driver").val('Evergreen');
+				}else if (selectedIls === 'evolve') {
+					$("#driver").val('Evolve');
+				}else if (selectedIls === 'koha') {
+					$("#driver").val('Koha');
+				}else if (selectedIls === 'polaris') {
+					$("#driver").val('Polaris');
+				}else if (selectedIls === 'sierra') {
+					$("#driver").val('Sierra');
+				}else if (selectedIls === 'symphony') {
+					$("#driver").val('SirsiDynixROA');
+				}
 			}
 		},
 
@@ -14245,7 +14324,7 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		submitLocalIllRequest: function (module, id, volume) {
+		submitLocalIllRequest: function (module, id) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				var acceptFeeField = $('#acceptFee');
@@ -14267,7 +14346,7 @@ AspenDiscovery.Record = (function () {
 					pickupLocation: $('#pickupLocationSelect').val(),
 					catalogKey: $('#catalogKey').val(),
 					note: $('#note').val(),
-					volumeId: $('#volume').val()
+					volumeId: $('#volumeId').val()
 				};
 				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitLocalIllRequest";
 				$.getJSON(url, params, function (data) {
@@ -14346,11 +14425,14 @@ AspenDiscovery.Record = (function () {
 			var module = $('#module').val();
 			var volume = $('#volume');
 			var variationId = $('#variationId');
+			var pickupSublocation = $('#pickupSublocation');
+			var cancelDateInput = $('#cancelDate');
 			var params = {
 				'method': 'placeHold',
 				pickupBranch: $('#pickupBranch').val(),
+				pickupSublocation: pickupSublocation === undefined ? '' : pickupSublocation.val(),
 				selectedUser: $('#user').val(),
-				cancelDate: $('#cancelDate').val(),
+				cancelDate: cancelDateInput.val(),
 				recordSource: $('#recordSource').val(),
 				account: $('#account').val(),
 				rememberHoldPickupLocation: $('#rememberHoldPickupLocation').prop('checked')
@@ -14406,7 +14488,7 @@ AspenDiscovery.Record = (function () {
 			}
 			params = this.loadHoldNotificationOptions(params);
 
-			var cancelDate = $('#cancelDate').val();
+			var cancelDate = cancelDateInput.val();
 			if (cancelDate) {
 				var today = new Date().getTime();
 				var cancelOn = new Date(cancelDate).getTime();
@@ -16142,85 +16224,6 @@ AspenDiscovery.Wikipedia = (function(){
 		}
 	};
 }(AspenDiscovery.Wikipedia));
-AspenDiscovery.IndexingClass = (function () {
-	return {
-
-		indexingClassSelect: function (id) {
-			//Hide all
-			$(".form-group").each(function () {
-				$(this).hide();
-			});
-
-			//Show Class Select
-			$("#propertyRowid").show();
-			$("#propertyRowindexingClass").show();
-			$(".btn-group").parent().show();
-
-
-			//Config per Class
-			var ilsOptions = {
-				//Common for all classes
-				commonFields: ['propertyRowid', 'propertyRowname', 'propertyRowmarcPath', 'propertyRowfilenamesToInclude',
-					'propertyRowmarcEncoding',
-					'propertyRowcreateFolderFromLeadingCharacters', 'propertyRowgroupingClass', 'propertyRowrecordDriver',
-					'propertyRowcatalogDriver', 'propertyRowrecordUrlComponent', 'propertyRowprocessRecordLinking',
-					'propertyRowrecordNumberTag', 'propertyRowrecordNumberSubfield', 'propertyRowrecordNumberPrefix',
-					'propertyRowcustomMarcFieldsToIndexAsKeyword', 'propertyRowtreatUnknownLanguageAs',
-					'propertyRowtreatUndeterminedLanguageAs', 'propertyRowsuppressRecordsWithUrlsMatching',
-					'propertyRowdetermineAudienceBy', 'propertyRowaudienceSubfield', 'propertyRowtreatUnknownAudienceAs',
-					'propertyRowdetermineLiteraryFormBy', 'propertyRowliteraryFormSubfield', 'propertyRowhideUnknownLiteraryForm',
-					'propertyRowhideNotCodedLiteraryForm', 'propertyRowitemSection', 'propertyRowsuppressItemlessBibs',
-					'propertyRowitemTag', 'propertyRowitemRecordNumber', 'propertyRowbibCallNumberFields', 'propertyRowuseItemBasedCallNumbers',
-					'propertyRowcallNumberPrestamp', 'propertyRowcallNumberPrestamp2', 'propertyRowcallNumber', 'propertyRowcallNumberCutter', 'propertyRowcallNumberPoststamp',
-					'propertyRowlocation', 'propertyRowincludeLocationNameInDetailedLocation', 'propertyRownonHoldableLocations',
-					'propertyRowlocationsToSuppress', 'propertyRowsubLocation', 'propertyRowshelvingLocation', 'propertyRowcollection',
-					'propertyRowcollectionsToSuppress', 'propertyRowitemUrl', 'propertyRowitemUrlDescription', 'propertyRowvolume', 'propertyRowbarcode',
-					'propertyRowstatus', 'propertyRownonHoldableStatuses', 'propertyRowstatusesToSuppress',
-					'propertyRowtreatLibraryUseOnlyGroupedStatusesAsAvailable', 'propertyRowtotalCheckouts', 'propertyRowlastYearCheckouts',
-					'propertyRowyearToDateCheckouts', 'propertyRowtotalRenewals', 'propertyRowiType', 'propertyRownonHoldableITypes',
-					'propertyRowiTypesToSuppress', 'propertyRowdueDate', 'propertyRowdueDateFormat', 'propertyRowdateCreated',
-					'propertyRowdateCreatedFormat', 'propertyRowlastCheckinDate', 'propertyRowlastCheckinFormat', 'propertyRowformat',
-					'propertyRoweContentDescriptor', 'propertyRowdoAutomaticEcontentSuppression', 'propertyRownoteSubfield', 'propertyRowreplacementCostSubfield',
-					'propertyRowformatMappingSection', 'propertyRowformatSource', 'propertyRowfallbackFormatField',
-					'propertyRowspecifiedFormat', 'propertyRowspecifiedFormatCategory', 'propertyRowspecifiedFormatBoost',
-					'propertyRowcheckRecordForLargePrint', 'propertyRowformatMap', 'propertyRowstatusMappingSection',
-					'propertyRowstatusMap', 'propertyRoworderTag', 'propertyRoworderStatus', 'propertyRoworderLocationSingle',
-					'propertyRoworderLocation', 'propertyRoworderCopies', 'propertyRoworderCode3', 'propertyRowregroupAllRecords',
-					'propertyRowrunFullUpdate', 'propertyRowlastUpdateOfChangedRecords', 'propertyRowlastUpdateOfAllRecords',
-					'propertyRowlastChangeProcessed', 'propertyRowfullMarcExportRecordIdThreshold', 'propertyRowlastUpdateFromMarcExport',
-					'propertyRowtranslationMaps', 'FloatingSave', 'propertyRowindex856Links', 'propertyRowincludePersonalAndCorporateNamesInTopics',
-					'propertyRowcustomFacetSection', 'propertyRowcustomFacet1SourceField', 'propertyRowcustomFacet1ValuesToInclude', 'propertyRowcustomFacet1ValuesToExclude',
-					'propertyRowcustomFacet2SourceField', 'propertyRowcustomFacet2ValuesToInclude', 'propertyRowcustomFacet2ValuesToExclude',
-					'propertyRowcustomFacet3SourceField', 'propertyRowcustomFacet3ValuesToInclude', 'propertyRowcustomFacet3ValuesToExclude'
-				],
-				//Specific per class
-				Koha: ['propertyRowlastUpdateOfAuthorities'],
-				Evolve: [],
-				ArlingtonKoha: ['propertyRowlastUpdateOfAuthorities'],
-				CarlX: [],
-				NashvilleCarlX: [],
-				Folio: [],
-				III: ['propertyRowbCode3sToSuppress', 'propertyRowiCode2', 'propertyRowuseICode2Suppression', 'propertyRowiCode2sToSuppress', 'propertyRoworderSection', 'propertyRowsierraSection', 'propertyRoworderRecordsStatusesToInclude', 'propertyRoworderRecordStatusToTreatAsUnderConsideration', 'propertyRowhideOrderRecordsForBibsWithPhysicalItems', 'propertyRoworderRecordsToSuppressByDate', 'propertyRowsierraFieldMappings', 'propertyRowcheckSierraMatTypeForFormat'],
-				Symphony: ['propertyRowlastVolumeExportTimestamp'],
-				Polaris: [],
-				Evergreen: ['propertyRowevergreenOrgUnitSchema', 'propertyRowevergreenSection', 'propertyRownumRetriesForBibLookups', 'propertyRownumMillisecondsToPauseAfterBibLookups', 'propertyRownumExtractionThreads']
-			};
-
-			//Show rows for selected class
-			var selectedIndexingClass = $("#indexingClassSelect").val();
-			var selectedIndexingClassText = $("#indexingClassSelect option:selected").text();
-
-			if (selectedIndexingClass !== '...' && selectedIndexingClass !== '') {
-				var iterator = ilsOptions[selectedIndexingClass];
-				iterator = $.merge(ilsOptions['commonFields'], iterator);
-				iterator.forEach(function (value) {
-					$("#" + value).show();
-				});
-			}
-		}
-	}
-}(AspenDiscovery.IndexingClass || {}));
-
 /*
  *   This content is licensed according to the W3C Software License at
  *   https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document

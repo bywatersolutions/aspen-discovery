@@ -3,10 +3,10 @@
 
 		<h1>{translate text='Forgot %1%' 1=$usernameLabel isPublicFacing=true translateParameters=true}</h1>
 		{if isset($error)}
-            <p class="alert alert-warning">
-                {$error}
-            </p>
-        {else}
+			<p class="alert alert-warning">
+				{$error}
+			</p>
+		{else}
 		<div class="alert alert-info">{translate text="To receive your $usernameLabel to login, provide your phone number.  You must have a text-capable phone number associated with your account to receive your $usernameLabel.  If you do not, please contact the library." isPublicFacing=true}</div>
 		<form id="forgotBarcode" method="POST" action="/MyAccount/ForgotBarcode" class="form-horizontal">
 			<div class="form-group">

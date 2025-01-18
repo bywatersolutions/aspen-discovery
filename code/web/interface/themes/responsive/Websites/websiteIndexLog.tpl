@@ -5,7 +5,7 @@
 
 		<h4>{translate text="Filter by" isAdminFacing=true}</h4>
 
-        {include file='Admin/exportLogFilters.tpl'}
+		{include file='Admin/exportLogFilters.tpl'}
 		<div class="adminTableRegion fixed-height-table">
 			<table class="adminTable table table-condensed table-hover table-condensed smallText table-sticky">
 				<thead>

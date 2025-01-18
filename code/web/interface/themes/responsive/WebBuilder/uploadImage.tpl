@@ -15,7 +15,7 @@
 		</div>
 	</form>
 	<script type="application/javascript">
-        {literal}
+		{literal}
 		$("#uploadCoverForm").validate({
 			submitHandler: function(){
 				AspenDiscovery.WebBuilder.doImageUpload();
@@ -26,6 +26,6 @@
 			var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
 			$("#selected-image-label").val(label);
 		});
-        {/literal}
+		{/literal}
 	</script>
 {/strip}

@@ -9,7 +9,7 @@
 	<div class="row">
 		<div class="col-xs-12">
 			{assign var="permanentId" value=$recordDriver->getPermanentId()}
-            {assign var="groupedWorkValid" value=$recordDriver->hasValidGroupedWorkDriver()}
+			{assign var="groupedWorkValid" value=$recordDriver->hasValidGroupedWorkDriver()}
 			{if !empty($groupedWorkValid)}
 				<a href="/GroupedWork/{$recordDriver->getPermanentId()}" class="btn btn-sm btn-default">{translate text="Go To Grouped Work" isPublicFacing=true}</a>
 				<button onclick="return AspenDiscovery.GroupedWork.reloadCover('{$recordDriver->getPermanentId()}', '{$bookcoverInfo->recordType}', '{$bookcoverInfo->recordId}')" class="btn btn-sm btn-default">{translate text="Reload Cover" isAdminFacing=true}</button>

@@ -1,7 +1,7 @@
 {strip}
 <h1>{$title}</h1>
 	<div class="alert alert-info">
-        {translate text="Only 90 days of history is included" isAdminFacing=true}
+		{translate text="Only 90 days of history is included" isAdminFacing=true}
 	</div>
 {if !empty($showReturnToList)}
 	<a class="btn btn-default" href='/{$module}/{$toolName}?objectAction=list'><i class="fas fa-arrow-alt-circle-left" role="presentation"></i> {translate text="Return to List" isAdminFacing=true}</a>

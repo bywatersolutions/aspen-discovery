@@ -6,13 +6,13 @@ class UserAPI extends AbstractAPI {
 
 
 	/**
-	 * Processes method to determine return type and calls the correct method.
+	 * Processes method to determine the return type and calls the correct method.
 	 * Should not be called directly.
 	 *
 	 * @see Action::launch()
 	 * @access private
 	 */
-	function launch() {
+	function launch() : void {
 		$method = (isset($_GET['method']) && !is_array($_GET['method'])) ? $_GET['method'] : '';
 		$output = '';
 
@@ -54,6 +54,7 @@ class UserAPI extends AbstractAPI {
 					'returnCheckout',
 					'updateOverDriveEmail',
 					'getValidPickupLocations',
+					'getValidSublocations',
 					'getHiddenBrowseCategories',
 					'getILSMessages',
 					'dismissBrowseCategory',
@@ -256,8 +257,8 @@ class UserAPI extends AbstractAPI {
 	 *
 	 * Parameters:
 	 * <ul>
-	 * <li>username - The barcode of the user.  Can be truncated to the last 7 or 9 digits.</li>
-	 * <li>password - The pin number for the user.
+	 * <li>username - The barcode of the user. Can be truncated to the last 7 or 9 digits.</li>
+	 * <li>password - The pin for the user.
 	 * </ul>
 	 *
 	 * @noinspection PhpUnused
@@ -1916,6 +1917,18 @@ class UserAPI extends AbstractAPI {
 			$shortId = $bibId;
 		}
 
+		$pickupSublocationId = $_REQUEST['pickupSublocation'] ?? false;
+		$pickupSublocation = null;
+		if ($pickupSublocationId) {
+			//In the form this is set as the id of the sublocation in Aspen, but we want to pass the ILS ID
+			require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+			$pickupSublocationObject = new Sublocation();
+			$pickupSublocationObject->id = $pickupSublocationId;
+			if ($pickupSublocationObject->find(true)) {
+				$pickupSublocation = $pickupSublocationObject->ilsId;
+			}
+		}
+
 		$user = $this->getUserForApiCall();
 		if ($user && !($user instanceof AspenError)) {
 			global $library;
@@ -1966,11 +1979,11 @@ class UserAPI extends AbstractAPI {
 
 					$holdType = $_REQUEST['holdType'];
 					if ($holdType == 'item' && isset($_REQUEST['itemId'])) {
-						$result = $user->placeItemHold($shortId, $_REQUEST['itemId'], $pickupBranch, $cancelDate);
+						$result = $user->placeItemHold($shortId, $_REQUEST['itemId'], $pickupBranch, $cancelDate, $pickupSublocation);
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
-						$needsIllRequest = isset($hold_result['error_code']) && ($hold_result['error_code'] == 'hatErrorResponse.17286') || ($hold_result['error_code'] == 'hatErrorResponse.447');
+						$needsIllRequest = isset($hold_result['error_code']) && (($hold_result['error_code'] == 'hatErrorResponse.17286') || ($hold_result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -1982,11 +1995,11 @@ class UserAPI extends AbstractAPI {
 							'needsIllRequest' => $needsIllRequest
 						];
 					} elseif ($holdType == 'volume' && isset($_REQUEST['volumeId'])) {
-						$result = $user->placeVolumeHold($shortId, $_REQUEST['volumeId'], $pickupBranch);
+						$result = $user->placeVolumeHold($shortId, $_REQUEST['volumeId'], $pickupBranch, $pickupSublocation);
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
-						$needsIllRequest = isset($result['error_code']) && ($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447');
+						$needsIllRequest = isset($result['error_code']) && (($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -2012,7 +2025,7 @@ class UserAPI extends AbstractAPI {
 								];
 							}
 						}
-						$result = $user->placeHold($bibId, $pickupBranch, $cancelDate);
+						$result = $user->placeHold($bibId, $pickupBranch, $cancelDate, $pickupSublocation);
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
@@ -2020,6 +2033,7 @@ class UserAPI extends AbstractAPI {
 						if(isset($result['items'])) {
 							$hasItems = (bool)$result['items'];
 						}
+						$needsIllRequest = isset($result['error_code']) && (($result['error_code'] == 'hatErrorResponse.17286') || ($result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],
@@ -2029,6 +2043,7 @@ class UserAPI extends AbstractAPI {
 							'confirmationId' => $result['api']['confirmationId'] ?? null,
 							'shouldBeItemHold' => $hasItems,
 							'items' => $result['items'] ?? null,
+							'needsIllRequest' => $needsIllRequest
 						];
 					}
 				} elseif ($source == 'overdrive') {
@@ -2129,7 +2144,19 @@ class UserAPI extends AbstractAPI {
 					]),
 				];
 			}
-			$result = $user->changeHoldPickUpLocation($holdId, $locationCode);
+			$newSublocation = $_REQUEST['newSublocation'] ?? null;
+			$pickupSublocation = null;
+			if (!empty($newSublocation)) {
+				//In the form this is set as the id of the sublocation in Aspen, but we want to pass the ILS ID
+				require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+				$pickupSublocationObject = new Sublocation();
+				$pickupSublocationObject->id = $newSublocation;
+				if ($pickupSublocationObject->find(true)) {
+					$pickupSublocation = $pickupSublocationObject->ilsId;
+				}
+			}
+
+			$result = $user->changeHoldPickUpLocation($holdId, $locationCode, $pickupSublocation);
 			return [
 				'success' => $result['success'],
 				'title' => $result['api']['title'],
@@ -2144,11 +2171,7 @@ class UserAPI extends AbstractAPI {
 	}
 
 	function getValidPickupLocations(): array {
-		[
-			$username,
-			$password,
-		] = $this->loadUsernameAndPassword();
-		$patron = UserAccount::validateAccount($username, $password);
+		$patron = $this->getUserForApiCall();
 		if ($patron && !($patron instanceof AspenError)) {
 			if ($patron->hasIlsConnection()) {
 				$tmpPickupLocations = $patron->getValidPickupBranches($patron->getAccountProfile()->recordSource);
@@ -2170,6 +2193,64 @@ class UserAPI extends AbstractAPI {
 				return [
 					'success' => false,
 					'message' => 'Patron is not connected to an ILS.',
+				];
+			}
+		} else {
+			return [
+				'success' => false,
+				'message' => 'Login unsuccessful',
+			];
+		}
+	}
+
+	function getValidSublocations() : array {
+		$patron = $this->getUserForApiCall();
+		if ($patron && !($patron instanceof AspenError)) {
+			if (isset($_REQUEST['locationCode'])) {
+				$location = new Location();
+				$location->code = $_REQUEST['locationCode'];
+				if ($location->find(true)) {
+					$validSubLocationsForUser = $location->getPickupSublocations($patron);
+					$subLocationsToReturn = [];
+					foreach ($validSubLocationsForUser as $sublocation) {
+						$subLocationsToReturn[$sublocation->id] = [
+							'id' => $sublocation->id,
+							'ilsId' => $sublocation->ilsId,
+							'displayName' => $sublocation->name,
+							'locationCode' => $location->code,
+							'locationId' => $location->locationId
+						];
+					}
+					return [
+						'success' => true,
+						'sublocations' => $subLocationsToReturn,
+					];
+				}else{
+					return [
+						'success' => false,
+						'message' => 'Could not find location for the specified location code',
+					];
+				}
+			}else{
+				$tmpPickupLocations = $patron->getValidPickupBranches($patron->getAccountProfile()->recordSource);
+				$subLocationsToReturn = [];
+				foreach ($tmpPickupLocations as $pickupLocation) {
+					if (!is_string($pickupLocation)) {
+						$validSubLocationsForUser = $pickupLocation->getPickupSublocations($patron);
+						foreach ($validSubLocationsForUser as $sublocation) {
+							$subLocationsToReturn[$sublocation->id] = [
+								'id' => $sublocation->id,
+								'ilsId' => $sublocation->ilsId,
+								'displayName' => $sublocation->name,
+								'locationCode' => $pickupLocation->code,
+								'locationId' => $pickupLocation->locationId
+							];
+						}
+					}
+				}
+				return [
+					'success' => true,
+					'sublocations' => $subLocationsToReturn,
 				];
 			}
 		} else {
@@ -4626,7 +4707,7 @@ class UserAPI extends AbstractAPI {
 		$user = $this->getUserForApiCall();
 		if ($user && !($user instanceof AspenError)) {
 			$newStatus = $_REQUEST['status'] ?? null;
-			if($newStatus) {
+			if($newStatus !== null) {
 				if ($newStatus == 'false' || !$newStatus) {
 					$user->shouldAskBrightness = 0;
 					$user->update();
@@ -4637,6 +4718,11 @@ class UserAPI extends AbstractAPI {
 					];
 				} else {
 					// no update to the status since it defaults to 1
+					return [
+						'success' => true,
+						'title' => 'Success',
+						'message' => 'User screen brightness prompt status did not need update'
+					];
 				}
 			} else {
 				return [
@@ -4662,7 +4748,7 @@ class UserAPI extends AbstractAPI {
 		];
 		if (isset($_REQUEST['username'])) {
 			$user = UserAccount::getUserByBarcode($_REQUEST['username']);
-			if ($user != false) {
+			if ($user !== false) {
 				$results = [
 					'success' => true,
 					'id' => $user->id,
@@ -4681,7 +4767,7 @@ class UserAPI extends AbstractAPI {
 	/**
 	 * @return bool|User
 	 */
-	function getUserForApiCall($patronBarcode = null, $patronPassword = null) {
+	function getUserForApiCall(?String $patronBarcode = null, ?String $patronPassword = null) : bool|User {
 		if ($this->context == 'internal') {
 			if ($patronBarcode == null && $patronPassword == null) {
 				return UserAccount::getActiveUserObj();
@@ -4732,7 +4818,7 @@ class UserAPI extends AbstractAPI {
 		}
 	}
 
-	function getLinkedAccounts() {
+	function getLinkedAccounts() : array {
 		$user = $this->getUserForApiCall();
 
 		if ($user && !($user instanceof AspenError)) {
@@ -6043,6 +6129,12 @@ class UserAPI extends AbstractAPI {
 							'title' => translate(['text' => 'Updated', 'isPublicFacing' => true]),
 							'message' => translate(['text' => 'Marked message as read', 'isPublicFacing' => true]),
 						];
+					}else{
+						return [
+							'success' => false,
+							'title' => translate(['text' => 'Not Updated', 'isPublicFacing' => true]),
+							'message' => translate(['text' => 'Could not mark message as read', 'isPublicFacing' => true]),
+						];
 					}
 				} else {
 					return [
@@ -6084,6 +6176,12 @@ class UserAPI extends AbstractAPI {
 							'success' => true,
 							'title' => translate(['text' => 'Updated', 'isPublicFacing' => true]),
 							'message' => translate(['text' => 'Marked message as unread', 'isPublicFacing' => true]),
+						];
+					}else{
+						return [
+							'success' => false,
+							'title' => translate(['text' => 'Not Updated', 'isPublicFacing' => true]),
+							'message' => translate(['text' => 'Could not mark message as unread', 'isPublicFacing' => true]),
 						];
 					}
 				} else {

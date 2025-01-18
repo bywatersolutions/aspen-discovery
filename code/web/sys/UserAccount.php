@@ -4,8 +4,8 @@ require_once ROOT_DIR . '/sys/Authentication/AuthenticationFactory.php';
 require_once ROOT_DIR . '/sys/Account/TwoFactorAuthenticationError.php';
 
 class UserAccount {
-	public static $isLoggedIn = null;
-	public static $isAuthenticated = false;
+	public static ?bool $isLoggedIn = null;
+	public static ?bool $isAuthenticated = false;
 	public static $primaryUserData = null;
 	/** @var User|false */
 	private static $primaryUserObjectFromDB = null;
@@ -16,7 +16,7 @@ class UserAccount {
 	private static $ssoAuthOnly = false;
 
 	/**
-	 * Check to see if the user is enrolled in 2 factor authentication and has been sent a verification code, but has not verified it.
+	 * Check to see if the user is enrolled in two-factor authentication and has been sent a verification code, but has not verified it.
 	 *
 	 * @return bool
 	 */
@@ -28,9 +28,9 @@ class UserAccount {
 			if ($twoFactorSetting->find()) {
 
 				if (!UserAccount::isUserMasquerading()) {
-					//Two factor might be required
+					//Two-factor authentication might be required
 					if (UserAccount::has2FAEnabled()) {
-						//Two factor is required, check to see if it's complete.
+						//Two-factor authentication is required, check to see if it's complete.
 						//Check the session to see if it is complete
 						require_once ROOT_DIR . '/sys/TwoFactorAuthCode.php';
 						$authCodeForSession = new TwoFactorAuthCode();
@@ -666,14 +666,14 @@ class UserAccount {
 	 * Validate the account information (username and password are correct).
 	 * Returns the account, but does not set the global user variable.
 	 *
-	 * @param $username       string
+	 * @param $username       ?string
 	 * @param $password       ?string
 	 * @param $accountSource  ?string The source of the user account if known or null to test all sources
 	 * @param $parentAccount  ?User   The parent user if any
 	 *
 	 * @return User|false
 	 */
-	public static function validateAccount(string $username, ?string $password, ?string $accountSource = null, ?User $parentAccount = null) {
+	public static function validateAccount(?string $username, ?string $password, ?string $accountSource = null, ?User $parentAccount = null) {
 		if (array_key_exists($username . $password, UserAccount::$validatedAccounts)) {
 			return UserAccount::$validatedAccounts[$username . $password];
 		}

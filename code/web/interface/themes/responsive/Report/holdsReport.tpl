@@ -24,15 +24,15 @@
 				<p>
 					There are a total of <strong>{$reportData|@count}</strong> Fill List items.
 				</p>
-            {/if}
+			{/if}
 		</div>
 {literal}
 <style>
-    @media screen {
-        .displayPrint {
-            display: none !important;
-        }
-    }
+	@media screen {
+		.displayPrint {
+			display: none !important;
+		}
+	}
 	@media print {
 		@page {
 			size: letter;
@@ -68,87 +68,87 @@
 		table#holdsReportTable thead tr {
 			display: none !important;
 		}
-        .holdsReportSlipContainer{
-            border-bottom: 1px dashed #ccc !important;
-            border-top: 1px dashed #ccc !important;
-            display: table !important;
-            height: 2.75in !important;
-            max-height: 2.75in !important;
-            max-width: 8in !important;
-            min-height: 2.75in !important;
-            min-width: 8in !important;
-            width: 8in !important;
-        }
-        .holdsReportSlipContainer td {
-            padding: 0in !important;
-        }
-        div.holdsReportSlip {
-            color: #000;
-            display: table-row !important;
-            font-size: 12pt;
-            page-break-inside: avoid;
-        }
-        div.holdsReportSlip div.patron {
-            display: table-cell;
-            height: 2.6in !important;
-            padding: .25in !important;
-            transform: rotate(-90deg);
-            width: 2.75in;
-        }
-        div.holdsReportSlip div.patron div {
-            font-weight: bold;
-        }
+		.holdsReportSlipContainer{
+			border-bottom: 1px dashed #ccc !important;
+			border-top: 1px dashed #ccc !important;
+			display: table !important;
+			height: 2.75in !important;
+			max-height: 2.75in !important;
+			max-width: 8in !important;
+			min-height: 2.75in !important;
+			min-width: 8in !important;
+			width: 8in !important;
+		}
+		.holdsReportSlipContainer td {
+			padding: 0in !important;
+		}
+		div.holdsReportSlip {
+			color: #000;
+			display: table-row !important;
+			font-size: 12pt;
+			page-break-inside: avoid;
+		}
+		div.holdsReportSlip div.patron {
+			display: table-cell;
+			height: 2.6in !important;
+			padding: .25in !important;
+			transform: rotate(-90deg);
+			width: 2.75in;
+		}
+		div.holdsReportSlip div.patron div {
+			font-weight: bold;
+		}
 		div.PICKUP_BRANCH {
 		}
-        div.GRD_LVL {
-        }
-        div.HOME_ROOM {
-        }
+		div.GRD_LVL {
+		}
+		div.HOME_ROOM {
+		}
 /*
-        div.P_BARCODE_SCANNABLE {
-            font-family: "3 of 9 Barcode";
-            font-size: 20pt !important;
-            font-weight: normal !important;
-        }
+		div.P_BARCODE_SCANNABLE {
+			font-family: "3 of 9 Barcode";
+			font-size: 20pt !important;
+			font-weight: normal !important;
+		}
 */
-        div.PATRON_NAME {
-        }
-        div.holdsReportSlip div.placeHolder {
-            display: table-cell;
-            height: 2.6in;
-            padding: .25in !important;
-            transform: rotate(-90deg);
-            width: 2.75in;
-        }
-        div.holdsReportSlip div.item {
-            display: table-cell;
-            height: 2.6in !important;
-            padding: .25in !important;
-            transform: rotate(90deg);
-            width: 2.75in;
-        }
-        div.holdsReportSlip div.item div {
-        }
-        div.CALL_NUMBER {
-        }
-        div.ITEM_ID {
-        }
-        div.TITLE {
-            font-style: italic;
-        }
-        div.DUE_DATE {
-        }
-        table#holdsReportTable {
-        }
-        table#holdsReportTable .displayScreen {
-            display: none;
-        }
-        table#holdsReportTable thead {
-            display: table !important;
-        }
-        table#holdsReportTable tbody tr td {
-            border: 0;
-        }
+		div.PATRON_NAME {
+		}
+		div.holdsReportSlip div.placeHolder {
+			display: table-cell;
+			height: 2.6in;
+			padding: .25in !important;
+			transform: rotate(-90deg);
+			width: 2.75in;
+		}
+		div.holdsReportSlip div.item {
+			display: table-cell;
+			height: 2.6in !important;
+			padding: .25in !important;
+			transform: rotate(90deg);
+			width: 2.75in;
+		}
+		div.holdsReportSlip div.item div {
+		}
+		div.CALL_NUMBER {
+		}
+		div.ITEM_ID {
+		}
+		div.TITLE {
+			font-style: italic;
+		}
+		div.DUE_DATE {
+		}
+		table#holdsReportTable {
+		}
+		table#holdsReportTable .displayScreen {
+			display: none;
+		}
+		table#holdsReportTable thead {
+			display: table !important;
+		}
+		table#holdsReportTable tbody tr td {
+			border: 0;
+		}
 	}
 </style>
 {/literal}
@@ -160,10 +160,10 @@
 					<th class="filter-select filter-onlyAvail">Homeroom</th>
 					<th class="sorter-false">Student ID</th>
 					<th class="filter">Student Name</th>
-                    <th class="filter-select filter-onlyAvail">Shelf Location</th>
-                    <th class="filter">Call Number</th>
-                    <th class="filter">Title</th>
-                    <th class="sorter-false">Notice</th>
+					<th class="filter-select filter-onlyAvail">Shelf Location</th>
+					<th class="filter">Call Number</th>
+					<th class="filter">Title</th>
+					<th class="sorter-false">Notice</th>
 				<tr>
 			</thead>
 			<tbody>
@@ -175,10 +175,10 @@
 					<td class="displayScreen">{$dataRow.HOME_ROOM|lower|capitalize:true}</td>
 					<td class="displayScreen">{$dataRow.P_BARCODE}</td>
 					<td class="displayScreen">{$dataRow.PATRON_NAME}</td>
-                    <td class="displayScreen">{$dataRow.SHELF_LOCATION|replace:'kids ':''|replace:'teen ':''|replace:'adult ':''}</td>
-                    <td class="displayScreen">{$dataRow.CALL_NUMBER}</td>
-                    <td class="displayScreen">{$dataRow.TITLE}</td>
-                    <td class="displayPrint">
+					<td class="displayScreen">{$dataRow.SHELF_LOCATION|replace:'kids ':''|replace:'teen ':''|replace:'adult ':''}</td>
+					<td class="displayScreen">{$dataRow.CALL_NUMBER}</td>
+					<td class="displayScreen">{$dataRow.TITLE}</td>
+					<td class="displayPrint">
 						<div class="holdsReportSlip">
 							<div class="patron">
 								<div class="PATRON_NAME">{$dataRow.PATRON_NAME|upper}</div>
@@ -188,10 +188,10 @@
 								<div class="HOME_ROOM">{$dataRow.HOME_ROOM|lower|capitalize:true}</div>
 							</div>
 							<div class="placeHolder">
-                                <p>Thank you for checking out from your school library.</p>
-                                <p>Books are due in 3 weeks.</p>
-                                <p>DVDs are due in 1 week.</p>
-                                <p>Check your account online at https://limitlesslibraries.org</p>
+								<p>Thank you for checking out from your school library.</p>
+								<p>Books are due in 3 weeks.</p>
+								<p>DVDs are due in 1 week.</p>
+								<p>Check your account online at https://limitlesslibraries.org</p>
 							</div>
 							<div class="item">
 								<div class="SHELF_LOCATION">{$dataRow.SHELF_LOCATION|replace:'kids ':''|replace:'teen ':''|replace:'adult ':''|capitalize}</div>

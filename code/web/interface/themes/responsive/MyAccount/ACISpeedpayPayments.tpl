@@ -25,9 +25,9 @@
 			</div>
 			<div class="row">
 				<div class="form-group col-xs-6 col-lg-7">
-	                <label id="account-holdername" class="control-label">{translate text="Cardholder Name" isPublicFacing=true}</label>
-	                <input type="text" data-aci-speedpay="account-holder-name" class="form-control" minlength="1" maxlength="45"/>
-	            </div>
+					<label id="account-holdername" class="control-label">{translate text="Cardholder Name" isPublicFacing=true}</label>
+					<input type="text" data-aci-speedpay="account-holder-name" class="form-control" minlength="1" maxlength="45"/>
+				</div>
 				<div class="form-group col-xs-2">
 					<label id="region-code" class="control-label">{translate text="State" isPublicFacing=true}</label>
 					<input type="text" data-aci-speedpay="account-region-code" class="form-control" minlength="2" maxlength="3" />
@@ -46,11 +46,11 @@
 			<script>
 				fundingAccountGatewayResult = aci.speedpay.fundingAccountGateway.init(
 					{
-                        "apiAuthKey": '{/literal}{$sdkAuthKey}{literal}',
-                        "accessToken": '{/literal}{$accessToken}{literal}',
-                        "singleUse": 'true',
-                        "paymentMethod": 'Card',
-                        "billerAccountId": '{/literal}{$billerAccountId}{literal}',
+						"apiAuthKey": '{/literal}{$sdkAuthKey}{literal}',
+						"accessToken": '{/literal}{$accessToken}{literal}',
+						"singleUse": 'true',
+						"paymentMethod": 'Card',
+						"billerAccountId": '{/literal}{$billerAccountId}{literal}',
 						"styles": {
 							"input": {
 								"fontfamily": "Helvetica",
@@ -94,36 +94,36 @@
 							}
 						},
 					},
-                    (onError = function(event) {
-                            AspenDiscovery.Account.handleACIError(event.message.default);
-                    }),
-                );
+					(onError = function(event) {
+							AspenDiscovery.Account.handleACIError(event.message.default);
+					}),
+				);
 
-                var cardButton = document.getElementById('process-payment');
-                cardButton.addEventListener("click", function(event) {
-	                cardButton.disabled = true;
-	                cardButton.value = "Submitting Payment...";
-                    fundingAccountGatewayResult.then((handler) =>
-                    {
-                        handler.createToken()
-                       .then((tokenDetails) =>
-                        {
-                           var paymentId = AspenDiscovery.Account.createACIOrder('#fines{/literal}{$userId}{literal}', 'fine', tokenDetails.token.id, '{/literal}{$accessToken}{literal}');
-                           AspenDiscovery.Account.completeACIOrder(tokenDetails.token.id, {/literal}{$userId}{literal}, 'fine', paymentId, '{/literal}{$accessToken}{literal}', '{/literal}{$billerAccountId}{literal}');
-	                        cardButton.disabled = false;
-	                        cardButton.value = "{/literal}{if !empty($payFinesLinkText)}{$payFinesLinkText}{else}{translate text = 'Submit Payment' isPublicFacing=true}{/if}{literal}";
-                        }
-                        )
-                       .catch((error) =>
-                        {
-	                        AspenDiscovery.Account.handleACIError(error.message.default);
-	                        cardButton.disabled = false;
-	                        cardButton.value = "{/literal}{if !empty($payFinesLinkText)}{$payFinesLinkText}{else}{translate text = 'Submit Payment' isPublicFacing=true}{/if}{literal}";
-                        });
-                    })
+				var cardButton = document.getElementById('process-payment');
+				cardButton.addEventListener("click", function(event) {
+					cardButton.disabled = true;
+					cardButton.value = "Submitting Payment...";
+					fundingAccountGatewayResult.then((handler) =>
+					{
+						handler.createToken()
+					   .then((tokenDetails) =>
+						{
+							var paymentId = AspenDiscovery.Account.createACIOrder('#fines{/literal}{$userId}{literal}', 'fine', tokenDetails.token.id, '{/literal}{$accessToken}{literal}');
+							AspenDiscovery.Account.completeACIOrder(tokenDetails.token.id, {/literal}{$userId}{literal}, 'fine', paymentId, '{/literal}{$accessToken}{literal}', '{/literal}{$billerAccountId}{literal}');
+							cardButton.disabled = false;
+							cardButton.value = "{/literal}{if !empty($payFinesLinkText)}{$payFinesLinkText}{else}{translate text = 'Submit Payment' isPublicFacing=true}{/if}{literal}";
+						}
+						)
+					   .catch((error) =>
+						{
+							AspenDiscovery.Account.handleACIError(error.message.default);
+							cardButton.disabled = false;
+							cardButton.value = "{/literal}{if !empty($payFinesLinkText)}{$payFinesLinkText}{else}{translate text = 'Submit Payment' isPublicFacing=true}{/if}{literal}";
+						});
+					})
 				});
 			</script>
-        {/literal}
+		{/literal}
 			{else}
 				<div class="alert alert-warning"><strong>{translate text=$aciError isPublicFacing=true}</strong></div>
 			{/if}

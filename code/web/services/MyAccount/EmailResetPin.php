@@ -4,7 +4,7 @@ require_once ROOT_DIR . "/Action.php";
 require_once ROOT_DIR . '/CatalogConnection.php';
 
 class MyAccount_EmailResetPin extends Action {
-	function launch($msg = null) {
+	function launch($msg = null) : void {
 		global $interface;
 		global $library;
 

@@ -56,19 +56,19 @@ class Admin_Administrators extends ObjectEditor {
 		return 'id';
 	}
 
-	function canAddNew() {
+	function canAddNew() : bool {
 		return false;
 	}
 
-	function canCompare() {
+	function canCompare() : bool {
 		return false;
 	}
 
-	function canCopy() {
+	function canCopy() : bool {
 		return false;
 	}
 
-	function customListActions() {
+	function customListActions() : array {
 		return [
 			[
 				'label' => 'Add Administrator',
@@ -78,16 +78,15 @@ class Admin_Administrators extends ObjectEditor {
 	}
 
 	/** @noinspection PhpUnused */
-	function addAdministrator() {
+	function addAdministrator() : void {
 		global $interface;
 		//Basic List
 		$interface->setTemplate('addAdministrator.tpl');
 	}
 
 	/** @noinspection PhpUnused */
-	function processNewAdministrator() {
+	function processNewAdministrator() : void {
 		global $interface;
-		global $configArray;
 		$loginRaw = trim($_REQUEST['login']);
 		$logins = preg_split("/\\r\\n|\\r|\\n/", $loginRaw);
 		$errors = [];
@@ -100,7 +99,7 @@ class Admin_Administrators extends ObjectEditor {
 			if ($numResults == 0) {
 				//See if we can fetch the user from the ils
 				$newAdmin = UserAccount::findNewUser($login, '');
-				if ($newAdmin == false) {
+				if ($newAdmin === false) {
 					$newAdmin = new User();
 					$newAdmin->username = $login;
 					$newAdmin->find();
@@ -131,7 +130,7 @@ class Admin_Administrators extends ObjectEditor {
 				]);
 			}
 
-			if ($newAdmin != false) {
+			if ($newAdmin !== false) {
 				if (isset($_REQUEST['roles'])) {
 					//Convert from a list of ids to the actual roles to be saved
 					$roleIds = $_REQUEST['roles'];
@@ -187,23 +186,23 @@ class Admin_Administrators extends ObjectEditor {
 		return UserAccount::userHasPermission('Administer Users');
 	}
 
-	function canDelete() {
+	function canDelete() : bool {
 		return false;
 	}
 
-	function canBatchEdit() {
+	function canBatchEdit() : bool {
 		return false;
 	}
 
-	function canFilter($objectStructure) {
+	function canFilter($objectStructure) : bool {
 		return false;
 	}
 
-	protected function showQuickFilterOnPropertiesList() {
+	protected function showQuickFilterOnPropertiesList() : bool {
 		return true;
 	}
 
-	protected function supportsPagination() {
+	protected function supportsPagination() : bool {
 		return false;
 	}
 }

@@ -75,7 +75,6 @@ class User extends DataObject {
 	public $lastLoginValidation;
 
 	public $twoFactorStatus; //Whether the user has enrolled
-	public $twoFactorAuthSettingId; //The settings based on their PType
 
 	public $updateMessage;
 	public $updateMessageIsError;
@@ -597,7 +596,7 @@ class User extends DataObject {
 	public function getRolesAssignedByPType(): array {
 		$rolesAssignedByPType = [];
 		if ($this->id) {
-			//Get role based on patron type
+			//Get the user role based on their patron type
 			$patronType = $this->getPTypeObj();
 			if (!empty($patronType)) {
 				if ($patronType->assignedRoleId != -1) {
@@ -1111,12 +1110,16 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function insert($context = '') {
+	function insert($context = '') : int {
 		if ($this->firstname === null) {
 			$this->firstname = '';
 		}
 		if ($context == 'development') {
 			$this->source = 'development';
+			$this->homeLocationId = 0;
+			$this->displayName = $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.';
+		} elseif ($context == 'localAdministrator') {
+			$this->source = 'admin';
 			$this->homeLocationId = 0;
 			$this->displayName = $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.';
 		} else {
@@ -1158,13 +1161,13 @@ class User extends DataObject {
 		return $ret;
 	}
 
-	function hasRole($roleName) {
+	function hasRole($roleName) : bool {
 		$myRoles = $this->__get('roles');
 		return in_array($roleName, $myRoles);
 	}
 
 	static function getObjectStructure($context = ''): array {
-		//Lookup available roles in the system
+		//Lookup the available roles in the system
 		require_once ROOT_DIR . '/sys/Administration/Role.php';
 		$roleList = Role::getLookup();
 
@@ -1176,6 +1179,12 @@ class User extends DataObject {
 				'type' => 'label',
 				'label' => 'Id',
 				'description' => 'The unique id of the in the system',
+			],
+			'source' => [
+				'property' => 'source',
+				'type' => 'label',
+				'label' => 'Source Account Profile',
+				'description' => 'The source of the user in the system',
 			],
 			'username' => [
 				'property' => 'username',
@@ -1201,6 +1210,12 @@ class User extends DataObject {
 				'type' => 'label',
 				'label' => 'Last Name',
 				'description' => 'The last name of the user.',
+			],
+			'displayName' => [
+				'property' => 'displayName',
+				'type' => 'label',
+				'label' => 'Display Name',
+				'description' => 'The display name of the user.',
 			],
 			'email' => [
 				'property' => 'email',
@@ -1251,10 +1266,17 @@ class User extends DataObject {
 			$structure['firstname']['type'] = 'text';
 			$structure['lastname']['type'] = 'text';
 			unset($structure['homeLibraryName']);
-			unset($structure['homeLocation']);
+			$structure['homeLocation']['label'] = 'Primary Location';
 			unset($structure['barcode']);
 			unset($structure['roles']);
 			unset($structure['additionalAdministrationLocations']);
+		}else if ($context == 'localAdministrator') {
+			$structure['firstname']['type'] = 'text';
+			$structure['lastname']['type'] = 'text';
+			$structure['email']['required'] = true;
+			unset($structure['homeLibraryName']);
+			unset($structure['homeLocation']);
+			unset($structure['barcode']);
 		} else {
 			unset($structure['username']);
 			unset($structure['password']);
@@ -2331,24 +2353,27 @@ class User extends DataObject {
 	public function getValidSublocations(int $locationId): array {
 		require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 		require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-		$patronType = $this->getPTypeObj();
 		$sublocations = [];
-		$object = new Sublocation();
-		$object->locationId = $locationId;
-		$object->isValidHoldPickupAreaILS = 1;
-		$object->isValidHoldPickupAreaAspen = 1;
-		$object->orderBy('weight');
-		$object->find();
-		while ($object->fetch()) {
-			$sublocationPType = new SublocationPatronType();
-			$sublocationPType->patronTypeId = $patronType->id;
-			$sublocationPType->sublocationId = $object->id;
-			if ($sublocationPType->find(true)) {
-				$sublocations[$object->id] = clone($object);
+		$patronType = $this->getPTypeObj();
+		if ($patronType !== null) {
+			$object = new Sublocation();
+			$object->locationId = $locationId;
+			$object->isValidHoldPickupAreaILS = 1;
+			$object->isValidHoldPickupAreaAspen = 1;
+			$object->orderBy('weight');
+			$object->find();
+			while ($object->fetch()) {
+				$sublocationPType = new SublocationPatronType();
+				$sublocationPType->patronTypeId = $patronType->id;
+				$sublocationPType->sublocationId = $object->id;
+				if ($sublocationPType->find(true)) {
+					$sublocations[$object->id] = clone($object);
+				}
 			}
+
+			ksort($sublocations);
 		}
 
-		ksort($sublocations);
 		return $sublocations;
 	}
 
@@ -2365,7 +2390,7 @@ class User extends DataObject {
 	 * message - the message to display
 	 * @access public
 	 */
-	function placeHold($recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+	function placeHold(string $recordId, string $pickupBranch, ?string $cancelDate = null, ?string  $pickupSublocation = null) : array {
 		$result = $this->getCatalogDriver()->placeHold($this, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
@@ -2392,7 +2417,7 @@ class User extends DataObject {
 		return $result;
 	}
 
-	function placeVolumeHold($recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {
+	function placeVolumeHold($recordId, $volumeId, $pickupBranch, $pickupSublocation = null) : array {
 		$result = $this->getCatalogDriver()->placeVolumeHold($this, $recordId, $volumeId, $pickupBranch, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
@@ -2457,11 +2482,10 @@ class User extends DataObject {
 	 * @param string $itemId The id of the item to hold
 	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
 	 * @param null|string $cancelDate The date to automatically cancel the hold if not filled
-	 * @return mixed True if successful, false if unsuccessful
-	 * If an error occurs, return a AspenError
+	 * @return array an array with the results of the hold
 	 * @access public
 	 */
-	function placeItemHold($recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+	function placeItemHold(string $recordId, string $itemId, string $pickupBranch, ?string $cancelDate = null, ?string  $pickupSublocation = null) : array {
 		$result = $this->getCatalogDriver()->placeItemHold($this, $recordId, $itemId, $pickupBranch, $cancelDate, $pickupSublocation);
 		$this->updateAltLocationForHold($pickupBranch);
 		$thisUser = translate([
@@ -3054,6 +3078,7 @@ class User extends DataObject {
 				require_once ROOT_DIR . '/sys/Account/PType.php';
 				$patronType = new PType();
 				$patronType->pType = $this->patronType;
+				$patronType->accountProfileId = $this->getAccountProfile()->id;
 				if ($patronType->find(true)) {
 					$this->_pTypeObj = $patronType;
 				} else {
@@ -3957,7 +3982,8 @@ class User extends DataObject {
 		}
 		$sections['system_admin'] = new AdminSection('System Administration');
 		$sections['system_admin']->addAction(new AdminAction('Modules', 'Enable and disable sections of Aspen Discovery.', '/Admin/Modules'), 'Administer Modules');
-		$sections['system_admin']->addAction(new AdminAction('Administration Users', 'Define who should have administration privileges.', '/Admin/Administrators'), 'Administer Users');
+		$sections['system_admin']->addAction(new AdminAction('Administrators', 'Define users from the ILS who should have administration privileges.', '/Admin/Administrators'), 'Administer Users');
+		$sections['system_admin']->addAction(new AdminAction('Local Administrators', 'Define local Aspen users who should have administration privileges.', '/Admin/LocalAdministrators'), 'Manage Local Administrators');
 		$sections['system_admin']->addAction(new AdminAction('Permissions', 'Define who what each role in the system can do.', '/Admin/Permissions'), 'Administer Permissions');
 		$sections['system_admin']->addAction(new AdminAction('DB Maintenance', 'Update the database when new versions of Aspen Discovery are released.', '/Admin/DBMaintenance'), 'Run Database Maintenance');
 		$sections['system_admin']->addAction(new AdminAction('Optional Updates', 'Recommended updates that can be optionally applied when new versions of Aspen Discovery are released.', '/Admin/OptionalUpdates'), 'Run Optional Updates');
@@ -4538,7 +4564,8 @@ class User extends DataObject {
 			} else {
 				$sections['aspen_lida']->addAction($notificationReportAction, 'View Notifications Reports');
 			}
-			if (false && $allowILSMessaging) {
+			if (false /* $allowILSMessaging*/) {
+				/** @noinspection PhpUnreachableStatementInspection */
 				$sections['aspen_lida']->addAction(new AdminAction('ILS Notification Settings', 'Define settings for ILS notifications in Aspen LiDA.', '/AspenLiDA/ILSNotificationSettings'), 'Administer Aspen LiDA Settings');
 			}
 			$sections['aspen_lida']->addAction(new AdminAction('LiDA Notifications', 'LiDA Notifications allow you to send custom alerts to your patrons via the app.', '/Admin/LiDANotifications'), [
@@ -4843,7 +4870,7 @@ class User extends DataObject {
 		$selectedRequestCandidate = $materialsRequest->getSelectedHoldCandidate();
 		$source = $selectedRequestCandidate->source;
 		if ($source == 'ils' || $source == null) {
-			//Materials request stores the id of the pickup location
+			//The Materials request stores the id of the pickup location
 			$pickupBranchId = $materialsRequest->holdPickupLocation;
 			if (empty($pickupBranchId)) {
 				$pickupBranchId = $this->homeLocationId;
@@ -5146,37 +5173,45 @@ class User extends DataObject {
 		return $result;
 	}
 
-	public function get2FAStatusForPType() {
-		$patronType = $this->getPTypeObj();
-		if (!empty($patronType)) {
+	private false|null|TwoFactorAuthSetting $_twoFactorAuthenticationSetting = false;
+	public function getTwoFactorAuthenticationSetting() : ?TwoFactorAuthSetting {
+		if ($this->_twoFactorAuthenticationSetting === false) {
 			require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
-			$twoFactorAuthSetting = new TwoFactorAuthSetting();
-			$twoFactorAuthSetting->id = $patronType->twoFactorAuthSettingId;
-			if ($twoFactorAuthSetting->find(true)) {
-				if ($twoFactorAuthSetting->isEnabled != 'notAvailable') {
-					return true;
-				}
+			$this->_twoFactorAuthenticationSetting = new TwoFactorAuthSetting();
+			//If the user has a patron type, we will use that to determine the two factor authentication settings.
+			//Otherwise, we can use the account profile.
+			$patronType = $this->getPTypeObj();
+			if (!empty($patronType)) {
+				$this->_twoFactorAuthenticationSetting->id = $patronType->twoFactorAuthSettingId;
+			}else{
+				$this->_twoFactorAuthenticationSetting->accountProfileId = $this->getAccountProfile()->id;
+			}
+			if (!$this->_twoFactorAuthenticationSetting->find(true)) {
+				$this->_twoFactorAuthenticationSetting = null;
 			}
 		}
-		return false;
+		return $this->_twoFactorAuthenticationSetting;
 	}
 
-	public function is2FARequired() {
-		$patronType = $this->getPTypeObj();
-		if (!empty($patronType)) {
-			require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
-			$twoFactorAuthSetting = new TwoFactorAuthSetting();
-			$twoFactorAuthSetting->id = $patronType->twoFactorAuthSettingId;
-			if ($twoFactorAuthSetting->find(true)) {
-				if ($twoFactorAuthSetting->isEnabled == 'mandatory') {
-					return true;
-				}
-			}
+	public function get2FAStatusForPType() : bool {
+		$twoFactorAuthSetting = $this->getTwoFactorAuthenticationSetting();
+		if ($twoFactorAuthSetting == null) {
+			return false;
+		}else{
+			return $twoFactorAuthSetting->isEnabled != 'notAvailable';
 		}
-		return false;
 	}
 
-	public function get2FAStatus() {
+	public function is2FARequired() : bool {
+		$twoFactorAuthSetting = $this->getTwoFactorAuthenticationSetting();
+		if ($twoFactorAuthSetting == null) {
+			return false;
+		}else{
+			return $twoFactorAuthSetting->isEnabled == 'mandatory';
+		}
+	}
+
+	public function get2FAStatus() : bool {
 		$status = $this->twoFactorStatus;
 		if ($status == '1') {
 			//Make sure that 2-factor authentication has not been disabled by ptype even though the user previously opted in
@@ -5850,6 +5885,43 @@ class User extends DataObject {
 		} else {
 			return json_decode($this->_yearInReviewResults->wrappedResults);
 		}
+	}
+
+	public function canActiveUserEdit() : bool {
+		if ($this->source == 'admin') {
+			if ($this->username == 'aspen_admin') {
+				return UserAccount::getActiveUserObj()->isAspenAdminUser();
+			}elseif ($this->username == 'nyt_user') {
+				return false;
+			}else{
+				return UserAccount::userHasPermission('Manage Local Administrators');
+			}
+		}elseif ($this->source == 'development') {
+			return UserAccount::getActiveUserObj()->isAspenAdminUser();
+		}
+		return true;
+	}
+
+	public function canActiveUserDelete() : bool {
+		if ($this->source == 'admin') {
+			if ($this->username == 'aspen_admin' || $this->username == 'nyt_user') {
+				return false;
+			}
+		}
+		return $this->canActiveUserEdit();
+	}
+
+	public function updateStructureForEditingObject($structure) : array {
+		if ($this->source == 'admin' && $this->username == 'aspen_admin') {
+			$structure['username']['readOnly'] = true;
+			$structure['password']['readOnly'] = true;
+			$structure['firstname']['readOnly'] = true;
+			$structure['lastname']['readOnly'] = true;
+			$structure['email']['readOnly'] = true;
+			unset($structure['additionalAdministrationLocations']);
+		}
+
+		return $structure;
 	}
 }
 

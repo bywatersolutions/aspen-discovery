@@ -24,13 +24,16 @@
 		{if !empty($id)}
 		<input type='hidden' name='id' value='{$id}' id="id" />
 		{/if}
-	    {if !empty($sourceId)}
+		{if !empty($sourceId)}
 			<input type='hidden' name='sourceId' value='{$sourceId}' id="sourceId" />
-	    {/if}
+		{/if}
 		{if !empty($patronIdCheck)}
 			<input type="hidden" name="patronIdCheck" value={$patronIdCheck|escape}>
 		{else}
 			<input type="hidden" name="patronIdCheck" value=0>
+		{/if}
+		{if !empty($activeIls)}
+			<input type="hidden" name="activeIls" id="activeIls" value={$activeIls}>
 		{/if}
 
 		{foreach from=$structure item=property}
@@ -64,15 +67,21 @@
 						<button type="submit" name="submit" value="{$saveButtonText}" class="btn btn-primary">{translate text=$saveButtonText isAdminFacing=true}</button>
 					{/if}
 				{else}
-					<div id="objectEditorSaveButtons" class="btn-group">
-					<button type="submit" name="submitReturnToList" value="Save Changes and Return" class="btn btn-primary"><i class="fas fa-save"></i> {translate text="Save Changes and Return" isAdminFacing=true}</button>
-					{if !empty($id)}
-						<button type="submit" name="submitStay" value="Save Changes and Stay Here" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Stay Here" isAdminFacing=true}</button>
+					{if !empty($objectAction) && $objectAction == 'addNew' && $hasMultiStepAddNew}
+						<div id="objectEditorSaveButtons" class="btn-group">
+							<button type="submit" name="submitStay" value="Next" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Next" isAdminFacing=true}</button>
+						</div>
 					{else}
-						<button type="submit" name="submitStay" value="Save Changes and Continue Editing" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Continue Editing" isAdminFacing=true}</button>
-						<button type="submit" name="submitAddAnother" value="Save Changes and Add Another" class="btn btn-default"><i class="fas fa-plus"></i> {translate text="Save Changes and Add Another" isAdminFacing=true}</button>
+						<div id="objectEditorSaveButtons" class="btn-group">
+						<button type="submit" name="submitReturnToList" value="Save Changes and Return" class="btn btn-primary"><i class="fas fa-save"></i> {translate text="Save Changes and Return" isAdminFacing=true}</button>
+						{if !empty($id)}
+							<button type="submit" name="submitStay" value="Save Changes and Stay Here" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Stay Here" isAdminFacing=true}</button>
+						{else}
+							<button type="submit" name="submitStay" value="Save Changes and Continue Editing" class="btn btn-default"><i class="fas fa-pencil-alt"></i> {translate text="Save Changes and Continue Editing" isAdminFacing=true}</button>
+							<button type="submit" name="submitAddAnother" value="Save Changes and Add Another" class="btn btn-default"><i class="fas fa-plus"></i> {translate text="Save Changes and Add Another" isAdminFacing=true}</button>
+						{/if}
+						</div>
 					{/if}
-					</div>
 				{/if}
 			</div>
 		{/if}
@@ -81,13 +90,13 @@
 {if !empty($captcha)}
 	{literal}
 	<script type="text/javascript">
-      var onloadCallback = function() {
-          var captchas = document.getElementsByClassName("g-recaptcha");
-          for(var i = 0; i < captchas.length; i++) {
-              grecaptcha.render(captchas[i], {'sitekey' : '{/literal}{$captchaKey}{literal}'});
-          }
-      };
-    </script>
+		var onloadCallback = function() {
+			var captchas = document.getElementsByClassName("g-recaptcha");
+			for(var i = 0; i < captchas.length; i++) {
+				grecaptcha.render(captchas[i], {'sitekey' : '{/literal}{$captchaKey}{literal}'});
+			}
+		};
+	</script>
 	{/literal}
 {/if}
 	{if !empty($tos)}

@@ -95,7 +95,7 @@
 											</a>
 										</li>
 									{/if}
-                                    {if $user->getInterlibraryLoanType() == 'vdx'}
+									{if $user->getInterlibraryLoanType() == 'vdx'}
 										<li class="myAccountLink">
 											&nbsp;&nbsp;&raquo;&nbsp;
 											<a href="/MyAccount/Holds?tab=interlibrary_loan" id="holdsInterlibraryLoan" title="View Interlibrary Loan Requests">
@@ -115,7 +115,7 @@
 										<li class="myAccountLink">
 											&nbsp;&nbsp;&raquo;&nbsp;
 											<a href="/MyAccount/Holds?tab=palace_project" id="holdsPalaceProject" title="View holds from Palace Project">
-                                                {translate text="Palace Project" isPublicFacing=true} {if empty($offline)}<span class="badge"><span class="palace_project-holds-placeholder">??</span></span> <span class="palace_project-available-holds" style="display: none"> <span class="label label-success"><span class="palace_project-available-holds-placeholder"></span> {translate text="Available Now" isPublicFacing=true}</span></span>{/if}
+												{translate text="Palace Project" isPublicFacing=true} {if empty($offline)}<span class="badge"><span class="palace_project-holds-placeholder">??</span></span> <span class="palace_project-available-holds" style="display: none"> <span class="label label-success"><span class="palace_project-available-holds-placeholder"></span> {translate text="Available Now" isPublicFacing=true}</span></span>{/if}
 											</a>
 										</li>
 									{/if}
@@ -157,7 +157,7 @@
 										<div class="myAccountLink" title="Notification History">
 											<a href="/MyAccount/NotificationHistory">{translate text='Notification History' isPublicFacing=true}</a>
 										</div>
-                                    {/if}
+									{/if}
 								{/if}
 							{/if}
 							{if $user->canSuggestMaterials()}
@@ -250,14 +250,14 @@
 							{if empty($offline)}
 								{if !empty($showUserPreferences)}<div class="myAccountLink"><a href="/MyAccount/MyPreferences">{translate text='Your Preferences' isPublicFacing=true}</a></div>{/if}
 								{if $cookieConsentEnabled} <div class="header-menu-option"><a href="/MyAccount/MyCookiePreferences">{translate text="Your Privacy Settings" isPublicFacing=true}</a></div>{/if}
-								{if !empty($showUserContactInformation)}<div class="myAccountLink"><a href="/MyAccount/ContactInformation">{translate text='Contact Information' isPublicFacing=true}</a></div>{/if}
+								{if !empty($showUserContactInformation) && $userHasCatalogConnection}<div class="myAccountLink"><a href="/MyAccount/ContactInformation">{translate text='Contact Information' isPublicFacing=true}</a></div>{/if}
 								{if $user->showHoldNotificationPreferences()}
 									<div class="myAccountLink"><a href="/MyAccount/HoldNotificationPreferences">{translate text='Hold Notification Preferences' isPublicFacing=true}</a></div>
 								{/if}
 								{if $user->showMessagingSettings()}
 									<div class="myAccountLink"><a href="/MyAccount/MessagingSettings">{translate text='Messaging Settings' isPublicFacing=true}</a></div>
 								{/if}
-								{if !empty($allowAccountLinking)}
+								{if !empty($allowAccountLinking) && $userHasCatalogConnection}
 									<div class="myAccountLink"><a href="/MyAccount/LinkedAccounts">{translate text='Linked Accounts' isPublicFacing=true}</a></div>
 								{/if}
 								{if !empty($twoFactorEnabled)}

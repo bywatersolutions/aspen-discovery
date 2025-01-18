@@ -2,58 +2,58 @@
 	{if !empty($showBrowseContent)}
 	<h1 class="hiddenTitle">{translate text='Browse the Catalog' isPublicFacing=true}</h1>
 	<div id="home-page-browse-header" class="row">
-    {if $accessibleBrowseCategories == '1'}
+	{if $accessibleBrowseCategories == '1'}
 		<div class="col-sm-12" id="browse-category-feed" role="feed">
 			<!-- Slider main container -->
-            {foreach from=$browseCategories item=browseCategory name="browseCategoryLoop"}
+			{foreach from=$browseCategories item=browseCategory name="browseCategoryLoop"}
 
-            <div class="browse-category-feed-item" id="browse-category-{$browseCategory.textId}" role="article">
-	            <div class="browse-category-group-heading">
-		            <a id="browse-search-link-{$browseCategory.textId}" href="{if $browseCategory.searchUrl}{$browseCategory.searchUrl}{/if}" title="View all results for {translate text=$browseCategory.label isPublicFacing=true}"> <h2 id="tablist-browse-category-{$browseCategory.textId}"><i class="fas fa-search" role="presentation"></i> {translate text=$browseCategory.label isPublicFacing=true}</h2></a>
-                    {if !empty($isLoggedIn)}
-	                    <button id="browse-dismiss-{$browseCategory.textId}" class="btn btn-default browse-dismiss" onclick="AspenDiscovery.Account.dismissBrowseCategory(null, '{$browseCategory.textId}')" title="{translate text='Hide Category %1%' 1={$browseCategory.label} inAttribute=true isPublicFacing=true}">
-		                    <i class="fas fa-times" role="presentation"></i> {translate text='Hide' isPublicFacing=true}
-	                    </button>
-                    {/if}
-	            </div>
-	            {if !empty($browseCategory.subcategories)}
-		            <div class="tabs">
-                        {$browseCategory.subcategories nofilter}
-		            </div>
-	            {else}
-		            <div class="swiper swiper-first swiper-browse-category-{$browseCategory.textId}" id="swiper-{$browseCategory.textId}">
+			<div class="browse-category-feed-item" id="browse-category-{$browseCategory.textId}" role="article">
+				<div class="browse-category-group-heading">
+					<a id="browse-search-link-{$browseCategory.textId}" href="{if $browseCategory.searchUrl}{$browseCategory.searchUrl}{/if}" title="View all results for {translate text=$browseCategory.label isPublicFacing=true}"> <h2 id="tablist-browse-category-{$browseCategory.textId}"><i class="fas fa-search" role="presentation"></i> {translate text=$browseCategory.label isPublicFacing=true}</h2></a>
+					{if !empty($isLoggedIn)}
+						<button id="browse-dismiss-{$browseCategory.textId}" class="btn btn-default browse-dismiss" onclick="AspenDiscovery.Account.dismissBrowseCategory(null, '{$browseCategory.textId}')" title="{translate text='Hide Category %1%' 1={$browseCategory.label} inAttribute=true isPublicFacing=true}">
+							<i class="fas fa-times" role="presentation"></i> {translate text='Hide' isPublicFacing=true}
+						</button>
+					{/if}
+				</div>
+				{if !empty($browseCategory.subcategories)}
+					<div class="tabs">
+						{$browseCategory.subcategories nofilter}
+					</div>
+				{else}
+					<div class="swiper swiper-first swiper-browse-category-{$browseCategory.textId}" id="swiper-{$browseCategory.textId}">
 						<div class="swiper-navigation-container">
 							<div class="swiper-button-prev"></div>
 						</div>
-			            <div class="swiper-wrapper" id="swiper-browse-category-{$browseCategory.textId}">
-				            <div class="swiper-slide" id="swiper-loading-{$browseCategory.textId}" style="height: 200px">
-					            <i class="fas fa-lg fa-spinner fa-spin"></i>
-				            </div>
-	                       {literal} <script type="text/javascript">
-					            setTimeout(() => AspenDiscovery.Browse.initializeBrowseCategorySwiper({/literal}'{$browseCategory.textId}'{literal}), 1000)
-	                        </script>{/literal}
-			            </div>
-			            <div class="swiper-navigation-container">
-				            <div class="swiper-button-next"></div>
-			            </div>
-		            </div>
-	            {/if}
-            </div>
+						<div class="swiper-wrapper" id="swiper-browse-category-{$browseCategory.textId}">
+							<div class="swiper-slide" id="swiper-loading-{$browseCategory.textId}" style="height: 200px">
+								<i class="fas fa-lg fa-spinner fa-spin"></i>
+							</div>
+						   {literal} <script type="text/javascript">
+								setTimeout(() => AspenDiscovery.Browse.initializeBrowseCategorySwiper({/literal}'{$browseCategory.textId}'{literal}), 1000)
+							</script>{/literal}
+						</div>
+						<div class="swiper-navigation-container">
+							<div class="swiper-button-next"></div>
+						</div>
+					</div>
+				{/if}
+			</div>
 			{/foreach}
 		</div>
 
-        {if !empty($isLoggedIn)}
-		    <div class="row text-center" style="margin-top: 2em">
-			    <div class="col-xs-12">
-				    <hr/>
-				    <a class="btn {if !empty($showBrowseContent)}btn-default{else}btn-primary{/if}"  href="#" role="button" title="{translate text='Show Hidden Browse Categories' inAttribute=true isPublicFacing=true}" onclick="return AspenDiscovery.Account.showHiddenBrowseCategories('{$loggedInUser}')">
-					    <i class="fas fa-eye"></i> {translate text='Show Hidden Browse Categories' isPublicFacing=true}
-				    </a>
-			    </div>
-		    </div>
-        {/if}
+		{if !empty($isLoggedIn)}
+			<div class="row text-center" style="margin-top: 2em">
+				<div class="col-xs-12">
+					<hr/>
+					<a class="btn {if !empty($showBrowseContent)}btn-default{else}btn-primary{/if}"  href="#" role="button" title="{translate text='Show Hidden Browse Categories' inAttribute=true isPublicFacing=true}" onclick="return AspenDiscovery.Account.showHiddenBrowseCategories('{$loggedInUser}')">
+						<i class="fas fa-eye"></i> {translate text='Show Hidden Browse Categories' isPublicFacing=true}
+					</a>
+				</div>
+			</div>
+		{/if}
 
-	    {else}
+		{else}
 		<div class="col-sm-12">
 			<div class="row text-center" id="browse-category-picker">
 				<div class="jcarousel-wrapper">
@@ -83,10 +83,10 @@
 				{/if}
 			</div>
 		</div>
-	    {/if}
+		{/if}
 	</div>
 	{/if}
-    {if $accessibleBrowseCategories == '0'}
+	{if $accessibleBrowseCategories == '0'}
 	<div id="home-page-browse-content" class="row">
 		<div class="col-sm-12">
 

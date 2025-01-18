@@ -1,8 +1,3 @@
-{*{if (isset($title)) }*}
-	{*<script type="text/javascript">*}
-		{*alert("{$title}");*}
-	{*</script>*}
-{*{/if}*}
 {if !empty($loggedIn)}
 
 	{if !empty($profile->_web_note)}

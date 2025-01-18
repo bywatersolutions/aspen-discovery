@@ -1,5 +1,5 @@
 {if !empty($loggedIn)}
-    {strip}
+	{strip}
 	{if !empty($profile->_web_note)}
 		<div class="row">
 			<div id="web_note" class="alert alert-info text-center col-xs-12">{$profile->_web_note}</div>
@@ -128,7 +128,7 @@
 				{/foreach}
 			{rdelim}
 		);
-        {if !empty($showAlternateLibraryCard)}
+		{if !empty($showAlternateLibraryCard)}
 		function updateAlternateLibraryCardBarcode(){ldelim}
 			var alternateLibraryCardVal = $("#alternateLibraryCard").val();
 			var alternateLibraryCardSvg = $("#library-alternateLibraryCard-svg");

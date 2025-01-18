@@ -427,7 +427,7 @@ class CatalogConnection {
 		if (!$userToResetPin->find(true)) {
 			$userToResetPin = $this->driver->findNewUser($barcode, '');
 		}
-		if ($userToResetPin == false) {
+		if ($userToResetPin === false) {
 			$result['error'] = translate([
 				'text' => "Could not find a patron with that barcode, please contact the library.",
 				'isPublicFacing' => true,
@@ -889,14 +889,14 @@ class CatalogConnection {
 	 *
 	 * @param User $patron The User to place a hold for
 	 * @param string $recordId The id of the bib record
-	 * @param string $pickupBranch The branch where the user wants to pickup the item when available
-	 * @param string $cancelDate
-	 * @param string $pickupSublocation The sublocation where the user wants to pickup the item when available
+	 * @param string $pickupBranch The branch where the user wants to pick up the item when available
+	 * @param ?string $cancelDate
+	 * @param ?string $pickupSublocation The sublocation within the location where the user wants to pick up the item
 	 * @return  mixed                 True if successful, false if unsuccessful
-	 *                                If an error occurs, return a AspenError
+	 *                                If an error occurs, return an AspenError
 	 * @access  public
 	 */
-	function placeHold($patron, $recordId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
+	function placeHold(User $patron, string $recordId, string $pickupBranch, ?string $cancelDate = null, ?string $pickupSublocation = null) : array {
 		$result = $this->driver->placeHold($patron, $recordId, $pickupBranch, $cancelDate, $pickupSublocation);
 		if ($result['success'] == true) {
 			$indexingProfileId = $this->driver->getIndexingProfile()->id;
@@ -1423,7 +1423,7 @@ class CatalogConnection {
 		}
 	}
 
-	function processEmailResetPinForm() {
+	function processEmailResetPinForm() : array {
 		if ($this->getForgotPasswordType() == 'emailAspenResetLink') {
 			$result = [
 				'success' => false,

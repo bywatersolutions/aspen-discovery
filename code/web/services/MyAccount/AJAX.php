@@ -85,76 +85,89 @@ class MyAccount_AJAX extends JSON_Action {
 
 				if ($accountToLink->id != $user->id) {
 					$linkeePtype = $accountToLink->getPType();
+					if ($linkeePtype != null) {
+						require_once ROOT_DIR . '/sys/Account/PType.php';
+						$linkingSettingUser = PType::getAccountLinkingSetting($userPtype);
+						$linkingSettingLinkee = PType::getAccountLinkingSetting($linkeePtype);
 
-					require_once ROOT_DIR . '/sys/Account/PType.php';
-					$linkingSettingUser = PType::getAccountLinkingSetting($userPtype);
-					$linkingSettingLinkee = PType::getAccountLinkingSetting($linkeePtype);
-
-					if (($accountToLink->disableAccountLinking == 0) && ($linkingSettingUser != '1' && $linkingSettingUser != '3') && ($linkingSettingLinkee != '2' && $linkingSettingLinkee != '3')) {
-						$addResult = $user->addLinkedUser($accountToLink);
-						if ($addResult === true) {
-							$result = [
-								'success' => true,
-								'title' => translate([
-									'text' => 'Success',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Successfully linked accounts.',
-									'isPublicFacing' => true,
-								]),
-							];
-						} else { // insert failure or user is blocked from linking account or account & account to link are the same account
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, we could not link to that account.  Accounts cannot be linked if all libraries do not allow account linking.  Please contact your local library if you have questions.',
-									'isPublicFacing' => true,
-								]),
-							];
-						}
-					} else {
-						if ($linkingSettingUser == '1' || $linkingSettingUser == '3') {
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, you are not permitted to link to others.',
-									'isPublicFacing' => true,
-								]),
-							];
-						} else if ($linkingSettingLinkee == '2' || $linkingSettingLinkee == '3') {
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, that account cannot be linked to.',
-									'isPublicFacing' => true,
-								]),
-							];
+						if (($accountToLink->disableAccountLinking == 0) && ($linkingSettingUser != '1' && $linkingSettingUser != '3') && ($linkingSettingLinkee != '2' && $linkingSettingLinkee != '3')) {
+							$addResult = $user->addLinkedUser($accountToLink);
+							if ($addResult === true) {
+								$result = [
+									'success' => true,
+									'title' => translate([
+										'text' => 'Success',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Successfully linked accounts.',
+										'isPublicFacing' => true,
+									]),
+								];
+							} else { // insert failure or user is blocked from linking account or account & account to link are the same account
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, we could not link to that account.  Accounts cannot be linked if all libraries do not allow account linking.  Please contact your local library if you have questions.',
+										'isPublicFacing' => true,
+									]),
+								];
+							}
 						} else {
-							$result = [
-								'success' => false,
-								'title' => translate([
-									'text' => 'Unable to link accounts',
-									'isPublicFacing' => true,
-								]),
-								'message' => translate([
-									'text' => 'Sorry, this user does not allow account linking.',
-									'isPublicFacing' => true,
-								]),
-							];
+							if ($linkingSettingUser == '1' || $linkingSettingUser == '3') {
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, you are not permitted to link to others.',
+										'isPublicFacing' => true,
+									]),
+								];
+							} else if ($linkingSettingLinkee == '2' || $linkingSettingLinkee == '3') {
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, that account cannot be linked to.',
+										'isPublicFacing' => true,
+									]),
+								];
+							} else {
+								$result = [
+									'success' => false,
+									'title' => translate([
+										'text' => 'Unable to link accounts',
+										'isPublicFacing' => true,
+									]),
+									'message' => translate([
+										'text' => 'Sorry, this user does not allow account linking.',
+										'isPublicFacing' => true,
+									]),
+								];
+							}
 						}
+					}else{
+						$result = [
+							'success' => false,
+							'title' => translate([
+								'text' => 'Unable to link accounts',
+								'isPublicFacing' => true,
+							]),
+							'message' => translate([
+								'text' => 'Sorry, this user type cannot be linked to.',
+								'isPublicFacing' => true,
+							]),
+						];
 					}
 				} else {
 					$result = [
@@ -1567,14 +1580,14 @@ class MyAccount_AJAX extends JSON_Action {
 							$groupedWork = new GroupedWork();
 							$groupedWork->permanent_id = $userListEntry->sourceId;
 							if ($groupedWork->find(true)) {
-								$userListEntry->title = substr($groupedWork->full_title, 0, 50);
+								$userListEntry->title = mb_substr($groupedWork->full_title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Lists') {
 							require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 							$list = new UserList();
 							$list->id = $userListEntry->sourceId;
 							if ($list->find(true)) {
-								$userListEntry->title = substr($list->title, 0, 50);
+								$userListEntry->title = mb_substr($list->title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Events') {
 							if (preg_match('`^communico`', $userListEntry->sourceId)) {
@@ -1582,28 +1595,28 @@ class MyAccount_AJAX extends JSON_Action {
 								$recordDriver = new CommunicoEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 								$recordDriver = new SpringshareLibCalEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^assabet`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 								$recordDriver = new AssabetEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} else {
 								require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
 								$recordDriver = new LibraryCalendarEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							}
 						} elseif ($userListEntry->source == 'OpenArchives') {
@@ -1611,35 +1624,35 @@ class MyAccount_AJAX extends JSON_Action {
 							$recordDriver = new OpenArchivesRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Genealogy') {
 							require_once ROOT_DIR . '/sys/Genealogy/Person.php';
 							$person = new Person();
 							$person->personId = $userListEntry->sourceId;
 							if ($person->find(true)) {
-								$userListEntry->title = substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
+								$userListEntry->title = mb_substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'EbscoEds') {
 							require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 							$recordDriver = new EbscoRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Ebscohost') {
 							require_once ROOT_DIR . '/RecordDrivers/EbscohostRecordDriver.php';
 							$recordDriver = new EbscohostRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Summon') {
 							require_once ROOT_DIR . '/RecordDrivers/SummonRecordDriver.php';
 							$recordDriver = new SummonRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						}
 						$userListEntry->insert();
@@ -1971,7 +1984,7 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getChangeHoldLocationForm() {
+	function getChangeHoldLocationForm() : array {
 		global $interface;
 		/** @var $interface UInterface
 		 * @var $user User
@@ -2097,6 +2110,16 @@ class MyAccount_AJAX extends JSON_Action {
 			$holdId = $_REQUEST['holdId'];
 			$newPickupLocation = $_REQUEST['newLocation'];
 			$newPickupSublocation = $_REQUEST['newSublocation'] ?? null;
+			$pickupSublocation = null;
+			if (!empty($newPickupSublocation)) {
+				//In the form this is set as the id of the sublocation in Aspen, but we want to pass the ILS ID
+				require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+				$pickupSublocationObject = new Sublocation();
+				$pickupSublocationObject->id = $newPickupSublocation;
+				if ($pickupSublocationObject->find(true)) {
+					$pickupSublocation = $pickupSublocationObject->ilsId;
+				}
+			}
 
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getLoggedInUser();
@@ -2104,7 +2127,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$patronOwningHold = $user->getUserReferredTo($patronId);
 				if ($patronOwningHold != false) {
 					if ($patronOwningHold->validatePickupBranch($newPickupLocation)) {
-						return $patronOwningHold->changeHoldPickUpLocation($holdId, $newPickupLocation, $newPickupSublocation);
+						return $patronOwningHold->changeHoldPickUpLocation($holdId, $newPickupLocation, $pickupSublocation);
 					} else {
 						return [
 							'result' => false,
@@ -6990,7 +7013,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new CommunicoEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7007,7 +7030,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new SpringshareLibCalEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7024,7 +7047,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new LibraryCalendarEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7041,7 +7064,7 @@ class MyAccount_AJAX extends JSON_Action {
 					$recordDriver = new AssabetEventRecordDriver($userEventsEntry->sourceId);
 					if ($recordDriver->isValid()) {
 						$title = $recordDriver->getTitle();
-						$userEventsEntry->title = substr($title, 0, 50);
+						$userEventsEntry->title = mb_substr($title, 0, 50);
 						$eventDate = $recordDriver->getStartDate();
 						$userEventsEntry->eventDate = $eventDate->getTimestamp();
 						if ($recordDriver->isRegistrationRequired()) {
@@ -7264,14 +7287,14 @@ class MyAccount_AJAX extends JSON_Action {
 							$groupedWork = new GroupedWork();
 							$groupedWork->permanent_id = $userListEntry->sourceId;
 							if ($groupedWork->find(true)) {
-								$userListEntry->title = substr($groupedWork->full_title, 0, 50);
+								$userListEntry->title = mb_substr($groupedWork->full_title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Lists') {
 							require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 							$list = new UserList();
 							$list->id = $userListEntry->sourceId;
 							if ($list->find(true)) {
-								$userListEntry->title = substr($list->title, 0, 50);
+								$userListEntry->title = mb_substr($list->title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Events') {
 							if (preg_match('`^communico`', $userListEntry->sourceId)) {
@@ -7279,28 +7302,28 @@ class MyAccount_AJAX extends JSON_Action {
 								$recordDriver = new CommunicoEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^libcal`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 								$recordDriver = new SpringshareLibCalEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^lc_`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/LibraryCalendarEventRecordDriver.php';
 								$recordDriver = new LibraryCalendarEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							} elseif (preg_match('`^assabet_`', $userListEntry->sourceId)) {
 								require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 								$recordDriver = new AssabetEventRecordDriver($userListEntry->sourceId);
 								if ($recordDriver->isValid()) {
 									$title = $recordDriver->getTitle();
-									$userListEntry->title = substr($title, 0, 50);
+									$userListEntry->title = mb_substr($title, 0, 50);
 								}
 							}
 						} elseif ($userListEntry->source == 'OpenArchives') {
@@ -7308,28 +7331,28 @@ class MyAccount_AJAX extends JSON_Action {
 							$recordDriver = new OpenArchivesRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Genealogy') {
 							require_once ROOT_DIR . '/sys/Genealogy/Person.php';
 							$person = new Person();
 							$person->personId = $userListEntry->sourceId;
 							if ($person->find(true)) {
-								$userListEntry->title = substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
+								$userListEntry->title = mb_substr($person->firstName . $person->middleName . $person->lastName, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'EbscoEds') {
 							require_once ROOT_DIR . '/RecordDrivers/EbscoRecordDriver.php';
 							$recordDriver = new EbscoRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						} elseif ($userListEntry->source == 'Summon') {
 							require_once ROOT_DIR . '/RecordDrivers/SummonRecordDriver.php';
 							$recordDriver = new SummonRecordDriver($userListEntry->sourceId);
 							if ($recordDriver->isValid()) {
 								$title = $recordDriver->getTitle();
-								$userListEntry->title = substr($title, 0, 50);
+								$userListEntry->title = mb_substr($title, 0, 50);
 							}
 						}
 						$existingEntry = false;
@@ -7411,8 +7434,8 @@ class MyAccount_AJAX extends JSON_Action {
 					$groupedWork->permanent_id = $sourceId;
 					if ($groupedWork->find(true)) {
 						$groupedWorkDriver = new GroupedWorkDriver($sourceId);
-						$readingHistoryEntry->title = substr($groupedWorkDriver->getTitle(), 0, 150);
-						$readingHistoryEntry->author = substr($groupedWorkDriver->getPrimaryAuthor(), 0, 75);
+						$readingHistoryEntry->title = mb_substr($groupedWorkDriver->getTitle(), 0, 150);
+						$readingHistoryEntry->author = mb_substr($groupedWorkDriver->getPrimaryAuthor(), 0, 75);
 						//Leave the format blank
 						$readingHistoryEntry->format = '';
 						$checkoutDate = mktime(0, 0, 0, $month, 1, $year);
@@ -8996,14 +9019,12 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getSublocationsSelect() {
-		global $interface;
+	function getSublocationsSelect() : array {
 		$html = '';
 		$success = false;
 		$context = $_REQUEST['context'] ?? '';
 		if (UserAccount::isLoggedIn()) {
 			$patron = UserAccount::getActiveUserObj();
-			$patronType = $patron->getPTypeObj();
 			if (isset($_REQUEST['locationCode'])) {
 				$location = new Location();
 				if ($context === 'myPreferences') {
@@ -9013,24 +9034,12 @@ class MyAccount_AJAX extends JSON_Action {
 				}
 				if ($location->find(true)) {
 					$sublocations = [];
-					require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
-					require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-					$object = new Sublocation();
-					$object->locationId = $location->locationId;
-					$object->isValidHoldPickupAreaILS = 1;
-					$object->isValidHoldPickupAreaAspen = 1;
-					$object->orderBy('weight');
-					$object->find();
-					while ($object->fetch()) {
-						$sublocationPType = new SublocationPatronType();
-						$sublocationPType->patronTypeId = $patronType->id;
-						$sublocationPType->sublocationId = $object->id;
-						if ($sublocationPType->find(true)) {
-							$sublocations[$object->id] = $object->name;
-						}
+					$allSublocations = $location->getPickupSublocations($patron);
+					foreach ($allSublocations as $sublocation) {
+						$sublocations[$sublocation->id] = $sublocation->name;
 					}
 
-					if (count($sublocations) > 0) {
+					if (count($sublocations) > 1) {
 						$success = true;
 						if ($context === 'myPreferences') {
 							$labelText = 'Preferred Pickup Location';

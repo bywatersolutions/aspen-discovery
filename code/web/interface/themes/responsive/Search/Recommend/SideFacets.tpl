@@ -41,7 +41,7 @@
 								{elseif $title == 'lexile_score' || $title == 'accelerated_reader_reading_level' || $title == 'accelerated_reader_point_value'}
 									{include file="Search/Recommend/sliderFacet.tpl" cluster=$cluster title=$title}
 								{elseif $title == 'start_date'}
-                                    {include file="Search/Recommend/calendarFacet.tpl" cluster=$cluster title=$title}
+									{include file="Search/Recommend/calendarFacet.tpl" cluster=$cluster title=$title}
 								{elseif !empty($cluster.showAsDropDown)}
 									{include file="Search/Recommend/dropDownFacet.tpl" cluster=$cluster title=$title}
 								{elseif !empty($cluster.multiSelect)}
@@ -52,8 +52,8 @@
 							</div>
 						</div>
 						<script type="text/javascript">
-                            {* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
-                            {literal}
+							{* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
+							{literal}
 							$("#facetToggle_{/literal}{$title}{literal}").click(function() {
 								var toggleButton = $(this);
 								$(this).toggleClass('expanded');
@@ -67,20 +67,20 @@
 								}
 								return false;
 							})
-                            $("#facetToggle_{/literal}{$title}{literal}").keypress(function() {
-	                            var toggleButton = $(this);
-	                            $(this).toggleClass('expanded');
-	                            $(this).toggleClass('collapsed');
-	                            $('#facetDetails_{/literal}{$title}{literal}').toggle()
-	                            if (toggleButton.attr("aria-expanded") === "true") {
-		                            $(this).attr("aria-expanded","false");
-	                            }
-	                            else if (toggleButton.attr("aria-expanded") === "false") {
-		                            $(this).attr("aria-expanded","true");
-	                            }
-	                            return false;
-                            })
-                            {/literal}
+							$("#facetToggle_{/literal}{$title}{literal}").keypress(function() {
+								var toggleButton = $(this);
+								$(this).toggleClass('expanded');
+								$(this).toggleClass('collapsed');
+								$('#facetDetails_{/literal}{$title}{literal}').toggle()
+								if (toggleButton.attr("aria-expanded") === "true") {
+									$(this).attr("aria-expanded","false");
+								}
+								else if (toggleButton.attr("aria-expanded") === "false") {
+									$(this).attr("aria-expanded","true");
+								}
+								return false;
+							})
+							{/literal}
 						</script>
 					{/if}
 				{/foreach}

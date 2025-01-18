@@ -32,8 +32,8 @@ UNLOCK TABLES;
 
 LOCK TABLES `indexing_profiles` WRITE;
 /*!40000 ALTER TABLE `indexing_profiles` DISABLE KEYS */;
-INSERT INTO `indexing_profiles` (id, name, marcPath, marcEncoding, groupingClass, indexingClass, recordDriver, recordUrlComponent, formatSource, recordNumberTag, recordNumberSubfield, recordNumberPrefix, itemTag, itemRecordNumber, useItemBasedCallNumbers, callNumber, location, shelvingLocation, collection, volume, barcode, iType, dateCreated, dateCreatedFormat, format, catalogDriver, filenamesToInclude, doAutomaticEcontentSuppression, lastCheckinFormat, status, lastCheckinDate, dueDate, dueDateFormat, lastYearCheckouts, yearToDateCheckouts, totalRenewals, iCode2, noteSubfield)
-                         VALUES (1,'ils','/data/aspen-discovery/{sitename}/ils/marc','UTF8','MarcRecordGrouper','III','MarcRecordDriver','Record','bib','907', 'a', '.b','949','y',1,'a','l','l','t','c','i','t','z','MM-dd-yy','t','Sierra','.*\\.ma?rc',1, '', 's', '', 'e', 'MM-dd-yyyy', 'x', 'w', 'v', 'o', 'r');
+INSERT INTO `indexing_profiles` (id, name, marcPath, marcEncoding, indexingClass, recordUrlComponent, formatSource, recordNumberTag, recordNumberSubfield, recordNumberPrefix, itemTag, itemRecordNumber, useItemBasedCallNumbers, callNumber, location, shelvingLocation, collection, volume, barcode, iType, dateCreated, dateCreatedFormat, format, catalogDriver, filenamesToInclude, doAutomaticEcontentSuppression, lastCheckinFormat, status, lastCheckinDate, dueDate, dueDateFormat, lastYearCheckouts, yearToDateCheckouts, totalRenewals, iCode2, noteSubfield)
+                         VALUES (1,'ils','/data/aspen-discovery/{sitename}/ils/marc','UTF8','III','Record','bib','907', 'a', '.b','949','y',1,'a','l','l','t','c','i','t','z','MM-dd-yy','t','Sierra','.*\\.ma?rc',1, '', 's', '', 'e', 'MM-dd-yyyy', 'x', 'w', 'v', 'o', 'r');
 /*!40000 ALTER TABLE `indexing_profiles` ENABLE KEYS */;
 UNLOCK TABLES;
 

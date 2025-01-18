@@ -1,5 +1,10 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
 
+/**
+ * Contains information about how to connect to the ILS or other back end system including
+ * local administration. The fields shown will depend on the ILS that is active, and are
+ * enabled and disabled with JavaScript.
+ */
 class AccountProfile extends DataObject {
 	public $__table = 'account_profiles';    // table name
 
@@ -71,6 +76,20 @@ class AccountProfile extends DataObject {
 			];
 		}
 
+		if ($context == 'addNew') {
+			$accountProfile = new AccountProfile();
+			$accountProfile->selectAdd();
+			$accountProfile->selectAdd("MAX(weight) as maxWeight");
+			if ($accountProfile->find(true)) {
+				/** @noinspection PhpUndefinedFieldInspection */
+				$defaultWeight = $accountProfile->maxWeight + 1;
+			}else{
+				$defaultWeight = 0;
+			}
+		}else{
+			$defaultWeight = 0;
+		}
+
 		$structure = [
 			'id' => [
 				'property' => 'id',
@@ -83,7 +102,7 @@ class AccountProfile extends DataObject {
 				'type' => 'integer',
 				'label' => 'Weight',
 				'description' => 'The sort order',
-				'default' => 0,
+				'default' => $defaultWeight,
 			],
 			'name' => [
 				'property' => 'name',
@@ -99,20 +118,21 @@ class AccountProfile extends DataObject {
 				'label' => 'ILS',
 				'values' => [
 					'na' => 'None',
-					'koha' => 'Koha',
 					'carlx' => 'Carl.X',
 					'evergreen' => 'Evergreen',
 					'evolve' => 'Evolve',
-					'folio' => 'Folio',
-					'horizon' => 'Horizon',
-					'millennium' => 'Millennium',
+					//'folio' => 'Folio',
+					//'horizon' => 'Horizon',
+					'koha' => 'Koha',
+					//'millennium' => 'Millennium',
 					'polaris' => 'Polaris',
 					'sierra' => 'Sierra',
 					'symphony' => 'Symphony',
 				],
 				'description' => 'The ils of the account profile',
 				'required' => true,
-				'default' => 'koha',
+				'default' => 'na',
+				'onchange' => 'AspenDiscovery.Admin.setAccountProfileDefaultsByIls();AspenDiscovery.Admin.toggleAccountProfileIlsFields();return false;',
 			],
 			'driver' => [
 				'property' => 'driver',
@@ -121,6 +141,7 @@ class AccountProfile extends DataObject {
 				'maxLength' => 50,
 				'description' => 'The name of the driver to use for authentication',
 				'required' => false,
+				'relatedIls' => ['carlx','evergreen','evolve','koha','polaris','sierra','symphony']
 			],
 			'authConfigurationSection' => [
 				'property' => 'authConfigurationSection',
@@ -153,6 +174,7 @@ class AccountProfile extends DataObject {
 						],
 						'description' => 'How to login to Sierra/Millennium WebPAC (for screen scraping)',
 						'required' => false,
+						'relatedIls' => ['sierra']
 					],
 					'authenticationMethod' => [
 						'property' => 'authenticationMethod',
@@ -162,6 +184,7 @@ class AccountProfile extends DataObject {
 						'description' => 'The method of authentication to use',
 						'required' => true,
 						'onchange' => 'return AspenDiscovery.Admin.toggleSSOSettingsInAccountProfile();',
+						'default' => 'db'
 					],
 					'ssoSettingId' => [
 						'property' => 'ssoSettingId',
@@ -178,6 +201,7 @@ class AccountProfile extends DataObject {
 				'label' => 'ILS Connection Configuration',
 				'renderAsHeading' => true,
 				'showBottomBorder' => true,
+				'relatedIls' => ['carlx','evergreen','evolve','koha','polaris','sierra','symphony'],
 				'properties' => [
 					'vendorOpacUrl' => [
 						'property' => 'vendorOpacUrl',
@@ -187,7 +211,8 @@ class AccountProfile extends DataObject {
 						'description' => 'A link to the url for the vendor opac',
 						'required' => false,
 						'validationPattern' => "^https?:\/\/[-a-zA-Z0-9_.]*(:[0-9]{1,4})?([-\/a-zA-Z0-9_?&=.]*)$",
-						'validationMessage' => 'Please enter a valid URL. The URL may include port number.'
+						'validationMessage' => 'Please enter a valid URL. The URL may include port number.',
+						'relatedIls' => ['koha','sierra']
 					],
 					'patronApiUrl' => [
 						'property' => 'patronApiUrl',
@@ -197,13 +222,15 @@ class AccountProfile extends DataObject {
 						'description' => 'A link to the patron api for the vendor opac if any',
 						'required' => false,
 						'validationPattern' => "^https?:\/\/[-a-zA-Z0-9_.]*(:[0-9]{1,4})?([-\/a-zA-Z0-9_?&=.]*)$",
-						'validationMessage' => 'Please enter a valid URL. The URL may include port number.'
+						'validationMessage' => 'Please enter a valid URL. The URL may include port number.',
+						'relatedIls' => ['carlx','evergreen','evolve','koha','polaris','sierra','symphony'],
 					],
 					'databaseSection' => [
 						'property' => 'databaseSection',
 						'type' => 'section',
-						'label' => 'Database Information (optional)',
+						'label' => 'Database Information',
 						'hideInLists' => true,
+						'relatedIls' => ['carlx','koha','sierra'],
 						'properties' => [
 							'databaseHost' => [
 								'property' => 'databaseHost',
@@ -212,6 +239,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 100,
 								'description' => 'Optional URL where the database is located',
 								'required' => false,
+								'relatedIls' => ['carlx','koha','sierra'],
 							],
 							'databasePort' => [
 								'property' => 'databasePort',
@@ -220,6 +248,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 5,
 								'description' => 'The port to use when connecting to the database',
 								'required' => false,
+								'relatedIls' => ['carlx','koha','sierra'],
 							],
 							'databaseName' => [
 								'property' => 'databaseName',
@@ -228,6 +257,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 75,
 								'description' => 'Name of the schema to connect to within the database',
 								'required' => false,
+								'relatedIls' => ['carlx','koha','sierra'],
 							],
 							'databaseUser' => [
 								'property' => 'databaseUser',
@@ -236,6 +266,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'Username to use when connecting',
 								'required' => false,
+								'relatedIls' => ['carlx','koha','sierra'],
 							],
 							'databasePassword' => [
 								'property' => 'databasePassword',
@@ -244,6 +275,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'Password to use when connecting',
 								'required' => false,
+								'relatedIls' => ['carlx','koha','sierra'],
 							],
 							'databaseTimezone' => [
 								'property' => 'databaseTimezone',
@@ -252,21 +284,23 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'Timezone to use when connecting',
 								'required' => false,
+								'relatedIls' => ['koha'],
 							],
-                            'carlXViewVersion' => [
-                                'property' => 'carlXViewVersion',
-                                'type' => 'enum',
-                                'values' => [
-                                    '' => 'N/A',
-                                    'v' => 'v',
-                                    'v2' => 'v2',
-                                ],
-                                'default' => '',
-                                'label' => 'Carl.X Database View Version',
-                                'note' => 'Only used for Carl.X',
-                                'description' => 'Database View Version of Carl.X to use when connecting',
-                                'required' => false,
-                            ],
+							'carlXViewVersion' => [
+								'property' => 'carlXViewVersion',
+								'type' => 'enum',
+								'values' => [
+									'' => 'N/A',
+									'v' => 'v',
+									'v2' => 'v2',
+								],
+								'default' => '',
+								'label' => 'Carl.X Database View Version',
+								'note' => 'Only used for Carl.X',
+								'description' => 'Database View Version of Carl.X to use when connecting',
+								'required' => false,
+								'relatedIls' => ['carlx'],
+							],
 						],
 					],
 					'sip2Section' => [
@@ -274,6 +308,7 @@ class AccountProfile extends DataObject {
 						'type' => 'section',
 						'label' => 'SIP 2 Information (optional)',
 						'hideInLists' => true,
+						'relatedIls' => ['carlx','evergreen','evolve','polaris'],
 						'properties' => [
 							'sipHost' => [
 								'property' => 'sipHost',
@@ -282,6 +317,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 100,
 								'description' => 'The host for SIP 2 connections',
 								'required' => false,
+								'relatedIls' => ['carlx','evergreen','evolve','polaris'],
 							],
 							'sipPort' => [
 								'property' => 'sipPort',
@@ -290,6 +326,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'Port to use when connecting',
 								'required' => false,
+								'relatedIls' => ['carlx','evergreen','evolve','polaris'],
 							],
 							'sipUser' => [
 								'property' => 'sipUser',
@@ -298,6 +335,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'Username to use when connecting',
 								'required' => false,
+								'relatedIls' => ['carlx','evergreen','evolve','polaris'],
 							],
 							'sipPassword' => [
 								'property' => 'sipPassword',
@@ -306,14 +344,16 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'Password to use when connecting',
 								'required' => false,
+								'relatedIls' => ['carlx','evergreen','evolve','polaris'],
 							],
 						],
 					],
 					'oAuthSection' => [
 						'property' => 'oAuthSection',
 						'type' => 'section',
-						'label' => 'API/OAuth2 Information (optional)',
+						'label' => 'API/OAuth2 Information',
 						'hideInLists' => true,
+						'relatedIls' => ['carlx','evolve','koha','polaris','sierra','symphony'],
 						'properties' => [
 							'oAuthClientId' => [
 								'property' => 'oAuthClientId',
@@ -322,6 +362,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 36,
 								'description' => 'The Client ID to use when making a connection to APIs',
 								'required' => false,
+								'relatedIls' => ['carlx','koha','polaris','sierra','symphony'],
 							],
 							'oAuthClientSecret' => [
 								'property' => 'oAuthClientSecret',
@@ -330,6 +371,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'The Client Secret to use when making a connection to APIs',
 								'required' => false,
+								'relatedIls' => ['carlx','evolve','koha','polaris','sierra'],
 							],
 							'apiVersion' => [
 								'property' => 'apiVersion',
@@ -337,6 +379,7 @@ class AccountProfile extends DataObject {
 								'label' => 'API Version',
 								'maxLength' => 10,
 								'description' => 'Optional description for the version of the API. Required for Sierra.',
+								'relatedIls' => ['polaris','sierra'],
 							],
 							'workstationId' => [
 								'property' => 'workstationId',
@@ -344,14 +387,16 @@ class AccountProfile extends DataObject {
 								'label' => 'Workstation Id (Polaris)',
 								'maxLength' => 10,
 								'description' => 'Optional workstation ID for transactions, overrides workstation ID in account profile.',
+								'relatedIls' => ['polaris'],
 							],
 						],
 					],
 					'staffUser' => [
 						'property' => 'staffUser',
 						'type' => 'section',
-						'label' => 'Staff Account Information (optional)',
+						'label' => 'Staff Account Information',
 						'hideInLists' => true,
+						'relatedIls' => ['carlx','evergreen','polaris','symphony'],
 						'properties' => [
 							'domain' => [
 								'property' => 'domain',
@@ -360,6 +405,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 100,
 								'description' => 'The domain to use when performing staff actions',
 								'required' => false,
+								'relatedIls' => ['polaris'],
 							],
 							'staffUsername' => [
 								'property' => 'staffUsername',
@@ -368,6 +414,7 @@ class AccountProfile extends DataObject {
 								'maxLength' => 100,
 								'description' => 'The Staff Username to use when performing staff actions',
 								'required' => false,
+								'relatedIls' => ['carlx','evergreen','polaris','symphony'],
 							],
 							'staffPassword' => [
 								'property' => 'staffPassword',
@@ -376,16 +423,18 @@ class AccountProfile extends DataObject {
 								'maxLength' => 50,
 								'description' => 'The Staff Password to use when performing staff actions',
 								'required' => false,
+								'relatedIls' => ['evergreen','polaris','symphony'],
 							],
 						],
 					],
 					'overrideCode' => [
 						'property' => 'overrideCode',
 						'type' => 'storedPassword',
-						'label' => 'Override Code (Symphony only)',
+						'label' => 'Override Code',
 						'maxLength' => 50,
 						'description' => 'An Override Code to apply for some actions (i.e. PIN Resets)',
 						'required' => false,
+						'relatedIls' => ['symphony'],
 					],
 				],
 			],
@@ -404,7 +453,8 @@ class AccountProfile extends DataObject {
 						'description' => 'The record source of checkouts holds, etc.  Should match the name of an Indexing Profile.',
 						'required' => false,
 					],
-				]
+				],
+				'relatedIls' => ['carlx','evergreen','evolve','koha','polaris','sierra','symphony'],
 			],
 			'libraries' => [
 				'property' => 'libraries',
@@ -460,10 +510,7 @@ class AccountProfile extends DataObject {
 		return $ret;
 	}
 
-	/**
-	 * @return int|bool
-	 */
-	function update($context = '') {
+	function update($context = '') : bool|int {
 		global $memCache;
 		global $instanceName;
 		$memCache->delete('account_profiles_' . $instanceName);
@@ -481,7 +528,7 @@ class AccountProfile extends DataObject {
 		return parent::delete($useWhere);
 	}
 
-	public function saveLibraries() {
+	public function saveLibraries() : void {
 		if (isset ($this->_libraries) && is_array($this->_libraries)) {
 			$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
 			foreach ($libraryList as $libraryId => $displayName) {
@@ -509,8 +556,8 @@ class AccountProfile extends DataObject {
 	/**
 	 * @return null|IndexingProfile
 	 */
-	function getIndexingProfile() {
-		if ($this->_indexingProfile == false) {
+	function getIndexingProfile() : ?IndexingProfile {
+		if ($this->_indexingProfile === false) {
 			global $indexingProfiles;
 			if (array_key_exists($this->name, $indexingProfiles)) {
 				$this->_indexingProfile = $indexingProfiles[$this->name];
@@ -519,5 +566,31 @@ class AccountProfile extends DataObject {
 			}
 		}
 		return $this->_indexingProfile;
+	}
+
+	/**
+	 * Modify the structure of the object based on the object currently being edited.
+	 * This can be used to change enums or other values based on the object being edited, so we know relationships
+	 *
+	 * @param $structure
+	 * @return array
+	 */
+	public function updateStructureForEditingObject($structure) : array {
+		if ($this->name == 'admin') {
+			$structure['name']['readOnly'] = true;
+			unset($structure['ils']);
+			unset($structure['driver']);
+			unset($structure['authConfigurationSection']);
+			unset($structure['ilsConnectionSection']);
+			unset($structure['indexingConfigurationSection']);
+			unset($structure['libraries']);
+		}
+
+		return $structure;
+	}
+
+	public function canActiveUserDelete() : bool {
+		//Do not allow the admin account profile to be deleted
+		return $this->name != 'admin';
 	}
 }

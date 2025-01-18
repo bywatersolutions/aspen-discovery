@@ -49,7 +49,7 @@
 				<span class="help-block" style="margin-bottom:.5em; margin-top: 0">{translate text="Use Sharepass to send sensitive information to us such as login credentials we can use to replicate the behavior reported." isAdminFacing=true} <a href="https://app.tango.us/app/workflow/Share-sensitive-information-with-ByWater-SharePass-ea39fbda64f24949a1a8a80a1be8223b" target="_blank"><u>{translate text="Learn how to use Sharepass." isAdminFacing=true}</u></a></span>
 				<input type="url" class="form-control" name="sharepass" placeholder="https://" id="sharepass" {if !empty($sharepass)}value="{$sharepass}"{/if}>
 			</div>
-            {/if}
+			{/if}
 			<div class="form-group">
 				<label class="control-label" id="examples">{translate text="Url(s) to example records" isAdminFacing=true}</label>
 				<fieldset>
@@ -69,9 +69,9 @@
 			</div>
 		</form>
 		<script type="application/javascript">
-            {literal}
+			{literal}
 			$("#submitTicketForm").validate();
-            {/literal}
+			{/literal}
 		</script>
 	</div>
 {/strip}

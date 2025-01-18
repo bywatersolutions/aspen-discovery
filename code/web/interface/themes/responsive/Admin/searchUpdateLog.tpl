@@ -2,7 +2,7 @@
 	<div id="main-content" class="col-md-12">
 		<h1>{translate text="Saved Search Notifications Log" isAdminFacing=true}</h1>
 
-        {include file='Admin/exportLogFilters.tpl'}
+		{include file='Admin/exportLogFilters.tpl'}
 		<div class="adminTableRegion fixed-height-table">
 			<table class="adminTable table table-condensed table-hover table-condensed smallText table-sticky">
 				<thead>

@@ -14,7 +14,7 @@
 			{/if}
 
 			<h1>{translate text='Security Settings' isPublicFacing=true}</h1>
-            {if !empty($allowPinReset)}
+			{if !empty($allowPinReset)}
 			<div class="row" style="margin-bottom: 3em">
 				<div class="col-xs-6">
 					<label for="password" style="font-size: 18px">{translate text='PIN/Password' isPublicFacing=true}</label>
@@ -23,7 +23,7 @@
 					<a href="/MyAccount/ResetPinPage" id="resetPinPassword" class="btn btn-default {if !empty($offline)}disabled{/if}">{translate text='Reset PIN/Password' isPublicFacing=true}</a>{if !empty($offline)}<small class="muted help-block">Catalog is currently offline, please try again later.</small>{/if}
 				</div>
 			</div>
-            {/if}
+			{/if}
 			{if !empty($twoFactorEnabled)}
 			<div class="row">
 				<div class="col-xs-6">
@@ -34,13 +34,13 @@
 				<div class="col-xs-6 text-right">
 					{if $twoFactorStatus == '0'}
 						<button type="button" name="2faStatus" class="btn btn-primary" onclick="return AspenDiscovery.Account.show2FAEnrollment(false);">{translate text="Set up" isPublicFacing=true}</button>
-                    {else}
+					{else}
 						<button type="button" name="2faStatus" class="btn btn-primary" onclick="return AspenDiscovery.Account.showCancel2FA();" {if empty($enableDeactivation)}disabled{/if}>{translate text="Turn off" isPublicFacing=true}</button>
-                        {if empty($enableDeactivation)}<small class="help-block">{translate text="Your account is required to have 2FA enabled" isPublicFacing=true}</small>{/if}
-                    {/if}
+						{if empty($enableDeactivation)}<small class="help-block">{translate text="Your account is required to have 2FA enabled" isPublicFacing=true}</small>{/if}
+					{/if}
 				</div>
 			</div>
-	        {if $twoFactorStatus == '1'}
+			{if $twoFactorStatus == '1'}
 				<div class="row">
 					<div class="col-xs-6">
 						<label for="2faStatus">{translate text='Backup codes' isPublicFacing=true}</label>
@@ -51,14 +51,14 @@
 						<small class="help-block">{translate text="%1% codes remaining" 1=$numBackupCodes isPublicFacing=true}</small>
 					</div>
 				</div>
-	        {/if}
+			{/if}
 			{/if}
 
 			<script type="text/javascript">
-                {* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
-                {literal}
+				{* Initiate any checkbox with a data attribute set to data-switch=""  as a bootstrap switch *}
+				{literal}
 				$(function(){ $('input[type="checkbox"][data-switch]').bootstrapSwitch()});
-                {/literal}
+				{/literal}
 			</script>
 		{else}
 			<div class="page">

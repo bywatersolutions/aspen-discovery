@@ -183,7 +183,6 @@ public class IndexingProfile extends BaseIndexingSettings {
 		this.setCollectionSubfield(getCharFromRecordSet(indexingProfileRS,"collection"));
 		this.setSubLocationSubfield(getCharFromRecordSet(indexingProfileRS,"subLocation"));
 
-		this.setGroupingClass(indexingProfileRS.getString("groupingClass"));
 		this.setIndexingClass(indexingProfileRS.getString("indexingClass"));
 		this.setFormatSource(indexingProfileRS.getString("formatSource"));
 		this.setFallbackFormatField(indexingProfileRS.getString("fallbackFormatField"));
@@ -408,10 +407,6 @@ public class IndexingProfile extends BaseIndexingSettings {
 
 	private void setFilenamesToInclude(String filenamesToInclude) {
 		this.filenamesToInclude = filenamesToInclude;
-	}
-
-	public void setGroupingClass(String groupingClass) {
-		this.groupingClass = groupingClass;
 	}
 
 	public void setFormatSource(String formatSource) {

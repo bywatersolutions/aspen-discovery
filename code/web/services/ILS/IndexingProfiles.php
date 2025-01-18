@@ -6,9 +6,9 @@ require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
 require_once ROOT_DIR . '/sys/Indexing/IndexingProfile.php';
 
 class ILS_IndexingProfiles extends ObjectEditor {
-	function launch() {
+	function launch() : void {
 		global $interface;
-		$objectAction = isset($_REQUEST['objectAction']) ? $_REQUEST['objectAction'] : null;
+		$objectAction = $_REQUEST['objectAction'] ?? null;
 		if ($objectAction == 'viewMarcFiles') {
 			$id = $_REQUEST['id'];
 			$interface->assign('id', $id);
@@ -121,11 +121,11 @@ class ILS_IndexingProfiles extends ObjectEditor {
 		return 'id';
 	}
 
-	function canAddNew() {
+	function canAddNew() : bool {
 		return true;
 	}
 
-	function canDelete() {
+	function canDelete() : bool {
 		return true;
 	}
 
@@ -135,7 +135,7 @@ class ILS_IndexingProfiles extends ObjectEditor {
 
 	function getAdditionalObjectActions($existingObject): array {
 		$actions = [];
-		if ($existingObject && $existingObject->id != '') {
+		if ($existingObject instanceof IndexingProfile && $existingObject->id != '') {
 			$actions[] = [
 				'text' => 'View MARC files',
 				'url' => '/ILS/IndexingProfiles?objectAction=viewMarcFiles&id=' . $existingObject->id,
@@ -150,7 +150,7 @@ class ILS_IndexingProfiles extends ObjectEditor {
 	}
 
 	function getInitializationJs(): string {
-		return 'return AspenDiscovery.Admin.updateIndexingProfileFields();';
+		return 'AspenDiscovery.Admin.updateIndexingProfileFields();AspenDiscovery.Admin.toggleIlsSpecificFields();return false;';
 	}
 
 	function getBreadcrumbs(): array {
@@ -167,5 +167,9 @@ class ILS_IndexingProfiles extends ObjectEditor {
 
 	function canView(): bool {
 		return UserAccount::userHasPermission('Administer Indexing Profiles');
+	}
+
+	public function hasMultiStepAddNew() : bool {
+		return true;
 	}
 }

@@ -4,7 +4,7 @@
 			<h1 id="pageTitle">{$pageTitleShort}</h1>
 		</div>
 		<div class="col-xs-12 col-md-3 help-link">
-            {if !empty($instructions)}<a href="{$instructions}"><i class="fas fa-question-circle" role="presentation"></i>&nbsp;{translate text="Documentation" isAdminFacing=true}</a>{/if}
+			{if !empty($instructions)}<a href="{$instructions}"><i class="fas fa-question-circle" role="presentation"></i>&nbsp;{translate text="Documentation" isAdminFacing=true}</a>{/if}
 		</div>
 	</div>
 
@@ -42,6 +42,6 @@
 				<button class="btn btn-primary" type="submit">{translate text="Get Receipt" isAdminFacing=true}</button>
 			</div>
 		</form>
-        {$receiptResponse}
+		{$receiptResponse}
 	</div>
 {/strip}

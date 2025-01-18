@@ -5,14 +5,14 @@ require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
 require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
 
 class TwoFactorAuth extends ObjectEditor {
-	function launch() {
+	function launch() : void {
 		global $interface;
 		global $library;
-		$objectAction = isset($_REQUEST['objectAction']) ? $_REQUEST['objectAction'] : null;
+		$objectAction = $_REQUEST['objectAction'] ?? null;
 		if ($objectAction == 'recoverAccount') {
 			$id = $_REQUEST['id'];
 			$interface->assign('id', $id);
-			$interface->assign('usernameLabel', str_replace('Your', '', $library->loginFormUsernameLabel ? $library->loginFormUsernameLabel : 'Name'));
+			$interface->assign('usernameLabel', str_replace('Your', '', !empty($library->loginFormUsernameLabel) ? $library->loginFormUsernameLabel : 'Name'));
 			$this->display('twoFactorAccountRecovery.tpl', 'Account Recovery');
 		} else {
 			parent::launch();
@@ -64,7 +64,7 @@ class TwoFactorAuth extends ObjectEditor {
 
 	function getAdditionalObjectActions($existingObject): array {
 		$actions = [];
-		if ($existingObject && $existingObject->id != '') {
+		if ($existingObject instanceof TwoFactorAuthSetting  && $existingObject->id != '') {
 			$actions[] = [
 				'text' => 'Recover User Account',
 				'url' => '/Admin/TwoFactorAuth?objectAction=recoverAccount&id=' . $existingObject->id,
@@ -82,9 +82,9 @@ class TwoFactorAuth extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-    function getInstructions() : string{
-        return 'https://help.aspendiscovery.org/help/users/account';
-    }
+	function getInstructions() : string{
+		return 'https://help.aspendiscovery.org/help/users/account';
+	}
 
 	function getActiveAdminSection(): string {
 		return 'primary_configuration';
@@ -92,5 +92,9 @@ class TwoFactorAuth extends ObjectEditor {
 
 	function canView(): bool {
 		return UserAccount::userHasPermission('Administer Two-Factor Authentication');
+	}
+
+	public function hasMultiStepAddNew() : bool {
+		return true;
 	}
 }

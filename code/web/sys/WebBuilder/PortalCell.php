@@ -31,6 +31,7 @@ class PortalCell extends DataObject {
 	public $sourceInfo;
 	public $frameHeight;
 	public $makeCellAccordion;
+	public $imageURL;
 	public $pdfView;
 	public $imgAction;
 	public $imgAlt;

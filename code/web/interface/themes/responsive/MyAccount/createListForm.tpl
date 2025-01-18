@@ -19,7 +19,7 @@
 			<div class="form-group">
 			  <label for="listDesc" class="col-sm-3 control-label">{translate text="Description" isPublicFacing=true}</label>
 				<div class="col-sm-9">
-			    <textarea name="desc" id="listDesc" rows="3" cols="50" class="form-control"></textarea>
+					<textarea name="desc" id="listDesc" rows="3" cols="50" class="form-control"></textarea>
 				</div>
 			</div>
 		{/if}
@@ -55,7 +55,7 @@
 						<small>{translate text="If enabled, your name will be displayed as the author of this public list." isPublicFacing=true}</small>
 					</div>
 				</div>
-			</div>	
+			</div>
 		{/if}
 		{/if}
 	<input type="hidden" name="source" value="{if !empty($source)}{$source}{/if}">

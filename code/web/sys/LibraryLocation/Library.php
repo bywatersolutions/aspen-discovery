@@ -5015,9 +5015,13 @@ class Library extends DataObject {
 	 * @param boolean $restrictByHomeLibrary whether only the patron's home library should be returned
 	 * @return array
 	 */
-	static function getLibraryList(bool $restrictByHomeLibrary): array {
+	static function getLibraryList(bool $restrictByHomeLibrary, $accountProfileId = -1): array {
 		$library = new Library();
 		$library->orderBy('displayName');
+		if ($accountProfileId != -1) {
+			$library->accountProfileId = $accountProfileId;
+		}
+
 		if ($restrictByHomeLibrary) {
 			$homeLibrary = Library::getPatronHomeLibrary();
 			if ($homeLibrary != null) {

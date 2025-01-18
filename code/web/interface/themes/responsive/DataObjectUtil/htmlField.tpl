@@ -2,11 +2,11 @@
 <script type="text/javascript">
 {literal}
 CKEDITOR.replace( '{/literal}{$propName}{literal}',
-    {
-          toolbar : 'Basic', height:'{/literal}{$property.rows*20+30}{literal}px'
-    });
+	{
+		  toolbar : 'Basic', height:'{/literal}{$property.rows*20+30}{literal}px'
+	});
 
-//Update the instance so jquery validation works the first time. 
+//Update the instance so jquery validation works the first time.
 CKEDITOR.instances['{/literal}{$propName}{literal}'].on("instanceReady", function()
 {
 //set keyup event
@@ -19,10 +19,10 @@ this.document.on("paste", update_ckEditor_{/literal}{$propName}{literal});
 function update_ckEditor_{/literal}{$propName}{literal}()
 {
 
-    CKEDITOR.tools.setTimeout( function()
-    { 
-        $("#{/literal}{$propName}{literal}").val(CKEDITOR.instances.{/literal}{$propName}{literal}.getData()); 
-    }, 0);
+	CKEDITOR.tools.setTimeout( function()
+	{
+		$("#{/literal}{$propName}{literal}").val(CKEDITOR.instances.{/literal}{$propName}{literal}.getData());
+	}, 0);
 }
 
 {/literal}

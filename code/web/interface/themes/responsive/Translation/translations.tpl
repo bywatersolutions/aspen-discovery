@@ -30,7 +30,7 @@
 				<script type="text/javascript">
 					$(document).ready(function(){ldelim}
 						rome(updatedSince);
-                        {rdelim});
+						{rdelim});
 				</script>
 			</div>
 		</div>

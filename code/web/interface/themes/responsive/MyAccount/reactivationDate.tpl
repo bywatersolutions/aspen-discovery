@@ -9,7 +9,7 @@
 		</div>
 		{if !empty($reactivateDateNotRequired)}
 			<p class="alert alert-info">
-                {translate text="If a date is not selected, the hold will be frozen until you thaw it." isPublicFacing=true}
+				{translate text="If a date is not selected, the hold will be frozen until you thaw it." isPublicFacing=true}
 			</p>
 		{/if}
 	</form>

@@ -68,6 +68,7 @@ public class PolarisExportMain {
 	private static String serverName;
 
 	private static IlsExtractLogEntry logEntry;
+	private static long accountProfileId;
 	private static String webServiceUrl;
 	private static String clientId;
 	private static String clientSecret;
@@ -159,6 +160,7 @@ public class PolarisExportMain {
 					domain = accountProfileRS.getString("domain");
 					staffUsername = accountProfileRS.getString( "staffUsername");
 					staffPassword = accountProfileRS.getString( "staffPassword");
+					profileToLoad = accountProfileRS.getString("recordSource");
 				}
 				accountProfileRS.close();
 
@@ -425,8 +427,8 @@ public class PolarisExportMain {
 	private static void updateBranchInfo(Connection dbConn) {
 		try{
 			PreparedStatement existingAspenLocationStmt = dbConn.prepareStatement("SELECT libraryId, locationId, isMainBranch from location where code = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			PreparedStatement existingAspenLibraryStmt = dbConn.prepareStatement("SELECT libraryId from library where ilsCode = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			PreparedStatement addAspenLibraryStmt = dbConn.prepareStatement("INSERT INTO library (subdomain, displayName, ilsCode, browseCategoryGroupId, groupedWorkDisplaySettingId) VALUES (?, ?, ?, 1, 1)", Statement.RETURN_GENERATED_KEYS);
+			PreparedStatement existingAspenLibraryStmt = dbConn.prepareStatement("SELECT libraryId from library where ilsCode = ? and accountProfileId = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			PreparedStatement addAspenLibraryStmt = dbConn.prepareStatement("INSERT INTO library (accountProfileId, subdomain, displayName, ilsCode, browseCategoryGroupId, groupedWorkDisplaySettingId) VALUES (?, ?, ?, ?, 1, 1)", Statement.RETURN_GENERATED_KEYS);
 			PreparedStatement addAspenLocationStmt = dbConn.prepareStatement("INSERT INTO location (libraryId, displayName, code, browseCategoryGroupId, groupedWorkDisplaySettingId) VALUES (?, ?, ?, -1, -1)", Statement.RETURN_GENERATED_KEYS);
 			PreparedStatement addAspenLocationRecordsOwnedStmt = dbConn.prepareStatement("INSERT INTO location_records_to_include (locationId, indexingProfileId, location, subLocation, markRecordsAsOwned) VALUES (?, ?, ?, '', 1)");
 			PreparedStatement addAspenLocationRecordsToIncludeStmt = dbConn.prepareStatement("INSERT INTO location_records_to_include (locationId, indexingProfileId, location, subLocation, weight) VALUES (?, ?, '.*', '', 1)");
@@ -454,12 +456,14 @@ public class PolarisExportMain {
 					int organizationCodeId = organizationInfo.getInt("OrganizationCodeID");
 					if (organizationCodeId == 2) {
 						existingAspenLibraryStmt.setLong(1, ilsId);
+						existingAspenLibraryStmt.setLong(2, accountProfileId);
 						ResultSet existingLibraryRS = existingAspenLibraryStmt.executeQuery();
 						long libraryId = 0;
 						if (!existingLibraryRS.next()) {
-							addAspenLibraryStmt.setString(1, abbreviation);
-							addAspenLibraryStmt.setString(2, libraryDisplayName);
-							addAspenLibraryStmt.setLong(3, ilsId);
+							addAspenLibraryStmt.setLong(1, accountProfileId);
+							addAspenLibraryStmt.setString(2, abbreviation);
+							addAspenLibraryStmt.setString(3, libraryDisplayName);
+							addAspenLibraryStmt.setLong(4, ilsId);
 							addAspenLibraryStmt.executeUpdate();
 							ResultSet addAspenLibraryRS = addAspenLibraryStmt.getGeneratedKeys();
 							if (addAspenLibraryRS.next()){
@@ -535,7 +539,8 @@ public class PolarisExportMain {
 
 	private static void updatePatronCodes(Connection dbConn){
 		try{
-			PreparedStatement existingPTypeStmt = dbConn.prepareStatement("SELECT * from ptype");
+			PreparedStatement existingPTypeStmt = dbConn.prepareStatement("SELECT * from ptype where accountProfileId = ?");
+			existingPTypeStmt.setLong(1, accountProfileId);
 			ResultSet existingPTypesRS = existingPTypeStmt.executeQuery();
 			HashSet<Long> existingPTypes = new HashSet<>();
 			while (existingPTypesRS.next()){
@@ -543,7 +548,7 @@ public class PolarisExportMain {
 			}
 			existingPTypesRS.close();
 			existingPTypeStmt.close();
-			PreparedStatement addPTypeStmt = dbConn.prepareStatement("INSERT INTO ptype (pType, description) VALUES (?, ?)");
+			PreparedStatement addPTypeStmt = dbConn.prepareStatement("INSERT INTO ptype (accountProfileId, pType, description) VALUES (?, ?, ?)");
 			//Get a list of all libraries
 			String getPatronCodesUrl = "/PAPIService/REST/public/v1/1033/100/1/patroncodes";
 			WebServiceResponse patronCodesResponse = callPolarisAPI(getPatronCodesUrl, null, "GET", "application/json", null);
@@ -554,8 +559,9 @@ public class PolarisExportMain {
 					JSONObject curPatronType = patronCodeRows.getJSONObject(i);
 					long patronCodeId = curPatronType.getLong("PatronCodeID");
 					if (!existingPTypes.contains(patronCodeId)){
-						addPTypeStmt.setLong(1, patronCodeId);
-						addPTypeStmt.setString(2, curPatronType.getString("Description"));
+						addPTypeStmt.setLong(1, accountProfileId);
+						addPTypeStmt.setLong(2, patronCodeId);
+						addPTypeStmt.setString(3, curPatronType.getString("Description"));
 						addPTypeStmt.executeUpdate();
 					}
 				}
@@ -762,6 +768,7 @@ public class PolarisExportMain {
 				}
 				clientId = accountProfileRS.getString("oAuthClientId");
 				clientSecret = accountProfileRS.getString("oAuthClientSecret");
+				accountProfileId = accountProfileRS.getLong("id");
 			} else {
 				logger.error("Could not find an account profile for Polaris stopping");
 				System.exit(1);

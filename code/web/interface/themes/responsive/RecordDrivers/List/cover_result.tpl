@@ -1,12 +1,12 @@
 {strip}
-    {if $accessibleBrowseCategories == '1' && $action != 'Results' && !$isForSearchResults}
+	{if $accessibleBrowseCategories == '1' && $action != 'Results' && !$isForSearchResults}
 		<div class="swiper-slide browse-thumbnail {$coverStyle}">
 			<a href="{$summUrl}">
 				<img src="{$bookCoverUrlMedium}" alt="{$summTitle|escape}" class="{$coverStyle}" loading="lazy">
 				<div class="swiper-lazy-preloader"></div>
 			</a>
 		</div>
-    {else}
+	{else}
 		{if !empty($browseMode) && $browseMode == '1'}
 			<div class="browse-list grid-item {$coverStyle} col-tn-12 col-xs-6 col-sm-6 col-md-4 col-lg-3">
 				<a  href="{$summUrl}">

@@ -7,7 +7,7 @@
 			</div>
 		{elseif !empty($message)}
 			<div class="alert alert-info">
-                {$message}
+				{$message}
 			</div>
 		{/if}
 		<form enctype="multipart/form-data" name="uploadMarc" method="post">

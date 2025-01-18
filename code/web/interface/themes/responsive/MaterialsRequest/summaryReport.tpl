@@ -15,7 +15,7 @@
 					</select>
 				</div>
 				<div class="form-group">
-                    {translate text="Date" isAdminFacing=true}
+					{translate text="Date" isAdminFacing=true}
 					<label for="startDate"> {translate text="From" isAdminFacing=true}</label> <input type="date" id="startDate" name="startDate" value="{$startDate}" size="8" max="{$smarty.now|date_format:"%Y-%m-%d"}">
 					<label for="endDate">{translate text="To" isAdminFacing=true}</label> <input type="date" id="endDate" name="endDate" value="{$endDate}" size="8" max="{$smarty.now|date_format:"%Y-%m-%d"}">
 				</div>

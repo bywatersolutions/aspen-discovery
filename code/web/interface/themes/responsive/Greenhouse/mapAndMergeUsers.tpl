@@ -4,7 +4,7 @@
 			<h1 id="pageTitle">{$pageTitleShort}</h1>
 		</div>
 	</div>
-    {if isset($mergeResults)}
+	{if isset($mergeResults)}
 		<div class="row">
 			<div class="col-xs-12">
 				<h2>{translate text="Merge Results" isAdminFacing=true}</h2>
@@ -96,23 +96,23 @@
 				</div>
 			{/if}
 		</div>
-    {else}
+	{else}
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="alert alert-info">{translate text="This tool can be used to convert User usernames (unique values in the ILS) to new values while merging anything that exists with both the old and new username into a single record and moving all the ." isAdminFacing=true}</div>
 			</div>
 		</div>
-        {if !empty($setupErrors)}
+		{if !empty($setupErrors)}
 			<div class="row">
 				<div class="col-xs-12">
-                    {foreach from=$setupErrors item=setupError}
+					{foreach from=$setupErrors item=setupError}
 						<div class="alert alert-danger">
-                            {$setupError}
+							{$setupError}
 						</div>
-                    {/foreach}
+					{/foreach}
 				</div>
 			</div>
-        {else}
+		{else}
 			<form id='importForm' method="post" role="form" onsubmit="setFormSubmitting();" aria-label="{translate text="Remap User Usernames and Merge" isAdminFacing=true inAttribute=true}">
 				<div class='editor'>
 					<div class="row">
@@ -124,6 +124,6 @@
 					</div>
 				</div>
 			</form>
-        {/if}
-    {/if}
+		{/if}
+	{/if}
 {/strip}

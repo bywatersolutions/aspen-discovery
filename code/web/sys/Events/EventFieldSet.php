@@ -110,4 +110,16 @@ class EventFieldSet extends DataObject {
 			$fieldSetFields->update();
 		}
 	}
+
+	public static function getEventFieldSetList(): array {
+		$setList = [];
+		$object = new EventFieldSet();
+		$object->orderBy('name');
+		$object->find();
+		while ($object->fetch()) {
+			$label = $object->name;
+			$setList[$object->id] = $label;
+		}
+		return $setList;
+	}
 }

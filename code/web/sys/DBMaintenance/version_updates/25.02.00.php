@@ -116,6 +116,29 @@ function getUpdates25_02_00(): array {
 					eventFieldId INT NOT NULL,
 					eventFieldSetId INT NOT NULL
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_type (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventFieldSetId INT NOT NULL,
+					title VARCHAR(50) NOT NULL UNIQUE,
+					titleCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					description VARCHAR(100) NOT NULL,
+					descriptionCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					cover VARCHAR(100) DEFAULT NULL,
+					coverCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					eventLength FLOAT NOT NULL DEFAULT 1,
+					lengthCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					archived TINYINT(1) NOT NULL DEFAULT 0
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_type_library (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventTypeId INT NOT NULL,
+					libraryId INT NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_type_location (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventTypeId INT NOT NULL,
+					locationId INT NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
 			]
 		], //native_events_tables
 

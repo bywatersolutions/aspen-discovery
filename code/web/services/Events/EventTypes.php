@@ -2,11 +2,11 @@
 require_once ROOT_DIR . '/Action.php';
 require_once ROOT_DIR . '/sys/Events/LibraryEventsSetting.php';
 require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
-require_once ROOT_DIR . '/sys/Events/EventField.php';
+require_once ROOT_DIR . '/sys/Events/EventType.php';
 
-class Events_EventFields extends ObjectEditor {
+class Events_EventTypes extends ObjectEditor {
 	function getObjectType(): string {
-		return 'EventField';
+		return 'EventType';
 	}
 
 	function getModule(): string {
@@ -14,15 +14,15 @@ class Events_EventFields extends ObjectEditor {
 	}
 
 	function getToolName(): string {
-		return 'EventFields';
+		return 'EventTypes';
 	}
 
 	function getPageTitle(): string {
-		return 'Event Fields';
+		return 'Event Types';
 	}
 
 	function getAllObjects($page, $recordsPerPage): array {
-		$object = new EventField();
+		$object = new EventType();
 		$object->orderBy($this->getSort());
 		$this->applyFilters($object);
 		$object->limit(($page - 1) * $recordsPerPage, $recordsPerPage);
@@ -35,11 +35,11 @@ class Events_EventFields extends ObjectEditor {
 	}
 
 	function getDefaultSort(): string {
-		return 'name asc';
+		return 'title asc';
 	}
 
 	function getObjectStructure($context = ''): array {
-		return EventField::getObjectStructure($context);
+		return EventType::getObjectStructure($context);
 	}
 
 	function getPrimaryKeyColumn(): string {
@@ -58,7 +58,7 @@ class Events_EventFields extends ObjectEditor {
 		$breadcrumbs = [];
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home', 'Administration Home');
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home#events', 'Events');
-		$breadcrumbs[] = new Breadcrumb('/Events/EventsFields', 'Events Fields');
+		$breadcrumbs[] = new Breadcrumb('/Events/EventTypes', 'Events Types');
 		return $breadcrumbs;
 	}
 
@@ -67,10 +67,10 @@ class Events_EventFields extends ObjectEditor {
 	}
 
 	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Field Sets']);
+		return UserAccount::userHasPermission(['Administer Event Types']);
 	}
 
 	function canBatchEdit(): bool {
-		return UserAccount::userHasPermission(['Administer Field Sets']);
+		return UserAccount::userHasPermission(['Administer Event Types']);
 	}
 }

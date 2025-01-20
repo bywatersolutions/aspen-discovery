@@ -1341,13 +1341,16 @@ function loadModuleActionId() {
 		if (is_null($activeRecordProfile)) {
 			//We will default to the first indexing profile that has a catalog connection
 			$activeAccountProfile = $library->getAccountProfile();
-			$activeRecordProfile = $activeAccountProfile->getIndexingProfile();
-//			foreach ($indexingProfiles as $profile) {
-//				if (!empty($profile->catalogDriver)) {
-//					$activeRecordProfile = $profile;
-//					break;
-//				}
-//			}
+			if ($activeAccountProfile !== false) {
+				$activeRecordProfile = $activeAccountProfile->getIndexingProfile();
+			}else{
+				foreach ($indexingProfiles as $profile) {
+					if (!empty($profile->catalogDriver)) {
+						$activeRecordProfile = $profile;
+						break;
+					}
+				}
+			}
 		}
 	}
 }

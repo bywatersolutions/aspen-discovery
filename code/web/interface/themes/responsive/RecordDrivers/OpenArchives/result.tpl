@@ -57,12 +57,7 @@
 			<div class="row">
 				<div class="result-label col-tn-3">{translate text="Date" isPublicFacing=true} </div>
 				<div class="result-value col-tn-8 notranslate">
-					{assign var="formattedDates" value=[]}
-					{foreach from=$date item=singleDate}
-						{assign var="formattedDate" value=$singleDate|date_format:"%Y-%m-%d"}
-						{append var="formattedDates" value=$formattedDate}
-					{/foreach}
-					{implode subject=$formattedDates glue=", "}
+					{implode subject=$date}
 				</div>
 			</div>
 		{/if}

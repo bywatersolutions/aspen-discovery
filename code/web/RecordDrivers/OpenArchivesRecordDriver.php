@@ -54,7 +54,16 @@ class OpenArchivesRecordDriver extends IndexRecordDriver {
 			$interface->assign('date', $this->fields['date_text']);
 		} else {
 			if (array_key_exists('date', $this->fields)) {
-				$interface->assign('date', $this->fields['date']);
+				// check to see whether $this->fields['date'] is an array then loop through each member
+				if (is_array($this->fields['date'])) {
+					$date = '';
+					foreach ($this->fields['date'] as $datePart) {
+						$date .= date('Y-m-d', strtotime($datePart)) . ' ';
+					}
+					$interface->assign('date', $date);
+				} else {
+					$interface->assign('date', date('Y-m-d', $this->fields['date']));
+				}
 			} else {
 				$interface->assign('date', null);
 			}

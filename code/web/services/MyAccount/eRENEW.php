@@ -1,7 +1,5 @@
 <?php
 
-require_once ROOT_DIR . "/Action.php";
-
 class eRENEW extends Action {
 	public function launch() {
 		global $interface;

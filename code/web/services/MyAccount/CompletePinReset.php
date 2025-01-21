@@ -1,6 +1,5 @@
 <?php
 
-require_once ROOT_DIR . "/Action.php";
 require_once ROOT_DIR . '/CatalogConnection.php';
 
 class MyAccount_CompletePinReset extends Action {

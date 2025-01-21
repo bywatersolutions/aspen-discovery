@@ -1,5 +1,4 @@
 <?php
-require_once ROOT_DIR . '/Action.php';
 
 abstract class AbstractAPI extends Action{
 	protected $context;

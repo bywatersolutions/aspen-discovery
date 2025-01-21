@@ -133,9 +133,7 @@ public class KohaExportMain {
 				}
 
 				//Check to see if the ILS connection is offline and don't index
-				if (isOffline()) {
-					System.exit(0);
-				}
+				SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 
 				//Connect to the Koha database
 				Connection kohaConn;

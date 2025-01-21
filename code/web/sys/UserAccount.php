@@ -496,6 +496,8 @@ class UserAccount {
 	public static function login($validatedViaSSO = false) {
 		global $logger;
 		global $usageByIPAddress;
+		global $library;
+
 		$usageByIPAddress->numLoginAttempts++;
 		UserAccount::$ssoAuthOnly = UserAccount::isPrimaryAccountAuthenticationSSO();
 		$localAuthOnly = false;
@@ -544,20 +546,31 @@ class UserAccount {
 		/** @var User $primaryUser */
 		$primaryUser = null;
 		$lastError = null;
+		//TODO: Limit account profiles according to the selected library
 		$driversToTest = self::getAccountProfiles();
 
 		//Test each driver in turn.  We do test all of them in case an account is valid in
 		//more than one system
 		foreach ($driversToTest as $driverName => $driverData) {
+			/** @var AccountProfile $accountProfile */
+			$accountProfile = $driverData['accountProfile'];
+			$okToAuthenticate = false;
+			if ($accountProfile->id == $library->accountProfileId || $accountProfile->authenticationMethod == 'db') {
+				$okToAuthenticate = true;
+			}
+
+			if (!$okToAuthenticate) {
+				continue;
+			}
 			// Perform authentication:
 			$authN = AuthenticationFactory::initAuthentication($driverData['authenticationMethod'], $driverData);
-			// We get back 1 of 3 states from the authenticate call:
+			// We get back 1 of 3 states from the authentication call:
 			//  1) A user which means we authenticated correctly
 			//  2) Null which means the authentication method couldn't handle the user
 			//  3) AspenError which means the authentication method handled the user, but didn't find the user
 
 			if(!$localAuthOnly) {
-				$tempUser = $authN->authenticate($validatedViaSSO, $driverData['accountProfile']);
+				$tempUser = $authN->authenticate($validatedViaSSO, $accountProfile);
 			} else {
 				$tempUser = UserAccount::findNewAspenUser('username', $_POST['username']);
 			}
@@ -594,6 +607,9 @@ class UserAccount {
 				if ($primaryUser == null) {
 					$primaryUser = $tempUser;
 					self::updateSession($primaryUser);
+					//Once we have validated, stop processing users.
+					//Note: By breaking here we will not automatically link accounts from different account profiles.
+					break;
 				} else {
 					//We have more than one account with these credentials, automatically link them
 					$primaryUser->addLinkedUser($tempUser);
@@ -834,7 +850,7 @@ class UserAccount {
 	private static $_accountProfiles = null;
 
 	/**
-	 * @return AccountProfile[]
+	 * @return array - an array with the following elements: driver, authenticationMethod, accountProfile
 	 */
 	static function getAccountProfiles() : array {
 		if (UserAccount::$_accountProfiles == null) {

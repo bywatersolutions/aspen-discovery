@@ -6127,7 +6127,7 @@ AspenDiscovery.Account = (function () {
 						AspenDiscovery.showMessageWithButtons(response.result.title, response.result.body, response.result.buttons);
 						$('#resetPin').validate();
 					} else if (response.result.success === false && response.result.enroll2FA === true) {
-						AspenDiscovery.showMessageWithButtons('Error', 'Your patron type requires that you enroll into two-factor authentication before logging in.', '<button class=\'tool btn btn-primary\' onclick=\'AspenDiscovery.Account.show2FAEnrollment(true); return false;\'>Continue</button>');
+						AspenDiscovery.showMessageWithButtons('Error', 'Your are required to enroll into two-factor authentication before logging in.', '<button class=\'tool btn btn-primary\' onclick=\'AspenDiscovery.Account.show2FAEnrollment(true); return false;\'>Continue</button>');
 					} else if (response.result.success === false && response.result.has2FA === true) {
 						AspenDiscovery.showMessageWithButtons(response.result.title, response.result.body, response.result.buttons);
 					} else {
@@ -9697,34 +9697,9 @@ AspenDiscovery.Admin = (function () {
 			return false;
 		},
 		displayReleaseNotes: function () {
-			var url = Globals.path + "/Admin/AJAX";
-			var selectedNotes = $('#releaseSelector').val();
-			var params = {
-				method: 'getReleaseNotes',
-				release: selectedNotes
-			};
-			$.getJSON(url, params,
-				function (data) {
-					if (data.success) {
-						$("#releaseVersion").html(data.release);
-						$("#releaseNotes").html(data.releaseNotes);
-						if (data.actionItems === '') {
-							$("#actionItemsSection").hide();
-						} else {
-							$("#actionItemsSection").show();
-							$("#actionItems").html(data.actionItems);
-						}
-						if (data.testingSuggestions === '') {
-							$("#testingSection").hide();
-						} else {
-							$("#testingSection").show();
-							$("#testingSuggestions").html(data.testingSuggestions);
-						}
-					} else {
-						$("#releaseNotes").html("Error + " + data.message);
-					}
-				}
-			).fail(AspenDiscovery.ajaxFail);
+			var url = Globals.path + "/Admin/ReleaseNotes";
+			var selectedRelease = $('#releaseSelector').val();
+			window.location.href = url + "?release=" + selectedRelease;
 			return false;
 		},
 		updateBrowseSearchForSource: function () {

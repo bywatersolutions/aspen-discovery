@@ -8460,6 +8460,7 @@ class Koha extends AbstractIlsDriver {
 				'allCapsCode' => $key,
 				'label' => $consentType['title']['en'],
 				'description' => $consentType['description']['en'],
+				'actionConsentedTo' => $consentType['title']['en'] == 'Newsletter' ? "receiving our Newsletter" : $consentType['title']['en'],
 			];
 		}
 		return $formattedConsentTypes;

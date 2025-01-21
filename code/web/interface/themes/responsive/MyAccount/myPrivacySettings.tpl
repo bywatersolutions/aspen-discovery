@@ -134,7 +134,7 @@
 								</div>
 							</div>
 							<div id="my{$consentCode}ConsentExplanation" style="display:none; margin-top: 10px;">
-									{translate text="By checking this box you are giving your consent to our {$consentType['label']}. Aspen Discovery will send your consent information to Koha, where it will be stored. You can return to this page to update your consent at any point."}
+									{translate text="By checking this box you are giving your consent to {$consentType['actionConsentedTo']}. You can return to this page to update your consent at any point."}
 							</div>
 						</section>
 					{/foreach}

@@ -16,7 +16,6 @@ class Sublocation extends DataObject {
 
 	public function getNumericColumnNames(): array {
 		return [
-			'ilsId',
 			'locationId',
 			'isValidHoldPickupAreaAspen',
 			'isValidHoldPickupAreaILS'

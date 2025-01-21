@@ -5578,14 +5578,14 @@ class User extends DataObject {
 		}
 	}
 
-	public function canSuggestMaterials(): bool {
+	public function canSuggestMaterials(): int {
 		$patronType = $this->getPTypeObj();
 		if (!empty($patronType)) {
 			if ($patronType->canSuggestMaterials) {
-				return true;
+				return $patronType->canSuggestMaterials;
 			}
 		}
-		return false;
+		return 0;
 	}
 
 	function checkoutItem($barcode, Location $currentLocation): array {

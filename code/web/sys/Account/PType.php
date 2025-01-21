@@ -162,7 +162,12 @@ class PType extends DataObject {
 			],
 			'canSuggestMaterials' => [
 				'property' => 'canSuggestMaterials',
-				'type' => 'checkbox',
+				'type' => 'enum',
+				'values' => [
+					0 => 'No',
+					1 => 'Yes, limited by library settings',
+					2 => 'Yes, unlimited'
+				],
 				'label' => 'Allow users to create materials requests',
 				'description' => 'Allow users of this patron type to create materials requests or purchase suggestions.',
 			],

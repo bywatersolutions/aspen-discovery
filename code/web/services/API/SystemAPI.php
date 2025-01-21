@@ -358,60 +358,16 @@ class SystemAPI extends AbstractAPI {
 	}
 
 	public function getDatabaseUpdates(): array {
-		require_once ROOT_DIR . '/sys/DBMaintenance/base_updates.php';
-		$initialUpdates = getInitialUpdates();
 		require_once ROOT_DIR . '/sys/DBMaintenance/library_location_updates.php';
 		$library_location_updates = getLibraryLocationUpdates();
-		$postLibraryBaseUpdates = getPostLibraryBaseUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/grouped_work_updates.php';
-		$grouped_work_updates = getGroupedWorkUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/user_updates.php';
-		$user_updates = getUserUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/genealogy_updates.php';
-		$genealogy_updates = getGenealogyUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/browse_updates.php';
-		$browse_updates = getBrowseUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/collection_spotlight_updates.php';
-		$collection_spotlight_updates = getCollectionSpotlightUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/indexing_updates.php';
-		$indexing_updates = getIndexingUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/hoopla_updates.php';
-		$hoopla_updates = getHooplaUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/rbdigital_updates.php';
-		$rbdigital_updates = getRBdigitalUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/sierra_api_updates.php';
-		$sierra_api_updates = getSierraAPIUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/overdrive_updates.php';
-		$overdrive_updates = getOverDriveUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/ebsco_updates.php';
-		$ebscoUpdates = getEbscoUpdates();
 		require_once ROOT_DIR . '/sys/DBMaintenance/summon_updates.php';
 		$summonUpdates = getSummonUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/axis360_updates.php';
-		$axis360Updates = getAxis360Updates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/theming_updates.php';
-		$theming_updates = getThemingUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/translation_updates.php';
-		$translation_updates = getTranslationUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/open_archives_updates.php';
-		$open_archives_updates = getOpenArchivesUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/redwood_archive_updates.php';
-		$redwood_updates = getRedwoodArchiveUpdates();
 		require_once ROOT_DIR . '/sys/DBMaintenance/cloud_library_updates.php';
 		$cloudLibraryUpdates = getCloudLibraryUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/website_indexing_updates.php';
-		$websiteIndexingUpdates = getWebsiteIndexingUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/web_builder_updates.php';
-		$webBuilderUpdates = getWebBuilderUpdates();
 		require_once ROOT_DIR . '/sys/DBMaintenance/grapes_web_builder_updates.php';
 		$grapesWebBuilderUpdates = getGrapesWebBuilderUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/events_integration_updates.php';
-		$eventsIntegrationUpdates = getEventsIntegrationUpdates();
-		require_once ROOT_DIR . '/sys/DBMaintenance/file_upload_updates.php';
-		$fileUploadUpdates = getFileUploadUpdates();
-		$finalBaseUpdates = getFinalBaseUpdates();
 
-		$baseUpdates = array_merge($initialUpdates, $library_location_updates, $postLibraryBaseUpdates, $user_updates, $grouped_work_updates, $genealogy_updates, $browse_updates, $collection_spotlight_updates, $indexing_updates, $overdrive_updates, $ebscoUpdates, $summonUpdates, $axis360Updates, $hoopla_updates, $rbdigital_updates, $sierra_api_updates, $theming_updates, $translation_updates, $open_archives_updates, $redwood_updates, $cloudLibraryUpdates, $websiteIndexingUpdates, $webBuilderUpdates, $grapesWebBuilderUpdates, $eventsIntegrationUpdates, $fileUploadUpdates, $finalBaseUpdates);
+		$baseUpdates = array_merge($library_location_updates, $summonUpdates, $cloudLibraryUpdates, $grapesWebBuilderUpdates);
 
 		//Get version updates
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
@@ -431,12 +387,12 @@ class SystemAPI extends AbstractAPI {
 		return $baseUpdates;
 	}
 
-	public function hasPendingDatabaseUpdates() {
+	public function hasPendingDatabaseUpdates() : bool {
 		$availableUpdates = $this->getPendingDatabaseUpdates();
 		return count($availableUpdates) > 0;
 	}
 
-	public function getPendingDatabaseUpdates() {
+	public function getPendingDatabaseUpdates() : array {
 		$availableUpdates = $this->getDatabaseUpdates();
 		$availableUpdates = $this->checkWhichUpdatesHaveRun($availableUpdates);
 		$pendingUpdates = [];

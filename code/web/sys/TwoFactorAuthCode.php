@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
@@ -12,7 +12,8 @@ class TwoFactorAuthCode extends DataObject {
 	public $dateSent;
 	public $status;
 
-	public static function getObjectStructure($context = '') {
+	/** @noinspection PhpUnusedParameterInspection */
+	public static function getObjectStructure($context = '') : array {
 		return [
 			'id' => [
 				'property' => 'id',
@@ -58,7 +59,7 @@ class TwoFactorAuthCode extends DataObject {
 		];
 	}
 
-	public function createCode($num = 1, $backup = false) {
+	public function createCode($num = 1, $backup = false) : bool {
 		for ($i = 1; $i <= $num; $i++) {
 			$twoFactorAuthCode = new TwoFactorAuthCode();
 			$twoFactorAuthCode->code = mt_rand(100000, 999999);
@@ -122,7 +123,7 @@ class TwoFactorAuthCode extends DataObject {
 		return $result;
 	}
 
-	function sendCode() {
+	function sendCode() : bool {
 		require_once ROOT_DIR . '/sys/Email/Mailer.php';
 		$mail = new Mailer();
 		$replyToAddress = "";
@@ -143,7 +144,8 @@ class TwoFactorAuthCode extends DataObject {
 		$patron->id = $this->userId;
 		if ($patron->find(true)) {
 			if (!empty($patron->email)) {
-				$email = $mail->send($patron->email, translate([
+				/** @noinspection PhpUnusedLocalVariableInspection */
+				$emailResult = $mail->send($patron->email, translate([
 					'text' => "Your one-time login code",
 					'isPublicFacing' => true,
 				]), $body, $replyToAddress);
@@ -158,7 +160,7 @@ class TwoFactorAuthCode extends DataObject {
 		}
 	}
 
-	function validateCode($code) {
+	function validateCode($code) : array {
 		global $library;
 		require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
 		$authSetting = new TwoFactorAuthSetting();
@@ -217,7 +219,7 @@ class TwoFactorAuthCode extends DataObject {
 		return $result;
 	}
 
-	function createNewBackups() {
+	function createNewBackups() : void {
 		$oldBackupCodes = new TwoFactorAuthCode();
 		$oldBackupCodes->userId = UserAccount::getActiveUserId();
 		$oldBackupCodes->status = "backup";
@@ -229,7 +231,7 @@ class TwoFactorAuthCode extends DataObject {
 		$this->createCode(5, true);
 	}
 
-	function getBackups() {
+	function getBackups() : array {
 		$backupCodes = [];
 		$backupCode = new TwoFactorAuthCode();
 		$backupCode->userId = UserAccount::getActiveUserId();
@@ -241,7 +243,7 @@ class TwoFactorAuthCode extends DataObject {
 		return $backupCodes;
 	}
 
-	function deleteCode($code) {
+	function deleteCode($code) : bool {
 		$codeToCheck = new TwoFactorAuthCode();
 		$codeToCheck->code = $code;
 		if ($codeToCheck->find(true)) {
@@ -251,7 +253,7 @@ class TwoFactorAuthCode extends DataObject {
 		return false;
 	}
 
-	function cleanupOldCodes() {
+	function cleanupOldCodes() : void {
 		// delete codes with a used status and no longer have a valid session id
 		$codesFromOldSessions = new TwoFactorAuthCode();
 		$codesFromOldSessions->status = "used";
@@ -259,7 +261,7 @@ class TwoFactorAuthCode extends DataObject {
 		$codesFromOldSessions->find();
 		while ($codesFromOldSessions->fetch()) {
 			$session = new Session();
-			$session->session_id = $codesFromOldSessions->sessionId;
+			$session->setSessionId($codesFromOldSessions->sessionId);
 			if (!$session->find()) {
 				$codeToDelete = clone $codesFromOldSessions;
 				$codeToDelete->delete();
@@ -276,7 +278,7 @@ class TwoFactorAuthCode extends DataObject {
 		}
 	}
 
-	function deactivate2FA() {
+	function deactivate2FA() : void {
 
 		$user = new User();
 		$user->id = UserAccount::getActiveUserId();

@@ -786,6 +786,10 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 				foreach ($summaryFields as $summaryField) {
 					//Check to make sure we don't have an exact duplicate of this field
 					$curSummary = $this->getSubfieldData($summaryField, 'a');
+					$summarySource = $this->getSubfieldData($summaryField, 'c');
+					if (!empty($summarySource)) {
+						$curSummary .= $summarySource;
+					}
 					$okToAdd = true;
 					foreach ($summaries as $existingSummary) {
 						if ($existingSummary == $curSummary) {
@@ -876,8 +880,13 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 			/** @var File_MARC_Data_Field $descriptionField */
 			if ($descriptionField = $marcRecord->getField('520')) {
 				if ($descriptionSubfield = $descriptionField->getSubfield('a')) {
-					$description = trim($descriptionSubfield->getData());
-					$marcDescription = $this->trimDescription($description);
+					$description = $descriptionSubfield->getData();
+					if ($descriptionSourceSubfield = $descriptionField->getSubfield('c')) {
+						$marcDescription = $description . $descriptionSourceSubfield;
+					}else{
+						$marcDescription = $this->trimDescription($description);
+					}
+					$description = trim($description);
 				}
 			}
 
@@ -2174,7 +2183,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 					/** @var File_MARC_Subfield $subfield */
 					$noteText[] = $subfield->getData();
 				}
-				$note = implode(',', $noteText);
+				$note = implode(' ', $noteText);
 				if (strlen($note) > 0) {
 					$notes[] = [
 						'label' => $label,

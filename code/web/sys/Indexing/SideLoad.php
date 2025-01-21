@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 
 require_once ROOT_DIR . '/sys/Indexing/TranslationMap.php';
 require_once ROOT_DIR . '/sys/Indexing/FormatMapValue.php';
@@ -10,22 +10,22 @@ class SideLoad extends DataObject {
 
 	public $id;
 	public $name;
-	public $accessButtonLabel;
-	public $useLinkTextForButtonLabel;
+	public /** @noinspection PhpUnused */
+		$accessButtonLabel;
+	public /** @noinspection PhpUnused */
+		$useLinkTextForButtonLabel;
 	public $showStatus;
 	public $marcPath;
 	public /** @noinspection PhpUnused */
 		$filenamesToInclude;
 
-	public $deletedRecordsIds;
+	public /** @noinspection PhpUnused */
+		$deletedRecordsIds;
 
 	public /** @noinspection PhpUnused */
 		$marcEncoding;
 	public /** @noinspection PhpUnused */
-		$groupingClass;
-	public /** @noinspection PhpUnused */
 		$indexingClass;
-	public $recordDriver;
 	public /** @noinspection PhpUnused */
 		$recordUrlComponent;
 	public /** @noinspection PhpUnused */
@@ -175,17 +175,6 @@ class SideLoad extends DataObject {
 					'BESTGUESS' => 'BESTGUESS',
 				],
 				'default' => 'UTF8',
-				'forcesReindex' => true,
-			],
-			'groupingClass' => [
-				'property' => 'groupingClass',
-				'type' => 'text',
-				'label' => 'Grouping Class',
-				'maxLength' => 50,
-				'description' => 'The class to use while grouping the records',
-				'required' => true,
-				'hideInLists' => true,
-				'default' => 'SideLoadedRecordGrouper',
 				'forcesReindex' => true,
 			],
 			'indexingClass' => [

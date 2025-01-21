@@ -17,7 +17,6 @@ public class BaseIndexingSettings {
 	protected String name;
 	protected String marcPath;
 	String marcEncoding;
-	String groupingClass;
 	String recordNumberTag;
 	int recordNumberTagInt;
 	char recordNumberSubfield;
@@ -100,10 +99,6 @@ public class BaseIndexingSettings {
 
 	public String getSpecifiedFormatCategory() {
 		return specifiedFormatCategory;
-	}
-
-	public String getGroupingClass() {
-		return groupingClass;
 	}
 
 	public String getTreatUnknownLanguageAs() {

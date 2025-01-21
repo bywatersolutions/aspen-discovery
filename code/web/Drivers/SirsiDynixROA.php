@@ -1484,6 +1484,22 @@ class SirsiDynixROA extends HorizonAPI {
 					'key' => 'USPS',
 				];
 				$holdData['holdRange'] = 'SYSTEM';
+
+				if (!empty($volume)) {
+					//Local ILL with books by mail doesn't work, just return an error message
+					$result['success'] = false;
+					$result['message'] = translate([
+						'text' => "Titles with volumes cannot be requested from other libraries via the catalog. Please contact the library to request this title.",
+						'isPublicFacing' => true,
+					]);
+
+					$result['api']['title'] = translate([
+						'text' => 'Error',
+						'isPublicFacing' => true,
+					]);
+					$result['api']['message'] = $result['message'];
+					return $result;
+				}
 			}
 
 			//$holdRecord         = $this->getWebServiceResponse('holdRecordDescribe', $webServiceURL . "/circulation/holdRecord/describe", null, $sessionToken);

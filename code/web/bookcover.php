@@ -27,8 +27,8 @@ try {
 	}
 	if (SystemVariables::getSystemVariables()->trackIpAddresses) {
 		if ($usageByIPAddress->id) {
-            // This will match that specific IP/year/month/instance row.
-            $usageByIPAddress->find(true);
+			// This will match that specific IP/year/month/instance row.
+			$usageByIPAddress->find(true);
 			$usageByIPAddress->update();
 		} else {
 			$usageByIPAddress->insert();

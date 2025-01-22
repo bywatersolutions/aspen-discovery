@@ -1148,7 +1148,7 @@ class Millennium extends AbstractIlsDriver {
 		return 'requestPinResetResults.tpl';
 	}
 
-	public function processEmailResetPinForm() {
+	public function processEmailResetPinForm() : array {
 		$barcode = strip_tags($_REQUEST['barcode']);
 
 		//Go to the pinreset page

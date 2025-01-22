@@ -67,6 +67,10 @@ class MaterialsRequest_Results extends Action {
 
 		$sidebar = '';
 		if (UserAccount::isLoggedIn()) {
+			$user = UserAccount::getActiveUserObj();
+			$enableMaterialsRequest = $user->canSuggestMaterials();
+			$interface->assign('enableMaterialsRequest', $enableMaterialsRequest);
+
 			$sidebar = 'Search/home-sidebar.tpl';
 		}
 

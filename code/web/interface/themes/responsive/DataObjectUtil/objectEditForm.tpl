@@ -32,6 +32,9 @@
 		{else}
 			<input type="hidden" name="patronIdCheck" value=0>
 		{/if}
+		{if !empty($activeIls)}
+			<input type="hidden" name="activeIls" id="activeIls" value={$activeIls}>
+		{/if}
 
 		{foreach from=$structure item=property}
 			{include file="DataObjectUtil/property.tpl"}

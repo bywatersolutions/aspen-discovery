@@ -1,6 +1,5 @@
 <?php
 
-require_once ROOT_DIR . "/Action.php";
 require_once ROOT_DIR . "/sys/MaterialsRequests/MaterialsRequest.php";
 require_once ROOT_DIR . "/sys/MaterialsRequests/MaterialsRequestStatus.php";
 
@@ -44,6 +43,7 @@ class MaterialsRequest_Submit extends Action {
 		if ($processForm) {
 			//Check to see if the user type is ok to submit a request
 			$enableMaterialsRequest = $user->canSuggestMaterials();
+			$interface->assign('enableMaterialsRequest', $enableMaterialsRequest);
 			if (!$enableMaterialsRequest) {
 				$interface->assign('success', false);
 				$interface->assign('error', translate([
@@ -73,7 +73,7 @@ class MaterialsRequest_Submit extends Action {
 				$materialsRequest->find();
 				$interface->assign('openRequests', $openRequests);
 
-				if ($materialsRequest->getNumResults() >= $maxActiveRequests) {
+				if ($enableMaterialsRequest === 1 && $materialsRequest->getNumResults() >= $maxActiveRequests) {
 					$interface->assign('success', false);
 					$interface->assign('error', translate([
 							'text' => "You've already reached your maximum limit of %1% materials requests open at one time. Once we've processed your existing materials requests, you'll be able to submit again.",
@@ -100,7 +100,7 @@ class MaterialsRequest_Submit extends Action {
 					$materialsRequest->joinAdd($statusQuery, 'INNER', 'status', 'status', 'id');
 					$requestsThisYear = $materialsRequest->count();
 					$interface->assign('requestsThisYear', $requestsThisYear);
-					if ($requestsThisYear >= $maxRequestsPerYear) {
+					if ($enableMaterialsRequest === 1 && $requestsThisYear >= $maxRequestsPerYear) {
 						$interface->assign('success', false);
 						$interface->assign('error', translate([
 								'text' => "You've already reached your maximum limit of %1% materials requests per year.",

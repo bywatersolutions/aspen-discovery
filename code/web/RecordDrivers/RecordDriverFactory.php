@@ -110,16 +110,12 @@ class RecordDriverFactory {
 
 			if (array_key_exists($recordType, $indexingProfiles)) {
 				$indexingProfile = $indexingProfiles[$recordType];
-				$driverName = $indexingProfile->recordDriver;
-				$driverPath = ROOT_DIR . "/RecordDrivers/{$driverName}.php";
-				require_once $driverPath;
-				$recordDriver = new $driverName($id, $groupedWork);
+				require_once ROOT_DIR . "/RecordDrivers/MarcRecordDriver.php";
+				$recordDriver = new MarcRecordDriver($id, $groupedWork);
 			} elseif (array_key_exists(strtolower($recordType), $sideLoadSettings)) {
 				$indexingProfile = $sideLoadSettings[strtolower($recordType)];
-				$driverName = $indexingProfile->recordDriver;
-				$driverPath = ROOT_DIR . "/RecordDrivers/{$driverName}.php";
-				require_once $driverPath;
-				$recordDriver = new $driverName($id, $groupedWork);
+				require_once ROOT_DIR . "/RecordDrivers/SideLoadedRecord.php";
+				$recordDriver = new SideLoadedRecord($id, $groupedWork);
 			} else {
 				//Check to see if this is an object from the archive
 				$driverNameParts = explode('_', $recordType);

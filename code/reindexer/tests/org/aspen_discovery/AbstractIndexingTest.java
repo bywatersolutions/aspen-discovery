@@ -94,7 +94,6 @@ public abstract class AbstractIndexingTest  {
 					int curCol = 0;
 					profile.setName(indexingProfileData[curCol++]);
 					profile.setMarcEncoding("UTF8");
-					profile.setGroupingClass(indexingProfileData[curCol++]);
 					profile.setIndexingClass(indexingProfileData[curCol++]);
 					profile.setFormatSource(indexingProfileData[curCol++]);
 					profile.setRecordNumberTag(indexingProfileData[curCol++]);

@@ -124,7 +124,7 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 		return 'overrideInDriver';
 	}
 
-	function processEmailResetPinForm() {
+	function processEmailResetPinForm() : array {
 		return [
 			'success' => false,
 			'error' => 'This functionality is not available in the ILS.',

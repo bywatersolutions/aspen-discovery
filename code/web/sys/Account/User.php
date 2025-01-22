@@ -75,7 +75,6 @@ class User extends DataObject {
 	public $lastLoginValidation;
 
 	public $twoFactorStatus; //Whether the user has enrolled
-	public $twoFactorAuthSettingId; //The settings based on their PType
 
 	public $updateMessage;
 	public $updateMessageIsError;
@@ -597,7 +596,7 @@ class User extends DataObject {
 	public function getRolesAssignedByPType(): array {
 		$rolesAssignedByPType = [];
 		if ($this->id) {
-			//Get role based on patron type
+			//Get the user role based on their patron type
 			$patronType = $this->getPTypeObj();
 			if (!empty($patronType)) {
 				if ($patronType->assignedRoleId != -1) {
@@ -962,7 +961,7 @@ class User extends DataObject {
 	 *
 	 * @return boolean
 	 */
-	function addLinkedUser(User $linkedUser) {
+	function addLinkedUser(User $linkedUser) : bool {
 		/* var Library $library */ global $library;
 		if ($library->allowLinkedAccounts && $linkedUser->id != $this->id) { // library allows linked accounts and the account to link is not itself
 			$linkedUsers = $this->getLinkedUsers();
@@ -1002,7 +1001,7 @@ class User extends DataObject {
 		return false;
 	}
 
-	function removeLinkedUser($userId) {
+	function removeLinkedUser($userId) : bool {
 		/* var Library $library */ global $library;
 		if ($library->allowLinkedAccounts) {
 			require_once ROOT_DIR . '/sys/Account/UserLink.php';
@@ -1198,7 +1197,7 @@ class User extends DataObject {
 				'type' => 'storedPassword',
 				'label' => 'Password',
 				'description' => 'The password for the user.',
-				'hideInLists' => true
+				'hideInLists' => true,
 			],
 			'firstname' => [
 				'property' => 'firstname',
@@ -3079,6 +3078,7 @@ class User extends DataObject {
 				require_once ROOT_DIR . '/sys/Account/PType.php';
 				$patronType = new PType();
 				$patronType->pType = $this->patronType;
+				$patronType->accountProfileId = $this->getAccountProfile()->id;
 				if ($patronType->find(true)) {
 					$this->_pTypeObj = $patronType;
 				} else {
@@ -3124,11 +3124,20 @@ class User extends DataObject {
 				'message' => "Please enter your current pin number",
 			];
 		}
-		if ($this->cat_password != $oldPin) {
-			return [
-				'success' => false,
-				'message' => "The old pin number is incorrect",
-			];
+		if ($this->hasIlsConnection()) {
+			if ($this->cat_password != $oldPin) {
+				return [
+					'success' => false,
+					'message' => "The old pin number is incorrect",
+				];
+			}
+		}else{
+			if ($this->password != $oldPin) {
+				return [
+					'success' => false,
+					'message' => "The old pin number is incorrect",
+				];
+			}
 		}
 		if (!empty($_REQUEST['pin1'])) {
 			$newPin = $_REQUEST['pin1'];
@@ -3152,9 +3161,18 @@ class User extends DataObject {
 				'message' => "New PINs do not match. Please try again.",
 			];
 		}
-		$result = $this->getCatalogDriver()->updatePin($this, $oldPin, $newPin);
+		if ($this->hasIlsConnection()) {
+			$result = $this->getCatalogDriver()->updatePin($this, $oldPin, $newPin);
+		}else{
+			$result = [
+				'success' => true,
+				'message' => 'Your password was updated successfully.'
+			];
+		}
 		if ($result['success']) {
-			$this->__set('cat_password', $newPin);
+			if ($this->hasIlsConnection()) {
+				$this->__set('cat_password', $newPin);
+			}
 			$this->__set('password', $newPin);
 			$this->update();
 			$this->clearCache();
@@ -4860,7 +4878,11 @@ class User extends DataObject {
 		if ($this->hasIlsConnection()) {
 			return $this->getCatalogDriver()->getPasswordPinValidationRules();
 		} else {
-			return [];
+			return [
+				'minLength' => 12,
+				'maxLength' => 50,
+				'onlyDigitsAllowed' => false,
+			];
 		}
 	}
 
@@ -5171,37 +5193,49 @@ class User extends DataObject {
 		return $result;
 	}
 
-	public function get2FAStatusForPType() {
-		$patronType = $this->getPTypeObj();
-		if (!empty($patronType)) {
-			require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
-			$twoFactorAuthSetting = new TwoFactorAuthSetting();
-			$twoFactorAuthSetting->id = $patronType->twoFactorAuthSettingId;
-			if ($twoFactorAuthSetting->find(true)) {
-				if ($twoFactorAuthSetting->isEnabled != 'notAvailable') {
-					return true;
+	private false|null|TwoFactorAuthSetting $_twoFactorAuthenticationSetting = false;
+	public function getTwoFactorAuthenticationSetting() : ?TwoFactorAuthSetting {
+		if ($this->_twoFactorAuthenticationSetting === false) {
+			if ($this->isAspenAdminUser()) {
+				$this->_twoFactorAuthenticationSetting = null;
+			}else{
+				require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
+				$this->_twoFactorAuthenticationSetting = new TwoFactorAuthSetting();
+				//If the user has a patron type, we will use that to determine the two factor authentication settings.
+				//Otherwise, we can use the account profile.
+				$patronType = $this->getPTypeObj();
+				if (!empty($patronType)) {
+					$this->_twoFactorAuthenticationSetting->id = $patronType->twoFactorAuthSettingId;
+				}else{
+					$this->_twoFactorAuthenticationSetting->accountProfileId = $this->getAccountProfile()->id;
+				}
+				if (!$this->_twoFactorAuthenticationSetting->find(true)) {
+					$this->_twoFactorAuthenticationSetting = null;
 				}
 			}
 		}
-		return false;
+		return $this->_twoFactorAuthenticationSetting;
 	}
 
-	public function is2FARequired() {
-		$patronType = $this->getPTypeObj();
-		if (!empty($patronType)) {
-			require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
-			$twoFactorAuthSetting = new TwoFactorAuthSetting();
-			$twoFactorAuthSetting->id = $patronType->twoFactorAuthSettingId;
-			if ($twoFactorAuthSetting->find(true)) {
-				if ($twoFactorAuthSetting->isEnabled == 'mandatory') {
-					return true;
-				}
-			}
+	public function get2FAStatusForPType() : bool {
+		$twoFactorAuthSetting = $this->getTwoFactorAuthenticationSetting();
+		if ($twoFactorAuthSetting == null) {
+			return false;
+		}else{
+			return $twoFactorAuthSetting->isEnabled != 'notAvailable';
 		}
-		return false;
 	}
 
-	public function get2FAStatus() {
+	public function is2FARequired() : bool {
+		$twoFactorAuthSetting = $this->getTwoFactorAuthenticationSetting();
+		if ($twoFactorAuthSetting == null) {
+			return false;
+		}else{
+			return $twoFactorAuthSetting->isEnabled == 'mandatory';
+		}
+	}
+
+	public function get2FAStatus() : bool {
 		$status = $this->twoFactorStatus;
 		if ($status == '1') {
 			//Make sure that 2-factor authentication has not been disabled by ptype even though the user previously opted in
@@ -5544,14 +5578,14 @@ class User extends DataObject {
 		}
 	}
 
-	public function canSuggestMaterials(): bool {
+	public function canSuggestMaterials(): int {
 		$patronType = $this->getPTypeObj();
 		if (!empty($patronType)) {
 			if ($patronType->canSuggestMaterials) {
-				return true;
+				return $patronType->canSuggestMaterials;
 			}
 		}
-		return false;
+		return 0;
 	}
 
 	function checkoutItem($barcode, Location $currentLocation): array {

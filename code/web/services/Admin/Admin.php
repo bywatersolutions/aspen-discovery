@@ -1,7 +1,5 @@
 <?php
 
-require_once ROOT_DIR . '/Action.php';
-
 abstract class Admin_Admin extends Action {
 	protected $db;
 

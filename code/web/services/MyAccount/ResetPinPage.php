@@ -3,7 +3,7 @@
 require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
 class MyAccount_ResetPinPage extends MyAccount {
-	function launch() {
+	function launch() : void {
 		global $interface;
 		$user = UserAccount::getLoggedInUser();
 
@@ -47,7 +47,11 @@ class MyAccount_ResetPinPage extends MyAccount {
 
 			$interface->assign('profile', $user);
 			$interface->assign('barcodePin', $user->getAccountProfile()->loginConfiguration == 'barcode_pin');
-			$interface->assign('passwordLabel', $patronHomeLibrary->loginFormPasswordLabel ? $patronHomeLibrary->loginFormPasswordLabel : 'PIN/Password');
+			if ($patronHomeLibrary == null) {
+				$interface->assign('passwordLabel', 'Password');
+			}else{
+				$interface->assign('passwordLabel', !empty($patronHomeLibrary->loginFormPasswordLabel) ? $patronHomeLibrary->loginFormPasswordLabel : 'PIN/Password');
+			}
 		}
 
 		$this->display('resetPinPage.tpl', 'Reset PIN/Password');

@@ -297,7 +297,7 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 			updateGroupedWorkSolrDataBasedOnStandardMarcData(groupedWork, record, recordInfo.getRelatedItems(), identifier, primaryFormat, primaryFormatCategory, firstParentId != null);
 
 			//Special processing for ILS Records
-			String fullDescription = Util.getCRSeparatedString(MarcUtil.getFieldList(record, "520a"));
+			String fullDescription = Util.getCRSeparatedString(MarcUtil.getFieldList(record, "520ac"));
 			for (RecordInfo ilsRecord : allRelatedRecords) {
 				String primaryFormatCategoryForRecord = ilsRecord.getPrimaryFormatCategory();
 				if (primaryFormatCategoryForRecord == null){
@@ -1386,7 +1386,11 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 
 	protected List<RecordInfo> loadUnsuppressedEContentItems(AbstractGroupedWorkSolr groupedWork, String identifier, org.marc4j.marc.Record record, StringBuilder suppressionNotes, RecordInfo mainRecordInfo, boolean hasParentRecord, boolean hasChildRecords){
 		List<RecordInfo> unsuppressedEcontentRecords = new ArrayList<>();
-		if (settings.isIndex856Links()) {
+		if (settings.getIndex856Links() == 1 || settings.getIndex856Links() == 2) {
+			boolean hasEContentItems = !mainRecordInfo.getRelatedItems().isEmpty() && mainRecordInfo.getRelatedItems().stream().anyMatch(curItem->curItem.isEContent());
+			if (settings.getIndex856Links() == 2 && hasEContentItems) {
+				return unsuppressedEcontentRecords;
+			}
 			List<DataField> recordUrls = MarcUtil.getDataFields(record, 856);
 			if (recordUrls.isEmpty()) {
 				return unsuppressedEcontentRecords;

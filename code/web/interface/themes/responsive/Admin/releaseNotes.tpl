@@ -7,7 +7,7 @@
 				<label for="releaseSelector" class="control-label">{translate text="Select a release" isAdminFacing=true}</label>&nbsp;
 				<select id="releaseSelector" name="releaseSelector" class="form-control input-sm" onchange="return AspenDiscovery.Admin.displayReleaseNotes()">
 					{foreach from=$releaseNotes item=releaseNote}
-						<option value="{$releaseNote}">{$releaseNote}</option>
+						<option value="{$releaseNote}" {if $releaseNote==$releaseVersion}selected="selected"{/if}>{$releaseNote}</option>
 					{/foreach}
 				</select>
 			</div>

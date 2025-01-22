@@ -9,11 +9,11 @@ require_once ROOT_DIR . '/services/API/SystemAPI.php';
  * Shows a list of updates that are available with a description of the
  */
 class Admin_DBMaintenance extends Admin_Admin {
-	function launch() {
+	function launch() : void {
 		global $interface;
 
 		$systemAPI = new SystemAPI();
-		//Create updates table if one doesn't exist already
+		//Create the Updates table if one doesn't exist already
 		$this->createUpdatesTable();
 
 		$availableUpdates = $systemAPI->getDatabaseUpdates();
@@ -45,7 +45,7 @@ class Admin_DBMaintenance extends Admin_Admin {
 
 	}
 
-	private function createUpdatesTable() {
+	private function createUpdatesTable() : void {
 		global $aspen_db;
 		//Check to see if the updates table exists
 		$result = $aspen_db->query("SHOW TABLES");

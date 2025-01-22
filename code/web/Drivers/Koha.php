@@ -5476,6 +5476,7 @@ class Koha extends AbstractIlsDriver {
 							$listEntry = new UserListEntry();
 							$listEntry->source = 'GroupedWork';
 							$listEntry->sourceId = $groupedWork->permanent_id;
+							$listEntry->title = substr($groupedWork->full_title, 0, 50);
 							$listEntry->listId = $newList->id;
 							$listEntry->notes = '';
 							$listEntry->dateAdded = time();

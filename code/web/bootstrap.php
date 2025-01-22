@@ -105,6 +105,8 @@ try {
 	$usageByUserAgent->month = date('n');
 	global $aspenUsage;
 	$usageByUserAgent->instance = $aspenUsage->getInstance();
+    // Attempts to load an existing row from usage_by_user_agent that matches the index userAgentId.
+    $foundExisting = $usageByUserAgent->find(true);
 
 	if ($userAgent->blockAccess) {
 		$usageByUserAgent->numBlockedRequests++;
@@ -178,6 +180,7 @@ try {
 }
 $usageByIPAddress->lastRequest = time();
 $usageByIPAddress->numRequests++;
+$usageByIPAddress->update();
 
 $timer->logTime("Initialized Database");
 requireSystemLibraries();

@@ -25,6 +25,7 @@ class GreenhouseAPI extends AbstractAPI {
 				'getNotificationAccessToken',
 				'updateAspenLiDABuild',
 			]) && !IPAddress::allowAPIAccessForClientIP()) {
+
 			$this->forbidAPIAccess();
 		}
 
@@ -81,7 +82,7 @@ class GreenhouseAPI extends AbstractAPI {
 				}
 			}
 
-			if ($keychain['1'] && $keychain['2'] == true) {
+			if ($keychain['1'] === true && $keychain['2'] === true) {
 				return ['success' => true];
 			}
 		}

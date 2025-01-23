@@ -140,18 +140,13 @@ abstract class Action
 				'key2' => base64_decode($_SERVER['PHP_AUTH_PW'])
 			)
 		);
-		$opts = array('http' =>
-			array(
-				'method'  => 'POST',
-				'header'  => 'Content-Type: application/x-www-form-urlencoded',
-				'content' => $postData
-			)
-		);
-		$context  = stream_context_create($opts);
 		require_once ROOT_DIR . '/sys/SystemVariables.php';
 		$systemVariables = SystemVariables::getSystemVariables();
 		if ($systemVariables && !empty($systemVariables->greenhouseUrl)) {
-			if ($result = file_get_contents($systemVariables->greenhouseUrl . '/API/GreenhouseAPI?method=authenticateTokens', false, $context)) {
+			require_once ROOT_DIR . '/sys/CurlWrapper.php';
+			$curlWrapper = new CurlWrapper();
+			$result = $curlWrapper->curlPostPage($systemVariables->greenhouseUrl . '/API/GreenhouseAPI?method=authenticateTokens', $postData);
+			if (!empty($result)) {
 				$data = json_decode($result, true);
 				$isValid = $data['success'];
 
@@ -159,6 +154,7 @@ abstract class Action
 					return true;
 				}
 			}
+
 		} else {
 			global $configArray;
 			if ($result = file_get_contents($configArray['Site']['url'] . '/API/GreenhouseAPI?method=authenticateTokens', false, $context)) {

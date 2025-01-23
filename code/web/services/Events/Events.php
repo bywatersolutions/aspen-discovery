@@ -73,4 +73,8 @@ class Events_Events extends ObjectEditor {
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission(['Administer Events for All Locations']);
 	}
+
+	public function hasMultiStepAddNew() : bool {
+		return true;
+	}
 }

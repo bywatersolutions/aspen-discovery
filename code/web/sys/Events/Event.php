@@ -32,90 +32,184 @@ class Event extends DataObject {
 		$eventTypes = EventType::getEventTypeList();
 		$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
 		$locationList = Location::getLocationList(!UserAccount::userHasPermission('Administer All Libraries') || UserAccount::userHasPermission('Administer Home Library Locations'));
-		$structure = [
-			'id' => [
-				'property' => 'id',
-				'type' => 'label',
-				'label' => 'Id',
-				'description' => 'The unique id',
-			],
-			'eventTypeId' => [
-				'property' => 'eventTypeId',
-				'type' => 'enum',
-				'label' => 'Event Type',
-				'description' => 'The type of event',
-				'placeholder' => 'Choose an event type',
-				'values' => $eventTypes,
-				'onchange' => "return AspenDiscovery.Admin.getEventTypeFields(this.value);"
-			],
-			'title' => [
-				'property' => 'title',
-				'type' => 'text',
-				'label' => 'Title',
-				'description' => 'The title for this event',
-			],
-			'description' => [
-				'property' => 'description',
-				'type' => 'textarea',
-				'label' => 'Description',
-				'description' => 'The description for this event',
-			],
-			'cover' => [
-				'property' => 'cover',
-				'type' => 'image',
-				'label' => 'Cover',
-				'maxWidth' => 280,
-				'maxHeight' => 280,
-				'description' => 'The cover for this event',
-				'hideInLists' => true,
-			],
-			'eventLength' => [
-				'property' => 'eventLength',
-				'type' => 'integer',
-				'label' => 'Event Length (Hours)',
-				'description' => 'How long this event lasts',
-			],
-			'locationId' => [
-				'property' => 'locationId',
-				'type' => 'enum',
-				'label' => 'Location',
-				'description' => 'Location of the event',
-				'values' => $locationList,
-			],
-			'fieldSetFieldSection' => [
-				'property' => 'fieldSetFieldSection',
-				'type' => 'section',
-				'label' => 'Fields for this Event Type',
-				'hideInLists' => true,
-				'expandByDefault' => true,
-				'properties' => [],
-			],
-			'private' => [
-				'property' => 'private',
-				'type' => 'checkbox',
-				'label' => 'Private?',
-				'default' => false,
-				'description' => 'Private events are limited to those with permission to view private events',
-			],
-			'startDate' => [
-				'property' => 'startDate',
-				'type' => 'date',
-				'label' => 'Start Date',
-				'description' => 'The date this event starts',
-			],
-			'startTime' => [
-				'property' => 'startTime',
-				'type' => 'time',
-				'label' => 'Start Time',
-				'description' => 'The time this event starts',
-			],
-			'endDate' => [
-				'property' => 'endDate',
-				'type' => 'date',
-				'label' => 'End Date',
-				'description' => 'The date this event ends if different from Start Date',
-			],
-		];
+		if ($context == 'addNew') {
+			$structure = [
+				'id' => [
+					'property' => 'id',
+					'type' => 'label',
+					'label' => 'Id',
+					'description' => 'The unique id',
+				],
+				'eventTypeId' => [
+					'property' => 'eventTypeId',
+					'type' => 'enum',
+					'label' => 'Event Type',
+					'description' => 'The type of event',
+					'placeholder' => 'Choose an event type',
+					'values' => $eventTypes,
+					'onchange' => "return AspenDiscovery.Admin.getEventTypeFields(this.value);"
+				],
+				'title' => [
+					'property' => 'title',
+					'type' => 'text',
+					'label' => 'Title',
+					'description' => 'The title for this event',
+					'hiddenByDefault' => true,
+				],
+				'description' => [
+					'property' => 'description',
+					'type' => 'textarea',
+					'label' => 'Description',
+					'description' => 'The description for this event',
+					'hiddenByDefault' => true,
+				],
+				'cover' => [
+					'property' => 'cover',
+					'type' => 'image',
+					'label' => 'Cover',
+					'maxWidth' => 280,
+					'maxHeight' => 280,
+					'description' => 'The cover for this event',
+					'hideInLists' => true,
+					'hiddenByDefault' => true,
+				],
+				'eventLength' => [
+					'property' => 'eventLength',
+					'type' => 'integer',
+					'label' => 'Event Length (Hours)',
+					'description' => 'How long this event lasts',
+					'hiddenByDefault' => true,
+				],
+				'locationId' => [
+					'property' => 'locationId',
+					'type' => 'enum',
+					'label' => 'Location',
+					'description' => 'Location of the event',
+					'values' => $locationList,
+					'hiddenByDefault' => true,
+				],
+				'fieldSetFieldSection' => [
+					'property' => 'fieldSetFieldSection',
+					'type' => 'section',
+					'label' => 'Fields for this Event Type',
+					'hideInLists' => true,
+					'expandByDefault' => true,
+					'properties' => [],
+					'hiddenByDefault' => true,
+				],
+				'private' => [
+					'property' => 'private',
+					'type' => 'hidden',
+					'label' => 'Private?',
+					'default' => false,
+					'description' => 'Private events are limited to those with permission to view private events',
+				],
+				'startDate' => [
+					'property' => 'startDate',
+					'type' => 'hidden',
+					'label' => 'Start Date',
+					'description' => 'The date this event starts',
+				],
+				'startTime' => [
+					'property' => 'startTime',
+					'type' => 'hidden',
+					'label' => 'Start Time',
+					'description' => 'The time this event starts',
+				],
+				'endDate' => [
+					'property' => 'endDate',
+					'type' => 'hidden',
+					'label' => 'End Date',
+					'description' => 'The date this event ends if different from Start Date',
+				],
+			];
+		} else {
+			$structure = [
+				'id' => [
+					'property' => 'id',
+					'type' => 'label',
+					'label' => 'Id',
+					'description' => 'The unique id',
+				],
+				'eventTypeId' => [
+					'property' => 'eventTypeId',
+					'type' => 'enum',
+					'label' => 'Event Type',
+					'description' => 'The type of event',
+					'placeholder' => 'Choose an event type',
+					'values' => $eventTypes,
+					'readOnly' => true,
+					//'onchange' => "return AspenDiscovery.Admin.getEventTypeFields(this.value);"
+				],
+				'title' => [
+					'property' => 'title',
+					'type' => 'text',
+					'label' => 'Title',
+					'description' => 'The title for this event',
+				],
+				'description' => [
+					'property' => 'description',
+					'type' => 'textarea',
+					'label' => 'Description',
+					'description' => 'The description for this event',
+				],
+				'cover' => [
+					'property' => 'cover',
+					'type' => 'image',
+					'label' => 'Cover',
+					'maxWidth' => 280,
+					'maxHeight' => 280,
+					'description' => 'The cover for this event',
+					'hideInLists' => true,
+				],
+				'eventLength' => [
+					'property' => 'eventLength',
+					'type' => 'integer',
+					'label' => 'Event Length (Hours)',
+					'description' => 'How long this event lasts',
+				],
+				'locationId' => [
+					'property' => 'locationId',
+					'type' => 'enum',
+					'label' => 'Location',
+					'description' => 'Location of the event',
+					'values' => $locationList,
+				],
+				'fieldSetFieldSection' => [
+					'property' => 'fieldSetFieldSection',
+					'type' => 'section',
+					'label' => 'Fields for this Event Type',
+					'hideInLists' => true,
+					'expandByDefault' => true,
+					'properties' => [],
+				],
+				'private' => [
+					'property' => 'private',
+					'type' => 'checkbox',
+					'label' => 'Private?',
+					'default' => false,
+					'description' => 'Private events are limited to those with permission to view private events',
+				],
+				'startDate' => [
+					'property' => 'startDate',
+					'type' => 'date',
+					'label' => 'Start Date',
+					'description' => 'The date this event starts',
+				],
+				'startTime' => [
+					'property' => 'startTime',
+					'type' => 'time',
+					'label' => 'Start Time',
+					'description' => 'The time this event starts',
+				],
+				'endDate' => [
+					'property' => 'endDate',
+					'type' => 'date',
+					'label' => 'End Date',
+					'description' => 'The date this event ends if different from Start Date',
+				],
+			];
+			}
 		// Add empty, hidden, readonly copies of all potential fields so that data can be added if they exist for any selected event type
 		$eventFieldList = EventField::getEventFieldList();
 		foreach ($eventFieldList as $fieldId => $field) {

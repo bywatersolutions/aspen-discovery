@@ -152,8 +152,8 @@ function getUpdates25_02_00(): array {
 					recurrenceInterval INT NOT NULL,
 					recurrenceDay INT NOT NULL,
 					numberOfRecurrences INT,
-					startDate DATE NOT NULL,
-					startTime TIME NOT NULL,
+					startDate DATE NOT NULL DEFAULT (CURRENT_DATE),
+					startTime TIME NOT NULL DEFAULT (CURRENT_TIME),
 					endDate DATE,
 					visibility TINYINT(1) NOT NULL DEFAULT 1
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",

@@ -1680,4 +1680,38 @@ class Admin_AJAX extends JSON_Action {
 		$aspenUsageGraph = new Admin_UsageGraphs();
 		$aspenUsageGraph->buildCSV();
 	}
+
+	public function getEventTypeFields() {
+		require_once ROOT_DIR . '/sys/Events/EventType.php';
+		$result = [
+			'success' => false,
+			'title' => translate([
+				'text' => "Error",
+				'isAdminFacing' => true,
+			]),
+			'message' =>  translate([
+				'text' => 'Unknown event type.',
+				'isAdminFacing' => true,
+			])
+		];
+		$eventType = new EventType();
+		$eventType->id = $_REQUEST['eventTypeId'];
+		if ($eventType->find(true)){
+			$fieldStructure = $eventType->getFieldSetFields();
+			global $interface;
+			$fieldHTML = [];
+			foreach ($fieldStructure as $property){
+				$interface->assign('property', $property);
+				$fieldHTML[] = $interface->fetch('DataObjectUtil/property.tpl');
+			}
+			$locations = $eventType->getLocations();
+			$result = [
+				'success' => true,
+				'eventType' => $eventType->jsonSerialize(),
+				'typeFields' => $fieldHTML,
+				'locationIds' => json_encode(array_keys($locations)),
+			];
+		}
+		return $result;
+	}
 }

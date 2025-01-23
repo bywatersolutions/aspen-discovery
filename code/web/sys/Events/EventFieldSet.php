@@ -31,7 +31,6 @@ class EventFieldSet extends DataObject {
 				'label' => 'Event Fields',
 				'description' => 'The event fields that make up the set',
 				'values' => $eventFields,
-				'canAddNew' => true,
 			]
 		];
 		return $structure;
@@ -121,5 +120,51 @@ class EventFieldSet extends DataObject {
 			$setList[$object->id] = $label;
 		}
 		return $setList;
+	}
+
+	public function getFieldObjectStructure() {
+		$structure = [];
+		foreach ($this->getEventFields() as $fieldId) {
+			$field = new EventField();
+			$field->id = $fieldId->eventFieldId;
+			if ($field->find(true)) {
+				switch($field->type) {
+					case 0:
+						$type = 'text';
+						break;
+					case 1:
+						$type = 'textarea';
+						break;
+					case 2:
+						$type = 'checkbox';
+						break;
+					case 3:
+						$type = 'enum';
+						break;
+					case 4:
+						$type = 'email';
+						break;
+					case 5:
+						$type = 'url';
+						break;
+					default:
+						$type = '';
+						break;
+				}
+				$structure[$field->id] = [
+					'fieldId' => $field->id,
+					'property' => $field->id,
+					'type' => $type,
+					'label' => $field->name,
+					'description' => $field->description,
+					'defaultValue' => $field->defaultValue,
+					'facetName' => $field->facetName,
+				];
+				if ($type == 'enum') {
+					$structure[$field->id]['values'] = explode(",", $field->allowableValues);
+				}
+			}
+		}
+		return $structure;
 	}
 }

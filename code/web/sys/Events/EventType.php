@@ -15,7 +15,6 @@ class EventType extends DataObject {
 	public $coverCustomizable;
 	public $eventLength; // in hours
 	public $lengthCustomizable;
-	public $eventLengthCustomizable;
 	public $archived;
 	public $eventFieldSetId;
 
@@ -36,7 +35,7 @@ class EventType extends DataObject {
 			'title' => [
 				'property' => 'title',
 				'type' => 'text',
-				'label' => 'Name',
+				'label' => 'Title',
 				'description' => 'The default title for this type of event',
 			],
 			'titleCustomizable' => [
@@ -246,4 +245,28 @@ class EventType extends DataObject {
 			$eventTypeLocation->update();
 		}
 	}
+
+	public static function getEventTypeList(): array {
+		$typeList = [];
+		$object = new EventType();
+		$object->orderBy('title');
+		$object->find();
+		while ($object->fetch()) {
+			$label = $object->title;
+			$typeList[$object->id] = $label;
+		}
+		return $typeList;
+	}
+
+	public function getFieldSetFields() {
+		$fieldSet = new EventFieldSet();
+		if ($this->eventFieldSetId) {
+			$fieldSet->id = $this->eventFieldSetId;
+			if ($fieldSet->find(true)) {
+				return $fieldSet->getFieldObjectStructure();
+			}
+		}
+		return [];
+	}
+
 }

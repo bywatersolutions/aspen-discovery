@@ -10716,6 +10716,70 @@ AspenDiscovery.Admin = (function () {
 				}
 			}
 			return true;
+		},
+
+		getEventTypeFields: function (eventTypeId) {
+			var url = Globals.path + '/Admin/AJAX';
+			var params = {
+				method: 'getEventTypeFields',
+				eventTypeId: eventTypeId
+			};
+
+			$.getJSON(url, params, function (data) {
+				// $("form[id^=objectEditor]").replaceWith(data.formattedFields);
+				eventType = data.eventType;
+				if (!$("#title").val()) {
+					$("#title").val(eventType.title);
+				}
+				if (!eventType.titleCustomizable) {
+					$("#title").val(eventType.title);
+					$("#title").attr('readonly','readonly');
+				} else {
+					$("#title").removeAttr('readonly');
+				}
+				if (!$("#description").val()) {
+					$("#description").val(eventType.description);
+				}
+				if (!eventType.descriptionCustomizable) {
+					$("#description").val(eventType.description);
+					$("#description").attr('readonly', 'readonly');
+				} else {
+					$("#description").removeAttr('readonly');
+				}
+				if (!$("#cover").val()) {
+					$("#importFile-label-cover").val(eventType.cover);
+				}
+				if (!eventType.coverCustomizable) {
+					$("#importFile-label-cover").val(eventType.cover);
+					$("#importFile-label-cover").attr('readonly', 'readonly');
+				} else {
+					$("#importFile-label-cover").removeAttr('readonly');
+				}
+				if (!$("#eventLength").val()) {
+					$("#eventLength").val(eventType.eventLength);
+				}
+				if (!eventType.lengthCustomizable) {
+					$("#eventLength").val(eventType.eventLength);
+					$("#eventLength").attr('readonly', 'readonly');
+				} else {
+					$("#eventLength").removeAttr('readonly');
+				}
+				console.log(data.locationIds);
+				$("#locationIdSelect option").each(function() {
+					if (!data.locationIds.includes($(this).val())) {
+						console.log("Disabling " + $(this).val());
+						$(this).attr('disabled', 'disabled');
+						$(this).removeAttr('selected')
+						$(this).hide()
+					} else {
+						console.log("Enabling " + $(this).val());
+						$(this).removeAttr('disabled');
+						$(this).show();
+					}
+				})
+				$("#accordion_body_Fields_for_this_Event_Type .panel-body").html(data.typeFields);
+			});
+			return false;
 		}
 
 	};

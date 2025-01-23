@@ -139,6 +139,30 @@ function getUpdates25_02_00(): array {
 					eventTypeId INT NOT NULL,
 					locationId INT NOT NULL
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventTypeId INT NOT NULL,
+					locationId INT NOT NULL,
+					title VARCHAR(50),
+					description VARCHAR(500),
+					cover VARCHAR(100) DEFAULT NULL,
+					eventLength FLOAT NOT NULL DEFAULT 1,
+					sublocationId INT,
+					recurrenceFrequency TINYINT NOT NULL,
+					recurrenceInterval INT NOT NULL,
+					recurrenceDay INT NOT NULL,
+					numberOfRecurrences INT,
+					startDate DATE NOT NULL,
+					startTime TIME NOT NULL,
+					endDate DATE,
+					visibility TINYINT(1) NOT NULL DEFAULT 1
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_event_field (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventId INT NOT NULL,
+					eventFieldId INT NOT NULL,
+					value VARCHAR(150) NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
 			]
 		], //native_events_tables
 

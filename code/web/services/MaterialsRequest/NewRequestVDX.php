@@ -1,8 +1,5 @@
 <?php
 
-
-require_once ROOT_DIR . "/Action.php";
-
 class MaterialsRequest_NewRequestVDX extends Action {
 	function launch() {
 		global $interface;

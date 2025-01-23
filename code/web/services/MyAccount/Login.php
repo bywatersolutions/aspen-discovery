@@ -1,7 +1,5 @@
 <?php
 
-require_once ROOT_DIR . "/Action.php";
-
 class MyAccount_Login extends Action {
 	function launch($msg = null) {
 		global $interface;

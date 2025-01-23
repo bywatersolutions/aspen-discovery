@@ -24,6 +24,8 @@ require_once ROOT_DIR . '/sys/SystemLogging/ExternalRequestLogEntry.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/Library.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/HostInformation.php';
+require_once ROOT_DIR . '/Action.php';
+
 global $aspenUsage;
 global $serverName;
 $aspenUsage = new AspenUsage();

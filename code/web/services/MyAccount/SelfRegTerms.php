@@ -1,6 +1,5 @@
 <?php
 
-require_once ROOT_DIR . "/Action.php";
 class SelfRegTerms extends Action {
 	function launch($msg = null) {
 		global $interface;

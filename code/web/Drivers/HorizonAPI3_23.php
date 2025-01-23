@@ -123,7 +123,7 @@ abstract class HorizonAPI3_23 extends HorizonAPI {
 	}
 
 	// Newer Horizon API version
-	function processEmailResetPinForm() {
+	function processEmailResetPinForm() : array {
 		$barcode = $_REQUEST['barcode'];
 
 		$patron = new User;
@@ -149,6 +149,7 @@ abstract class HorizonAPI3_23 extends HorizonAPI {
 								// return an error message because horizon doesn't have an email.
 								return [
 									'success' => false,
+									'patronFound' => false,
 									'error' => 'The circulation system does not have an email associated with this card number. Please contact your library to reset your pin.',
 								];
 							}
@@ -170,6 +171,7 @@ abstract class HorizonAPI3_23 extends HorizonAPI {
 			if ($resetPinResponse === [] && !isset($resetPinResponse['messageList'])) {
 				return [
 					'success' => true,
+					'patronFound' => true,
 				];
 			} else {
 				$result = [
@@ -191,6 +193,7 @@ abstract class HorizonAPI3_23 extends HorizonAPI {
 		} else {
 			return [
 				'success' => false,
+				'patronFound' => false,
 				'error' => 'Sorry, we did not find the card number you entered or you have not logged into the catalog previously.  Please contact your library to reset your pin.',
 			];
 		}

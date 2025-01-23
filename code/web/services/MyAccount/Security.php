@@ -1,6 +1,5 @@
 <?php
 
-require_once ROOT_DIR . "/Action.php";
 require_once ROOT_DIR . '/CatalogConnection.php';
 require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
@@ -10,9 +9,8 @@ class Security extends MyAccount {
 
 		$twoFactor = UserAccount::has2FAEnabledForPType();
 		$interface->assign('twoFactorEnabled', $twoFactor);
-		$user = new User();
-		$user->id = UserAccount::getActiveUserId();
-		if ($user->find(true)) {
+		if (UserAccount::isLoggedIn()) {
+			$user = UserAccount::getActiveUserObj();
 
 			$twoFactorAuthSetting = $user->getTwoFactorAuthenticationSetting();
 			if ($twoFactorAuthSetting != null) {

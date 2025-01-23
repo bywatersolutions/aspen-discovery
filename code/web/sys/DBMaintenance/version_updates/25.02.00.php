@@ -34,8 +34,8 @@ function getUpdates25_02_00(): array {
 			],
 		], //manage_local_administrators_permission
 		'account_profile_admin_updates' => [
-			'title' => 'Manage Local Administrators Permission',
-			'description' => 'Add new permission to manage local administrators',
+			'title' => 'Admin Account Profile Updates',
+			'description' => 'Clean up default admin account profile',
 			'continueOnError' => true,
 			'sql' => [
 				"UPDATE account_profiles set vendorOpacUrl = '', patronApiUrl = '', ils = 'na', driver = '', recordSource = '' where name = 'admin'",

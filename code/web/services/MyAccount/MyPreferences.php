@@ -3,14 +3,14 @@
 require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
 class MyAccount_MyPreferences extends MyAccount {
-	function launch() {
+	function launch() : void {
 		global $interface;
 		$user = UserAccount::getLoggedInUser();
 
 		if ($user) {
 			// Determine which user we are showing/updating settings for
 			$linkedUsers = $user->getLinkedUsers();
-			$patronId = isset($_REQUEST['patronId']) ? $_REQUEST['patronId'] : $user->id;
+			$patronId = $_REQUEST['patronId'] ?? $user->id;
 			/** @var User $patron */
 			$patron = $user->getUserReferredTo($patronId);
 
@@ -57,7 +57,7 @@ class MyAccount_MyPreferences extends MyAccount {
 			$interface->assign('pickupLocations', $pickupLocations);
 
 			$pickupSublocations = [];
-			foreach ($pickupLocations as $locationKey => $location) {
+			foreach ($pickupLocations as $location) {
 				if (is_object($location)) {
 					$pickupSublocations[$location->locationId] = $patron->getValidSublocations($location->locationId);
 				}

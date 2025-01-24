@@ -23,7 +23,6 @@ class UserListEntry extends DataObject {
 	}
 
 	function insert($context = '') : int {
-		var_dump($this->title);
 		if($this->title == null)
 		{
 			$groupedWork = new GroupedWork();

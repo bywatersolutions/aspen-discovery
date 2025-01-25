@@ -419,7 +419,7 @@
 			{* disable html5 features until consistly implemented *
 			{*<input type='text' name='{$propName}' id='{$propName}' value='{$propValue}' {if !empty($property.maxLength)}maxLength='10'{/if}	class='form-control {if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if} date'>*}
 			{*<input type='text' name='{$propName}' id='{$propName}' value='{$propValue}' {if !empty($property.accessibleLabel)}aria-label="{$property.accessibleLabel}"{/if} {if !empty($property.maxLength)}maxLength='10'{/if}	class='form-control {if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if} dateAspen' {if !empty($property.readOnly)}readonly{/if}>*}
-			<input type="date" name='{$propName}' id='{$propName}' value='{$propValue|date_format:"%Y-%m-%d"}'	class='form-control' {if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if} {if !empty($property.readOnly)}readonly disabled{/if} {if !empty($property.autocomplete)}autocomplete="{$property.autocomplete}"{/if}>
+			<input type="date" name='{$propName}' id='{$propName}' value='{$propValue|date_format:"%Y-%m-%d"}'	class='form-control' {if !empty($property.required) && (empty($objectAction) || $objectAction != 'edit')}required{/if} {if !empty($property.readOnly)}readonly disabled{/if} {if !empty($property.autocomplete)}autocomplete="{$property.autocomplete}"{/if} {if !empty($property.onchange)} onchange="{$property.onchange}"{/if}>
 		{elseif $property.type == 'partialDate'}
 			{include file="DataObjectUtil/partialDate.tpl"}
 

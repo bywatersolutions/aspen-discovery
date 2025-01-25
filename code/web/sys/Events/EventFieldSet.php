@@ -105,8 +105,7 @@ class EventFieldSet extends DataObject {
 		$fieldSetFields->eventFieldSetId = $this->id;
 		$fieldSetFields->find();
 		while ($fieldSetFields->fetch()){
-			$fieldSetFields->eventFieldSetId = "0";
-			$fieldSetFields->update();
+			$fieldSetFields->delete(true);;
 		}
 	}
 

@@ -230,8 +230,7 @@ class EventType extends DataObject {
 		$eventTypeLibrary->eventTypeId= $this->id;
 		$eventTypeLibrary->find();
 		while ($eventTypeLibrary->fetch()){
-			$eventTypeLibrary->eventTypeId = "0";
-			$eventTypeLibrary->update();
+			$eventTypeLibrary->delete(true);;
 		}
 	}
 
@@ -240,9 +239,8 @@ class EventType extends DataObject {
 		$eventTypeLocation = new EventTypeLocation();
 		$eventTypeLocation->eventTypeId= $this->id;
 		$eventTypeLocation->find();
-		while ($eventTypeLocation->fetch()){
-			$eventTypeLocation->eventTypeId = "0";
-			$eventTypeLocation->update();
+		while ($eventTypeLocation->fetch()) {
+			$eventTypeLocation->delete(true);
 		}
 	}
 
@@ -256,6 +254,17 @@ class EventType extends DataObject {
 			$typeList[$object->id] = $label;
 		}
 		return $typeList;
+	}
+
+	public static function getEventTypeIdsForLocation(string $locationId): array {
+		$typeIds = [];
+		$typeLocation = new EventTypeLocation();
+		$typeLocation->locationId = $locationId;
+		$typeLocation->find();
+		while ($typeLocation->fetch()) {
+			$typeIds[] = $typeLocation->eventTypeId;
+		}
+		return $typeIds;
 	}
 
 	public function getFieldSetFields() {

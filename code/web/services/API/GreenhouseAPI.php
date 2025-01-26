@@ -65,9 +65,10 @@ class GreenhouseAPI extends AbstractAPI {
 			$key1 = $_POST['key1'];
 			$key2 = $_POST['key2'];
 
+			$keychain = [];
+
 			require_once ROOT_DIR . '/sys/Greenhouse/GreenhouseSettings.php';
 			$greenhouseSettings = new GreenhouseSettings();
-			$keychain = null;
 			if ($greenhouseSettings->find(true)) {
 				for ($key = 1; $key <= 5; $key += 1) {
 					$currentKey = "apiKey" . $key;
@@ -82,7 +83,7 @@ class GreenhouseAPI extends AbstractAPI {
 				}
 			}
 
-			if ($keychain['1'] === true && $keychain['2'] === true) {
+			if (array_key_exists('1', $keychain) && array_key_exists('2', $keychain) && $keychain['1'] === true && $keychain['2'] === true) {
 				return ['success' => true];
 			}
 		}

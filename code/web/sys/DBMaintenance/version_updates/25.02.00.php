@@ -67,6 +67,17 @@ function getUpdates25_02_00(): array {
 				'ALTER TABLE sideloads DROP column recordDriver',
 			]
 		], //sideload_remove_unused_properties
+		'branded_app_api_keys' => [
+			'title' => 'Branded App API Keys',
+			'description' => 'Add API keys to branded app settings',
+			'sql' => [
+				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey1 varchar(256) DEFAULT NULL",
+				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey2 varchar(256) DEFAULT NULL",
+				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey3 varchar(256) DEFAULT NULL",
+				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey4 varchar(256) DEFAULT NULL",
+				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey5 varchar(256) DEFAULT NULL",
+			]
+		], //branded_app_api_keys
 
 		//katherine
 

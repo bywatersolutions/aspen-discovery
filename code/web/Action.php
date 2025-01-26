@@ -129,22 +129,63 @@ abstract class Action
 		die();
 	}
 
-	protected function grantTokenAccess()
-	{
-		//TODO: store if the authentication token is valid or not for 5 minutes to help improve performance
-		global $memCache;
+	protected function grantTokenAccess() : bool {
+		$key1 = base64_decode($_SERVER['PHP_AUTH_USER']);
+		$key2 = base64_decode($_SERVER['PHP_AUTH_PW']);
+		if (empty($key1) || empty($key2)) {
+			return false;
+		}
+
+		if (method_exists($this, 'getLiDASlug')){
+			$lidaSlug = $this->getLiDASlug();
+			if (!empty($lidaSlug)) {
+				require_once ROOT_DIR . '/sys/AspenLiDA/BrandedAppSetting.php';
+				$brandedSettings = new BrandedAppSetting();
+				$brandedSettings->slugName = $lidaSlug;
+				if ($brandedSettings->find(true)) {
+					$allKeysFilledOut = true;
+					$keychain = [
+						'1' => false,
+						'2' => false
+					];
+					for ($key = 1; $key <= 5; $key += 1) {
+						$currentKey = "apiKey" . $key;
+						if (empty($brandedSettings->$currentKey)) {
+							$allKeysFilledOut = false;
+							break;
+						}else{
+							if ($key1 == $brandedSettings->$currentKey) {
+								$keychain['1'] = true;
+							}
+
+							if ($key2 == $brandedSettings->$currentKey) {
+								$keychain['2'] = true;
+							}
+						}
+					}
+					if ($allKeysFilledOut) {
+						/** @noinspection PhpConditionAlreadyCheckedInspection */
+						if ($keychain['1'] && $keychain['2']) {
+							return true;
+						}else{
+							return false;
+						}
+					}
+				}
+			}
+		}
 
 		$postData = http_build_query(
 			array(
-				'key1' => base64_decode($_SERVER['PHP_AUTH_USER']),
-				'key2' => base64_decode($_SERVER['PHP_AUTH_PW'])
+				'key1' => $key1,
+				'key2' => $key2
 			)
 		);
 		require_once ROOT_DIR . '/sys/SystemVariables.php';
 		$systemVariables = SystemVariables::getSystemVariables();
+		require_once ROOT_DIR . '/sys/CurlWrapper.php';
+		$curlWrapper = new CurlWrapper();
 		if ($systemVariables && !empty($systemVariables->greenhouseUrl)) {
-			require_once ROOT_DIR . '/sys/CurlWrapper.php';
-			$curlWrapper = new CurlWrapper();
 			$result = $curlWrapper->curlPostPage($systemVariables->greenhouseUrl . '/API/GreenhouseAPI?method=authenticateTokens', $postData);
 			if (!empty($result)) {
 				$data = json_decode($result, true);
@@ -157,7 +198,8 @@ abstract class Action
 
 		} else {
 			global $configArray;
-			if ($result = file_get_contents($configArray['Site']['url'] . '/API/GreenhouseAPI?method=authenticateTokens', false, $context)) {
+			$result = $curlWrapper->curlPostPage($configArray['Site']['url'] . '/API/GreenhouseAPI?method=authenticateTokens', $postData);
+			if (!empty($result)) {
 				$data = json_decode($result, true);
 				$isValid = $data['success'];
 
@@ -166,6 +208,7 @@ abstract class Action
 				}
 			}
 		}
+
 		return false;
 	}
 

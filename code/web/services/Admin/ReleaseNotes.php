@@ -3,7 +3,7 @@ require_once ROOT_DIR . '/services/Admin/Admin.php';
 require_once ROOT_DIR . '/sys/Parsedown/AspenParsedown.php';
 
 class Admin_ReleaseNotes extends Action {
-	function launch() {
+	function launch() : void {
 		global $interface;
 
 		//Get a list of all available release notes
@@ -19,16 +19,23 @@ class Admin_ReleaseNotes extends Action {
 
 		arsort($releaseNotes);
 
+		if (isset($_REQUEST['release']) && array_key_exists($_REQUEST['release'], $releaseNotes)) {
+			$releaseVersion = $_REQUEST['release'];
+		}else{
+			$releaseVersion = array_values($releaseNotes)[0];
+		}
+		$interface->assign('releaseVersion', $releaseVersion);
+
 		$parsedown = AspenParsedown::instance();
-		$releaseNotesFormatted = $parsedown->parse(file_get_contents($releaseNotesPath . '/' . reset($releaseNotes) . '.MD'));
+		$releaseNotesFormatted = $parsedown->parse(file_get_contents($releaseNotesPath . '/' . $releaseVersion . '.MD'));
 		$interface->assign('releaseNotesFormatted', $releaseNotesFormatted);
-		$interface->assign('releaseVersion', array_values($releaseNotes)[0]);
-		if (file_exists($releaseNotesPath . '/' . reset($releaseNotes) . '_action_items.MD')) {
-			$actionItemsFormatted = $parsedown->parse(file_get_contents($releaseNotesPath . '/' . reset($releaseNotes) . '_action_items.MD'));
+
+		if (file_exists($releaseNotesPath . '/' . $releaseVersion . '_action_items.MD')) {
+			$actionItemsFormatted = $parsedown->parse(file_get_contents($releaseNotesPath . '/' . $releaseVersion . '_action_items.MD'));
 			$interface->assign('actionItemsFormatted', $actionItemsFormatted);
 		}
-		if (file_exists($releaseNotesPath . '/' . reset($releaseNotes) . '_testing.MD')) {
-			$testingSuggestionsFormatted = $parsedown->parse(file_get_contents($releaseNotesPath . '/' . reset($releaseNotes) . '_testing.MD'));
+		if (file_exists($releaseNotesPath . '/' . $releaseVersion . '_testing.MD')) {
+			$testingSuggestionsFormatted = $parsedown->parse(file_get_contents($releaseNotesPath . '/' . $releaseVersion . '_testing.MD'));
 			$interface->assign('testingSuggestionsFormatted', $testingSuggestionsFormatted);
 		}
 

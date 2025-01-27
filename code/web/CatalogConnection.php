@@ -412,27 +412,45 @@ class CatalogConnection {
 	 * @param mixed $barcode
 	 * @return array
 	 */
-	public function sendAspenPasswordResetEmailForBarcode(mixed $barcode): array {
+	private function sendAspenPasswordResetEmailForBarcode(array $accountProfileInfo, mixed $barcode): array {
 		$result = [
 			'success' => false,
+			'foundPatron' => false,
 			'error' => translate([
 				'text' => "Unknown error sending password reset.",
 				'isPublicFacing' => true,
 			]),
 		];
 
-		$userToResetPin = new User();
-		$userToResetPin->source = $this->driver->accountProfile->name;
-		$userToResetPin->ils_barcode = $barcode;
-		if (!$userToResetPin->find(true)) {
-			$userToResetPin = $this->driver->findNewUser($barcode, '');
+		global $library;
+		$userToResetPin = false;
+		$accountProfile = $accountProfileInfo['accountProfile'];
+		if ($library->accountProfileId == $accountProfile->id) {
+			//Check the ILS we are connected to
+			$userToResetPin = new User();
+			$userToResetPin->source = $accountProfile->name;
+			$userToResetPin->ils_barcode = $barcode;
+			if (!$userToResetPin->find(true)) {
+				$accountProfileDriver = $accountProfileInfo['driver'];
+				$userToResetPin = $accountProfileDriver->findNewUser($barcode, '');
+			}
+		}elseif ($accountProfile->authenticationMethod == 'db') {
+			//Check anything we do database authentication for
+			$userToResetPin = new User();
+			$userToResetPin->source = $accountProfile->name;
+			$userToResetPin->username = $barcode;
+			if (!$userToResetPin->find(true)) {
+				$userToResetPin = false;
+			}
 		}
+
 		if ($userToResetPin === false) {
 			$result['error'] = translate([
 				'text' => "Could not find a patron with that barcode, please contact the library.",
 				'isPublicFacing' => true,
 			]);
 		} else {
+			$result['foundPatron'] = true;
 			if (empty($userToResetPin->email)) {
 				$result['error'] = translate([
 					'text' => "That account does not have an email associated with it, please contact the library.",
@@ -1424,30 +1442,49 @@ class CatalogConnection {
 	}
 
 	function processEmailResetPinForm() : array {
-		if ($this->getForgotPasswordType() == 'emailAspenResetLink') {
-			$result = [
-				'success' => false,
-				'error' => translate([
-					'text' => "Unknown error sending password reset.",
-					'isPublicFacing' => true,
-				]),
-			];
+		global $library;
+		$result = [
+			'success' => false,
+			'error' => translate([
+				'text' => "Unknown error sending password reset.",
+				'isPublicFacing' => true,
+			]),
+		];
 
-			//Get the user from the driver
-			if (empty($_REQUEST['reset_username'])) {
-				$result['error'] = translate([
-					'text' => "Barcode not provided. You must provide a barcode to use password reset.",
-					'isPublicFacing' => true,
-				]);
-			} else {
-				$barcode = $_REQUEST['reset_username'];
-				$result = $this->sendAspenPasswordResetEmailForBarcode($barcode);
+		$accountProfilesToCheck = UserAccount::getAccountProfiles();
+		foreach ($accountProfilesToCheck as $accountProfileInfo) {
+			$tmpAccountProfile = $accountProfileInfo['accountProfile'];
+			if ($library->accountProfileId == $tmpAccountProfile->id) {
+				if ($this->getForgotPasswordType() == 'emailAspenResetLink') {
+					//Get the user from the driver
+					if (empty($_REQUEST['reset_username'])) {
+						$result['error'] = translate([
+							'text' => "Barcode not provided. You must provide a barcode to use password reset.",
+							'isPublicFacing' => true,
+						]);
+					} else {
+						$barcode = $_REQUEST['reset_username'];
+						$result = $this->sendAspenPasswordResetEmailForBarcode($accountProfileInfo, $barcode);
+					}
+				} else {
+					$result = $this->driver->processEmailResetPinForm();
+				}
+			}elseif ($tmpAccountProfile->authenticationMethod == 'db') {
+				if (empty($_REQUEST['reset_username'])) {
+					$result['error'] = translate([
+						'text' => "Barcode not provided. You must provide a barcode to use password reset.",
+						'isPublicFacing' => true,
+					]);
+				} else {
+					$barcode = $_REQUEST['reset_username'];
+					$result = $this->sendAspenPasswordResetEmailForBarcode($accountProfileInfo, $barcode);
+				}
 			}
-
-			return $result;
-		} else {
-			return $this->driver->processEmailResetPinForm();
+			if ($result['success'] || !empty($result['foundPatron'])){
+				break;
+			}
 		}
+		return $result;
 	}
 
 	function hasMaterialsRequestSupport() {

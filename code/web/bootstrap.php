@@ -24,6 +24,8 @@ require_once ROOT_DIR . '/sys/SystemLogging/ExternalRequestLogEntry.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/Library.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/HostInformation.php';
+require_once ROOT_DIR . '/Action.php';
+
 global $aspenUsage;
 global $serverName;
 $aspenUsage = new AspenUsage();
@@ -46,14 +48,6 @@ if (isset($_SERVER['SERVER_NAME'])) {
 	$aspenUsage->instance = 'aspen_internal';
 }
 
-//This has to be done after reading configuration so we can get the servername
-global $usageByIPAddress;
-$usageByIPAddress = new UsageByIPAddress();
-$usageByIPAddress->year = date('Y');
-$usageByIPAddress->month = date('n');
-$usageByIPAddress->ipAddress = IPAddress::getClientIP();
-$usageByIPAddress->instance = $aspenUsage->getInstance();
-
 require_once ROOT_DIR . '/sys/Timer.php';
 global $timer;
 $timer = new Timer($startTime);
@@ -70,6 +64,51 @@ ob_start();
 
 initMemcache();
 initDatabase();
+
+if ($aspenUsage->getInstance() != 'aspen_internal') {
+	$isValidServerName = true;
+	//Validate that we are getting a valid, non-spoofed name.
+	if (!empty($_SERVER['SERVER_NAME'])) {
+		if (strip_tags($_SERVER['SERVER_NAME']) !== $_SERVER['SERVER_NAME']) {
+			$isValidServerName = false;
+		} elseif (html_entity_decode($_SERVER['SERVER_NAME']) !== $_SERVER['SERVER_NAME']) {
+			$isValidServerName = false;
+		}
+	}
+
+	if ($isValidServerName) {
+		$isValidServerName = false;
+		$validServerNames = getValidServerNames();
+
+		foreach ($validServerNames as $validServerName) {
+			if (strcasecmp($aspenUsage->getInstance(), $validServerName) === 0) {
+				$isValidServerName = true;
+				break;
+			}
+		}
+	}
+	if (!$isValidServerName) {
+		http_response_code(404);
+		if (IPAddress::showDebuggingInformation()) {
+			echo("<html><head><title>Invalid Request</title></head><body>Invalid Host $aspenUsage->getInstance(), valid instances are " . implode(', ', $validServerNames) . "</body></html>");
+		} else {
+			echo("<html><head><title>Invalid Request</title></head><body>Invalid Host</body></html>");
+		}
+		die();
+	}
+}
+
+//Check to see if timings should be enabled
+if (IPAddress::logTimingInformation()) {
+	$timer->enableTimings(true);
+}
+$timer->logTime("Initial configuration");
+
+try {
+	$aspenUsage->find(true);
+} catch (Exception $e) {
+	//Table has not been created yet, ignore it
+}
 
 global $userAgent;
 $userAgentString = 'Unknown';
@@ -124,50 +163,13 @@ try {
 	//This happens before tables are created, ignore it
 }
 
-if ($aspenUsage->getInstance() != 'aspen_internal') {
-	$isValidServerName = true;
-	//Validate that we are getting a valid, non-spoofed name.
-	if (!empty($_SERVER['SERVER_NAME'])) {
-		if (strip_tags($_SERVER['SERVER_NAME']) !== $_SERVER['SERVER_NAME']) {
-			$isValidServerName = false;
-		} elseif (html_entity_decode($_SERVER['SERVER_NAME']) !== $_SERVER['SERVER_NAME']) {
-			$isValidServerName = false;
-		}
-	}
-
-	if ($isValidServerName) {
-		$isValidServerName = false;
-		$validServerNames = getValidServerNames();
-
-		foreach ($validServerNames as $validServerName) {
-			if (strcasecmp($aspenUsage->getInstance(), $validServerName) === 0) {
-				$isValidServerName = true;
-				break;
-			}
-		}
-	}
-	if (!$isValidServerName) {
-		http_response_code(404);
-		if (IPAddress::showDebuggingInformation()) {
-			echo("<html><head><title>Invalid Request</title></head><body>Invalid Host $aspenUsage->getInstance(), valid instances are " . implode(', ', $validServerNames) . "</body></html>");
-		} else {
-			echo("<html><head><title>Invalid Request</title></head><body>Invalid Host</body></html>");
-		}
-		die();
-	}
-}
-
-//Check to see if timings should be enabled
-if (IPAddress::logTimingInformation()) {
-	$timer->enableTimings(true);
-}
-$timer->logTime("Initial configuration");
-
-try {
-	$aspenUsage->find(true);
-} catch (Exception $e) {
-	//Table has not been created yet, ignore it
-}
+//This has to be done after reading configuration so we can get the servername
+global $usageByIPAddress;
+$usageByIPAddress = new UsageByIPAddress();
+$usageByIPAddress->year = date('Y');
+$usageByIPAddress->month = date('n');
+$usageByIPAddress->ipAddress = IPAddress::getClientIP();
+$usageByIPAddress->instance = $aspenUsage->getInstance();
 
 try {
 	$usageByIPAddress->find(true);

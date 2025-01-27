@@ -1328,34 +1328,9 @@ AspenDiscovery.Admin = (function () {
 			return false;
 		},
 		displayReleaseNotes: function () {
-			var url = Globals.path + "/Admin/AJAX";
-			var selectedNotes = $('#releaseSelector').val();
-			var params = {
-				method: 'getReleaseNotes',
-				release: selectedNotes
-			};
-			$.getJSON(url, params,
-				function (data) {
-					if (data.success) {
-						$("#releaseVersion").html(data.release);
-						$("#releaseNotes").html(data.releaseNotes);
-						if (data.actionItems === '') {
-							$("#actionItemsSection").hide();
-						} else {
-							$("#actionItemsSection").show();
-							$("#actionItems").html(data.actionItems);
-						}
-						if (data.testingSuggestions === '') {
-							$("#testingSection").hide();
-						} else {
-							$("#testingSection").show();
-							$("#testingSuggestions").html(data.testingSuggestions);
-						}
-					} else {
-						$("#releaseNotes").html("Error + " + data.message);
-					}
-				}
-			).fail(AspenDiscovery.ajaxFail);
+			var url = Globals.path + "/Admin/ReleaseNotes";
+			var selectedRelease = $('#releaseSelector').val();
+			window.location.href = url + "?release=" + selectedRelease;
 			return false;
 		},
 		updateBrowseSearchForSource: function () {
@@ -1460,7 +1435,32 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowformatMap").show();
 				$("#propertyRowcheckRecordForLargePrint").hide();
 			}
-			AspenDiscovery.IndexingClass.indexingClassSelect();
+		},
+		setIndexingProfileDefaultsByIndexingClass: function () {
+			var selectedIndexingClass = $("#indexingClassSelect").val();
+			if (selectedIndexingClass === '') {
+				$("#catalogDriver").val('AbstractIlsDriver');
+			}else {
+				if (selectedIndexingClass === 'ArlingtonKoha') {
+					$("#catalogDriver").val('Koha');
+				}else if (selectedIndexingClass === 'CarlX') {
+					$("#catalogDriver").val('CarlX');
+				}else if (selectedIndexingClass === 'Evergreen') {
+					$("#catalogDriver").val('Evergreen');
+				}else if (selectedIndexingClass === 'Evolve') {
+					$("#catalogDriver").val('Evolve');
+				}else if (selectedIndexingClass === 'III') {
+					$("#catalogDriver").val('Sierra');
+				}else if (selectedIndexingClass === 'Koha') {
+					$("#catalogDriver").val('Koha');
+				}else if (selectedIndexingClass === 'NashvilleCarlX') {
+					$("#catalogDriver").val('Nashville');
+				}else if (selectedIndexingClass === 'Polaris') {
+					$("#catalogDriver").val('Polaris');
+				}else if (selectedIndexingClass === 'Symphony') {
+					$("#catalogDriver").val('SirsiDynixROA');
+				}
+			}
 		},
 		updateLayoutSettingsFields: function () {
 			var useHomeLink = $('#useHomeLinkSelect').val();
@@ -1843,7 +1843,22 @@ AspenDiscovery.Admin = (function () {
 			});
 		},
 
-		setDefaultsByIls: function () {
+		toggleIlsSpecificFields: function () {
+			var activeIls = $("#activeIls").val();
+			var propertyRows = $(".propertyRow");
+			propertyRows.each(function () {
+				if ($(this).attr("data-related-ils") !== undefined){
+					var relatedIls = $(this).data("related-ils");
+					if (relatedIls.includes("~" + activeIls + "~")) {
+						$(this).show();
+					}else{
+						$(this).hide();
+					}
+				}
+			});
+		},
+
+		setAccountProfileDefaultsByIls: function () {
 			var selectedIls = $("#ilsSelect").val();
 			if (selectedIls === 'na') {
 				$("#driver").val('');

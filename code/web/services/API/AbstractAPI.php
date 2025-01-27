@@ -1,5 +1,4 @@
 <?php
-require_once ROOT_DIR . '/Action.php';
 
 abstract class AbstractAPI extends Action{
 	protected $context;
@@ -43,6 +42,17 @@ abstract class AbstractAPI extends Action{
 				if ($name == 'LiDA-SessionID' || $name == 'lida-sessionid') {
 					$sessionId = explode(' ', $value);
 					return $sessionId[0];
+				}
+			}
+		}
+		return false;
+	}
+
+	function getLiDASlug() {
+		if (function_exists('getallheaders')) {
+			foreach (getallheaders() as $name => $value) {
+				if (strcasecmp($name, 'lida-slug') === 0) {
+					return $value;
 				}
 			}
 		}

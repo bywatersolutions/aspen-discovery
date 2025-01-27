@@ -1,7 +1,6 @@
 <?php
 
 require_once ROOT_DIR . '/sys/CurlWrapper.php';
-require_once ROOT_DIR . '/sys/ConfigArray.php';
 require_once ROOT_DIR . '/sys/SolrUtils.php';
 require_once ROOT_DIR . '/sys/AspenError.php';
 

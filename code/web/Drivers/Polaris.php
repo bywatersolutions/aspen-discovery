@@ -798,6 +798,17 @@ class Polaris extends AbstractIlsDriver {
 
 		if ($pickupSublocation) {
 			$body->HoldPickupAreaID = (int)$pickupSublocation;
+		}else{
+			//Check to see if there is only 1 valid pickup area for the location. If so, pass that as the pickup area
+			$location = new Location();
+			$location->code = $pickupBranch;
+			if ($location->find(true)) {
+				$sublocations = $location->getPickupSublocations($patron);
+				if (count($sublocations) == 1) {
+					$firstSublocation = reset($sublocations);
+					$body->HoldPickupAreaID = (int)$firstSublocation->ilsId;
+				}
+			}
 		}
 
 		//Need to set the Workstation
@@ -1424,7 +1435,39 @@ class Polaris extends AbstractIlsDriver {
 	}
 
 	function changeHoldPickupLocation(User $patron, $recordId, $itemToUpdateId, $newPickupLocation, $newPickupSublocation = null): array {
-		// Todo: Add HoldPickupAreaID value to update hold area ($newPickupSublocation) ??
+		//Polaris is currently unable to change a pickup area unless the pickup location does as well.
+		// we will return a good message if this is the case.
+		$existingHolds = $this->getHolds($patron);
+		$allHolds = array_merge($existingHolds['available'], $existingHolds['unavailable']);
+
+		//Get the aspen pickup location id rather than polar
+		$location = new Location();
+		$location->code = $newPickupLocation;
+		if ($location->find(true)) {
+			/** @var Hold $hold */
+			foreach ($allHolds as $hold) {
+				if ($hold->sourceId == $itemToUpdateId) {
+					if ($hold->pickupLocationId == $location->locationId && !empty($newPickupSublocation)) {
+						$message = translate([
+							'text' => 'To change pickup location within the branch, please contact the library.',
+							'isPublicFacing' => true,
+						]);
+						$result['success'] = false;
+						$result['message'] = $message;
+
+						// Result for API or app use
+						$result['api']['title'] = translate([
+							'text' => 'Unable to update pickup location',
+							'isPublicFacing' => true,
+						]);
+						$result['api']['message'] = $message;
+						return $result;
+					}
+					break;
+				}
+			}
+		}
+
 		$staffInfo = $this->getStaffUserInfo();
 		$polarisUrl = "/PAPIService/REST/public/v1/1033/100/1/patron/{$patron->getBarcode()}/holdrequests/$itemToUpdateId/pickupbranch?wsid={$this->getWorkstationID($patron)}&userid={$staffInfo['polarisId']}&pickupbranchid=$newPickupLocation";
 		if (!empty($newPickupSublocation)) {
@@ -1459,7 +1502,7 @@ class Polaris extends AbstractIlsDriver {
 				$message = translate([
 						'text' => 'Sorry, the pickup location of your hold could not be changed.',
 						'isPublicFacing' => true,
-					]) . " {$jsonResponse->ErrorMessage}";;
+					]) . " {$jsonResponse->ErrorMessage}";
 				$result['success'] = false;
 				$result['message'] = $message;
 

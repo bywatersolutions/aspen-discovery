@@ -3,7 +3,7 @@
 require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
 class MyAccount_MyPrivacySettings extends MyAccount {
-	function launch() {
+	function launch(): void {
 		global $interface;
 		global $library;
 

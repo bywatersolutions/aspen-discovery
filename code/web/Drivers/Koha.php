@@ -8502,7 +8502,7 @@ class Koha extends AbstractIlsDriver {
 		return $privacySection;
 	}
 
-	public function updatePatronConsent(int $patronIlsId, string $consentType, $consentEnabled = false) {
+	public function updatePatronConsent(int $patronIlsId, string $consentType, $consentEnabled = false): array {
 		$result = ['success' => false,];
 
 		$oauthToken = $this->getOAuthToken();
@@ -8551,7 +8551,7 @@ class Koha extends AbstractIlsDriver {
 		return $result;
 	}
 
-	public function getPatronConsents($patron) {	
+	public function getPatronConsents($patron): array {	
 		$oauthToken = $this->getOAuthToken();
 		if (!$oauthToken) {
 			$result['message'] = translate([
@@ -8594,7 +8594,7 @@ class Koha extends AbstractIlsDriver {
 
 	}
 
-	private function getConsentTypes() {
+	private function getConsentTypes(): array {
 		$oauthToken = $this->getOAuthToken();
 		if (!$oauthToken) {
 			return translate([

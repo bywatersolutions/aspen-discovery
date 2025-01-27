@@ -1118,10 +1118,12 @@ class User extends DataObject {
 			$this->source = 'development';
 			$this->homeLocationId = 0;
 			$this->displayName = $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.';
+			$this->unique_ils_id = '';
 		} elseif ($context == 'localAdministrator') {
 			$this->source = 'admin';
 			$this->homeLocationId = 0;
 			$this->displayName = $this->firstname . ' ' . substr($this->lastname, 0, 1) . '.';
+			$this->unique_ils_id = '';
 		} else {
 			if (!isset($this->homeLocationId)) {
 				$this->homeLocationId = 0;

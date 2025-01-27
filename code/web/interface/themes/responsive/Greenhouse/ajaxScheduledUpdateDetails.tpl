@@ -14,11 +14,11 @@
 		</div>
 		<div class="col-sm-3">
 			<strong>{translate text='Date Scheduled' isAdminFacing=true}</strong>
-			<div class="row"><div class="col-sm-12">{$updateScheduled}</span></div></div>
+			<div class="row"><div class="col-sm-12">{$updateScheduled|date_format:"%D %T"}</span></div></div>
 		</div>
 		<div class="col-sm-3">
 			<strong>{translate text='Date Ran' isAdminFacing=true}</strong>
-			<div class="row"><div class="col-sm-12">{if $updateRan}{$updateRan}{else}{translate text='Not Yet Ran' isAdminFacing=true}{/if}</div></div>
+			<div class="row"><div class="col-sm-12">{if $updateRan}{$updateRan|date_format:"%D %T"}{else}{translate text='Not Yet Ran' isAdminFacing=true}{/if}</div></div>
 		</div>
 	</div>
 	<hr>

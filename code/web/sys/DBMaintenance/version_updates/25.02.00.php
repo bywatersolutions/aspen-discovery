@@ -89,8 +89,7 @@ function getUpdates25_02_00(): array {
 
 				// 4) Re-insert aggregated rows into original table.
 				"INSERT INTO usage_by_user_agent
-				 SELECT userAgentId, year, month, instance, totalRequests, totalBlocked
-				 FROM usage_by_user_agent_temp",
+				 SELECT * FROM usage_by_user_agent_temp",
 
 				// 5) Drop the temp table.
 				"DROP TABLE usage_by_user_agent_temp",

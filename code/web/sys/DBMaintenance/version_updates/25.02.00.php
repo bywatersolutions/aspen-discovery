@@ -95,9 +95,10 @@ function getUpdates25_02_00(): array {
 				// 5) Drop the temp table.
 				"DROP TABLE usage_by_user_agent_temp",
 
-				// 6) Finally add the unique index
+				// 6) Finally, drop the old index and add the unique index.
 				"ALTER TABLE usage_by_user_agent
-				 ADD UNIQUE KEY userAgentIdMonthYearInstance (userAgentId, year, month, instance)"
+                 DROP INDEX userAgentId,
+				 ADD UNIQUE KEY userAgentId (userAgentId, year, month, instance)"
 			],
 		], //aggregate_usage_by_user_agent
 

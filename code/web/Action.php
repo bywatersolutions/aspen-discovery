@@ -115,8 +115,6 @@ abstract class Action
 		$aspenUsage->update();
 		global $usageByIPAddress;
 		try {
-			// This will match that specific IP/year/month/instance row.
-			$usageByIPAddress->find(true);
 			$usageByIPAddress->numBlockedApiRequests++;
 			if (SystemVariables::getSystemVariables()->trackIpAddresses) {
 				$usageByIPAddress->update();

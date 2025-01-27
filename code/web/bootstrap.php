@@ -180,7 +180,6 @@ try {
 }
 $usageByIPAddress->lastRequest = time();
 $usageByIPAddress->numRequests++;
-$usageByIPAddress->update();
 
 $timer->logTime("Initialized Database");
 requireSystemLibraries();

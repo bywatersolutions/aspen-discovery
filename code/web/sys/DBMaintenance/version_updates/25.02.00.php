@@ -97,7 +97,7 @@ function getUpdates25_02_00(): array {
 
 				// 6) Finally, drop the old index and add the unique index.
 				"ALTER TABLE usage_by_user_agent
-         DROP INDEX userAgentId,
+				 DROP INDEX userAgentId,
 				 ADD UNIQUE KEY userAgentId (userAgentId, year, month, instance)"
 			],
 		], //aggregate_usage_by_user_agent

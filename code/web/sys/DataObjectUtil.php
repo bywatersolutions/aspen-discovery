@@ -308,6 +308,15 @@ class DataObjectUtil {
 				$object->setProperty($propertyName, $time, $property);
 			}
 
+		} elseif ($property['type'] == 'time') {
+			if (empty(strlen($_REQUEST[$propertyName])) || strlen($_REQUEST[$propertyName]) == 0 || $_REQUEST[$propertyName] == '00:00:00') {
+				$object->setProperty($propertyName, null, $property);
+			} else {
+				$dateParts = date_parse($_REQUEST[$propertyName]);
+				$time = $dateParts['hour'] . ':' . $dateParts['minute'] . ':' . $dateParts['second'];
+				$object->setProperty($propertyName, $time, $property);
+			}
+
 		} elseif ($property['type'] == 'partialDate') {
 			$dayField = $property['propNameDay'];
 			$object->setProperty($dayField, $_REQUEST[$dayField], null);

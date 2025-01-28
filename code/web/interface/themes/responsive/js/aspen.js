@@ -10691,107 +10691,6 @@ AspenDiscovery.Admin = (function () {
 				}
 			}
 			return true;
-		},
-
-		getEventTypesForLocation: function(locationId) {
-			var url = Globals.path + '/Admin/AJAX';
-			var params = {
-				method: 'getEventTypeIdsForLocation',
-				locationId: locationId
-			};
-
-			$.getJSON(url, params, function (data) {
-				if (data.success) {
-					if (data.eventTypeIds.length > 0) {
-						$("#eventTypeIdSelect option").each(function () {
-							if (!data.eventTypeIds.includes($(this).val())) {
-								$(this).attr('disabled', 'disabled');
-								$(this).removeAttr('selected');
-								$(this).hide();
-							} else {
-								$(this).removeAttr('disabled');
-								$(this).show();
-							}
-						});
-						$("#propertyRoweventTypeId").show();
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message);
-						$("#eventTypeIdSelect option").each(function () {
-							$(this).attr('disabled', 'disabled');
-							$(this).removeAttr('selected');
-						});
-						$("#propertyRoweventTypeId").hide();
-						$("#propertyRowtitle").hide();
-						$("#propertyRowinfoSection").hide();
-						//$("#propertyRowinfoSection .propertyRow").show();
-					}
-				} else {
-					AspenDiscovery.showMessage('An error occurred ', data.message);
-				}
-			});
-		},
-
-		getEventTypeFields: function (eventTypeId) {
-			var url = Globals.path + '/Admin/AJAX';
-			var params = {
-				method: 'getEventTypeFields',
-				eventTypeId: eventTypeId
-			};
-
-			$.getJSON(url, params, function (data) {
-				if (data.success) {
-					eventType = data.eventType;
-					$("#title").val(eventType.title);
-					if (!eventType.titleCustomizable) {
-						$("#title").attr('readonly', 'readonly');
-					} else {
-						$("#title").removeAttr('readonly');
-					}
-					$("#description").val(eventType.description);
-					if (!eventType.descriptionCustomizable) {
-						$("#description").attr('readonly', 'readonly');
-					} else {
-						$("#description").removeAttr('readonly');
-					}
-					$("#importFile-label-cover").val(eventType.cover);
-					if (!eventType.coverCustomizable) {
-						$("#importFile-label-cover").attr('readonly', 'readonly');
-					} else {
-						$("#importFile-label-cover").removeAttr('readonly');
-					}
-					$("#eventLength").val(eventType.eventLength);
-					if (!eventType.lengthCustomizable) {
-						$("#eventLength").attr('readonly', 'readonly');
-					} else {
-						$("#eventLength").removeAttr('readonly');
-					}
-					$("#accordion_body_Fields_for_this_Event_Type .panel-body").html(data.typeFields);
-					$("#propertyRowtitle").show();
-					$("#propertyRowinfoSection").show();
-					$("#propertyRowinfoSection .propertyRow").show();
-				} else {
-					AspenDiscovery.showMessage('An error occurred ', data.message);
-				}
-			});
-			return false;
-		},
-
-		updateRecurrenceOptions: function (startDate) {
-			startDate = moment(startDate);
-			startDay = startDate.format("dddd");
-			var weekOfMonth = startDate.week() - startDate.startOf('month').week() + 1;
-			weekOfMonth = moment.localeData().ordinal(weekOfMonth); // Format as ordinal
-			$("#recurrenceSelect option[value=3]").text("Weekly on " + startDay + "s");
-			$("#recurrenceSelect option[value=4]").text("Monthly on the " + weekOfMonth + " " + startDay);
-			return false;
-		},
-
-		getRecurrenceForm: function(recurrence) {
-			if (recurrence == 1) {
-				return false;
-			}
-			console.log("Open recurrence form");
-			return false;
 		}
 
 	};
@@ -12326,6 +12225,479 @@ AspenDiscovery.EContent = (function(){
 	}
 }(AspenDiscovery.EContent));
 
+AspenDiscovery.Events = (function(){
+	return {
+		trackUsage: function (id) {
+			var ajaxUrl = Globals.path + "/Events/JSON?method=trackUsage&id=" + id;
+			$.getJSON(ajaxUrl);
+		},
+
+		//For native events
+		getEventTypesForLocation: function(locationId) {
+			var url = Globals.path + '/Events/AJAX';
+			var params = {
+				method: 'getEventTypeIdsForLocation',
+				locationId: locationId
+			};
+
+			$.getJSON(url, params, function (data) {
+				if (data.success) {
+					if (data.eventTypeIds.length > 0) {
+						$("#eventTypeIdSelect option").each(function () {
+							if (!data.eventTypeIds.includes($(this).val())) {
+								$(this).attr('disabled', 'disabled');
+								$(this).removeAttr('selected');
+								$(this).hide();
+							} else {
+								$(this).removeAttr('disabled');
+								$(this).show();
+							}
+						});
+						$("#propertyRoweventTypeId").show();
+					} else {
+						AspenDiscovery.showMessage(data.title, data.message);
+						$("#eventTypeIdSelect option").each(function () {
+							$(this).attr('disabled', 'disabled');
+							$(this).removeAttr('selected');
+						});
+						$("#propertyRoweventTypeId").hide();
+						$("#propertyRowtitle").hide();
+						$("#propertyRowinfoSection").hide();
+					}
+				} else {
+					AspenDiscovery.showMessage('An error occurred ', data.message);
+				}
+			});
+		},
+
+		getEventTypeFields: function (eventTypeId) {
+			var url = Globals.path + '/Events/AJAX';
+			var params = {
+				method: 'getEventTypeFields',
+				eventTypeId: eventTypeId
+			};
+
+			$.getJSON(url, params, function (data) {
+				if (data.success) {
+					eventType = data.eventType;
+					$("#title").val(eventType.title);
+					if (!eventType.titleCustomizable) {
+						$("#title").attr('readonly', 'readonly');
+					} else {
+						$("#title").removeAttr('readonly');
+					}
+					$("#description").val(eventType.description);
+					if (!eventType.descriptionCustomizable) {
+						$("#description").attr('readonly', 'readonly');
+					} else {
+						$("#description").removeAttr('readonly');
+					}
+					$("#importFile-label-cover").val(eventType.cover);
+					if (!eventType.coverCustomizable) {
+						$("#importFile-label-cover").attr('readonly', 'readonly');
+					} else {
+						$("#importFile-label-cover").removeAttr('readonly');
+					}
+					$("#eventLength").val(eventType.eventLength);
+					if (!eventType.lengthCustomizable) {
+						$("#eventLength").attr('readonly', 'readonly');
+					} else {
+						$("#eventLength").removeAttr('readonly');
+					}
+					$("#accordion_body_Fields_for_this_Event_Type .panel-body").html(data.typeFields);
+					$("#propertyRowtitle").show();
+					$("#propertyRowinfoSection").show();
+					$("#propertyRowinfoSection .propertyRow").show();
+				} else {
+					AspenDiscovery.showMessage('An error occurred ', data.message);
+				}
+			});
+			return false;
+		},
+
+		updateRecurrenceOptions: function (startDate) {
+			startDate = moment(startDate);
+			if (startDate.isValid()) {
+				startDay = startDate.format("dddd");
+				var date = startDate.format("MMMM D");
+				var weekOfMonth = AspenDiscovery.Events.getWeekofMonth(startDate);
+				weekOfMonth = moment.localeData().ordinal(weekOfMonth); // Format as ordinal
+				$("#recurrenceOptionSelect option[value=3]").text("Weekly on " + startDay + "s");
+				$("#recurrenceOptionSelect option[value=4]").text("Monthly on the " + weekOfMonth + " " + startDay);
+				$("#recurrenceOptionSelect option[value=5]").text("Annually on " + date);
+				AspenDiscovery.Events.calculateEndTime();
+				AspenDiscovery.Events.calculateRecurrenceDates();
+			}
+			return false;
+		},
+
+		getWeekofMonth: function (date) {
+			return date.week() - date.startOf('month').week() + 1;
+		},
+
+		calculateEndTime: function () {
+			console.log("Calculating end time");
+			var startDate = moment($("#startDate").val());
+			var startTime = $("#startTime").val();
+			var length = $("#eventLength").val();
+			if (startDate && startDate.isValid() && startTime && startTime.length && length && length.length) {
+				var timeParts = startTime.split(":");
+				startDate.hour(timeParts[0]).minute(timeParts[1]);
+				startDate.add(length, 'h');
+				$("#endDate").val(startDate.format("YYYY-MM-DD"));
+				$("#endTime").val(startDate.format("HH:mm"));
+			}
+			return false;
+		},
+
+		calculateRecurrenceDates: function () {
+
+			var endDate;
+			var recurrenceTotal;
+			var count = 0;
+			var useEndDate = false;
+			if ($("#endOptionSelect").val() == "1" && $("#recurrenceEnd").val()) {
+				endDate = moment($("#recurrenceEnd").val());
+				if (!endDate.isValid()) {
+					return false;
+				}
+				useEndDate = true;
+			} else if ($("#endOptionSelect").val() == "2" && $("#recurrenceCount").val() > 0) {
+				recurrenceTotal = $("#recurrenceCount").val();
+			} else {
+				return false; // We need either the end date or the number of recurrences to be set or else we can't calculate dates yet
+			}
+
+			var date = moment($("#startDate").val());
+			if (!date.isValid()) {
+				date = moment(); // Use today's date if there's no start date
+			}
+			var originalStart = date.format();
+
+			var dates = [];
+			var frequency = $("#recurrenceFrequencySelect").val();
+			var interval = $("#recurrenceInterval").val() || 1; // Assume interval is 1 if not set
+
+			function processMonthlyRepeat() {
+				tempDate = date.format(); // Keep original date
+				if (repeatBasedOnDate) {
+					if (dayNumber <= date.daysInMonth()) {
+						date.date(dayNumber);
+					} else {
+						date.add(1, 'M');
+						return false; // Don't generate if the day doesn't exist in the month
+					}
+				} else {
+					endOfMonth = date.endOf("month").format();
+					startOfMonth = date.startOf("Month").format();
+					if (date.day(weekDay).isBefore(startOfMonth)) {
+						date.add(1, 'w');
+					}
+					if (weekNumber > 0) {
+						date.add(weekNumber - 1, 'w');
+					} else { // Handle last week of the month
+						date.add(4, 'w');
+						if (date.isAfter(endOfMonth)) {
+							date.subtract(7, 'd');
+						}
+					}
+					if (date.isBefore(originalStart)) {
+						date.add(1, 'M'); // If it's before the start date, add a month and try again
+						return false;
+					}
+					if (date.isAfter(endOfMonth)) {
+						date = moment(tempDate).add(interval, 'M');
+						return false; // Don't generate if the day doesn't exist in the month
+					}
+				}
+				if (!repeatBasedOnDate && offset != 0) {
+					date.add(offset, 'd');
+					if (useEndDate && date.isAfter(endDate)) {
+						date = moment(tempDate).add(interval, 'M');
+						return false;
+					}
+					dates.push(date.format('dddd, MMMM Do, YYYY'));
+					date = moment(tempDate);
+				} else {
+					dates.push(date.format('dddd, MMMM Do, YYYY'));
+				}
+				date.add(interval, 'M');
+				return true;
+			}
+
+			switch (frequency) {
+				// daily
+				case '1':
+					if (useEndDate) {
+						while (date.isSameOrBefore(endDate)) {
+							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							date.add(interval, 'd');
+						}
+					} else {
+						while (count < recurrenceTotal) {
+							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							date.add(interval, 'd');
+							count++;
+						}
+					}
+					break;
+				case '2':
+				// weekly
+					var days = [];
+					$("#propertyRowweekDays input:checked").each(function () {
+						days.push($(this).val());
+					});
+					if (days.length) {
+						if (useEndDate) {
+							while (date.isSameOrBefore(endDate)) {
+								for (i = 0; i < days.length; i++) {
+									date.day(days[i]); // Set the date to the matching day in the same week
+									if (date.isBefore(originalStart)) {
+										date.add(1, 'w'); // If it's before the start date, add a week
+									}
+									dates.push(date.format('dddd, MMMM Do, YYYY'));
+								}
+								date.add(interval, 'w');
+							}
+						} else {
+							while (count < recurrenceTotal) {
+								for (i = 0; i < days.length && count < recurrenceTotal; i++) {
+									date.day(days[i]); // Set the date to the matching day in the same week
+									if (date.isBefore(originalStart)) {
+										date.add(1, 'w'); // If it's before the start date, add a week
+									}
+									dates.push(date.format('dddd, MMMM Do, YYYY'));
+									count++;
+								}
+								date.add(interval, 'w');
+							}
+						}
+					} else {
+						return false; //No days selected
+					}
+					break;
+				case '3':
+				// monthly
+					var repeatBasedOnDate = $("#monthlyOptionSelect").val() == "2";
+					var dayNumber = $("#monthDate").val() || date.format('D'); // If not set, use startDate
+					var weekNumber = $("#weekNumberSelect").val() || AspenDiscovery.Events.getWeekofMonth(date);
+					var weekDay = $("#monthDaySelect").val() || date.format('d');
+					var endOfMonth;
+					var startOfMonth;
+					var tempDate;
+					var offset = $("#monthOffset").val();
+					if (useEndDate) {
+						while (date.isSameOrBefore(endDate)) {
+							processMonthlyRepeat();
+						}
+					} else {
+						while (count < recurrenceTotal) {
+							if (processMonthlyRepeat()) {
+								count++; // Only count if the date wasn't skipped
+							}
+						}
+					}
+					break;
+
+				case '4':
+				// yearly
+					if (useEndDate) {
+						while (date.isSameOrBefore(endDate)) {
+							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							date.add(interval, 'y');
+						}
+					} else {
+						while (count < recurrenceTotal) {
+							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							date.add(interval, 'y');
+							count++;
+						}
+					}
+			}
+			$("#dates").html(dates.join("<br/>"));
+			return false;
+		},
+
+		collapsePanel: function (panelSelector) {
+			$(panelSelector + " .panel-title a").removeClass('expanded').addClass('collapsed').attr("aria-expanded", "false");
+			$(panelSelector + " .panel").removeClass('active').attr("aria-expanded", "false");
+			$(panelSelector + " .accordion_body").removeClass('in').hide();
+			$(panelSelector + " .accordion_body").removeClass('in').hide();
+		},
+
+		expandPanel: function (panelSelector) {
+			$(panelSelector + " .panel-title a").removeClass('collapsed').addClass('expanded').attr("aria-expanded", "true");
+			$(panelSelector + " .panel").addClass('active').attr("aria-expanded", "true");
+			$(panelSelector + " .accordion_body").addClass('in').show();
+		},
+
+		toggleRecurrenceSections: function (recurrence) {
+
+			function resetRecurrenceSections() {
+				$("#propertyRowfrequencySection").hide();
+				$("#propertyRowweeklySection").hide();
+				$("#propertyRowmonthlySection").hide();
+				$("#propertyRowrepeatEndsSection").hide();
+				$("#propertyRowdates").hide();
+				$("#propertyRowweekDays input").prop("checked", false);
+				$("#propertyRowweekNumber option").prop("selected", false);
+				$("#propertyRowmonthDay option").prop("selected", false);
+				AspenDiscovery.Events.collapsePanel("#accordion_Repeat_Frequency");
+			}
+			var startDate = moment($("#startDate").val());  // Check what happens if invalid date
+			var dayNumber = startDate.format('d');
+			var dayOfWeek = startDate.day();
+			var weekOfMonth = AspenDiscovery.Events.getWeekofMonth(startDate);
+			switch (recurrence) {
+				case '1':
+					// Does not repeat
+					resetRecurrenceSections();
+					break;
+				case '2':
+					// Daily
+					resetRecurrenceSections();
+					$("#recurrenceFrequencySelect option[value=1]").prop("selected","true");
+					$("#recurrenceInterval").val("1");
+					$("#propertyRowfrequencySection").show();
+					$("#propertyRowdates").show();
+					$("#propertyRowrepeatEndsSection").show();
+					break;
+				case '3':
+					// Weekly on same day of week
+					resetRecurrenceSections();
+					$("#recurrenceFrequencySelect option[value=2]").prop("selected","true");
+					$("#recurrenceInterval").val("1");
+					$("#propertyRowfrequencySection").show();
+					// Show weekly with specific day selected based on startDate
+					$("#propertyRowweekDays input[value=" + dayOfWeek + "]").prop("checked", true);
+					$("#propertyRowweeklySection").show();
+					$("#propertyRowrepeatEndsSection").show();
+					$("#propertyRowdates").show();
+					break;
+				case '4':
+					// Monthly on same day of week
+					resetRecurrenceSections();
+					$("#recurrenceFrequencySelect option[value=3]").prop("selected","true");
+					$("#recurrenceInterval").val("1");
+					$("#propertyRowfrequencySection").show();
+					// Show monthly with specific day based on startdate
+					$("#propertyRowweekNumber option[value=" + weekOfMonth + "]").prop("selected", true);
+					$("#propertyRowmonthDay option[value=" + dayOfWeek + "]").prop("selected", true);
+					$("#propertyRowweekNumber").show();
+					$("#propertyRowmonthDay").show();
+					$("#propertyRowmonthDate").hide();
+					$("#propertyRowmonthlySection").show();
+					$("#propertyRowrepeatEndsSection").show();
+					$("#propertyRowdates").show();
+					break;
+				case '5':
+					// Annually
+					resetRecurrenceSections();
+					$("#recurrenceFrequencySelect option[value=4]").prop("selected","true");
+					$("#recurrenceInterval").val("1");
+					$("#propertyRowfrequencySection").show();
+					$("#propertyRowrepeatEndsSection").show();
+					$("#propertyRowdates").show();
+					break;
+				case '6':
+					// Every week day
+					resetRecurrenceSections();
+					$("#recurrenceFrequencySelect option[value=2]").prop("selected","true");
+					$("#recurrenceInterval").val("1");
+					$("#propertyRowfrequencySection").show();
+					$("#propertyRowweekDays input[value!=6][value!=0]").prop("checked", true);
+					$("#propertyRowweeklySection").show();
+					$("#propertyRowrepeatEndsSection").show();
+					$("#propertyRowdates").show();
+					break;
+				case '7':
+					// Custom - nothing preset
+					resetRecurrenceSections();
+					AspenDiscovery.Events.expandPanel("#accordion_Repeat_Frequency");
+					$("#propertyRowfrequencySection").show();
+					$("#propertyRowrepeatEndsSection").show();
+					break;
+			}
+			AspenDiscovery.Events.calculateRecurrenceDates();
+			return false;
+		},
+
+		toggleMonthlyOptions: function (option) {
+			switch (option) {
+				case '1':
+					// By day of week
+					$("#propertyRowweekNumber").show();
+					$("#propertyRowmonthDay").show();
+					$("#propertyRowmonthDate").hide();
+					$("#propertyRowmonthOffset").show();
+					break;
+				case '2':
+					// By date
+					$("#propertyRowweekNumber").hide();
+					$("#propertyRowmonthDay").hide();
+					$("#propertyRowmonthDate").show();
+					$("#propertyRowmonthOffset").hide();
+					break;
+			}
+			AspenDiscovery.Events.calculateRecurrenceDates();
+			return false;
+		},
+
+		toggleEndOptions: function (option) {
+			switch (option) {
+				case '1':
+					// By date
+					$("#propertyRowrecurrenceEnd").show();
+					$("#propertyRowrecurrenceCount").hide();
+					break;
+				case '2':
+					// By count
+					$("#propertyRowrecurrenceEnd").hide();
+					$("#propertyRowrecurrenceCount").show();
+					break;
+			}
+			AspenDiscovery.Events.calculateRecurrenceDates();
+			return false;
+		},
+
+		toggleSectionsByFrequency: function (option) {
+
+			function resetSections() {
+				$("#propertyRowweeklySection").hide();
+				$("#propertyRowmonthlySection").hide();
+				AspenDiscovery.Events.collapsePanel("#propertyRowmonthlySection");
+				AspenDiscovery.Events.collapsePanel("#propertyRowweeklySection");
+			}
+
+			switch (option) {
+				case '1':
+					// Daily
+					// No extra options
+					resetSections();
+					break;
+				case '2':
+					// Weekly
+					resetSections();
+					$("#propertyRowweeklySection").show();
+					AspenDiscovery.Events.expandPanel("#propertyRowweeklySection");
+					break;
+				case '3':
+					// Monthly
+					resetSections();
+					$("#propertyRowmonthlySection").show();
+					AspenDiscovery.Events.expandPanel("#propertyRowmonthlySection");
+					break;
+				case '4':
+					// Annually
+					// No extra options
+					resetSections();
+					break;
+			}
+			AspenDiscovery.Events.calculateRecurrenceDates();
+			return false;
+		}
+	};
+}(AspenDiscovery.Events || {}));
 AspenDiscovery.GroupedWork = (function(){
 	return {
 		hasTableOfContentsInRecord: false,

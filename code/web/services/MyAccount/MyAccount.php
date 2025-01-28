@@ -1,7 +1,5 @@
 <?php
 
-require_once ROOT_DIR . '/Action.php';
-
 require_once ROOT_DIR . '/CatalogConnection.php';
 require_once ROOT_DIR . '/CatalogFactory.php';
 

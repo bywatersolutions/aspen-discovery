@@ -838,10 +838,15 @@ class IndexingProfile extends DataObject {
 						'properties' => [
 							'index856Links' => [
 								'property' => 'index856Links',
-								'type' => 'checkbox',
+								'type' => 'enum',
 								'label' => 'Index 856 links',
+								'values' => [
+									0 => 'None',
+									1 => 'Always',
+									2 => 'Only When No eContent Items Are Found'
+								],
 								'description' => 'Whether or not 856 links with a first indicator of 4 and second indicator of 0 or 1 are indexed and treated as items.',
-								'defaultValue' => false,
+								'defaultValue' => 0,
 								'hideInLists' => true,
 								'forcesReindex' => true,
 							],

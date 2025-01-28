@@ -1032,10 +1032,11 @@ class Record_AJAX extends Action {
 										require_once ROOT_DIR . '/sys/ILS/IlsVolumeInfo.php';
 										$volumeDataDB = new IlsVolumeInfo();
 										$volumeDataDB->volumeId = $_REQUEST['volume'];
+										$volumeInfo = $_REQUEST['volume'];
 										if ($volumeDataDB->find(true)) {
 											$volumeLabel = $volumeDataDB->displayLabel;
 										} else {
-											$volumeInfo = $_REQUEST['volume'];
+											$volumeLabel = $_REQUEST['volume'];
 										}
 									}
 
@@ -1831,7 +1832,7 @@ class Record_AJAX extends Action {
 			require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
 			$patronType = $user->getPTypeObj();
 			$sublocationLookup = new Sublocation();
-			$sublocationLookup->locationId = $user->pickupSublocationId;
+			$sublocationLookup->id = $user->pickupSublocationId;
 			$sublocationLookup->isValidHoldPickupAreaILS = 1;
 			$sublocationLookup->isValidHoldPickupAreaAspen = 1;
 			if ($sublocationLookup->find(true)) {

@@ -11,7 +11,7 @@ class SearchObjectFactory {
 	 * @param string $engine The type of SearchObject to build.
 	 * @return  SearchObject_BaseSearcher|false   The search object on success, false otherwise
 	 */
-	static function initSearchObject($engine = 'GroupedWork') {
+	static function initSearchObject(string $engine = 'GroupedWork') : mixed{
 		global $configArray;
 		if ($engine == 'GroupedWork') {
 			require_once ROOT_DIR . '/sys/SystemVariables.php';

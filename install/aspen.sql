@@ -5732,7 +5732,7 @@ CREATE TABLE `usage_by_user_agent` (
   `numRequests` int(11) NOT NULL DEFAULT 0,
   `numBlockedRequests` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `userAgentId` (`userAgentId`,`year`,`instance`,`month`)
+  UNIQUE KEY `userAgentId` (`userAgentId`,`year`,`instance`,`month`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 DROP TABLE IF EXISTS usage_tracking;
 CREATE TABLE `usage_tracking` (
@@ -6856,8 +6856,8 @@ Thank you for your purchase suggestion!', 0, 0, -1, 0, 1, 0, 0),
 	Thanks', 0, 0, -1, 0, 0, 1, 0),
 	(23, 'Hold Not Needed', 0, 0, '', 0, 0, -1, 0, 0, 0, 1);
 UPDATE modules set enabled=0;UPDATE modules set enabled=1 where name in ('Side Loads', 'User Lists');
-INSERT INTO system_variables (currencyCode, storeRecordDetailsInSolr, storeRecordDetailsInDatabase, indexVersion, searchVersion, appScheme, trackIpAddresses) VALUES ('USD', 0, 1, 2, 2, 'aspen-lida', 0); 
-INSERT INTO themes 
+INSERT INTO system_variables (currencyCode, storeRecordDetailsInSolr, storeRecordDetailsInDatabase, indexVersion, searchVersion, appScheme, trackIpAddresses) VALUES ('USD', 0, 1, 2, 2, 'aspen-lida', 0);
+INSERT INTO themes
   (id,themeName,logoName,headerBackgroundColor,headerBackgroundColorDefault,headerForegroundColor,headerForegroundColorDefault,
   generatedCss,
   pageBackgroundColor,pageBackgroundColorDefault,primaryBackgroundColor,primaryBackgroundColorDefault,primaryForegroundColor,primaryForegroundColorDefault,
@@ -6882,7 +6882,7 @@ INSERT INTO themes
   '#0087AB',1,'#ffffff',1,
   '#0087AB',1,'#f1f1f1',1,
   '#265a87',1,-1,
-  0,0,1,'border','','cover','no-repeat','Default'
+  0,0,1,'floating','','cover','no-repeat','Default'
 );
 UPDATE themes set headerBackgroundColor = '#ffffff' where id = 1;
 UPDATE themes set browseCategoryPanelColor = '#ffffff' where id = 1;

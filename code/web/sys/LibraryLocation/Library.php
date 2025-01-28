@@ -5412,6 +5412,8 @@ class Library extends DataObject {
 		$ils = 'unknown';
 		$hasIlsInbox = false;
 		$catalogRegistrationCapabilities = [];
+		$suspendRequiresReactivationDate = false;
+		$showDateWhenSuspending = true;
 
 		$catalog = CatalogFactory::getCatalogConnectionInstance();
 		if ($catalog != null) {
@@ -5421,10 +5423,12 @@ class Library extends DataObject {
 			$pinValidationRules = $catalog->getPasswordPinValidationRules();
 			$hasIlsInbox = $catalog->hasIlsInbox();
 			$catalogRegistrationCapabilities = $catalog->getRegistrationCapabilities();
+			$suspendRequiresReactivationDate = $catalog->suspendRequiresReactivationDate();
+			$showDateWhenSuspending = $catalog->showDateWhenSuspending();
 		}
 
 		$accountProfile = $this->getAccountProfile();
-		if ($accountProfile != false) {
+		if ($accountProfile !== false) {
 			$ils = $accountProfile->ils;
 		}
 
@@ -5433,6 +5437,8 @@ class Library extends DataObject {
 		$apiInfo['ils'] = $ils;
 		$apiInfo['displayIlsInbox'] = $hasIlsInbox;
 		$apiInfo['catalogRegistrationCapabilities'] = $catalogRegistrationCapabilities;
+		$apiInfo['suspendRequiresReactivationDate'] = $suspendRequiresReactivationDate;
+		$apiInfo['showDateWhenSuspending'] = $showDateWhenSuspending;
 
 		$superScopeLabel = $this->getGroupedWorkDisplaySettings()->availabilityToggleLabelSuperScope;
 		$localLabel = $this->getGroupedWorkDisplaySettings()->availabilityToggleLabelLocal;

@@ -179,7 +179,7 @@ class UserAccount {
 		return UserAccount::$userRoles;
 	}
 
-	public static function getActivePermissions() {
+	public static function getActivePermissions() : array {
 		if (UserAccount::$userPermissions == null) {
 			if (UserAccount::isLoggedIn()) {
 				UserAccount::$userPermissions = [];

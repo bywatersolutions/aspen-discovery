@@ -23,6 +23,14 @@ class UserListEntry extends DataObject {
 	}
 
 	function insert($context = '') : int {
+		if($this->source == "GroupedWork" && $this->title == null)
+		{
+			$groupedWork = new GroupedWork();
+			$groupedWork->permanent_id = $this->sourceId;
+			if ($groupedWork->find(true)) {
+				$this->title = mb_substr($groupedWork->full_title, 0, 50);
+			}
+		}
 		$result = parent::insert();
 		global $memCache;
 		$memCache->delete('user_list_data_' . UserAccount::getActiveUserId());

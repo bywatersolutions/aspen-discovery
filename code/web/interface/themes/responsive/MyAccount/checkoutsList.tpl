@@ -23,15 +23,15 @@
 			</div>
 		{/if}
 
-		<div class="btn-group">
-			{if $renewableCheckouts >= 1}
+		{if $renewableCheckouts >= 5}
+			<div class="btn-group">
 				{if $source=='all' || $source=='ils'}
 					<a href="#" onclick="AspenDiscovery.Account.renewSelectedTitles()" class="btn btn-sm btn-default">{translate text="Renew Selected Items" isPublicFacing=true}</a>
 					<a href="#" onclick="AspenDiscovery.Account.renewAll()" class="btn btn-sm btn-default">{translate text="Renew All" isPublicFacing=true}</a>
 				{/if}
-			{/if}
-			<a class="btn btn-sm btn-default" id="exportToExcel" onclick="return AspenDiscovery.Account.exportCheckouts('{$source}', $('#accountSort_{$source} option:selected').val());">{translate text="Export to CSV" isPublicFacing=true}</a>
-		</div>
+				<a class="btn btn-sm btn-default" id="exportToExcel" onclick="return AspenDiscovery.Account.exportCheckouts('{$source}', $('#accountSort_{$source} option:selected').val());">{translate text="Export to CSV" isPublicFacing=true}</a>
+			</div>
+		{/if}
 
 		<div class="striped">
 			{foreach from=$transList item=checkedOutTitle name=checkedOutTitleLoop key=checkedOutKey}

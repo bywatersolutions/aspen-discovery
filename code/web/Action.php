@@ -114,7 +114,7 @@ abstract class Action
 		$aspenUsage->blockedApiRequests++;
 		$aspenUsage->update();
 		global $usageByIPAddress;
-		try{
+		try {
 			$usageByIPAddress->numBlockedApiRequests++;
 			if (SystemVariables::getSystemVariables()->trackIpAddresses) {
 				$usageByIPAddress->update();

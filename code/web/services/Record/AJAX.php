@@ -1032,10 +1032,11 @@ class Record_AJAX extends Action {
 										require_once ROOT_DIR . '/sys/ILS/IlsVolumeInfo.php';
 										$volumeDataDB = new IlsVolumeInfo();
 										$volumeDataDB->volumeId = $_REQUEST['volume'];
+										$volumeInfo = $_REQUEST['volume'];
 										if ($volumeDataDB->find(true)) {
 											$volumeLabel = $volumeDataDB->displayLabel;
 										} else {
-											$volumeInfo = $_REQUEST['volume'];
+											$volumeLabel = $_REQUEST['volume'];
 										}
 									}
 

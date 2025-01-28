@@ -141,7 +141,10 @@ function getDownloadMultiPdfAction($id) : array {
 //Supplemental File Actions
 function getDownloadSingleSupplementalFileAction($id, $fileId) : array {
 	return [
-		'title' => 'Download Supplemental File',
+		'title' => translate([
+			'text' => 'Download Supplemental File',
+			'isPublicFacing' => true,
+		]),
 		'url' => "/Record/$id/DownloadSupplementalFile?fileId=$fileId",
 		'requireLogin' => false,
 		'type' => 'download_supplemental_file',
@@ -150,7 +153,10 @@ function getDownloadSingleSupplementalFileAction($id, $fileId) : array {
 
 function getDownloadMultiSupplementalFileAction($id) : array {
 	return [
-		'title' => 'Download Supplemental File',
+		'title' => translate([
+			'text' => 'Download Supplemental File',
+			'isPublicFacing' => true,
+		]),
 		'url' => '',
 		'onclick' => "return AspenDiscovery.Record.selectFileDownload('$id', 'RecordSupplementalFile');",
 		'requireLogin' => false,

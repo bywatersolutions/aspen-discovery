@@ -140,7 +140,7 @@ public class EvolveExportMain {
 					}
 					logEntry.incErrors("Could not load Evolve account profile");
 					accountProfileRS.close();
-					SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
+					SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 					continue;
 				}
 				accountProfileRS.close();
@@ -154,7 +154,7 @@ public class EvolveExportMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
-				SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
+				SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 
 				indexingProfile = IndexingProfile.loadIndexingProfile(serverName, dbConn, profileToLoad, logger, logEntry);
 				if (indexingProfile == null){

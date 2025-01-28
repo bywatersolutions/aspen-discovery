@@ -81,7 +81,7 @@ public class SystemUtils {
 		return true;
 	}
 
-    public static void QuitIfOffline(Connection dbConn, Logger logger, IlsExtractLogEntry logEntry)
+    public static void quitIfOffline(Connection dbConn, Logger logger, IlsExtractLogEntry logEntry)
     {
         if (isOffline(dbConn, logger)) {
 			//ensure we get a print to screen when running from the command line

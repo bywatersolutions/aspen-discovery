@@ -148,7 +148,7 @@ public class EvergreenExportMain {
 					}
 					logEntry.incErrors("Could not load Evergreen account profile");
 					accountProfileRS.close();
-					SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
+					SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 					continue;
 				}
 				accountProfileRS.close();
@@ -162,7 +162,7 @@ public class EvergreenExportMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
-				SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
+				SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 
 				if (baseUrl != null) {
 					indexingProfile = IndexingProfile.loadIndexingProfile(serverName, dbConn, profileToLoad, logger, logEntry);

@@ -107,7 +107,7 @@ public class SymphonyExportMain {
 					logger.error("Error deleting old log entries", e);
 				}
 
-				SystemUtils.QuitIfOffline(dbConn, logger, logEntry);
+				SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 			} catch (Exception e) {
 				System.out.println("Error connecting to aspen database " + e);
 				System.exit(1);

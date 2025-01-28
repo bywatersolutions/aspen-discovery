@@ -6882,7 +6882,7 @@ INSERT INTO themes
   '#0087AB',1,'#ffffff',1,
   '#0087AB',1,'#f1f1f1',1,
   '#265a87',1,-1,
-  0,0,1,'border','','cover','no-repeat','Default'
+  0,0,1,'floating','','cover','no-repeat','Default'
 );
 UPDATE themes set headerBackgroundColor = '#ffffff' where id = 1;
 UPDATE themes set browseCategoryPanelColor = '#ffffff' where id = 1;

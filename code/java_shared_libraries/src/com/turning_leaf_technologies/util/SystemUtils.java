@@ -81,14 +81,14 @@ public class SystemUtils {
 		return true;
 	}
 
-    public static void quitIfOffline(Connection dbConn, Logger logger, IlsExtractLogEntry logEntry)
-    {
-        if (isOffline(dbConn, logger)) {
+	public static void quitIfOffline(Connection dbConn, Logger logger, IlsExtractLogEntry logEntry)
+	{
+		if (isOffline(dbConn, logger)) {
 			//ensure we get a print to screen when running from the command line
 			System.out.println("ILS is offine, won't index.");
-            logEntry.addNote("ILS is offline, won't index.");
-            logEntry.saveResults();
-            System.exit(0);
-        }
-    }
+			logEntry.addNote("ILS is offline, won't index.");
+			logEntry.saveResults();
+			System.exit(0);
+		}
+	}
 }

@@ -311,7 +311,7 @@ class MyAccount_MyList extends MyAccount {
 					$groupedWork = new GroupedWork();
 					$groupedWork->permanent_id = $userListEntry->sourceId;
 					if ($groupedWork->find(true)) {
-						$userListEntry->title = substr($groupedWork->full_title, 0, 50);
+						$userListEntry->title = mb_substr($groupedWork->full_title, 0, 50);
 					}
 
 					$existingEntry = false;

@@ -141,8 +141,14 @@ public class EvergreenExportMain {
 
 					staffToken = getAPIAuthToken(staffUsername, staffPassword);
 				}else{
+					if(logEntry == null)
+					{
+						String fallbackIndexingProfile = "evergreen";
+						logEntry = new IlsExtractLogEntry(dbConn, fallbackIndexingProfile, logger);
+					}
 					logEntry.incErrors("Could not load Evergreen account profile");
 					accountProfileRS.close();
+					SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 					continue;
 				}
 				accountProfileRS.close();
@@ -156,6 +162,7 @@ public class EvergreenExportMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
+				SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 
 				if (baseUrl != null) {
 					indexingProfile = IndexingProfile.loadIndexingProfile(serverName, dbConn, profileToLoad, logger, logEntry);

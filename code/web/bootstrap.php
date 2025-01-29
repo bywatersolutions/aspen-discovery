@@ -48,14 +48,6 @@ if (isset($_SERVER['SERVER_NAME'])) {
 	$aspenUsage->instance = 'aspen_internal';
 }
 
-//This has to be done after reading configuration so we can get the servername
-global $usageByIPAddress;
-$usageByIPAddress = new UsageByIPAddress();
-$usageByIPAddress->year = date('Y');
-$usageByIPAddress->month = date('n');
-$usageByIPAddress->ipAddress = IPAddress::getClientIP();
-$usageByIPAddress->instance = $aspenUsage->getInstance();
-
 require_once ROOT_DIR . '/sys/Timer.php';
 global $timer;
 $timer = new Timer($startTime);
@@ -72,59 +64,6 @@ ob_start();
 
 initMemcache();
 initDatabase();
-
-global $userAgent;
-$userAgentString = 'Unknown';
-if (isset($_SERVER['HTTP_USER_AGENT'])) {
-	$userAgentString = $_SERVER['HTTP_USER_AGENT'];
-}
-try {
-	$userAgent = new UserAgent();
-	if (strlen($userAgentString) > 512) {
-		$userAgentString = substr($userAgentString, 0, 512);
-	}
-	if (isSpammyUserAgent($userAgentString)) {
-		http_response_code(404);
-		echo("<html><head><title>Page Not Found</title></head><body><h1>404</h1> <p>We're sorry, but the page you are looking for can't be found.</p></body></html>");
-		die();
-	}
-	$userAgent->userAgent = $userAgentString;
-	if ($userAgent->find(true)) {
-		$userAgentId = $userAgent->id;
-	}else{
-		if (!$userAgent->insert()) {
-			$logger->log("Could not insert user agent $userAgentString", Logger::LOG_ERROR);
-			$logger->log($userAgent->getLastError(), Logger::LOG_ERROR);
-		}
-		$userAgentId = $userAgent->id;
-	}
-	require_once ROOT_DIR . '/sys/SystemLogging/UsageByUserAgent.php';
-	$usageByUserAgent = new UsageByUserAgent();
-	$usageByUserAgent->userAgentId = $userAgentId;
-	$usageByUserAgent->year = date('Y');
-	$usageByUserAgent->month = date('n');
-	global $aspenUsage;
-	$usageByUserAgent->instance = $aspenUsage->getInstance();
-
-	if ($userAgent->blockAccess) {
-		$usageByUserAgent->numBlockedRequests++;
-		if ($usageByUserAgent->update() == 0){
-			$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
-			$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
-		}
-		http_response_code(403);
-		echo("<h1>Forbidden</h1><p><strong>We are unable to handle your request.</strong></p>");
-		die();
-	}else{
-		$usageByUserAgent->numRequests++;
-		if ($usageByUserAgent->update() == 0){
-			$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
-			$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
-		}
-	}
-}catch (Exception $e) {
-	//This happens before tables are created, ignore it
-}
 
 if ($aspenUsage->getInstance() != 'aspen_internal') {
 	$isValidServerName = true;
@@ -170,6 +109,69 @@ try {
 } catch (Exception $e) {
 	//Table has not been created yet, ignore it
 }
+
+global $userAgent;
+$userAgentString = 'Unknown';
+if (isset($_SERVER['HTTP_USER_AGENT'])) {
+	$userAgentString = $_SERVER['HTTP_USER_AGENT'];
+}
+try {
+	$userAgent = new UserAgent();
+	if (strlen($userAgentString) > 512) {
+		$userAgentString = substr($userAgentString, 0, 512);
+	}
+	if (isSpammyUserAgent($userAgentString)) {
+		http_response_code(404);
+		echo("<html><head><title>Page Not Found</title></head><body><h1>404</h1> <p>We're sorry, but the page you are looking for can't be found.</p></body></html>");
+		die();
+	}
+	$userAgent->userAgent = $userAgentString;
+	if ($userAgent->find(true)) {
+		$userAgentId = $userAgent->id;
+	}else{
+		if (!$userAgent->insert()) {
+			$logger->log("Could not insert user agent $userAgentString", Logger::LOG_ERROR);
+			$logger->log($userAgent->getLastError(), Logger::LOG_ERROR);
+		}
+		$userAgentId = $userAgent->id;
+	}
+	require_once ROOT_DIR . '/sys/SystemLogging/UsageByUserAgent.php';
+	$usageByUserAgent = new UsageByUserAgent();
+	$usageByUserAgent->userAgentId = $userAgentId;
+	$usageByUserAgent->year = date('Y');
+	$usageByUserAgent->month = date('n');
+	global $aspenUsage;
+	$usageByUserAgent->instance = $aspenUsage->getInstance();
+	// Attempts to load an existing row from usage_by_user_agent that matches the index userAgentId.
+	$foundExisting = $usageByUserAgent->find(true);
+
+	if ($userAgent->blockAccess) {
+		$usageByUserAgent->numBlockedRequests++;
+		if ($usageByUserAgent->update() == 0){
+			$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
+			$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+		}
+		http_response_code(403);
+		echo("<h1>Forbidden</h1><p><strong>We are unable to handle your request.</strong></p>");
+		die();
+	}else{
+		$usageByUserAgent->numRequests++;
+		if ($usageByUserAgent->update() == 0){
+			$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
+			$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+		}
+	}
+}catch (Exception $e) {
+	//This happens before tables are created, ignore it
+}
+
+//This has to be done after reading configuration so we can get the servername
+global $usageByIPAddress;
+$usageByIPAddress = new UsageByIPAddress();
+$usageByIPAddress->year = date('Y');
+$usageByIPAddress->month = date('n');
+$usageByIPAddress->ipAddress = IPAddress::getClientIP();
+$usageByIPAddress->instance = $aspenUsage->getInstance();
 
 try {
 	$usageByIPAddress->find(true);

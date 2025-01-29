@@ -728,6 +728,7 @@ class Theme extends DataObject {
 				'description' => 'Choose a style for cover images throughout the catalog.',
 				'required' => false,
 				'hideInLists' => true,
+				'default' => 'floating'
 			],
 
 			//Overall page colors

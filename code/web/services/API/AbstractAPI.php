@@ -48,6 +48,17 @@ abstract class AbstractAPI extends Action{
 		return false;
 	}
 
+	function getLiDASlug() {
+		if (function_exists('getallheaders')) {
+			foreach (getallheaders() as $name => $value) {
+				if (strcasecmp($name, 'lida-slug') === 0) {
+					return $value;
+				}
+			}
+		}
+		return false;
+	}
+
 	function getLiDAUserAgent() {
 		if (function_exists('getallheaders')) {
 			foreach (getallheaders() as $name => $value) {

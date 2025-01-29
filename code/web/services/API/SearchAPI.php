@@ -5,7 +5,7 @@ require_once ROOT_DIR . '/sys/Pager.php';
 
 class SearchAPI extends AbstractAPI {
 
-	function launch() {
+	function launch() : void {
 		$method = (isset($_GET['method']) && !is_array($_GET['method'])) ? $_GET['method'] : '';
 		$output = '';
 
@@ -57,8 +57,8 @@ class SearchAPI extends AbstractAPI {
 				header('HTTP/1.0 401 Unauthorized');
 				$output = json_encode(['error' => 'unauthorized_access']);
 			}
-			ExternalRequestLogEntry::logRequest('SearchAPI.' . $method, $_SERVER['REQUEST_METHOD'], $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], getallheaders(), '', $_SERVER['REDIRECT_STATUS'], isset($jsonOutput) ? $jsonOutput : $output, []);
-			echo isset($jsonOutput) ? $jsonOutput : $output;
+			ExternalRequestLogEntry::logRequest('SearchAPI.' . $method, $_SERVER['REQUEST_METHOD'], $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], getallheaders(), '', $_SERVER['REDIRECT_STATUS'], $jsonOutput ?? $output, []);
+			echo $jsonOutput ?? $output;
 		} elseif (IPAddress::allowAPIAccessForClientIP() || in_array($method, [
 				'getListWidget',
 				'getCollectionSpotlight',
@@ -76,7 +76,7 @@ class SearchAPI extends AbstractAPI {
 				}
 				require_once ROOT_DIR . '/sys/SystemLogging/APIUsage.php';
 				APIUsage::incrementStat('SearchAPI', $method);
-				echo isset($jsonOutput) ? $jsonOutput : $output;
+				echo $jsonOutput ?? $output;
 			} else {
 				echo json_encode(['error' => 'invalid_method']);
 			}
@@ -100,7 +100,7 @@ class SearchAPI extends AbstractAPI {
 
 		//Check if solr is running by pinging it
 		/** @var SearchObject_AbstractGroupedWorkSearcher $solrSearcher */
-		$solrSearcher = SearchObjectFactory::initSearchObject('GroupedWork');
+		$solrSearcher = SearchObjectFactory::initSearchObject();
 		if (!$solrSearcher->ping(false)) {
 			$this->addCheck($checks, 'Solr', self::STATUS_CRITICAL, "Solr is not responding");
 		} else {
@@ -109,7 +109,7 @@ class SearchAPI extends AbstractAPI {
 
 		//Check for a current backup
 		global $serverName;
-		$backupDir = "/data/aspen-discovery/{$serverName}/sql_backup/";
+		$backupDir = "/data/aspen-discovery/$serverName/sql_backup/";
 		$lastBackupSize = 0;
 		if (!file_exists($backupDir)) {
 			$this->addCheck($checks, 'Backup', self::STATUS_CRITICAL, "Backup directory $backupDir does not exist");
@@ -118,16 +118,15 @@ class SearchAPI extends AbstractAPI {
 			$backupFileFound = false;
 			$backupFileTooSmall = false;
 			foreach ($backupFiles as $backupFile) {
-				if (preg_match('/.*\.tar\.gz/', $backupFile) || preg_match('/.*\.sql\.gz/', $backupFile)) {
+				if (str_ends_with($backupFile, '.tar.gz/') || str_ends_with($backupFile, '.sql.gz/')) {
 					$fileCreationTime = filectime($backupDir . $backupFile);
 					if ((time() - $fileCreationTime) < (24.5 * 60 * 60)) {
 						$fileSize = filesize($backupDir . $backupFile);
+						$backupFileFound = true;
 						if ($fileSize > 1000) {
 							//We have a backup file created in the last 24.5 hours (30 min buffer to give time for the backup to be created)
-							$backupFileFound = true;
 							$lastBackupSize = $fileSize;
 						} else {
-							$backupFileFound = true;
 							$backupFileTooSmall = true;
 						}
 					}
@@ -230,7 +229,7 @@ class SearchAPI extends AbstractAPI {
 			if ($freeMem < 1000000000) {
 				$this->addCheck($checks, 'Memory Usage', self::STATUS_CRITICAL, "Less than 1GB ($freeMem) of available memory exists, increase available resources");
 			} elseif ($percentMemoryUsage > 95 && $freeMem < 2500000000) {
-				$this->addCheck($checks, 'Memory Usage', self::STATUS_CRITICAL, "{$percentMemoryUsage}% of total memory is in use, increase available resources");
+				$this->addCheck($checks, 'Memory Usage', self::STATUS_CRITICAL, "$percentMemoryUsage% of total memory is in use, increase available resources");
 			} else {
 				$this->addCheck($checks, 'Memory Usage');
 			}
@@ -239,7 +238,7 @@ class SearchAPI extends AbstractAPI {
 			//Get the number of CPUs available
 			$numCPUs = (int)shell_exec("cat /proc/cpuinfo | grep processor | wc -l");
 
-			//Check load (use the 5 minute load)
+			//Check the load (use the 5 minute load)
 			$load = sys_getloadavg();
 			$this->addServerStat($serverStats, '1 minute Load Average', $load[0]);
 			$this->addServerStat($serverStats, '5 minute Load Average', $load[1]);
@@ -252,15 +251,15 @@ class SearchAPI extends AbstractAPI {
 
 			if ($load[1] > $numCPUs * 2.5) {
 				if ($load[0] >= $load[1]) {
-					$this->addCheck($checks, 'Load Average', self::STATUS_CRITICAL, "Load is very high {$load[1]} and is increasing");
+					$this->addCheck($checks, 'Load Average', self::STATUS_CRITICAL, "Load is very high $load[1] and is increasing");
 				} else {
-					$this->addCheck($checks, 'Load Average', self::STATUS_WARN, "Load is very high {$load[1]}, but it is decreasing");
+					$this->addCheck($checks, 'Load Average', self::STATUS_WARN, "Load is very high $load[1], but it is decreasing");
 				}
 			} elseif ($load[1] > $numCPUs * 1.5) {
 				if ($load[0] >= $load[1]) {
-					$this->addCheck($checks, 'Load Average', self::STATUS_WARN, "Load is high {$load[1]} and is increasing");
+					$this->addCheck($checks, 'Load Average', self::STATUS_WARN, "Load is high $load[1] and is increasing");
 				} else {
-					$this->addCheck($checks, 'Load Average', self::STATUS_WARN, "Load is high {$load[1]}, but it is decreasing");
+					$this->addCheck($checks, 'Load Average', self::STATUS_WARN, "Load is high $load[1], but it is decreasing");
 				}
 			} else {
 				$this->addCheck($checks, 'Load Average');
@@ -271,10 +270,10 @@ class SearchAPI extends AbstractAPI {
 			if (preg_match('/(\d+\.\d+) wa,/', $topInfo, $matches)) {
 				$waitTime = $matches[1];
 				$this->addServerStat($serverStats, 'Wait Time', $waitTime);
-				if ($waitTime > 15) {
-					$this->addCheck($checks, 'Wait Time', self::STATUS_WARN, "Wait time is over 15 $waitTime");
-				} elseif ($waitTime > 30) {
+				if ($waitTime > 30) {
 					$this->addCheck($checks, 'Wait Time', self::STATUS_CRITICAL, "Wait time is over 30 $waitTime");
+				} else if ($waitTime > 15) {
+					$this->addCheck($checks, 'Wait Time', self::STATUS_WARN, "Wait time is over 15 $waitTime");
 				} else {
 					$this->addCheck($checks, 'Wait Time');
 				}
@@ -488,7 +487,7 @@ class SearchAPI extends AbstractAPI {
 						if (empty($logEntry->endTime)) {
 							$numUnfinishedEntries++;
 							if ($isFirstEntry && ($currentTime - $logEntry->startTime) >= 8 * 60 * 60) {
-								$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "The last log entry for {$aspenModule->name} has been running for more than 8 hours");
+								$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "The last log entry for $aspenModule->name has been running for more than 8 hours");
 							}
 						} else {
 							if ($logEntry->endTime > $lastFinishTime) {
@@ -557,18 +556,18 @@ class SearchAPI extends AbstractAPI {
 						}
 					}
 					if ($checkEntriesInLast26Hours && !$isFirstEntryRunning && ($lastFinishTime < time() - 26 * 60 * 60)) {
-						$this->addCheck($checks, $aspenModule->name, self::STATUS_CRITICAL, "No log entries for {$aspenModule->name} have completed in the last 26 hours");
+						$this->addCheck($checks, $aspenModule->name, self::STATUS_CRITICAL, "No log entries for $aspenModule->name have completed in the last 26 hours");
 					} elseif ($checkEntriesInLast24Hours && !$isFirstEntryRunning && ($lastFinishTime < time() - 24 * 60 * 60)) {
-						$this->addCheck($checks, $aspenModule->name, self::STATUS_CRITICAL, "No log entries for {$aspenModule->name} have completed in the last 24 hours");
-					} elseif ($checkEntriesInLast1Hours && !$isFirstEntryRunning && ($lastFinishTime < time() - 1 * 60 * 60) && date('H') >= 8 && date('H') < 21) {
-						$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "No log entries for {$aspenModule->name} have completed in the last 1 hours");
+						$this->addCheck($checks, $aspenModule->name, self::STATUS_CRITICAL, "No log entries for $aspenModule->name have completed in the last 24 hours");
+					} elseif ($checkEntriesInLast1Hours && !$isFirstEntryRunning && ($lastFinishTime < time() - 60 * 60) && date('H') >= 8 && date('H') < 21) {
+						$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "No log entries for $aspenModule->name have completed in the last 1 hours");
 					} else {
 						if ($logErrors > 0) {
-							$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "The last {$logErrors} log entry for {$aspenModule->name} had errors");
+							$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "The last $logErrors log entry for $aspenModule->name had errors");
 						} else {
 							if (!$isFirstEntryRunning && ($numUnfinishedEntries > $numSettings)) {
 								$totalEntriesChecked = $numEntriesToCheck * $numSettings;
-								$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "{$numUnfinishedEntries} of the last $totalEntriesChecked log entries for {$aspenModule->name} did not finish.");
+								$this->addCheck($checks, $aspenModule->name, self::STATUS_WARN, "$numUnfinishedEntries of the last $totalEntriesChecked log entries for $aspenModule->name did not finish.");
 							} else {
 								$this->addCheck($checks, $aspenModule->name);
 							}
@@ -649,7 +648,7 @@ class SearchAPI extends AbstractAPI {
 				$sitemapFiles = scandir(ROOT_DIR . '/sitemaps');
 				$groupedWorkSitemapFound = false;
 				foreach ($sitemapFiles as $sitemapFile) {
-					if (strpos($sitemapFile, 'grouped_work_site_map_') === 0) {
+					if (str_starts_with($sitemapFile, 'grouped_work_site_map_')) {
 						$groupedWorkSitemapFound = true;
 						break;
 					}
@@ -662,7 +661,7 @@ class SearchAPI extends AbstractAPI {
 			}
 		}
 
-		//Check anti virus & offline mode
+		//Check antivirus & offline mode
 		$systemVariables = SystemVariables::getSystemVariables();
 		if (!empty($systemVariables)) {
 			if ($systemVariables->monitorAntivirus){
@@ -682,7 +681,7 @@ class SearchAPI extends AbstractAPI {
 							$numLinesRead = 0;
 							while ($line = fgets($antivirusLogFh)) {
 								$line = trim($line);
-								if (strpos($line, 'Infected files: ') === 0) {
+								if (str_starts_with($line, 'Infected files: ')) {
 									$line = str_replace('Infected files: ', '', $line);
 									$numInfectedFiles = $line;
 									$foundInfectedFilesLine = true;
@@ -712,7 +711,7 @@ class SearchAPI extends AbstractAPI {
 			if($isOfflineMode > 0) {
 				$this->addCheck($checks, "Offline Mode", self::STATUS_WARN, "The catalog is in offline mode");
 			} else {
-				$this->addCheck($checks, "Offline Mode", self::STATUS_OK);
+				$this->addCheck($checks, "Offline Mode");
 			}
 		}
 
@@ -832,7 +831,7 @@ class SearchAPI extends AbstractAPI {
 		return $result;
 	}
 
-	private function addCheck(&$checks, $checkName, $status = self::STATUS_OK, $note = '') {
+	private function addCheck(&$checks, $checkName, $status = self::STATUS_OK, $note = '') : void {
 		$checkNameMachine = str_replace(' ', '_', strtolower($checkName));
 		$checks[$checkNameMachine] = [
 			'name' => $checkName,
@@ -843,7 +842,7 @@ class SearchAPI extends AbstractAPI {
 		}
 	}
 
-	private function addServerStat(array &$serverStats, string $statName, $value) {
+	private function addServerStat(array &$serverStats, string $statName, $value) : void {
 		$statNameMachine = str_replace(' ', '_', strtolower($statName));
 		$serverStats[$statNameMachine] = [
 			'name' => $statName,
@@ -854,7 +853,7 @@ class SearchAPI extends AbstractAPI {
 	/**
 	 * Do a basic search and return results as a JSON array
 	 */
-	function search() {
+	function search() : array {
 		global $interface;
 		global $timer;
 
@@ -862,7 +861,7 @@ class SearchAPI extends AbstractAPI {
 		require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 		$timer->logTime('Include search engine');
 
-		//setup the results array.
+		//set up the results array.
 		$jsonResults = [];
 
 		// Initialise from the current search globals
@@ -900,7 +899,7 @@ class SearchAPI extends AbstractAPI {
 			if ($error !== false) {
 				// If it's a parse error or the user specified an invalid field, we
 				// should display an appropriate message:
-				if (stristr($error, 'org.apache.lucene.queryParser.ParseException') || preg_match('/^undefined field/', $error)) {
+				if (stristr($error, 'org.apache.lucene.queryParser.ParseException') || str_starts_with($error, 'undefined field')) {
 					$jsonResults['parseError'] = true;
 
 					// Unexpected error -- let's treat this as a fatal condition.
@@ -955,7 +954,7 @@ class SearchAPI extends AbstractAPI {
 			//Check to see if a format category is already set
 			$categorySelected = false;
 			if (isset($facetSet['top'])) {
-				foreach ($facetSet['top'] as $title => $cluster) {
+				foreach ($facetSet['top'] as $cluster) {
 					if ($cluster['label'] == 'Category') {
 						foreach ($cluster['list'] as $thisFacet) {
 							if ($thisFacet['isApplied']) {
@@ -998,7 +997,7 @@ class SearchAPI extends AbstractAPI {
 		$jsonResults['time'] = round($searchObject->getTotalSpeed(), 2);
 		$jsonResults['savedSearch'] = $searchObject->isSavedSearch();
 		$jsonResults['searchId'] = $searchObject->getSearchId();
-		$currentPage = isset($_REQUEST['page']) ? $_REQUEST['page'] : 1;
+		$currentPage = $_REQUEST['page'] ?? 1;
 		$jsonResults['page'] = $currentPage;
 
 
@@ -1020,11 +1019,11 @@ class SearchAPI extends AbstractAPI {
 	 * @deprecated
 	 *
 	 */
-	function getListWidget() {
+	function getListWidget() : string {
 		return $this->getCollectionSpotlight();
 	}
 
-	function getCollectionSpotlight() {
+	function getCollectionSpotlight() : string {
 		global $interface;
 		if (isset($_REQUEST['username']) && isset($_REQUEST['password'])) {
 			$username = $_REQUEST['username'];
@@ -1136,7 +1135,7 @@ class SearchAPI extends AbstractAPI {
 		if ($searchObject->getResultTotal() >= 1) {
 			//Return the first result
 			$recordSet = $searchObject->getResultRecordSet();
-			foreach ($recordSet as $recordKey => $record) {
+			foreach ($recordSet as $record) {
 				return $record['id'];
 			}
 		}
@@ -1144,7 +1143,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getTitleInfoForISBN() {
+	function getTitleInfoForISBN() : array {
 		if (isset($_REQUEST['isbn'])) {
 			$isbn = str_replace('-', '', strip_tags($_REQUEST['isbn']));
 		} else {
@@ -1161,7 +1160,7 @@ class SearchAPI extends AbstractAPI {
 		require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 		$timer->logTime('Include search engine');
 
-		//setup the results array.
+		//set up the results
 		$jsonResults = [];
 
 		// Initialise from the current search globals
@@ -1185,20 +1184,20 @@ class SearchAPI extends AbstractAPI {
 		if ($searchObject->getResultTotal() >= 1) {
 			//Return the first result
 			$recordSet = $searchObject->getResultRecordSet();
-			foreach ($recordSet as $recordKey => $record) {
+			foreach ($recordSet as $record) {
 				$jsonResults[] = [
 					'id' => $record['id'],
-					'title' => isset($record['title_display']) ? $record['title_display'] : null,
-					'author' => isset($record['author_display']) ? $record['author_display'] : (isset($record['author2']) ? $record['author2'] : ''),
-					'format' => isset($record['format_' . $solrScope]) ? $record['format_' . $solrScope] : '',
-					'format_category' => isset($record['format_category_' . $solrScope]) ? $record['format_category_' . $solrScope] : '',
+					'title' => $record['title_display'] ?? null,
+					'author' => $record['author_display'] ?? ($record['author2'] ?? ''),
+					'format' => $record['format_' . $solrScope] ?? '',
+					'format_category' => $record['format_category_' . $solrScope] ?? '',
 				];
 			}
 		}
 		return $jsonResults;
 	}
 
-	function getActiveBrowseCategories() {
+	function getActiveBrowseCategories() : array {
 		//Figure out which library or location we are looking at
 		global $library;
 		global $locationSingleton;
@@ -1323,17 +1322,16 @@ class SearchAPI extends AbstractAPI {
 		return $formattedCategories;
 	}
 
-	function getSubCategories($textId = null, $loadFirstResults = false) {
+	function getSubCategories($textId = null, $loadFirstResults = false) : array {
 		$textId = $this->getTextId($textId);
 		$curCount = 1;
 		if (!empty($textId)) {
 			$activeBrowseCategory = $this->getBrowseCategory($textId);
 			if ($activeBrowseCategory != null) {
 				$subCategories = [];
-				/** @var SubBrowseCategories $subCategory */
 				foreach ($activeBrowseCategory->getSubCategories() as $subCategory) {
 					$firstSubCategoryResults = [];
-					// Get Needed Info about sub-category
+					// Get information about the subcategory
 					if ($textId == "system_saved_searches") {
 						$label = explode('_', $subCategory->id);
 						$id = $label[3];
@@ -1350,7 +1348,9 @@ class SearchAPI extends AbstractAPI {
 								$searchObject->getFilterList();
 								$searchObject->displayQuery();
 								$searchObject->clearFacets();
-								$searchObject->disableSpelling();
+								if (method_exists($searchObject, 'disableSpelling')) {
+									$searchObject->disableSpelling();
+								}
 								$searchObject->disableLogging();
 								$searchObject->setLimit(self::ITEMS_PER_PAGE);
 								$searchObject->setPage($pageToLoad);
@@ -1410,7 +1410,7 @@ class SearchAPI extends AbstractAPI {
 							}
 						} else {
 							global $logger;
-							$logger->log("Did not find subcategory with id {$subCategory->subCategoryId}", Logger::LOG_WARNING);
+							$logger->log("Did not find subcategory with id $subCategory->subCategoryId", Logger::LOG_WARNING);
 						}
 					}
 				}
@@ -1435,7 +1435,8 @@ class SearchAPI extends AbstractAPI {
 		}
 	}
 
-	function getBrowseCategoryInfo() {
+	/** @noinspection PhpUnused */
+	function getBrowseCategoryInfo() : array {
 		$textId = $this->getTextId();
 		if ($textId == null) {
 			return ['success' => false];
@@ -1492,22 +1493,25 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/**
-	 * @param null $textId Optional Id to set the object's textId to
-	 * @return null         Return the object's textId value
+	 * @param null|string $textId Optional ID to set the object's textId to
+	 * @return null|string         Return the object's textId value
 	 */
-	private function getTextId($textId = null) {
+	private function getTextId(?string $textId = null) : ?string {
 		if (!empty($textId)) {
 			return $textId;
-		} else { // set Id only once
-			return isset($_REQUEST['textId']) ? $_REQUEST['textId'] : null;
+		} else { // set the id only once
+			return $_REQUEST['textId'] ?? null;
 		}
 	}
 
 	/**
-	 * @param string $textId
-	 * @return BrowseCategory
+	 * @param ?string $textId
+	 * @return ?BrowseCategory
 	 */
-	private function getBrowseCategory($textId) {
+	private function getBrowseCategory(?string $textId) : ?BrowseCategory {
+		if (empty($textId)) {
+			return null;
+		}
 		require_once ROOT_DIR . '/sys/Browse/BrowseCategory.php';
 		$browseCategory = new BrowseCategory();
 		$browseCategory->textId = $textId;
@@ -1520,13 +1524,13 @@ class SearchAPI extends AbstractAPI {
 
 	const ITEMS_PER_PAGE = 24;
 
-	public function getBrowseCategoryResults($browseCategory, &$response) {
+	public function getBrowseCategoryResults($browseCategory, &$response) : void {
 		if (isset($_REQUEST['pageToLoad']) && is_numeric($_REQUEST['pageToLoad'])) {
 			$pageToLoad = (int)$_REQUEST['pageToLoad'];
 		} else {
 			$pageToLoad = 1;
 		}
-		$pageSize = isset($_REQUEST['pageSize']) ? $_REQUEST['pageSize'] : self::ITEMS_PER_PAGE;
+		$pageSize = $_REQUEST['pageSize'] ?? self::ITEMS_PER_PAGE;
 		if ($browseCategory->textId == 'system_recommended_for_you') {
 			$this->getSuggestionsBrowseCategoryResults($pageToLoad, $pageSize, $response);
 		} elseif ($browseCategory->textId == 'system_saved_searches') {
@@ -1557,7 +1561,7 @@ class SearchAPI extends AbstractAPI {
 					$records = [];
 				}
 				$response['searchUrl'] = '/CourseReserves/' . $browseCategory->sourceCourseReserveId;
-				$response['label'] = $sourceList->title;
+				$response['label'] = $sourceList->getTitle();
 				// Search Browse Category //
 			} else {
 				$searchObject = SearchObjectFactory::initSearchObject($browseCategory->source);
@@ -1574,7 +1578,9 @@ class SearchAPI extends AbstractAPI {
 
 				//Get titles for the list
 				$searchObject->clearFacets();
-				$searchObject->disableSpelling();
+				if (method_exists($searchObject, 'disableSpelling')) {
+					$searchObject->disableSpelling();
+				}
 				$searchObject->disableLogging();
 				$searchObject->setLimit($pageSize);
 				$searchObject->setPage($pageToLoad);
@@ -1612,7 +1618,7 @@ class SearchAPI extends AbstractAPI {
 		return [];
 	}
 
-	private function getSuggestionsBrowseCategoryResults(int $pageToLoad, int $pageSize, &$response = []) {
+	private function getSuggestionsBrowseCategoryResults(int $pageToLoad, int $pageSize, &$response = []) : array {
 		if (!UserAccount::isLoggedIn()) {
 			$response = [
 				'success' => false,
@@ -1628,7 +1634,7 @@ class SearchAPI extends AbstractAPI {
 			require_once ROOT_DIR . '/sys/Suggestions.php';
 			$suggestions = Suggestions::getSuggestions(-1, $pageToLoad, $pageSize);
 			$records = [];
-			foreach ($suggestions as $suggestedItemId => $suggestionData) {
+			foreach ($suggestions as $suggestionData) {
 				$record = $suggestionData['titleInfo'];
 				unset($record['auth_author']);
 				unset($record['auth_authorStr']);
@@ -1649,7 +1655,7 @@ class SearchAPI extends AbstractAPI {
 		return $response;
 	}
 
-	private function getAppSuggestionsBrowseCategoryResults(int $pageToLoad, int $pageSize, &$response = []) {
+	private function getAppSuggestionsBrowseCategoryResults(int $pageToLoad, int $pageSize) : array {
 		if (!isset($_REQUEST['username']) || !isset($_REQUEST['password'])) {
 			return [
 				'success' => false,
@@ -1668,6 +1674,7 @@ class SearchAPI extends AbstractAPI {
 			];
 		}
 
+		$response = [];
 		$response['label'] = translate([
 			'text' => 'Recommended for you',
 			'isPublicFacing' => true,
@@ -1677,7 +1684,7 @@ class SearchAPI extends AbstractAPI {
 		require_once ROOT_DIR . '/sys/Suggestions.php';
 		$suggestions = Suggestions::getSuggestions(-1, $pageToLoad, $pageSize, $user);
 		$records = [];
-		foreach ($suggestions as $suggestedItemId => $suggestionData) {
+		foreach ($suggestions as $suggestionData) {
 			$record = $suggestionData['titleInfo'];
 			$formats = [];
 			foreach($record['format'] as $format) {
@@ -1714,7 +1721,7 @@ class SearchAPI extends AbstractAPI {
 		return $response;
 	}
 
-	private function getSavedSearchBrowseCategoryResults(int $pageSize, $id = null, $appUser = null) {
+	private function getSavedSearchBrowseCategoryResults(int $pageSize, $id = null, $appUser = null) : array {
 
 		if (!isset($_REQUEST['username']) || !isset($_REQUEST['password'])) {
 			return [
@@ -1752,7 +1759,7 @@ class SearchAPI extends AbstractAPI {
 		return $response;
 	}
 
-	private function getUserListBrowseCategoryResults(int $pageToLoad, int $pageSize, $id = null, $forLida = false) {
+	private function getUserListBrowseCategoryResults(int $pageToLoad, int $pageSize, $id = null, $forLida = false) : array {
 		if (!isset($_REQUEST['username']) || !isset($_REQUEST['password'])) {
 			return [
 				'success' => false,
@@ -1780,8 +1787,14 @@ class SearchAPI extends AbstractAPI {
 		require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 		$sourceList = new UserList();
 		$sourceList->id = $id;
+		$response = [];
 		if ($sourceList->find(true)) {
 			$records = $sourceList->getBrowseRecordsRaw(($pageToLoad - 1) * $pageSize, $pageSize, $forLida);
+		}else{
+			return [
+				'success' => false,
+				'message' => 'Sorry, we could not find that list.',
+			];
 		}
 		$response['items'] = $records;
 
@@ -1793,7 +1806,7 @@ class SearchAPI extends AbstractAPI {
 # *
 # ****************************************************************************************************************************
 	/** @noinspection PhpUnused */
-	function getBrowseCategoryListForUser() {
+	function getBrowseCategoryListForUser() : array {
 		//Figure out which library or location we are looking at
 		global $library;
 		global $locationSingleton;
@@ -1823,7 +1836,7 @@ class SearchAPI extends AbstractAPI {
 			$categoryInformation = new BrowseCategory();
 			$categoryInformation->id = $curCategory->browseCategoryId;
 			if ($categoryInformation->find(true)) {
-				if ($categoryInformation->isValidForDisplayInApp($appUser, false) && ($categoryInformation->source == 'GroupedWork' || $categoryInformation->source == 'List')) {
+				if ($categoryInformation->isValidForDisplayInApp($appUser) && ($categoryInformation->source == 'GroupedWork' || $categoryInformation->source == 'List')) {
 					if ($categoryInformation->textId == ('system_saved_searches') && $appUser && !($appUser instanceof AspenError)) {
 						$savedSearches = $listApi->getSavedSearches($appUser->id);
 						$allSearches = $savedSearches['searches'];
@@ -1951,7 +1964,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getAppActiveBrowseCategories() {
+	function getAppActiveBrowseCategories() : array {
 		//Figure out which library or location we are looking at
 		global $library;
 		global $locationSingleton;
@@ -2017,7 +2030,7 @@ class SearchAPI extends AbstractAPI {
 			$categoryInformation->id = $curCategory->browseCategoryId;
 
 			if ($categoryInformation->find(true)) {
-				if ($categoryInformation->isValidForDisplayInApp($appUser, false) && ($categoryInformation->source == "GroupedWork" || $categoryInformation->source == "List" || $categoryInformation->source == 'Events')) {
+				if ($categoryInformation->isValidForDisplayInApp($appUser) && ($categoryInformation->source == "GroupedWork" || $categoryInformation->source == "List" || $categoryInformation->source == 'Events')) {
 					if ($categoryInformation->textId == ("system_saved_searches") && $appUser && !($appUser instanceof AspenError)) {
 						$savedSearches = $listApi->getSavedSearches($appUser->id);
 						$allSearches = $savedSearches['searches'];
@@ -2121,7 +2134,7 @@ class SearchAPI extends AbstractAPI {
 										if ($appVersion && $appVersion < 24.03) {
 											$categoryResponse['events'] = [];
 										} else {
-											if (preg_match('`^communico`', $listEntry->sourceId)){
+											if (str_starts_with($listEntry->sourceId, 'communico')){
 												require_once ROOT_DIR . '/RecordDrivers/CommunicoEventRecordDriver.php';
 												$recordDriver = new CommunicoEventRecordDriver($listEntry->sourceId);
 												if ($recordDriver->isValid()) {
@@ -2131,7 +2144,7 @@ class SearchAPI extends AbstractAPI {
 													];
 													$count++;
 												}
-											} elseif (preg_match('`^libcal`', $listEntry->sourceId)){
+											} elseif (str_starts_with($listEntry->sourceId, 'libcal')){
 												require_once ROOT_DIR . '/RecordDrivers/SpringshareLibCalEventRecordDriver.php';
 												$recordDriver = new SpringshareLibCalEventRecordDriver($listEntry->sourceId);
 												if ($recordDriver->isValid()) {
@@ -2141,7 +2154,7 @@ class SearchAPI extends AbstractAPI {
 													];
 													$count++;
 												}
-											} elseif (preg_match('`^assabet`', $listEntry->sourceId)){
+											} elseif (str_starts_with($listEntry->sourceId, 'assabet')){
 												require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 												$recordDriver = new AssabetEventRecordDriver($listEntry->sourceId);
 												if ($recordDriver->isValid()) {
@@ -2395,7 +2408,7 @@ class SearchAPI extends AbstractAPI {
 
 		$items = [];
 
-		if (strpos($thisId, "system_saved_searches") !== false) {
+		if (str_contains($thisId, "system_saved_searches")) {
 			if ($id) {
 				$result = $this->getSavedSearchBrowseCategoryResults($pageSize, $id, $appUser);
 			} else {
@@ -2411,7 +2424,7 @@ class SearchAPI extends AbstractAPI {
 				//Error loading items
 				$response['records'] = [];
 			}
-		} elseif (strpos($thisId, "system_user_lists") !== false) {
+		} elseif (str_contains($thisId, "system_user_lists")) {
 			if ($id) {
 				$result = $this->getUserListBrowseCategoryResults($pageToLoad, $pageSize, $id, true);
 			} else {
@@ -2463,17 +2476,17 @@ class SearchAPI extends AbstractAPI {
 					} else {
 						global $configArray;
 						$lmBypass = false;
-						$commmunicoBypass = false;
-						$springshareBypass = false;
+						$communicoBypass = false;
+						$springShareBypass = false;
 						$assabetBypass = false;
 						$lmAddToList = false;
 						$communicoAddToList = false;
-						$springshareAddToList = false;
+						$springShareAddToList = false;
 						$assabetAddToList = false;
 						$libraryEventSettings = [];
 
 						if($browseCategory->source === 'Events') {
-							$searchLibrary = Library::getSearchLibrary(null);
+							$searchLibrary = Library::getSearchLibrary();
 							require_once ROOT_DIR . '/sys/Events/LibraryEventsSetting.php';
 							$libraryEventsSetting = new LibraryEventsSetting();
 							$libraryEventsSetting->libraryId = $searchLibrary->libraryId;
@@ -2495,16 +2508,16 @@ class SearchAPI extends AbstractAPI {
 									$eventSetting = new CommunicoSetting();
 									$eventSetting->id = $id;
 									if($eventSetting->find(true)) {
-										$commmunicoBypass = $eventSetting->bypassAspenEventPages;
-										$commmunicoAddToList = $eventSetting->eventsInLists;
+										$communicoBypass = $eventSetting->bypassAspenEventPages;
+										$communicoAddToList = $eventSetting->eventsInLists;
 									}
 								} else if ($source == 'springshare') {
 									require_once ROOT_DIR . '/sys/Events/SpringshareLibCalSetting.php';
 									$eventSetting = new SpringshareLibCalSetting();
 									$eventSetting->id = $id;
 									if($eventSetting->find(true)) {
-										$springshareBypass = $eventSetting->bypassAspenEventPages;
-										$springshareAddToList = $eventSetting->eventsInLists;
+										$springShareBypass = $eventSetting->bypassAspenEventPages;
+										$springShareAddToList = $eventSetting->eventsInLists;
 									}
 								} else if ($source == 'assabet') {
 									require_once ROOT_DIR . '/sys/Events/AssabetSetting.php';
@@ -2535,7 +2548,9 @@ class SearchAPI extends AbstractAPI {
 						//Get titles for the list
 						$searchObject->setFieldsToReturn('id,title_display,author_display,format,language');
 						$searchObject->clearFacets();
-						$searchObject->disableSpelling();
+						if (method_exists($searchObject, 'disableSpelling')) {
+							$searchObject->disableSpelling();
+						}
 						$searchObject->disableLogging();
 						$searchObject->setLimit($pageSize);
 						$searchObject->setPage($pageToLoad);
@@ -2568,12 +2583,12 @@ class SearchAPI extends AbstractAPI {
 									$addToList = $lmAddToList;
 								} else if (str_starts_with($record['id'], 'communico')) {
 									$eventSource = 'communico';
-									$bypass = $commmunicoBypass;
+									$bypass = $communicoBypass;
 									$addToList = $communicoAddToList;
 								} else if (str_starts_with($record['id'], 'libcal')) {
 									$eventSource = 'springshare_libcal';
-									$bypass = $springshareBypass;
-									$addToList = $springshareAddToList;
+									$bypass = $springShareBypass;
+									$addToList = $springShareAddToList;
 								} else if (str_starts_with($record['id'], 'assabet')) {
 									$eventSource = 'assabet';
 									$bypass = $assabetBypass;
@@ -2670,7 +2685,8 @@ class SearchAPI extends AbstractAPI {
 		return $response;
 	}
 
-	function getListResults() {
+	/** @noinspection PhpUnused */
+	function getListResults() : array {
 		if (!empty($_REQUEST['page'])) {
 			$pageToLoad = $_REQUEST['page'];
 		} else {
@@ -2701,22 +2717,26 @@ class SearchAPI extends AbstractAPI {
 		require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 		$sourceList = new UserList();
 		$sourceList->id = $id;
+		$response = [];
 		if ($sourceList->find(true)) {
 			$response['title'] = $sourceList->title;
 			$response['id'] = $sourceList->id;
 			$records = $sourceList->getBrowseRecordsRaw(($pageToLoad - 1) * $pageSize, $pageSize, $isLida, $appVersion);
+			$response['items'] = $records;
+		}else{
+			return [
+				'success' => false,
+				'message' => 'List not found',
+			];
 		}
-		$response['items'] = $records;
+
 
 		return $response;
 	}
 
-	function getSavedSearchResults() {
-		if (isset($_REQUEST['limit'])) {
-			$pageSize = $_REQUEST['limit'];
-		} else {
-			$pageSize = self::ITEMS_PER_PAGE;
-		}
+	/** @noinspection PhpUnused */
+	function getSavedSearchResults() : array {
+		$pageSize = $_REQUEST['limit'] ?? self::ITEMS_PER_PAGE;
 
 		if (isset($_REQUEST['id'])) {
 			$id = $_REQUEST['id'];
@@ -2770,8 +2790,6 @@ class SearchAPI extends AbstractAPI {
 				$id = $item['id'];
 				if ($ccode != '') {
 					$format = $format . ' - ' . $ccode;
-				} else {
-					$format = $format;
 				}
 
 				$summary = utf8_encode(trim(strip_tags($item['display_description'])));
@@ -2839,7 +2857,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function searchLite() {
+	function searchLite() : array {
 		global $timer;
 		global $configArray;
 
@@ -2886,7 +2904,7 @@ class SearchAPI extends AbstractAPI {
 				];
 			}
 			$id = $_REQUEST['id'];
-			if(strpos($_REQUEST['id'], '_')  !== false) {
+			if(str_contains($_REQUEST['id'], '_')) {
 				$label = explode('_', $_REQUEST['id']);
 				$id = $label[3];
 			}
@@ -2896,7 +2914,7 @@ class SearchAPI extends AbstractAPI {
 			if($sourceList->find(true)) {
 				$results['listId'] = $sourceList->id;
 				$recordsPerPage = isset($_REQUEST['pageSize']) && (is_numeric($_REQUEST['pageSize'])) ? $_REQUEST['pageSize'] : 20;
-				$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 1;
+				$page = $_REQUEST['page'] ?? 1;
 				$startRecord = ($page - 1) * $recordsPerPage;
 				if ($startRecord < 0) {
 					$startRecord = 0;
@@ -2908,8 +2926,6 @@ class SearchAPI extends AbstractAPI {
 				}
 				$pageInfo = [
 					'resultTotal' => $totalRecords,
-					'startRecord' => $startRecord,
-					'endRecord' => $endRecord,
 					'perPage' => $recordsPerPage,
 				];
 				$records = $sourceList->getBrowseRecordsRaw($startRecord, $recordsPerPage, $isLida, $appVersion);
@@ -2934,7 +2950,7 @@ class SearchAPI extends AbstractAPI {
 									$items[$recordKey]['itemList'][$format]['key'] = $i;
 									$items[$recordKey]['itemList'][$format]['name'] = translate(['text' => $format, 'isPublicFacing' => true]);
 									$i++;
-								};
+								}
 							}
 						}
 					}
@@ -2991,7 +3007,7 @@ class SearchAPI extends AbstractAPI {
 			}
 			$records = $this->getAppBrowseCategoryResults($_REQUEST['id'], null, $_REQUEST['pageSize'] ?? 25, true);
 			$recordsPerPage = isset($_REQUEST['pageSize']) && (is_numeric($_REQUEST['pageSize'])) ? $_REQUEST['pageSize'] : 20;
-			$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 1;
+			$page = $_REQUEST['page'] ?? 1;
 			$startRecord = ($page - 1) * $recordsPerPage;
 			if ($startRecord < 0) {
 				$startRecord = 0;
@@ -3003,8 +3019,6 @@ class SearchAPI extends AbstractAPI {
 			}
 			$pageInfo = [
 				'resultTotal' => $totalRecords,
-				'startRecord' => $startRecord,
-				'endRecord' => $endRecord,
 				'perPage' => $recordsPerPage,
 			];
 			$items = [];
@@ -3028,7 +3042,7 @@ class SearchAPI extends AbstractAPI {
 								$items[$recordKey]['itemList'][$format]['key'] = $i;
 								$items[$recordKey]['itemList'][$format]['name'] = translate(['text' => $format, 'isPublicFacing' => true]);
 								$i++;
-							};
+							}
 						}
 					}
 				}
@@ -3114,8 +3128,8 @@ class SearchAPI extends AbstractAPI {
 				$searchObject->removeFilterByPrefix('availability_toggle'); // clear anything previously set
 				$searchObject->addFilter('availability_toggle:' . $_REQUEST['availability_toggle']);
 			} else {
-				$searchLibrary = Library::getSearchLibrary(null);
-				$searchLocation = Location::getSearchLocation(null);
+				$searchLibrary = Library::getSearchLibrary();
+				$searchLocation = Location::getSearchLocation();
 				if ($searchLocation) {
 					$availabilityToggleValue = $searchLocation->getGroupedWorkDisplaySettings()->defaultAvailabilityToggle;
 				} else {
@@ -3127,16 +3141,16 @@ class SearchAPI extends AbstractAPI {
 		}
 
 		$lmBypass = false;
-		$commmunicoBypass = false;
-		$springshareBypass = false;
+		$communicoBypass = false;
+		$springShareBypass = false;
 		$assabetBypass = false;
 		$lmAddToList = false;
 		$communicoAddToList = false;
-		$springshareAddToList = false;
+		$springShareAddToList = false;
 		$assabetAddToList = false;
 		$libraryEventSettings = [];
 		if($searchEngine == 'Events') {
-			$searchLibrary = Library::getSearchLibrary(null);
+			$searchLibrary = Library::getSearchLibrary();
 			require_once ROOT_DIR . '/sys/Events/LibraryEventsSetting.php';
 			$libraryEventsSetting = new LibraryEventsSetting();
 			$libraryEventsSetting->libraryId = $searchLibrary->libraryId;
@@ -3158,7 +3172,7 @@ class SearchAPI extends AbstractAPI {
 					$eventSetting = new CommunicoSetting();
 					$eventSetting->id = $id;
 					if($eventSetting->find(true)) {
-						$commmunicoBypass = $eventSetting->bypassAspenEventPages;
+						$communicoBypass = $eventSetting->bypassAspenEventPages;
 						$commmunicoAddToList = $eventSetting->eventsInLists;
 					}
 				} else if ($source == 'springshare') {
@@ -3166,8 +3180,8 @@ class SearchAPI extends AbstractAPI {
 					$eventSetting = new SpringshareLibCalSetting();
 					$eventSetting->id = $id;
 					if($eventSetting->find(true)) {
-						$springshareBypass = $eventSetting->bypassAspenEventPages;
-						$springshareAddToList = $eventSetting->eventsInLists;
+						$springShareBypass = $eventSetting->bypassAspenEventPages;
+						$springShareAddToList = $eventSetting->eventsInLists;
 					}
 				} else if ($source == 'assabet') {
 					require_once ROOT_DIR . '/sys/Events/AssabetSetting.php';
@@ -3260,12 +3274,12 @@ class SearchAPI extends AbstractAPI {
 						$addToList = $lmAddToList;
 					} else if (str_starts_with($record['id'], 'communico')) {
 						$eventSource = 'communico';
-						$bypass = $commmunicoBypass;
+						$bypass = $communicoBypass;
 						$addToList = $communicoAddToList;
 					} else if (str_starts_with($record['id'], 'libcal')) {
 						$eventSource = 'springshare_libcal';
-						$bypass = $springshareBypass;
-						$addToList = $springshareAddToList;
+						$bypass = $springShareBypass;
+						$addToList = $springShareAddToList;
 					} else if (str_starts_with($record['id'], 'assabet')) {
 						$eventSource = 'assabet';
 						$bypass = $assabetBypass;
@@ -3387,7 +3401,7 @@ class SearchAPI extends AbstractAPI {
 										'isPublicFacing' => true
 									]);
 									$i++;
-								};
+								}
 							}
 						}
 					}
@@ -3470,37 +3484,28 @@ class SearchAPI extends AbstractAPI {
 				if(isset($facet['multiSelect'])) {
 					$options[$key]['multiSelect'] = (bool)$facet['multiSelect'];
 				}
-				if (isset($facet['sortedList'])) {
-					foreach ($facet['sortedList'] as $item) {
-						$options[$key]['facets'][$i]['value'] = $item['value'];
-						$options[$key]['facets'][$i]['display'] = $item['display'];
-						$options[$key]['facets'][$i]['field'] = $facet['field_name'];
-						$options[$key]['facets'][$i]['count'] = $item['count'];
-						$options[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
-						if (isset($item['multiSelect'])) {
-							$options[$key]['facets'][$i]['multiSelect'] = (bool)$item['multiSelect'];
-						} else {
+				if (isset($facet['sortedList']) && $facet['showAlphabetically']) {
+					$listToReturn = 'sortedList';
+				}elseif (isset($facet['fullUnsortedList'])) {
+					$listToReturn = 'fullUnsortedList';
+				}else{
+					$listToReturn = 'list';
+				}
+				foreach ($facet[$listToReturn] as $item) {
+					$options[$key]['facets'][$i]['value'] = $item['value'];
+					$options[$key]['facets'][$i]['display'] = $item['display'];
+					$options[$key]['facets'][$i]['field'] = $facet['field_name'];
+					$options[$key]['facets'][$i]['count'] = $item['count'];
+					$options[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
+					if (isset($item['multiSelect'])) {
+						$options[$key]['facets'][$i]['multiSelect'] = (bool)$item['multiSelect'];
+					} else {
+						$options[$key]['facets'][$i]['multiSelect'] = false;
+						if(isset($facet['multiSelect'])) {
 							$options[$key]['facets'][$i]['multiSelect'] = (bool)$facet['multiSelect'];
 						}
-						$i++;
 					}
-				} else {
-					foreach ($facet['list'] as $item) {
-						$options[$key]['facets'][$i]['value'] = $item['value'];
-						$options[$key]['facets'][$i]['display'] = $item['display'];
-						$options[$key]['facets'][$i]['field'] = $facet['field_name'];
-						$options[$key]['facets'][$i]['count'] = $item['count'];
-						$options[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
-						if (isset($item['multiSelect'])) {
-							$options[$key]['facets'][$i]['multiSelect'] = (bool)$item['multiSelect'];
-						} else {
-							$options[$key]['facets'][$i]['multiSelect'] = false;
-							if(isset($facet['multiSelect'])) {
-								$options[$key]['facets'][$i]['multiSelect'] = (bool)$facet['multiSelect'];
-							}
-						}
-						$i++;
-					}
+					$i++;
 				}
 
 				if (array_key_exists($facet['label'], $appliedFacets)) {
@@ -3556,8 +3561,14 @@ class SearchAPI extends AbstractAPI {
 		return $results;
 	}
 
-	/** @noinspection PhpUnused */
-	public function restoreSearch($id, $processSearch = true) {
+	/**
+	 * This is used both in restoring searches for API usage and in Search_AJAX
+	 *
+	 * @param string|int $id - The ID of the search to be restored
+	 * @param bool $processSearch - Whether or not the search should be processed before returning it
+	 * @return mixed - false if no search is found, a Search Object if the search can be restored, or an AspenError if the user does not have access to the search
+	 */
+	public function restoreSearch(string|int $id, bool $processSearch = true): mixed {
 		require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 		$search = new SearchEntry();
 		$search->id = $id;
@@ -3576,7 +3587,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getSortList() {
+	function getSortList() : array {
 		$results = [
 			'success' => false,
 			'message' => '',
@@ -3629,7 +3640,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getFormatCategories() {
+	function getFormatCategories() : array {
 		$results = [
 			'success' => false,
 			'message' => '',
@@ -3650,13 +3661,13 @@ class SearchAPI extends AbstractAPI {
 			$items = [];
 			$i = 0;
 			$items['key'] = 0;
-			$items['label'] = translate(['text' => $formatCategories['label'], 'isPublicFacing' => true]);;
+			$items['label'] = translate(['text' => $formatCategories['label'], 'isPublicFacing' => true]);
 			$items['field'] = $formatCategories['field_name'];
 			$items['hasApplied'] = $formatCategories['hasApplied'];
 			$items['multiSelect'] = (bool)$formatCategories['multiSelect'];
 			foreach ($formatCategories['list'] as $category) {
 				$items['facets'][$i]['value'] = $category['value'];
-				$items['facets'][$i]['display'] = translate(['text' => $category['display'], 'isPublicFacing' => true]);;
+				$items['facets'][$i]['display'] = translate(['text' => $category['display'], 'isPublicFacing' => true]);
 				$items['facets'][$i]['field'] = $formatCategories['field_name'];
 				$items['facets'][$i]['count'] = $category['count'];
 				$items['facets'][$i]['isApplied'] = $category['isApplied'];
@@ -3674,7 +3685,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getAvailableFacets() {
+	function getAvailableFacets() : array {
 		$results = [
 			'success' => false,
 			'message' => 'Unable to restore search from id',
@@ -3763,34 +3774,25 @@ class SearchAPI extends AbstractAPI {
 				$items[$key]['field'] = $facet['field_name'];
 				$items[$key]['hasApplied'] = $facet['hasApplied'];
 				$items[$key]['multiSelect'] = (bool)$facet['multiSelect'];
-				if (isset($facet['sortedList'])) {
-					foreach ($facet['sortedList'] as $item) {
-						$items[$key]['facets'][$i]['value'] = $item['value'];
-						$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);;
-						$items[$key]['facets'][$i]['field'] = $facet['field_name'];
-						$items[$key]['facets'][$i]['count'] = $item['count'];
-						$items[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
-						if (isset($item['multiSelect'])) {
-							$items[$key]['facets'][$i]['multiSelect'] = (bool)$item['multiSelect'];
-						} else {
-							$items[$key]['facets'][$i]['multiSelect'] = (bool)$facet['multiSelect'];
-						}
-						$i++;
+				if (isset($facet['sortedList']) && $facet['showAlphabetically']) {
+					$listToReturn = 'sortedList';
+				}elseif (isset($facet['fullUnsortedList'])) {
+					$listToReturn = 'fullUnsortedList';
+				}else{
+					$listToReturn = 'list';
+				}
+				foreach ($facet[$listToReturn] as $item) {
+					$items[$key]['facets'][$i]['value'] = $item['value'];
+					$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);
+					$items[$key]['facets'][$i]['field'] = $facet['field_name'];
+					$items[$key]['facets'][$i]['count'] = $item['count'];
+					$items[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
+					if (isset($item['multiSelect'])) {
+						$items[$key]['facets'][$i]['multiSelect'] = (bool)$item['multiSelect'];
+					} else {
+						$items[$key]['facets'][$i]['multiSelect'] = (bool)$facet['multiSelect'];
 					}
-				} else {
-					foreach ($facet['list'] as $item) {
-						$items[$key]['facets'][$i]['value'] = $item['value'];
-						$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);
-						$items[$key]['facets'][$i]['field'] = $facet['field_name'];
-						$items[$key]['facets'][$i]['count'] = $item['count'];
-						$items[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
-						if (isset($item['multiSelect'])) {
-							$items[$key]['facets'][$i]['multiSelect'] = (bool)$item['multiSelect'];
-						} else {
-							$items[$key]['facets'][$i]['multiSelect'] = (bool)$facet['multiSelect'];
-						}
-						$i++;
-					}
+					$i++;
 				}
 
 				if (array_key_exists($facet['label'], $appliedFacets)) {
@@ -3826,7 +3828,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function searchAvailableFacets() {
+	function searchAvailableFacets() : array {
 		$results = [
 			'success' => false,
 			'message' => 'Unable to restore search from id',
@@ -3850,28 +3852,11 @@ class SearchAPI extends AbstractAPI {
 		if ($searchObj) {
 			$items = [];
 			$index = 0;
-			if(array_key_exists($facet, $searchObj->getFacetConfig())) {
+			if (array_key_exists($facet, $searchObj->getFacetConfig())) {
 				/** @var SearchObject_SolrSearcher $newSearch */
 				$newSearch = clone $searchObj;
 				$newSearch->addFacetSearch($facet, $term);
-				$newSearchResult = $newSearch->processSearch(false, true);
-				$facetConfig = $newSearch->getFacetConfig()[$facet];
-				if (is_object($facetConfig)) {
-					$facetTitle = $facetConfig->displayName;
-					$facetTitlePlural = $facetConfig->displayNamePlural;
-					$isMultiSelect = $facetConfig->multiSelect;
-				} else {
-					$facetTitle = $facet;
-					$facetTitlePlural = $facet;
-					$isMultiSelect = false;
-				}
-
-				$appliedFacets = $searchObj->getFilterList();
-				$appliedFacetValues = [];
-				if (array_key_exists($facetTitle, $appliedFacets)) {
-					$appliedFacetValues = $appliedFacets[$facetTitle];
-					asort($appliedFacetValues);
-				}
+				$newSearch->processSearch(false, true);
 
 				$allFacets = $newSearch->getFacetList();
 				if (isset($allFacets[$facet])) {
@@ -3910,7 +3895,7 @@ class SearchAPI extends AbstractAPI {
 						if (isset($facet['sortedList'])) {
 							foreach ($facet['sortedList'] as $item) {
 								$items[$key]['facets'][$i]['value'] = $item['value'];
-								$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);;
+								$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);
 								$items[$key]['facets'][$i]['field'] = $facet['field_name'];
 								$items[$key]['facets'][$i]['count'] = $item['count'];
 								$items[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
@@ -3924,7 +3909,7 @@ class SearchAPI extends AbstractAPI {
 						} else {
 							foreach ($facet['list'] as $item) {
 								$items[$key]['facets'][$i]['value'] = $item['value'];
-								$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);;
+								$items[$key]['facets'][$i]['display'] = translate(['text' => $item['display'], 'isPublicFacing' => true]);
 								$items[$key]['facets'][$i]['field'] = $facet['field_name'];
 								$items[$key]['facets'][$i]['count'] = $item['count'];
 								$items[$key]['facets'][$i]['isApplied'] = $item['isApplied'];
@@ -3951,7 +3936,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getAvailableFacetsKeys() {
+	function getAvailableFacetsKeys() : array {
 		$results = [
 			'success' => false,
 			'message' => 'Unable to restore search from id',
@@ -3987,7 +3972,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getAppliedFilters() {
+	function getAppliedFilters() : array {
 		$results = [
 			'success' => false,
 			'message' => 'Unable to restore search from id',
@@ -4013,7 +3998,7 @@ class SearchAPI extends AbstractAPI {
 				$list = $searchObj->getSortList();
 				$sort = [];
 				foreach ($list as $index => $item) {
-					if ($item['selected'] == true) {
+					if ($item['selected']) {
 						$sort = $item;
 						$sort['value'] = $index;
 						break;
@@ -4035,26 +4020,20 @@ class SearchAPI extends AbstractAPI {
 				$i = 0;
 				foreach ($filter as $item) {
 					if($item['field'] == 'availability_toggle') {
-						$searchLibrary = Library::getSearchLibrary(null);
-						$searchLocation = Location::getSearchLocation(null);
+						$searchLibrary = Library::getSearchLibrary();
+						$searchLocation = Location::getSearchLocation();
 						if ($searchLocation) {
 							$superScopeLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelSuperScope;
 							$localLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelLocal;
 							$localLabel = str_ireplace('{display name}', $searchLocation->displayName, $localLabel);
-							$availableLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailable;
-							$availableLabel = str_ireplace('{display name}', $searchLocation->displayName, $availableLabel);
 							$availableOnlineLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailableOnline;
 							$availableOnlineLabel = str_ireplace('{display name}', $searchLocation->displayName, $availableOnlineLabel);
-							$availabilityToggleValue = $searchLocation->getGroupedWorkDisplaySettings()->defaultAvailabilityToggle;
 						} else {
 							$superScopeLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelSuperScope;
 							$localLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelLocal;
 							$localLabel = str_ireplace('{display name}', $searchLibrary->displayName, $localLabel);
-							$availableLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailable;
-							$availableLabel = str_ireplace('{display name}', $searchLibrary->displayName, $availableLabel);
 							$availableOnlineLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailableOnline;
 							$availableOnlineLabel = str_ireplace('{display name}', $searchLibrary->displayName, $availableOnlineLabel);
-							$availabilityToggleValue = $searchLibrary->getGroupedWorkDisplaySettings()->defaultAvailabilityToggle;
 						}
 
 						if($item['value'] == 'global') {
@@ -4089,18 +4068,12 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getSearchSources() {
+	function getSearchSources() : array {
 		global $library;
 		global $location;
 
 		require_once(ROOT_DIR . '/Drivers/marmot_inc/SearchSources.php');
 		$searchSources = new SearchSources();
-		[
-			$enableCombinedResults,
-			$showCombinedResultsFirst,
-			$combinedResultsName,
-		] = $searchSources::getCombinedSearchSetupParameters($location, $library);
-
 		$validSearchSources = $searchSources->getSearchSources();
 
 		return [
@@ -4110,25 +4083,15 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getSearchIndexes() {
-		global $library;
-		global $location;
-
+	function getSearchIndexes() : array {
 		require_once(ROOT_DIR . '/Drivers/marmot_inc/SearchSources.php');
 		$searchSources = new SearchSources();
-		[
-			$enableCombinedResults,
-			$showCombinedResultsFirst,
-			$combinedResultsName,
-		] = $searchSources::getCombinedSearchSetupParameters($location, $library);
 
-		$searchSource = !empty($_REQUEST['searchSource']) ? $_REQUEST['searchSource'] : 'local';
 		$validSearchSources = $searchSources->getSearchSources();
 		$activeSearchSource = 'catalog';
 		if (isset($_REQUEST['searchSource'])) {
 			$activeSearchSource = $_REQUEST['searchSource'];
 		}
-		$activeSearchObject = SearchSources::getSearcherForSource($activeSearchSource);
 		if (!array_key_exists($activeSearchSource, $validSearchSources)) {
 			$activeSearchSource = array_key_first($validSearchSources);
 		}
@@ -4144,7 +4107,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getDefaultFacets() {
+	function getDefaultFacets() : array {
 		$limit = $_REQUEST['limit'] ?? 5;
 		$searchObj = SearchObjectFactory::initSearchObject();
 		$searchObj->init();
@@ -4163,28 +4126,6 @@ class SearchAPI extends AbstractAPI {
 			$i++;
 		}
 
-		$searchLibrary = Library::getSearchLibrary(null);
-		$searchLocation = Location::getSearchLocation(null);
-		if ($searchLocation) {
-			$superScopeLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelSuperScope;
-			$localLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelLocal;
-			$localLabel = str_ireplace('{display name}', $searchLocation->displayName, $localLabel);
-			$availableLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailable;
-			$availableLabel = str_ireplace('{display name}', $searchLocation->displayName, $availableLabel);
-			$availableOnlineLabel = $searchLocation->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailableOnline;
-			$availableOnlineLabel = str_ireplace('{display name}', $searchLocation->displayName, $availableOnlineLabel);
-			$availabilityToggleValue = $searchLocation->getGroupedWorkDisplaySettings()->defaultAvailabilityToggle;
-		} else {
-			$superScopeLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelSuperScope;
-			$localLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelLocal;
-			$localLabel = str_ireplace('{display name}', $searchLibrary->displayName, $localLabel);
-			$availableLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailable;
-			$availableLabel = str_ireplace('{display name}', $searchLibrary->displayName, $availableLabel);
-			$availableOnlineLabel = $searchLibrary->getGroupedWorkDisplaySettings()->availabilityToggleLabelAvailableOnline;
-			$availableOnlineLabel = str_ireplace('{display name}', $searchLibrary->displayName, $availableOnlineLabel);
-			$availabilityToggleValue = $searchLibrary->getGroupedWorkDisplaySettings()->defaultAvailabilityToggle;
-		}
-
 		return [
 			'success' => true,
 			'limit' => $limit,
@@ -4194,7 +4135,7 @@ class SearchAPI extends AbstractAPI {
 	}
 
 	/** @noinspection PhpUnused */
-	function getFacetClusterByKey() {
+	function getFacetClusterByKey() : array {
 		$results = [
 			'success' => false,
 			'message' => 'Unable to restore search from id',
@@ -4233,7 +4174,7 @@ class SearchAPI extends AbstractAPI {
 
 	/** @noinspection PhpUnused */
 	// placeholder for fetching more facets when searching thru large (>100) clusters
-	function searchFacetCluster() {
+	function searchFacetCluster() : array {
 		$results = [
 			'success' => false,
 			'message' => 'Unable to restore search from id',

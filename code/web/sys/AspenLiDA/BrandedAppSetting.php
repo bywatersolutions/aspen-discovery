@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
 class BrandedAppSetting extends DataObject {
@@ -16,6 +16,13 @@ class BrandedAppSetting extends DataObject {
 	public $logoNotification;
 	public $appName;
 	public $autoPickUserHomeLocation;
+
+	//API Keys that are used instead of Greenhouse Settings if needed.
+	public $apiKey1;
+	public $apiKey2;
+	public $apiKey3;
+	public $apiKey4;
+	public $apiKey5;
 
 	static function getObjectStructure($context = ''): array {
 
@@ -137,8 +144,55 @@ class BrandedAppSetting extends DataObject {
 				'description' => 'Whether or not to Aspen LiDA should log in the user based on their home location instead of prompting them to select one',
 				'hideInLists' => true,
 				'required' => false,
-			]
-
+			],
+			'apiKeySection' => [
+				'property' => 'apiKeySection',
+				'type' => 'section',
+				'label' => 'API Keys (optional)',
+				'instructions' => 'API Keys to use instead of API Keys within Greenhouse Settings. If API Keys are not provided, the keys in the greenhouse will be used.',
+				'properties' => [
+					'apiKey1' => [
+						'property' => 'apiKey1',
+						'type' => 'storedPassword',
+						'label' => 'API Key 1',
+						'description' => 'API key for authenticating LiDA access',
+						'canBatchUpdate' => false,
+						'hideInLists' => true,
+					],
+					'apiKey2' => [
+						'property' => 'apiKey2',
+						'type' => 'storedPassword',
+						'label' => 'API Key 2',
+						'description' => 'API key for authenticating LiDA access',
+						'canBatchUpdate' => false,
+						'hideInLists' => true,
+					],
+					'apiKey3' => [
+						'property' => 'apiKey3',
+						'type' => 'storedPassword',
+						'label' => 'API Key 3',
+						'description' => 'API key for authenticating LiDA access',
+						'canBatchUpdate' => false,
+						'hideInLists' => true,
+					],
+					'apiKey4' => [
+						'property' => 'apiKey4',
+						'type' => 'storedPassword',
+						'label' => 'API Key 4',
+						'description' => 'API key for authenticating LiDA access',
+						'canBatchUpdate' => false,
+						'hideInLists' => true,
+					],
+					'apiKey5' => [
+						'property' => 'apiKey5',
+						'type' => 'storedPassword',
+						'label' => 'API Key 5',
+						'description' => 'API key for authenticating LiDA access',
+						'canBatchUpdate' => false,
+						'hideInLists' => true,
+					],
+				]
+			],
 		];
 	}
 /*

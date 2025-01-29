@@ -322,7 +322,7 @@ class SideFacets implements RecommendationInterface {
 	 * @return array
 	 */
 	private function applyFacetSettings($facetKey, array $sideFacets, FacetSetting $facetSetting, $lockedFacets): array {
-		//Do other handling of the display
+		//Do additional handling of the display
 		if ($facetSetting->sortMode == 'alphabetically') {
 			asort($sideFacets[$facetKey]['list']);
 		}
@@ -350,8 +350,10 @@ class SideFacets implements RecommendationInterface {
 				}
 				$tmpList = array_slice($facetsList, 0, $facetSetting->numEntriesToShowByDefault);
 				$sideFacets[$facetKey]['list'] = array_merge($sideFacets[$facetKey]['list'], $tmpList);
+				$sideFacets[$facetKey]['fullUnsortedList'] = array_merge($sideFacets[$facetKey]['list'], $facetsList);
 			} else {
 				$sideFacets[$facetKey]['list'] = array_slice($facetsList, 0, $facetSetting->numEntriesToShowByDefault);
+				$sideFacets[$facetKey]['fullUnsortedList'] = $facetsList;
 			}
 
 			$sortedList = [];

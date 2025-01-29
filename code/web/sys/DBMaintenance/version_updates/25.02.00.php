@@ -169,6 +169,15 @@ function getUpdates25_02_00(): array {
 					eventFieldId INT NOT NULL,
 					value VARCHAR(150) NOT NULL
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_instance (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventId INT NOT NULL,
+					date DATE NOT NULL,
+					time TIME NOT NULL,
+					length INT NOT NULL,
+					status TINYINT(1) NOT NULL DEFAULT 1,
+					note VARCHAR(150)
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
 			]
 		], //native_events_tables
 

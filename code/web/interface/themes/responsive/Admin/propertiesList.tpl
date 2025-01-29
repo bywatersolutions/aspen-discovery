@@ -126,6 +126,8 @@
 									{$propValue|escape}
 								{elseif $property.type == 'date'}
 									{$propValue|date_format}
+								{elseif $property.type == 'time'}
+									{$propValue|date_format:"%I:%M %p"}
 								{elseif $property.type == 'timestamp'}
 									{if $propValue == 0}
 										{if empty($property.unsetLabel)}

@@ -4,6 +4,7 @@ require_once ROOT_DIR . '/sys/Events/EventType.php';
 require_once ROOT_DIR . '/sys/Events/EventTypeLibrary.php';
 require_once ROOT_DIR . '/sys/Events/EventTypeLocation.php';
 require_once ROOT_DIR . '/sys/Events/EventEventField.php';
+require_once ROOT_DIR . '/sys/Events/EventInstance.php';
 
 class Event extends DataObject {
 	public $__table = 'event';
@@ -34,6 +35,7 @@ class Event extends DataObject {
 	public $recurrenceEnd;
 	public $recurrenceCount;
 	public $_dates; // Used to generate instances
+	public $_instances;
 
 
 
@@ -112,7 +114,7 @@ class Event extends DataObject {
 			'startDateForList' => [
 				'property' => 'startDateForList',
 				'type' => 'date',
-				'label' => 'Event Date',
+				'label' => 'Start Date',
 				'readOnly' => true,
 				'hiddenByDefault' => true,
 			],
@@ -222,12 +224,24 @@ class Event extends DataObject {
 							],
 						],
 					],
-					'dates' => [
-						'property' => 'dates',
+					'datesPreview' => [
+						'property' => 'datesPreview', // Store dates here
 						'type' => 'hidden',
 					],
 				],
-			]
+			],
+			'dates' => [
+				'property' => 'dates',
+				'type' => 'hidden',
+				'hideInLists' => true,
+			],
+			'instances' => [
+				'property' => 'instances',
+				'type' => 'integer',
+				'label' => 'Total Upcoming Events',
+				'hiddenByDefault' => true,
+				'readOnly' => true,
+			],
 		];
 		// Add empty, hidden, readonly copies of all potential fields so that data can be added if they exist for any selected event type
 		$eventFieldList = EventField::getEventFieldList();
@@ -468,8 +482,8 @@ class Event extends DataObject {
 						],
 					],
 				],
-				'dates' => [
-					'property' => 'dates',
+				'datesPreview' => [
+					'property' => 'datesPreview',
 					'type' => 'label',
 					'label' => 'Date Preview',
 					'note' => 'To update, change the scheduling options above',
@@ -489,6 +503,7 @@ class Event extends DataObject {
 			$this->saveLibraries();
 			$this->saveLocations();
 			$this->saveFields();
+			$this->generateInstances();
 		}
 		return $ret;
 	}
@@ -499,6 +514,7 @@ class Event extends DataObject {
 			$this->saveLibraries();
 			$this->saveLocations();
 			$this->saveFields();
+			$this->generateInstances();
 		}
 		return $ret;
 	}
@@ -512,6 +528,8 @@ class Event extends DataObject {
 			$this->setTypeField($name, $value);
 		} else if ($name == 'startDateForList') {
 			$this->_startDateForList = $this->startDate;
+		} else if ($name == 'dates') {
+			$this->setDates($value);
 		} else {
 			parent::__set($name, $value);
 		}
@@ -526,6 +544,12 @@ class Event extends DataObject {
 			return $this->getTypeField($name);
 		} else if ($name == 'startDateForList') {
 			return parent::__get('startDate');
+		} else if ($name == 'instances') {
+			return $this->getInstanceCount();
+		} else if ($name == 'endDate') {
+			return $this->calculateEnd($name);
+		} else if ($name == 'endTime') {
+			return $this->calculateEnd($name);
 		} else {
 			return parent::__get($name);
 		}
@@ -545,6 +569,15 @@ class Event extends DataObject {
 			'monthOffset',
 			'endOption',
 		];
+	}
+
+	public function getAdditionalListActions(): array {
+		$objectActions[] = [
+			'text' => 'Edit Specific Dates',
+			'url' => '/Events/EventInstances?objectAction=edit&id=' . $this->id,
+		];
+
+		return $objectActions;
 	}
 
 	public function setLibraries($value) {
@@ -609,6 +642,55 @@ class Event extends DataObject {
 		}
 	}
 
+	public function generateInstances() {
+		// If event doesn't repeat and there is a start date, time and event length
+		if (isset($this->startDate) && isset($this->startTime) && isset($this->eventLength)) {
+			$todayDate = date('Y-m-d');
+			$todayTime = date('H:i:s');
+			if ($this->recurrenceOption == '1') {
+				// Don't generate dates in the past
+				if ($this->startDate > $todayDate || ($this->startDate == $todayDate && $this->startTime > $todayTime)) {
+					$instance = new EventInstance();
+					$instance->eventId = $this->id;
+					$instance->find(true); // Update event if it already exists
+					$instance->date = $this->startDate;
+					$instance->time = $this->startTime;
+					$instance->length = $this->eventLength;
+					$instance->update();
+				}
+			} else { // If event does repeat and there are preview dates
+				if ($this->_dates && is_array($this->_dates)) {
+					// Clear existing events, but only if they haven't already happened and don't have a note
+					// Should add more user options about which events to change
+					$this->clearFutureInstances();
+					foreach ($this->_dates as $date) {
+						// Don't create instances in the past
+						if ($date > $todayDate || ($date == $todayDate && $time > $todayTime)) {
+							$instance = new EventInstance();
+							$instance->eventId = $this->id;
+							$instance->date = $date;
+							$instance->time = $this->startTime;
+							$instance->length = $this->eventLength;
+							$instance->update();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private function clearFutureInstances() {
+		$instance = new EventInstance();
+		$instance->eventId = $this->id;
+		$instance->find();
+		$todayDate = date('Y-m-d');
+		$todayTime = date('H:i:s');
+		$instance->whereAdd("date > '$todayDate' OR (date = '$todayDate' and time > '$todayTime')");
+		while ($instance->fetch()) {
+			$instance->delete(true);
+		}
+	}
+
 
 	private function clearLibraries() {
 		//Unset existing library associations
@@ -634,6 +716,11 @@ class Event extends DataObject {
 		$this->_typeFields[$fieldId] = $value;
 	}
 
+	public function setDates ($value) {
+		$value = explode(',', $value);
+		$this->_dates = $value;
+	}
+
 	public function getTypeField($fieldId) {
 		if (!isset($this->_typeFields[$fieldId]) && $this->id) {
 			$this->_typeFields[$fieldId] = '';
@@ -645,6 +732,32 @@ class Event extends DataObject {
 			}
 		}
 		return $this->_typeFields[$fieldId] ?? '';
+	}
+
+	public function getInstances() {
+		if (!isset($this->_instances) && $this->id) {
+			$this->_instances = [];
+			$instance = new EventInstance();
+			$instance->eventId = $this->id;
+			$instance->find();
+			while ($instance->fetch()) {
+				$this->_instances[$instance->id] = $instance->date;
+			}
+		}
+		return $this->_instances;
+	}
+
+	public function getInstanceCount() {
+		if (!isset($this->_instances) && $this->id) {
+			$this->_instances = [];
+			$instance = new EventInstance();
+			$instance->eventId = $this->id;
+			$todayDate = date('Y-m-d');
+			$todayTime = date('H:i:s');
+			$instance->whereAdd("date > '$todayDate' OR (date = '$todayDate' and time > '$todayTime')");
+			$this->_instances = $instance->count();
+		}
+		return $this->_instances;
 	}
 
 	public function saveFields() {
@@ -686,6 +799,21 @@ class Event extends DataObject {
 		}
 	}
 
+	public function calculateEnd($fieldName) {
+		if (isset($this->startDate) && isset($this->startTime) && isset($this->eventLength)) {
+			$dateTime = new \DateTime($this->startDate . ' ' . $this->startTime);
+			$dateTime->modify('+' . $this->eventLength . ' hours');
+			$endDate = $dateTime->format('Y-m-d');
+			$endTime = $dateTime->format('H:i:s');
+		}
+		if ($fieldName == "endTime") {
+			return $endTime;
+		} else if ($fieldName == "endDate") {
+			return $endDate;
+		}
+		return NULL;
+	}
+
 	public function updateStructureForEditingObject($structure) : array {
 		if ($eventType = $this->getEventType()) {
 			if (!empty($this->eventTypeId)) {
@@ -724,7 +852,7 @@ class Event extends DataObject {
 						// daily repeat
 						$structure['scheduleSection']['properties']['frequencySection']['hiddenByDefault'] = false;
 						$structure['scheduleSection']['properties']['repeatEndsSection']['hiddenByDefault'] = false;
-						$structure['scheduleSection']['properties']['dates']['hiddenByDefault'] = false;
+						$structure['scheduleSection']['properties']['datesPreview']['hiddenByDefault'] = false;
 						break;
 					case '6': // every weekday - same as weekly
 					case '3':
@@ -732,20 +860,20 @@ class Event extends DataObject {
 						$structure['scheduleSection']['properties']['frequencySection']['hiddenByDefault'] = false;
 						$structure['scheduleSection']['properties']['weeklySection']['hiddenByDefault'] = false;
 						$structure['scheduleSection']['properties']['repeatEndsSection']['hiddenByDefault'] = false;
-						$structure['scheduleSection']['properties']['dates']['hiddenByDefault'] = false;
+						$structure['scheduleSection']['properties']['datesPreview']['hiddenByDefault'] = false;
 						break;
 					case '4':
 						// monthly repeats
 						$structure['scheduleSection']['properties']['frequencySection']['hiddenByDefault'] = false;
 						$structure['scheduleSection']['properties']['monthlySection']['hiddenByDefault'] = false;
 						$structure['scheduleSection']['properties']['repeatEndsSection']['hiddenByDefault'] = false;
-						$structure['scheduleSection']['properties']['dates']['hiddenByDefault'] = false;
+						$structure['scheduleSection']['properties']['datesPreview']['hiddenByDefault'] = false;
 						break;
 					case '5':
 						// annual repeats
 						$structure['scheduleSection']['properties']['frequencySection']['hiddenByDefault'] = false;
 						$structure['scheduleSection']['properties']['repeatEndsSection']['hiddenByDefault'] = false;
-						$structure['scheduleSection']['properties']['dates']['hiddenByDefault'] = false;
+						$structure['scheduleSection']['properties']['datesPreview']['hiddenByDefault'] = false;
 						break;
 					case '7':
 						// custom
@@ -772,8 +900,8 @@ class Event extends DataObject {
 				}
 				switch ($this->endOption) {
 					case '1':
-						$structure['scheduleSection']['properties']['repeatEndSection']['properties']['recurrenceEnd']['hiddenByDefault'] = false;
-						$structure['scheduleSection']['properties']['repeatEndSection']['properties']['recurrenceCount']['hiddenByDefault'] = true;
+						$structure['scheduleSection']['properties']['repeatEndsSection']['properties']['recurrenceEnd']['hiddenByDefault'] = false;
+						$structure['scheduleSection']['properties']['repeatEndsSection']['properties']['recurrenceCount']['hiddenByDefault'] = true;
 						break;
 					case '2':
 						$structure['scheduleSection']['properties']['repeatEndsSection']['properties']['recurrenceEnd']['hiddenByDefault'] = true;

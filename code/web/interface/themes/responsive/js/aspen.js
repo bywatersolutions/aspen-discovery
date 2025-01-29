@@ -12374,6 +12374,7 @@ AspenDiscovery.Events = (function(){
 			}
 			var originalStart = date.format();
 
+			var datesPreview = [];
 			var dates = [];
 			var frequency = $("#recurrenceFrequencySelect").val();
 			var interval = $("#recurrenceInterval").val() || 1; // Assume interval is 1 if not set
@@ -12416,10 +12417,12 @@ AspenDiscovery.Events = (function(){
 						date = moment(tempDate).add(interval, 'M');
 						return false;
 					}
-					dates.push(date.format('dddd, MMMM Do, YYYY'));
+					datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+					dates.push(date.format('YYYY-MM-DD'));
 					date = moment(tempDate);
 				} else {
-					dates.push(date.format('dddd, MMMM Do, YYYY'));
+					datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+					dates.push(date.format('YYYY-MM-DD'));
 				}
 				date.add(interval, 'M');
 				return true;
@@ -12430,12 +12433,14 @@ AspenDiscovery.Events = (function(){
 				case '1':
 					if (useEndDate) {
 						while (date.isSameOrBefore(endDate)) {
-							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+							dates.push(date.format('YYYY-MM-DD'));
 							date.add(interval, 'd');
 						}
 					} else {
 						while (count < recurrenceTotal) {
-							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+							dates.push(date.format('YYYY-MM-DD'));
 							date.add(interval, 'd');
 							count++;
 						}
@@ -12455,7 +12460,8 @@ AspenDiscovery.Events = (function(){
 									if (date.isBefore(originalStart)) {
 										date.add(1, 'w'); // If it's before the start date, add a week
 									}
-									dates.push(date.format('dddd, MMMM Do, YYYY'));
+									datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+									dates.push(date.format('YYYY-MM-DD'));
 								}
 								date.add(interval, 'w');
 							}
@@ -12466,7 +12472,8 @@ AspenDiscovery.Events = (function(){
 									if (date.isBefore(originalStart)) {
 										date.add(1, 'w'); // If it's before the start date, add a week
 									}
-									dates.push(date.format('dddd, MMMM Do, YYYY'));
+									datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+									dates.push(date.format('YYYY-MM-DD'));
 									count++;
 								}
 								date.add(interval, 'w');
@@ -12503,18 +12510,21 @@ AspenDiscovery.Events = (function(){
 				// yearly
 					if (useEndDate) {
 						while (date.isSameOrBefore(endDate)) {
-							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+							dates.push(date.format('YYYY-MM-DD'));
 							date.add(interval, 'y');
 						}
 					} else {
 						while (count < recurrenceTotal) {
-							dates.push(date.format('dddd, MMMM Do, YYYY'));
+							datesPreview.push(date.format('dddd, MMMM Do, YYYY'));
+							dates.push(date.format('YYYY-MM-DD'));
 							date.add(interval, 'y');
 							count++;
 						}
 					}
 			}
-			$("#dates").html(dates.join("<br/>"));
+			$("#datesPreview").html(datesPreview.join("<br/>"));
+			$("#dates").val(dates);
 			return false;
 		},
 
@@ -12538,7 +12548,7 @@ AspenDiscovery.Events = (function(){
 				$("#propertyRowweeklySection").hide();
 				$("#propertyRowmonthlySection").hide();
 				$("#propertyRowrepeatEndsSection").hide();
-				$("#propertyRowdates").hide();
+				$("#propertyRowdatesPreview").hide();
 				$("#propertyRowweekDays input").prop("checked", false);
 				$("#propertyRowweekNumber option").prop("selected", false);
 				$("#propertyRowmonthDay option").prop("selected", false);
@@ -12559,7 +12569,7 @@ AspenDiscovery.Events = (function(){
 					$("#recurrenceFrequencySelect option[value=1]").prop("selected","true");
 					$("#recurrenceInterval").val("1");
 					$("#propertyRowfrequencySection").show();
-					$("#propertyRowdates").show();
+					$("#propertyRowdatesPreview").show();
 					$("#propertyRowrepeatEndsSection").show();
 					break;
 				case '3':
@@ -12572,7 +12582,7 @@ AspenDiscovery.Events = (function(){
 					$("#propertyRowweekDays input[value=" + dayOfWeek + "]").prop("checked", true);
 					$("#propertyRowweeklySection").show();
 					$("#propertyRowrepeatEndsSection").show();
-					$("#propertyRowdates").show();
+					$("#propertyRowdatesPreview").show();
 					break;
 				case '4':
 					// Monthly on same day of week
@@ -12588,7 +12598,7 @@ AspenDiscovery.Events = (function(){
 					$("#propertyRowmonthDate").hide();
 					$("#propertyRowmonthlySection").show();
 					$("#propertyRowrepeatEndsSection").show();
-					$("#propertyRowdates").show();
+					$("#propertyRowdatesPreview").show();
 					break;
 				case '5':
 					// Annually
@@ -12597,7 +12607,7 @@ AspenDiscovery.Events = (function(){
 					$("#recurrenceInterval").val("1");
 					$("#propertyRowfrequencySection").show();
 					$("#propertyRowrepeatEndsSection").show();
-					$("#propertyRowdates").show();
+					$("#propertyRowdatesPreview").show();
 					break;
 				case '6':
 					// Every week day
@@ -12608,7 +12618,7 @@ AspenDiscovery.Events = (function(){
 					$("#propertyRowweekDays input[value!=6][value!=0]").prop("checked", true);
 					$("#propertyRowweeklySection").show();
 					$("#propertyRowrepeatEndsSection").show();
-					$("#propertyRowdates").show();
+					$("#propertyRowdatesPreview").show();
 					break;
 				case '7':
 					// Custom - nothing preset

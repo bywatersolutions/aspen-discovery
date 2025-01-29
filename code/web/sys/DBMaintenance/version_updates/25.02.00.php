@@ -222,6 +222,7 @@ function getUpdates25_02_00(): array {
 					status TINYINT(1) NOT NULL DEFAULT 1,
 					note VARCHAR(150)
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"ALTER TABLE sublocation ADD COLUMN isValidEventLocation TINYINT(1) DEFAULT 0",
 			]
 		], //native_events_tables
 

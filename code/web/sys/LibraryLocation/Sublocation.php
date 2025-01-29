@@ -11,6 +11,7 @@ class Sublocation extends DataObject {
 	public $locationId;
 	public $isValidHoldPickupAreaILS;
 	public $isValidHoldPickupAreaAspen;
+	public $isValidEventLocation;
 
 	private $_patronTypes;
 
@@ -18,7 +19,8 @@ class Sublocation extends DataObject {
 		return [
 			'locationId',
 			'isValidHoldPickupAreaAspen',
-			'isValidHoldPickupAreaILS'
+			'isValidHoldPickupAreaILS',
+			'isValidEventLocation',
 		];
 	}
 

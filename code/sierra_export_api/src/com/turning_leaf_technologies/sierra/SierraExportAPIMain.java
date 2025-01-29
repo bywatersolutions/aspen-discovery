@@ -138,6 +138,7 @@ public class SierraExportAPIMain {
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
 				}
+				SystemUtils.quitIfOffline(dbConn, logger, logEntry);
 
 				//Connect to the Sierra database
 				Connection sierraConn = null;

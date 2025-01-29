@@ -119,6 +119,7 @@
 					<input type="hidden" name="patronId" value={$profile->id|escape}>
 					{foreach $consentTypes as $consentType}
 						<section id="{$consentType['lowercaseCode']}ConsentSection">
+						<input type="hidden" name="updateScopeSection" value="{$consentType['lowercaseCode']}">
 							{$consentCode = $consentType['capitalisedCode']}
 							<h2>{translate text={$consentType['label']} isPublicFacing=true}</h2>
 							<div class="form-group #propertyRow" style="margin-bottom:10px;">
@@ -133,7 +134,7 @@
 								</div>
 							</div>
 							<div id="my{$consentCode}ConsentExplanation" style="display:none; margin-top: 10px;">
-									{translate text="By checking this box you are giving your consent to our {$consentType['label']}. Aspen Discovery will send your consent information to Koha, where it will be stored. You can return to this page to update your consent at any point."}
+									{translate text="By checking this box you are giving your consent to {$consentType['actionConsentedTo']}. You can return to this page to update your consent at any point."}
 							</div>
 						</section>
 					{/foreach}

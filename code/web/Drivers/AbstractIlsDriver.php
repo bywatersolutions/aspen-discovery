@@ -917,4 +917,8 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 			'message' => 'This functionality has not been implemented for this ILS',
 		];
 	}
+
+	public function hasIlsConsentSupport(): bool {
+		return false;
+	}
 }

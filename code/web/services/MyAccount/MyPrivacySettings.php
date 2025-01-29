@@ -3,25 +3,48 @@
 require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
 class MyAccount_MyPrivacySettings extends MyAccount {
-	function launch() {
+	function launch(): void {
 		global $interface;
 		global $library;
 
 		if (!UserAccount::isLoggedIn()) {
 			$interface->assign('error', 'You must be logged in to access the Administration Interface');
-		} 
+		}
 		
-		// Do not lauch this page if there is nothing to show
+		// Handles patrons attempting to access the page directly through the URL when the 'Privacy Settings' link is disabled and does not show
 		if (!$library->ilsConsentEnabled && !$library->cookieStorageConsent) {
 			header("Location: " . '/MyAccount');
 		}
+		
+		$user = UserAccount::getLoggedInUser();
+		$linkedUsers = $user->getLinkedUsers();
+		$driver = $user->getCatalogDriver();
 
-		$interface->assign('ilsConsentEnabled', $library->ilsConsentEnabled);
+		$consentPluginNames = $driver->getPluginNamesByMethodName('patron_consent_type');
+		$anyConsentPluginsEnabled = false;
+
+		foreach($consentPluginNames as $pluginName) {
+			$pluginStatus = $driver->getPluginStatus($pluginName);
+			if ($library->ilsConsentEnabled && !$pluginStatus['enabled']) {
+				global $logger;
+				$statusDescription = $pluginStatus['installed'] ? 'disabled' : 'not installed';
+				$logger->log("Patrons Privacy Settings: Patrons cannot view and update their consents as the $pluginName plugin is $statusDescription", Logger::LOG_ERROR);
+	
+				$messages = [];
+				$messages[] = [
+					'message' => 'Other consent options are enabled but cannot be shown here due to a technical issue. Please contact your library.',
+					'messageStyle' => 'info',
+				];
+				$interface->assign('ilsMessages', $messages);
+				continue;
+			}
+			$anyConsentPluginsEnabled = true;
+		}
+
+		$interface->assign('ilsConsentEnabled', $library->ilsConsentEnabled && $anyConsentPluginsEnabled);
 		$interface->assign('cookieConsentEnabled', $library->cookieStorageConsent);
 		
 		//Determine which user we are showing/updating settings for
-		$user = UserAccount::getLoggedInUser();
-		$linkedUsers = $user->getLinkedUsers();
 		$patronId = isset($_REQUEST['patronId']) ? $_REQUEST['patronId'] : $user->id;
 		/** @var $patron */
 		$patronRefferedTo = $user->getUserReferredTo($patronId);
@@ -40,11 +63,10 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 		}
 
 		$action = $this->assignAction();
-		$driver = $user->getCatalogDriver();
-		$consentTypes = $library->ilsConsentEnabled ? $driver->getFormattedConsentTypes() : null;
+		$consentTypes = $library->ilsConsentEnabled && $anyConsentPluginsEnabled ? $driver->getFormattedConsentTypes() : null;
 
 		if ($action == 'save') {
-			$this->updatePrivacySettings($user, $patronRefferedTo, $driver, $library->ilsConsentEnabled, $consentTypes);
+			$this->updatePrivacySettings($user, $patronRefferedTo, $driver, $anyConsentPluginsEnabled, $consentTypes);
 			session_write_close();
 			$actionUrl = '/MyAccount/MyPrivacySettings' . ($patronRefferedTo->id == $user->id ? '': '?patronId=' . $patronId);
 			header("Location: " . $actionUrl);
@@ -60,7 +82,7 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 			$user->updateMessageIsError = 0;
 		}
 		
-		if (!$library->ilsConsentEnabled) {
+		if (!$library->ilsConsentEnabled || !$anyConsentPluginsEnabled) {
 			$this->display('myPrivacySettings.tpl', 'My Privacy Settings');
 			return;
 		}
@@ -93,7 +115,7 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 		return "";
 	}
 
-	private function updatePrivacySettings($user, $patronRefferedTo, $driver, $ilsConsentEnabled = null, $consentTypes = null): void {
+	private function updatePrivacySettings($user, $patronRefferedTo, $driver, $anyConsentPluginsEnabled = null, $consentTypes = null): void {
 		if ($_REQUEST['patronId'] != $user->id) {
 			$user->updateMessage = translate([
 				'text' => 'Wrong account credentials, please try again.',
@@ -111,10 +133,19 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 		}
 		
 		if ($_POST['updateScope'] === 'userILSIssuedConsent') {
-			if ($ilsConsentEnabled) {
-				foreach ($consentTypes as $consentType) {
-					$result = $driver->updatePatronConsent($patronRefferedTo->unique_ils_id, $consentType['allCapsCode'], isset($_POST['userNewsletter']));
-				}
+			$consentTypeName = $_REQUEST['updateScopeSection'];
+			if (!$anyConsentPluginsEnabled) {
+				global $logger;
+				$logger->log("Patrons Privacy Settings: Patron with id $patronRefferedTo->id could not update their $consentTypeName consent", Logger::LOG_ERROR);
+	
+				$user->updateMessage = translate([
+					'text' => 'Could not update consent due to a technical issue. Please contact your library',
+					'isPublicFacing' => true,
+				]);
+				$user->updateMessageIsError = true;
+			}
+			foreach ($consentTypes as $consentType) {
+				$result = $driver->updatePatronConsent($patronRefferedTo->unique_ils_id, $consentType['allCapsCode'], isset($_POST['userNewsletter']));
 			}
 		}
 		if (isset($result['message'])) {

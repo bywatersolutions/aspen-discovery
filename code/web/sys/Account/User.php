@@ -544,12 +544,14 @@ class User extends DataObject {
 			$this->_additionalAdministrationLocations = [];
 			require_once ROOT_DIR . '/sys/Administration/AdministrationLocation.php';
 
-			$locationsList = Location::getLocationList(false);
-			$administrationLocation = new AdministrationLocation();
-			$administrationLocation->userId = $this->id;
-			$administrationLocation->find();
-			while ($administrationLocation->fetch()) {
-				$this->_additionalAdministrationLocations[$administrationLocation->locationId] = $locationsList[$administrationLocation->locationId];
+			if (!empty($this->id)) {
+				$locationsList = Location::getLocationList(false);
+				$administrationLocation = new AdministrationLocation();
+				$administrationLocation->userId = $this->id;
+				$administrationLocation->find();
+				while ($administrationLocation->fetch()) {
+					$this->_additionalAdministrationLocations[$administrationLocation->locationId] = $locationsList[$administrationLocation->locationId];
+				}
 			}
 		}
 
@@ -557,7 +559,7 @@ class User extends DataObject {
 	}
 
 	function saveAdditionalAdministrationLocations(): void {
-		if (isset($this->id) && isset($this->_additionalAdministrationLocations) && is_array($this->_additionalAdministrationLocations)) {
+		if (!empty($this->id) && isset($this->_additionalAdministrationLocations) && is_array($this->_additionalAdministrationLocations)) {
 			require_once ROOT_DIR . '/sys/Administration/AdministrationLocation.php';
 			$userAdministrationLocations = new AdministrationLocation();
 			$userAdministrationLocations->userId = $this->id;
@@ -1163,6 +1165,8 @@ class User extends DataObject {
 		if ($context != 'development') {
 			$this->saveRoles();
 		}
+		$this->saveAdditionalAdministrationLocations();
+
 		$this->clearCache();
 		return $ret;
 	}

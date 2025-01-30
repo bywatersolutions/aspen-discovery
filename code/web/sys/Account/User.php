@@ -617,7 +617,11 @@ class User extends DataObject {
 	}
 
 	function getPasswordOrPin() {
-		return empty($this->ils_password) ? '' : $this->ils_password;
+		if ($this->getAccountProfile()->authenticationMethod == 'db') {
+			return empty($this->password) ? '' : $this->password;
+		}else{
+			return empty($this->ils_password) ? '' : $this->ils_password;
+		}
 	}
 
 	function getPasswordOrPinField() {
@@ -1273,9 +1277,13 @@ class User extends DataObject {
 			unset($structure['roles']);
 			unset($structure['additionalAdministrationLocations']);
 		}else if ($context == 'localAdministrator') {
+			$structure['username']['required'] = true;
 			$structure['firstname']['type'] = 'text';
+			$structure['firstname']['required'] = true;
 			$structure['lastname']['type'] = 'text';
+			$structure['lastname']['required'] = true;
 			$structure['email']['required'] = true;
+
 			unset($structure['homeLibraryName']);
 			unset($structure['homeLocation']);
 			unset($structure['barcode']);

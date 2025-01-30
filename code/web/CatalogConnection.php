@@ -1470,14 +1470,14 @@ class CatalogConnection {
 					$result = $this->driver->processEmailResetPinForm();
 				}
 			}elseif ($tmpAccountProfile->authenticationMethod == 'db') {
-				if (empty($_REQUEST['reset_username'])) {
+				if (empty($_REQUEST['reset_username']) && empty($_REQUEST['username'])) {
 					$result['error'] = translate([
-						'text' => "Barcode not provided. You must provide a barcode to use password reset.",
+						'text' => "Username not provided. You must provide a username to use password reset.",
 						'isPublicFacing' => true,
 					]);
 				} else {
-					$barcode = $_REQUEST['reset_username'];
-					$result = $this->sendAspenPasswordResetEmailForBarcode($accountProfileInfo, $barcode);
+					$username = $_REQUEST['reset_username'] ?? $_REQUEST['username'];
+					$result = $this->sendAspenPasswordResetEmailForBarcode($accountProfileInfo, $username);
 				}
 			}
 			if ($result['success'] || !empty($result['foundPatron'])){

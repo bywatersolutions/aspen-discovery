@@ -261,6 +261,7 @@ class Library extends DataObject {
 	public $additionalCss;
 	public $maxRequestsPerYear;
 	public $yearlyRequestLimitType;
+	public $requestCalendarStartDate;
 	public $maxActiveRequests;
 	// Contact Links //
 	public $twitterLink;
@@ -3254,6 +3255,14 @@ class Library extends DataObject {
 						'description' => 'Sets the method of determining the yearly request limit',
 						'hideInLists' => true,
 						'default' => 0,
+					],
+					'requestCalendarStartDate' => [
+						'property' => 'requestCalendarStartDate',
+						'type' => 'dayMonth',
+						'label' => 'Yearly Request Calendar Start Date',
+						'description' => 'Sets the date that the request year starts on',
+						'hideInLists' => true,
+						'default' => '01-01',
 					],
 					'maxActiveRequests' => [
 						'property' => 'maxActiveRequests',

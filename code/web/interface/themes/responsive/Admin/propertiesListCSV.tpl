@@ -36,6 +36,8 @@
 						{else}
 							{$value = {$propValue|date_format:"%D %T"}}
 						{/if}
+					{elseif $property.type == 'dayMonth'}
+						{$value = {$propValue|date_format:"%M %J"}}
 					{elseif $property.type == 'partialDate'}
 						{assign var=propNameMonth value=$property.propNameMonth}
 						{assign var=propMonthValue value=$dataItem->$propNameMonth}

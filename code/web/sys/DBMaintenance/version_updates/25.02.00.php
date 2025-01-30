@@ -111,6 +111,13 @@ function getUpdates25_02_00(): array {
 				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey5 varchar(256) DEFAULT NULL",
 			]
 		], //branded_app_api_keys
+		'library_requestCalendarStartDate' => [
+			'title' => 'Library Request Calendar Start Date',
+			'description' => 'Add library request calendar start date',
+			'sql' => [
+				"ALTER TABLE library add COLUMN requestCalendarStartDate CHAR(5) DEFAULT '01-01'"
+			]
+		], //library_requestCalendarStartDate
 
 		//katherine
 

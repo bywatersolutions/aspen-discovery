@@ -2186,7 +2186,7 @@ class Evergreen extends AbstractIlsDriver {
 				// that somebody is trying to abuse the reset API
 			} elseif ($apiResponse->payload[0] == 1) {
 				$result['error'] = null;
-				'patronFound' => true,
+				$result['patronFound'] = true;
 				$result['success'] = true;
 			}
 		}

@@ -8408,7 +8408,7 @@ class Koha extends AbstractIlsDriver {
 
 	public function areAnyConsentPluginsEnabled(): bool {
 		global $library;
-		$anyConsentPluginsEnabled = true;
+		$anyConsentPluginsEnabled = false;
 		$consentPluginNames = $this->getPluginNamesByMethodName('patron_consent_type');
 		foreach($consentPluginNames as $pluginName) {
 			$pluginStatus = $this->getPluginStatus($pluginName);
@@ -8416,9 +8416,9 @@ class Koha extends AbstractIlsDriver {
 				global $logger;
 				$statusDescription = $pluginStatus['installed'] ? 'disabled' : 'not installed';
 				$logger->log("Consent options could not be presented or recorded because the $pluginName plugin is $statusDescription", Logger::LOG_ERROR);
-				$anyConsentPluginsEnabled = false;
-				break;
-			} 
+				continue;
+			}
+			$anyConsentPluginsEnabled = true;
 		}
 		return $anyConsentPluginsEnabled;
 	}

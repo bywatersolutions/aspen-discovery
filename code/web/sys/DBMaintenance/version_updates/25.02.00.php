@@ -225,6 +225,18 @@ function getUpdates25_02_00(): array {
 				"ALTER TABLE sublocation ADD COLUMN isValidEventLocation TINYINT(1) DEFAULT 0",
 			]
 		], //native_events_tables
+		'native_events_indexing_tables' => [
+			'title' => 'Native Events Indexing Tables',
+			'description' => 'Add new tables for native events related to indexing',
+			'continueOnError' => true,
+			'sql' => [
+				"CREATE TABLE events_indexing_settings (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					daysToIndex INT DEFAULT 365,
+					runFullUpdate TINYINT(1) DEFAULT 0
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+			]
+		], //native_events_indexing_tables
 
 		//kirstien - Grove
 

@@ -4528,6 +4528,7 @@ class User extends DataObject {
 			$sections['events']->addAction(new AdminAction('Event Field Sets', 'Define sets of event fields to use for native events.', '/Events/EventFieldSets'), 'Administer Field Sets');
 			$sections['events']->addAction(new AdminAction('Event Types', 'Define event types to use for native events.', '/Events/EventTypes'), 'Administer Event Types');
 			$sections['events']->addAction(new AdminAction('Events', 'Administer native events.', '/Events/Events'), 'Administer Events for All Locations');
+			$sections['events']->addAction(new AdminAction('Indexing Settings', 'Administer native events.', '/Events/IndexingSettings'), 'Administer Events for All Locations');
 			$sections['events']->addAction(new AdminAction('Indexing Log', 'View the indexing log for Events.', '/Events/IndexingLog'), [
 				'View System Reports',
 				'View Indexing Logs',

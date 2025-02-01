@@ -669,8 +669,8 @@ EOT;
 					, patron_v2.name AS Patron_Name
 					, patron_v2.patronid AS P_Barcode
 					, case
-					    when itembranch.branchgroup = 2 then 'MNPS'
-					    else 'NPL'
+						when itembranch.branchgroup = 2 then 'MNPS'
+						else 'NPL'
 				    end AS SYSTEM
 					, item_v2.cn AS Call_Number
 					, bbibmap_v2.title AS Title

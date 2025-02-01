@@ -671,7 +671,7 @@ EOT;
 					, case
 						when itembranch.branchgroup = 2 then 'MNPS'
 						else 'NPL'
-				    end AS SYSTEM
+					end AS SYSTEM
 					, item_v2.cn AS Call_Number
 					, bbibmap_v2.title AS Title
 					, to_char(transitem_v2.duedate,'MM/DD/YYYY') AS Due_Date

@@ -245,7 +245,7 @@ class Nashville extends CarlX {
 					i.*
 				from item_v2 i
 				right join branch_v2 b on i.branch = b.branchnumber
-				where b.branchcode = '$location'
+				where upper(b.branchcode) = upper('$location')
 			), r as (
 				select
 					r.refid
@@ -330,7 +330,7 @@ EOT;
 				left join item_v2 i on ( t.bid = i.bid and t.holdingbranch = i.branch)
 				left join location_v2 l on i.location = l.locnumber
 				left join branch_v2 pb on t.pickupbranch = pb.branchnumber -- Pickup Branch
-				where ob.branchcode = '$location'
+				where upper(ob.branchcode) = upper('$location')
 				-- and t.pickupbranch = ob.branchnumber -- commented out in 23.08.01 to include MNPS Exploratorium holds; originally meant to ensure a lock between school collection and pickup branch ; pickup branch field changed from t.renew to t.pickupbranch in CarlX 9.6.8.0
 				and t.transcode = 'R*'
 				and i.status = 'S'
@@ -381,7 +381,7 @@ EOT;
                 left join branch_v2 ob on t.holdingbranch = ob.branchnumber -- Origin Branch
                 left join location_v2 l on i.location = l.locnumber
                 left join branch_v2 pb on t.pickupbranch = pb.branchnumber -- Pickup Branch
-            	where ob.branchcode = '$location'
+            	where upper(ob.branchcode) = upper('$location')
                 and t.transcode = 'R*'
                 order by 
                     i.bid
@@ -449,7 +449,7 @@ EOT;
 					left join bty_v2 bty on p.bty = bty.btynumber
 				where
 					p.bty in ('21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','46','47')
-					and patronbranch.branchcode = '$location'
+					and upper(patronbranch.branchcode) = upper('$location')
 					and p.street2 is not null
 				order by
 					1, 3, 7, 8, 9
@@ -489,7 +489,7 @@ EOT;
 				where
 				    p.bty = '$bty'
 					and p.bty in ('21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','46','47')
-					and patronbranch.branchcode = '$location'
+					and upper(patronbranch.branchcode) = upper('$location')
 					and p.street2 is not null
 				order by
 					p.name
@@ -538,7 +538,7 @@ EOT;
 					and (
 						(
 							p.bty in ('21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','46','47')
-							and patronbranch.branchcode = '$location'
+							and upper(patronbranch.branchcode) = upper('$location')
 							and p.street2 = '$homeroom'
 						) or (
 							(p.bty = 13 OR p.bty = 40 OR p.bty = 51)
@@ -598,7 +598,7 @@ EOT;
 				  left join patron_v2 s on b.branchnumber = s.defaultbranch
 				  left join patron_v2 h on s.street2 = h.patronid
 			  where
-				b.branchcode = '$location'
+				upper(b.branchcode) = upper('$location')
 				and s.street2 is not null
 				and s.bty in ('13','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','40','42','46','47','51')
 			  order by
@@ -622,7 +622,7 @@ EOT;
             left join branch_v2 b on p.defaultBranch = b.branchnumber
             left join bty_v2 bty on p.bty = bty.btynumber
             where ((p.bty >= 21 and p.bty <= 34) or p.bty in (35,36,37,46,47))
-            and b.branchcode = '$location'
+            and upper(b.branchcode) = upper('$location')
             union all
             -- entry for All Students
 			select
@@ -635,7 +635,7 @@ EOT;
             left join branch_v2 b on p.defaultBranch = b.branchnumber
             left join bty_v2 bty on p.bty = bty.btynumber
             where ((p.bty >= 21 and p.bty <= 34) or p.bty in (35,36,37,46,47))
-            and b.branchcode = '$location'
+            and upper(b.branchcode) = upper('$location')
             order by 2, 5, 4
 EOT;
         $stid = oci_parse($this->dbConnection, $sql);
@@ -700,7 +700,7 @@ EOT;
 					and patronbranch.branchgroup = '2'
 					and patronbranchgroup.branchgroup = patronbranch.branchgroup
 					and bty in ('13','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','40','42','46','47','51')
-					and patronbranch.branchcode = '$location'
+					and upper(patronbranch.branchcode) = upper('$location')
 				order by 
 					patronbranch.branchcode
 					, patron_v2.bty
@@ -727,7 +727,7 @@ EOT;
 					left join branch_v2 b on p.defaultbranch = b.branchnumber
 					left join bty_v2 t on p.bty = t.btynumber
 					where p.bty in ('13','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','40','42','46','47','51')
-					and b.branchcode = '$location'
+					and upper(b.branchcode) = upper('$location')
 				), r as (
 					select
 						 p.branchcode
@@ -828,7 +828,7 @@ EOT;
                 left join location_v2 l on i.location = l.locnumber
                 left join systemitemcodes_v2 s on i.status = s.code
                 right join branch_v2 b on i.branch = b.branchnumber
-                where b.branchcode = '$location'
+                where upper(b.branchcode) = upper('$location')
                 and s.type not in ('A', 'D')
             ),
             r as (

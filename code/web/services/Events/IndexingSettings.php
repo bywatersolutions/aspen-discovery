@@ -10,7 +10,7 @@ class Events_IndexingSettings extends ObjectEditor {
 	}
 
 	function getToolName(): string {
-		return 'Settings';
+		return 'IndexingSettings';
 	}
 
 	function getModule(): string {

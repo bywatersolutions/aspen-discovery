@@ -1,3 +1,4 @@
+{debug}
 {strip}
 	<div id="record{$record->source}_{$record->sourceId|escape}" class="result row{if $record->isOverdue()} bg-overdue{/if}">
 
@@ -152,7 +153,7 @@
 							<div class="col-sm-12 col-md-7 result-value">
 								{$record->dueDate|date_format}
 								{if $record->isOverdue()}
-									&nbsp;<span class="label label-danger">{translate text="OVERDUE" isPublicFacing=true}</span>
+									&nbsp;<span class="label label-danger">{translate text="{if !empty($record->ilsStatus)}{$record->ilsStatus}{else}OVERDUE{/if}" isPublicFacing=true}</span>
 								{elseif $record->getDaysUntilDue() == 0}
 									&nbsp;<span class="label label-warning">({translate text="Due today" isPublicFacing=true})</span>
 								{elseif $record->getDaysUntilDue() == 1}
@@ -249,6 +250,9 @@
 								{else}
 									{translate text="Sorry, this title cannot be renewed" isPublicFacing=true}
 								{/if}
+							{/if}
+							{if !empty($record->ilsStatus) && $record->ilsStatus == 'Lost'}
+								<a href="/MyAccount/Fines" class="btn btn-sm btn-primary">{translate text='Pay Fine Online' isPublicFacing=true}</a>
 							{/if}
 						{/if}
 					</div>

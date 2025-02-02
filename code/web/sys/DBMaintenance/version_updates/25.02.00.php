@@ -130,6 +130,14 @@ function getUpdates25_02_00(): array {
 		//chloe - PTFS-Europe
 
 		//James Staub - Nashville Public Library
+		'user_checkout_add_ilsStatus' => [
+			'title' => 'User Checkout Add ILS Status',
+			'description' => 'Add ILS Status to User Checkout',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE user_checkout ADD COLUMN ilsStatus VARCHAR(50) DEFAULT NULL",
+			]
+		], //user_checkout_add_ilsStatus
 
 		//Lucas Montoya - Theke Solutions
 

@@ -26,6 +26,7 @@ class Checkout extends CircEntry {
 	public $holdQueueLength;
 	public $isIll;
 	public $outOfHoldGroupMessage;
+	public $ilsStatus;
 
 	//For OverDrive
 	public $collectionName;
@@ -78,6 +79,7 @@ class Checkout extends CircEntry {
 			'canReturnEarly',
 			'isSupplemental',
 			'isIll',
+			'ilsStatus'
 		];
 	}
 

@@ -693,7 +693,14 @@ class CarlX extends AbstractIlsDriver {
 				$curTitle->dueDate = strtotime($dueDate);
 				$curTitle->checkoutDate = strtotime(strstr($chargeItem->TransactionDate, 'T', true));
 				$curTitle->renewCount = isset($chargeItem->RenewalCount) ? $chargeItem->RenewalCount : 0;
-				$curTitle->canRenew = true;
+				if ($chargeItem->Status == 'Lost') {
+					$curTitle->canRenew = false;
+				} elseif ($chargeItem->ItemStatus == 'Overdue') {
+					$curTitle->canRenew = true;
+				} else { // Assume "Charged", i.e., Checked Out
+					$curTitle->canRenew = true;
+				}
+				$curTitle->ilsStatus = $chargeItem->Status; // CarlX "Charged", "Overdue", "Lost"
 				$curTitle->renewIndicator = $chargeItem->ItemNumber;
 
 				$curTitle->format = 'Unknown';

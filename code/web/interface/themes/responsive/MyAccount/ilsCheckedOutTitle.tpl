@@ -1,4 +1,3 @@
-{debug}
 {strip}
 	<div id="record{$record->source}_{$record->sourceId|escape}" class="result row{if $record->isOverdue()} bg-overdue{/if}">
 

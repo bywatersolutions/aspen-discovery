@@ -23,6 +23,15 @@
 			</div>
 		{/if}
 
+		{if $renewableCheckouts >= 5}
+			<div class="btn-group">
+				{if $source=='all' || $source=='ils'}
+					<a href="#" onclick="AspenDiscovery.Account.renewSelectedTitles()" class="btn btn-sm btn-default">{translate text="Renew Selected Items" isPublicFacing=true}</a>
+					<a href="#" onclick="AspenDiscovery.Account.renewAll()" class="btn btn-sm btn-default">{translate text="Renew All" isPublicFacing=true}</a>
+				{/if}
+			</div>
+		{/if}
+
 		<div class="striped">
 			{foreach from=$transList item=checkedOutTitle name=checkedOutTitleLoop key=checkedOutKey}
 				{if $checkedOutTitle->type == 'ils'}

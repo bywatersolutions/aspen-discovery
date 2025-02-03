@@ -73,31 +73,27 @@ function getUpdates25_02_00(): array {
 			'description' => 'Combine multiple rows per (userAgentId, year, month, instance) into one row before adding unique key',
 			'continueOnError' => true,
 			'sql' => [
-				// 1) Create a temporary table with the same structure.
+				// 1. Create new empty table with original structure.
 				"CREATE TABLE usage_by_user_agent_temp LIKE usage_by_user_agent",
 
-				// 2) Insert aggregated data into temp table.
+				// 2. Remove old non-unique index from temp table.
+				"ALTER TABLE usage_by_user_agent_temp DROP INDEX userAgentId",
+
+				// 3. Insert aggregated data directly into temp table.
 				"INSERT INTO usage_by_user_agent_temp (userAgentId, year, month, instance, numRequests, numBlockedRequests)
 				 SELECT userAgentId, year, month, instance,
-						SUM(numRequests) AS totalRequests,
-						SUM(numBlockedRequests) AS totalBlocked
+						SUM(numRequests),
+						SUM(numBlockedRequests)
 				 FROM usage_by_user_agent
 				 GROUP BY userAgentId, year, month, instance",
 
-				// 3) Clear out original table.
-				"TRUNCATE TABLE usage_by_user_agent",
+				// 4. Add unique index to temp table before swap.
+				"ALTER TABLE usage_by_user_agent_temp 
+				 ADD UNIQUE INDEX userAgentId (userAgentId, year, month, instance)",
 
-				// 4) Re-insert aggregated rows into original table.
-				"INSERT INTO usage_by_user_agent
-				 SELECT * FROM usage_by_user_agent_temp",
-
-				// 5) Drop the temp table.
-				"DROP TABLE usage_by_user_agent_temp",
-
-				// 6) Finally, drop the old index and add the unique index.
-				"ALTER TABLE usage_by_user_agent
-				 DROP INDEX userAgentId,
-				 ADD UNIQUE KEY userAgentId (userAgentId, year, month, instance)"
+				// 5. Atomic table swap.
+				"DROP TABLE usage_by_user_agent",
+				"RENAME TABLE usage_by_user_agent_temp TO usage_by_user_agent",
 			],
 		], //aggregate_usage_by_user_agent
 		'branded_app_api_keys' => [

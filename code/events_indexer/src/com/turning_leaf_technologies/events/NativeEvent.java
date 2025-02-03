@@ -6,9 +6,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.zone.ZoneRules;
 import java.util.*;
 
 class NativeEvent {
@@ -111,7 +113,9 @@ class NativeEvent {
 	}
 
 	private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	private final ZoneOffset zone = ZoneOffset.UTC;
+	private final ZoneId zoneId = ZoneId.systemDefault();
+	private final ZoneRules rules = zoneId.getRules();
+	private final ZoneOffset zone = rules.getOffset (Instant.now());
 
 	public Date getStartDateTime(EventsIndexerLogEntry logEntry) {
 		try {

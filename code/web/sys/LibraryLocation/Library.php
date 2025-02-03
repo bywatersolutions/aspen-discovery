@@ -5475,6 +5475,7 @@ class Library extends DataObject {
 		$generalSettings = $this->getLiDAGeneralSettings();
 		$apiInfo['generalSettings']['autoRotateCard'] = $generalSettings->autoRotateCard ?? 0;
 		$apiInfo['enableSelfRegistrationInApp'] = $generalSettings->enableSelfRegistration ?? 0;
+		$apiInfo['showMoreInfoBtn'] = (int)$generalSettings->showMoreInfoBtn ?? 0;
 
 		$apiInfo['hasEventSettings'] = $this->hasEventSettings();
 

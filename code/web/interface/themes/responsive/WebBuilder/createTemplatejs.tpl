@@ -45,7 +45,7 @@
 				},
 			},
 			plugins: [
-		  'gjs-blocks-basic',
+		  'gjs-blocks-basic', 
 		  'grapesjs-script-editor',
 		  'grapesjs-plugin-forms',
 		  'grapesjs-preset-webpage',
@@ -70,7 +70,7 @@
 		  'grapesjs-style-bg': {},
 		  'grapesjs-typed': {}
 		},
-
+	
 		});
 		editor.Panels.addButton('options', [{
 			id: 'save-as-template',
@@ -94,7 +94,7 @@
 					html: html,
 					css: css,
 				};
-
+				
 				var url = Globals.path + '/WebBuilder/AJAX?method=saveAsTemplate';
 				$.ajax({
 					url: url,
@@ -108,10 +108,24 @@
 					}),
 					contentType: "application/json",
 					success: function (response) {
-						console.log('Saved as Template');
+						var title = response.title;
+						var message;
+
+						if (response.success) {
+							message = response.message || 'Template updated successfully.';
+							AspenDiscovery.showMessage(title, message);
+						} else {
+							message = response.message || 'Failed to save template.'
+							AspenDiscovery.showMessage(title, message);
+						}
 					},
 					error: function (xhr, status, error) {
 						console.error('Error saving template: ', error);
+						var errorMessage = 'Failed to save template. Please try again.';
+						if (xhr.responseJSON && xhr.responseJSON.message) {
+							errorMessage = xhr.responseJSON.message;
+						}
+						AspenDiscovery.showMessage('Error', errorMessage);
 					}
 				});
 			}
@@ -160,7 +174,7 @@
 			const urlParams = new URLSearchParams(window.location.search);
 			const templateId = urlParams.get('id');
 			const url = Globals.path + '/WebBuilder/AJAX?method=loadGrapesTemplate&id=' + templateId;
-
+		
 			$.ajax({
 				url: url,
 				type: 'GET',

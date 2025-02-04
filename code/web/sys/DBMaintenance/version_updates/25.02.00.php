@@ -73,31 +73,27 @@ function getUpdates25_02_00(): array {
 			'description' => 'Combine multiple rows per (userAgentId, year, month, instance) into one row before adding unique key',
 			'continueOnError' => true,
 			'sql' => [
-				// 1) Create a temporary table with the same structure.
+				// 1. Create new empty table with original structure.
 				"CREATE TABLE usage_by_user_agent_temp LIKE usage_by_user_agent",
 
-				// 2) Insert aggregated data into temp table.
+				// 2. Remove old non-unique index from temp table.
+				"ALTER TABLE usage_by_user_agent_temp DROP INDEX userAgentId",
+
+				// 3. Insert aggregated data directly into temp table.
 				"INSERT INTO usage_by_user_agent_temp (userAgentId, year, month, instance, numRequests, numBlockedRequests)
 				 SELECT userAgentId, year, month, instance,
-						SUM(numRequests) AS totalRequests,
-						SUM(numBlockedRequests) AS totalBlocked
+						SUM(numRequests),
+						SUM(numBlockedRequests)
 				 FROM usage_by_user_agent
 				 GROUP BY userAgentId, year, month, instance",
 
-				// 3) Clear out original table.
-				"TRUNCATE TABLE usage_by_user_agent",
+				// 4. Add unique index to temp table before swap.
+				"ALTER TABLE usage_by_user_agent_temp 
+				 ADD UNIQUE INDEX userAgentId (userAgentId, year, month, instance)",
 
-				// 4) Re-insert aggregated rows into original table.
-				"INSERT INTO usage_by_user_agent
-				 SELECT * FROM usage_by_user_agent_temp",
-
-				// 5) Drop the temp table.
-				"DROP TABLE usage_by_user_agent_temp",
-
-				// 6) Finally, drop the old index and add the unique index.
-				"ALTER TABLE usage_by_user_agent
-				 DROP INDEX userAgentId,
-				 ADD UNIQUE KEY userAgentId (userAgentId, year, month, instance)"
+				// 5. Atomic table swap.
+				"DROP TABLE usage_by_user_agent",
+				"RENAME TABLE usage_by_user_agent_temp TO usage_by_user_agent",
 			],
 		], //aggregate_usage_by_user_agent
 		'branded_app_api_keys' => [
@@ -111,6 +107,13 @@ function getUpdates25_02_00(): array {
 				"ALTER TABLE aspen_lida_branded_settings ADD COLUMN apiKey5 varchar(256) DEFAULT NULL",
 			]
 		], //branded_app_api_keys
+		'library_requestCalendarStartDate' => [
+			'title' => 'Library Request Calendar Start Date',
+			'description' => 'Add library request calendar start date',
+			'sql' => [
+				"ALTER TABLE library add COLUMN requestCalendarStartDate CHAR(5) DEFAULT '01-01'"
+			]
+		], //library_requestCalendarStartDate
 
 		//katherine
 		'native_events_permissions' => [
@@ -239,6 +242,14 @@ function getUpdates25_02_00(): array {
 		], //native_events_indexing_tables
 
 		//kirstien - Grove
+		'lida_general_settings_add_more_info' => [
+			'title' => 'Add option in Aspen LiDA General Settings to display More Info button',
+			'description' => 'Add option in Aspen LiDA General Settings to display More Info button',
+			'sql' => [
+				"ALTER TABLE aspen_lida_general_settings add COLUMN showMoreInfoBtn TINYINT(1) DEFAULT 1"
+			]
+		],
+		//lida_general_settings_add_more_info
 
 		//kodi
 
@@ -247,6 +258,22 @@ function getUpdates25_02_00(): array {
 		//chloe - PTFS-Europe
 
 		//James Staub - Nashville Public Library
+		'user_checkout_add_ilsStatus' => [
+			'title' => 'User Checkout Add ILS Status',
+			'description' => 'Add ILS Status to User Checkout',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE user_checkout ADD COLUMN ilsStatus VARCHAR(50) DEFAULT NULL",
+			]
+		], //user_checkout_add_ilsStatus
+		'user_checkout_add_showFineButton' => [
+			'title' => 'User Checkout Add Show Fine Button',
+			'description' => 'Add Show Fine Button to User Checkout',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE user_checkout ADD COLUMN showFineButton TINYINT(1) DEFAULT 0",
+			]
+		], //user_checkout_add_showFineButton
 
 		//Lucas Montoya - Theke Solutions
 

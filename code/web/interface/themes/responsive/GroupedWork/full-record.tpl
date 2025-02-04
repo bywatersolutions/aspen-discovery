@@ -15,6 +15,7 @@
 			{/if}
 		</h1>
 
+		{if !$minimalInterface}
 		<div class="row">
 			<div class="col-xs-4 col-sm-5 col-md-4 col-lg-3 text-center">
 				{if $disableCoverArt != 1}
@@ -135,6 +136,7 @@
 
 			</div>
 		</div>
+		{/if}
 
 		<div class="row">
 			{include file=$moreDetailsTemplate}

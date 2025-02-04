@@ -6,6 +6,7 @@ class GeneralSetting extends DataObject {
 	public $name;
 	public $autoRotateCard;
 	public $enableSelfRegistration;
+	public $showMoreInfoBtn;
 
 	private $_libraries;
 
@@ -39,6 +40,14 @@ class GeneralSetting extends DataObject {
 				'type' => 'checkbox',
 				'label' => 'Enable self-registration',
 				'description' => 'Whether or not users can self register for a new account in LiDA.',
+				'hideInLists' => true,
+			],
+			'showMoreInfoBtn' => [
+				'property' => 'showMoreInfoBtn',
+				'type' => 'checkbox',
+				'label' => 'Show More Info button on Grouped Work Screen',
+				'note' => 'This button opens up an in-app Aspen Discovery session to see additional record information.',
+				'description' => 'Whether or not to display a More Info button in Aspen LiDA on the Grouped Work screen.',
 				'hideInLists' => true,
 			],
 			'libraries' => [

@@ -317,6 +317,15 @@ class DataObjectUtil {
 				$object->setProperty($propertyName, $time, $property);
 			}
 
+		} elseif ($property['type'] == 'dayMonth') {
+			if (isset($_REQUEST[$propertyName . "_month"]) && isset($_REQUEST[$propertyName . "_day"])){
+				if (is_numeric($_REQUEST[$propertyName . "_month"]) && is_numeric($_REQUEST[$propertyName . "_day"])) {
+					$dayMonth = str_pad($_REQUEST[$propertyName . "_month"], "2", "0", STR_PAD_LEFT);
+					$dayMonth .= "-" . str_pad($_REQUEST[$propertyName . "_day"], "2", "0", STR_PAD_LEFT);
+					$object->setProperty($propertyName, $dayMonth, $property);
+				}
+			}
+
 		} elseif ($property['type'] == 'partialDate') {
 			$dayField = $property['propNameDay'];
 			$object->setProperty($dayField, $_REQUEST[$dayField], null);

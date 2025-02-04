@@ -12,18 +12,19 @@ class Authentication_LiDA extends Action {
 			$logger->log('Starting LiDA Authentication', Logger::LOG_ERROR);
 
 			$returnTo = $_REQUEST['goTo'] ?? 'Home';
+			$id = $_REQUEST['id'] ?? null;
 
-			if(isset($_REQUEST['session']) && isset($_REQUEST['user'])) {
+			if (isset($_REQUEST['session']) && isset($_REQUEST['user'])) {
 				$session = new SharedSession();
 				$session->setSessionId($_REQUEST['session']);
 				$session->setUserId($_REQUEST['user']);
-				if($session->find(true)) {
-					if($session->isSessionStillValid()) {
+				if ($session->find(true)) {
+					if ($session->isSessionStillValid()) {
 						if (UserAccount::findNewAspenUser('id', $_REQUEST['user'])) {
 							$tmpUser = new User();
 							$tmpUser->id = $_REQUEST['user'];
 							if ($tmpUser->find(true)) {
-								$session->redirectUser($tmpUser, $returnTo);
+								$session->redirectUser($tmpUser, $returnTo, $id);
 							}
 						}
 					} else {
@@ -44,17 +45,25 @@ class Authentication_LiDA extends Action {
 							$tmpUser = new User();
 							$tmpUser->id = $_REQUEST['user'];
 							if ($tmpUser->find(true)) {
-								$session->redirectUser($tmpUser, $returnTo);
+								$session->redirectUser($tmpUser, $returnTo, $id);
 							}
 						}
 					}
 				} else {
-					// no matching shared session found, ask the user to log into Discovery
-					header('Location: /MyAccount/' . $returnTo . '?minimalInterface=true');
+					// no matching shared session found, we just redirect them to the requested page and will be asked to log in when necessary
+					if ($returnTo === 'GroupedWork' && $id) {
+						header('Location: /GroupedWork/' . $id . '/Home/?minimalInterface=true');
+					} else {
+						header('Location: /MyAccount/' . $returnTo . '?minimalInterface=true');
+					}
 				}
 			} else {
-				// not enough data provided, ask the user to log into Discovery
-				header('Location: /MyAccount/' . $returnTo . '?minimalInterface=true');
+				// not enough data provided, we just redirect them to the requested page and will be asked to log in when necessary
+				if ($returnTo === 'GroupedWork' && $id) {
+					header('Location: /GroupedWork/' . $id . '/Home/?minimalInterface=true');
+				} else {
+					header('Location: /MyAccount/' . $returnTo . '?minimalInterface=true');
+				}
 			}
 		} else {
 			// probably ended up here by mistake

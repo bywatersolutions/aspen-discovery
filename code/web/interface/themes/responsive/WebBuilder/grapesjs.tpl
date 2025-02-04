@@ -25,7 +25,7 @@
 
 	<script>
 		const urlParams = new URLSearchParams(window.location.search);
-		const templateId = urlParams.get('templateId');
+		const templateId = urlParams.get('templateId'); 
 		const grapesPageId = urlParams.get('id');
 			const editor = grapesjs.init({
 				container: "#gjs",
@@ -43,7 +43,7 @@
 					headers: { 'Content-Type': 'application/json' },
 				},
 				plugins: [
-					'gjs-blocks-basic',
+					'gjs-blocks-basic', 
 					'grapesjs-script-editor',
 					'grapesjs-plugin-forms',
 					'grapesjs-preset-webpage',
@@ -90,7 +90,7 @@
 										projectData: projectData,
 										html: html,
 										css: css,
-								};
+								};  
 								var url = Globals.path + '/WebBuilder/AJAX?method=saveAsPage';
 								$.ajax({
 										url: url,
@@ -106,10 +106,23 @@
 										}),
 										contentType: "application/json",
 										success: function (response) {
-												console.log('Saved as Grapes Page');
+											var title = response.title;
+											var message;
+											if (response.success) {
+												message = response.message || 'Page Saved.';
+												AspenDiscovery.showMessage(title, message);
+											} else {
+												message = response.message || 'Failed to save page.';
+												AspenDiscovery.showMessage(title, message);
+											}
 										},
 										error: function (xhr, status, error) {
 												console.error('Error saving page: ', error);
+												var errorMessage = 'Failed to save page. Please try again.';
+												if (xhr.responseJSON && xhr.responseJSON.message){
+													errorMessage = xhr.responseJSON.message;
+												}
+												AspenDiscovery.showMessage('Error', errorMessage);
 										}
 								});
 						}
@@ -156,7 +169,7 @@
 
 			editor.on('load', () => {
 				const urlParams = new URLSearchParams(window.location.search);
-				const templateId = urlParams.get('templateId');
+				const templateId = urlParams.get('templateId'); 
 				const grapesPageId = urlParams.get('id');
 				var url = Globals.path + '/WebBuilder/AJAX?method=loadGrapesPage&id=' + grapesPageId + '&templateId=' + templateId;
 				$.ajax({
@@ -180,7 +193,7 @@
 				}
 			});
 		});
-
+		
 	</script>
 	<style>
 		.gjs-editor-cont {

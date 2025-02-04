@@ -6,10 +6,6 @@ class MyAccount_MyPrivacySettings extends MyAccount {
 	function launch(): void {
 		global $interface;
 		global $library;
-
-		if (!UserAccount::isLoggedIn()) {
-			$interface->assign('error', 'You must be logged in to access the Administration Interface');
-		}
 		
 		// Handles patrons attempting to access the page directly through the URL when the 'Privacy Settings' link is disabled and does not show
 		if (!$library->ilsConsentEnabled && !$library->cookieStorageConsent) {

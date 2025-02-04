@@ -13,7 +13,7 @@ class SharedSession extends DataObject {
 		return $this->createdOn < strtotime('+1 hour', $this->createdOn);
 	}
 
-	public function getSessionId() : mixed {
+	public function getSessionId(): mixed {
 		return $this->sessionId;
 	}
 
@@ -45,15 +45,17 @@ class SharedSession extends DataObject {
 		$this->createdOn = $created;
 	}
 
-	public function redirectUser(User $user, $returnTo) {
-		// for now, we will assume users are being redirected to a MyAccount action
+	public function redirectUser(User $user, $returnTo, $id = null) {
 		$page = '/MyAccount/' . $returnTo;
+		if ($returnTo === 'GroupedWork' && $id) {
+			$page = '/GroupedWork/' . $id . '/Home/';
+		}
+
 		global $configArray;
 		$redirectTo = $configArray['Site']['url'] . $page . '?minimalInterface=true'; // set minimalInterface to hide some unnecessary elements that clutter the mobile UI
-		if(UserAccount::loginWithAspen($user)) {
+		if (UserAccount::loginWithAspen($user)) {
 			global $timer;
-			/** SessionInterface $session */
-			global $session;
+			/** SessionInterface $session */ global $session;
 			require_once ROOT_DIR . '/sys/Session/MySQLSession.php';
 			session_name('aspen_session');
 			$session = new MySQLSession();

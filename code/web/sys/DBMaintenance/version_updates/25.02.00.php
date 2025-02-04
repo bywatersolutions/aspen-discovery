@@ -134,6 +134,22 @@ function getUpdates25_02_00(): array {
 		//chloe - PTFS-Europe
 
 		//James Staub - Nashville Public Library
+		'user_checkout_add_ilsStatus' => [
+			'title' => 'User Checkout Add ILS Status',
+			'description' => 'Add ILS Status to User Checkout',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE user_checkout ADD COLUMN ilsStatus VARCHAR(50) DEFAULT NULL",
+			]
+		], //user_checkout_add_ilsStatus
+		'user_checkout_add_showFineButton' => [
+			'title' => 'User Checkout Add Show Fine Button',
+			'description' => 'Add Show Fine Button to User Checkout',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE user_checkout ADD COLUMN showFineButton TINYINT(1) DEFAULT 0",
+			]
+		], //user_checkout_add_showFineButton
 
 		//Lucas Montoya - Theke Solutions
 

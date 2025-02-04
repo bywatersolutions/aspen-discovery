@@ -118,6 +118,14 @@ function getUpdates25_02_00(): array {
 		//katherine
 
 		//kirstien - Grove
+		'lida_general_settings_add_more_info' => [
+			'title' => 'Add option in Aspen LiDA General Settings to display More Info button',
+			'description' => 'Add option in Aspen LiDA General Settings to display More Info button',
+			'sql' => [
+				"ALTER TABLE aspen_lida_general_settings add COLUMN showMoreInfoBtn TINYINT(1) DEFAULT 1"
+			]
+		],
+		//lida_general_settings_add_more_info
 
 		//kodi
 

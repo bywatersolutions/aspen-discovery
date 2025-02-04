@@ -437,6 +437,9 @@ class Library extends DataObject {
 	//cookieConsent
 	public $cookieStorageConsent;
 	public $cookiePolicyHTML;
+	
+	// ILS privacy consent
+	public $ilsConsentEnabled;
 
 	//SHAREit
 	public $repeatInShareIt;
@@ -3604,6 +3607,13 @@ class Library extends DataObject {
 						'default' => 'This body has not yet set a cookie storage policy, please check back later.',
 						'hideInLists' => true,
 					],
+					'ilsConsentEnabled' => [
+						'property' => 'ilsConsentEnabled',
+						'type' => 'checkbox',
+						'label' => 'Enable ILS-issued consents',
+						'description' => 'Enable patrons to give and rescind consent through the Your Account / Privacy Page for consent types issued from the ILS',
+						'default' => false,
+					],
 				]
 			],
 			'messagingSection' => [
@@ -4167,6 +4177,9 @@ class Library extends DataObject {
 		}
 		if (!array_key_exists('Single sign-on', $enabledModules)) {
 			unset($structure['ssoSection']);
+		}
+		if (!$catalog->hasIlsConsentSupport()) {
+			unset($structure['dataProtectionRegulations']['properties']['ilsConsentEnabled']);
 		}
 
 		return $structure;

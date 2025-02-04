@@ -70,6 +70,28 @@ class Admin_Libraries extends ObjectEditor {
 		if (!UserAccount::userHasPermission('Administer All Libraries')) {
 			unset($objectStructure['isDefault']);
 		}
+		global $library;
+		$accountProfile = $library->getAccountProfile();
+		if (!$accountProfile || empty($accountProfile) || !isset($accountProfile->driver)) {
+			return $objectStructure;
+		}
+
+		// if 'Enable ILS-issued consents' is not already toggled on, prevent administrators from seeing it (and toggling it on) if no consent plugins are installed and enabled in Koha
+		$catalogDriver = CatalogFactory::getCatalogConnectionInstance(trim($accountProfile->driver), $accountProfile);
+		$consentPluginNames = $catalogDriver->getPluginNamesByMethodName('patron_consent_type');
+		$anyConsentPluginsEnabled = false;
+		foreach($consentPluginNames as $pluginName) {
+			$pluginStatus = $catalogDriver->getPluginStatus($pluginName);
+			if ($pluginStatus['enabled']) {
+				$anyConsentPluginsEnabled = true;
+				break;
+			}
+		}
+
+		if($catalogDriver->hasIlsConsentSupport() && !$anyConsentPluginsEnabled && $library->ilsConsentEnabled == 0) {
+			unset($objectStructure['dataProtectionRegulations']['properties']['ilsConsentEnabled']);
+		}
+		
 		return $objectStructure;
 	}
 

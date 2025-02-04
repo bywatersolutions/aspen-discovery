@@ -295,12 +295,13 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 		return null;
 	}
 
-	function getPasswordPinValidationRules() {
+	function getPasswordPinValidationRules() : array {
 		global $library;
 		return [
 			'minLength' => $library->minPinLength,
 			'maxLength' => $library->maxPinLength,
 			'onlyDigitsAllowed' => $library->onlyDigitsAllowedInPin,
+			'requireStrongPassword' => false
 		];
 	}
 

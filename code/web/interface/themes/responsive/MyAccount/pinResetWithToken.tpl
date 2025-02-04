@@ -1,7 +1,7 @@
 {strip}
 	<div id="page-content" class="content">
 		<div id="main-content">
-			<div class="resultHead"><h1>{translate text='Reset My PIN' isPublicFacing=true}</h1></div>
+			<div class="resultHead"><h1>{if $hasIlsConnection}{translate text='Reset My PIN' isPublicFacing=true}{else}{translate text='Reset My Password' isPublicFacing=true}{/if}</h1></div>
 			<div class="page">
 				{if !empty($error)}
 					<div class="alert alert-danger">{$error}</div>
@@ -10,12 +10,14 @@
 					<div class="alert alert-warning">{translate text="Your PIN has expired, enter a new PIN below." isPublicFacing=true}</div>
 				{/if}
 				{if !empty($result) && $result.success}
-					<div class="alert alert-success">{translate text='Your PIN has been reset.' isPublicFacing=true}</div>
+					<div class="alert alert-success">{if $hasIlsConnection}{translate text='Your PIN has been reset.' isPublicFacing=true}{else}{translate text='Your Password has been reset.' isPublicFacing=true}{/if}</div>
 					<div ><a href="/MyAccount/Home" class="btn btn-primary">{translate text='Continue to login' isPublicFacing=true}</a> </div>
 				{else}
 					{if !empty($tokenValid)}
 						<div class="alert alert-info">
-							{if !empty($pinValidationRules.onlyDigitsAllowed)}
+							{if !empty($pinValidationRules.requireStrongPassword)}
+								{translate text="A strong password from 12 to 50 characters including at least one uppercase, lowercase, number, and special character (-_~!@#$%^&*.+)." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength}
+							{elseif !empty($pinValidationRules.onlyDigitsAllowed)}
 								{translate text="PINs must be between %1% and %2% digits." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength}
 							{else}
 								{translate text="PINs must be between %1% and %2% characters." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength}

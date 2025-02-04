@@ -1604,7 +1604,7 @@ class CatalogConnection {
 		}
 	}
 
-	function getPasswordPinValidationRules() {
+	function getPasswordPinValidationRules() : array {
 		return $this->driver->getPasswordPinValidationRules();
 	}
 

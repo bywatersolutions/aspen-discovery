@@ -2259,11 +2259,12 @@ class Polaris extends AbstractIlsDriver {
 	}
 
 	//Use the values
-//	function getPasswordPinValidationRules(){
+//	function getPasswordPinValidationRules() : array {
 //		return [
 //			'minLength' => 4,
 //			'maxLength' => 14,
 //			'onlyDigitsAllowed' => false,
+//			'requireStrongPassword' => false
 //		];
 //	}
 

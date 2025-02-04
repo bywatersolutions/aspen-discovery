@@ -2714,11 +2714,12 @@ class SirsiDynixROA extends HorizonAPI {
 		}
 	}
 
-//	function getPasswordPinValidationRules(){
+//	function getPasswordPinValidationRules() : array {
 //		return [
 //			'minLength' => 4,
 //			'maxLength' => 60,
 //			'onlyDigitsAllowed' => false,
+////		'requireStrongPassword' => false
 //		];
 //	}
 

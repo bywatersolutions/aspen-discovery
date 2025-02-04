@@ -28,7 +28,9 @@
 					{/foreach}
 				{/if}
 				<div class="alert alert-info">
-					{if !empty($pinValidationRules.onlyDigitsAllowed)}
+					{if !empty($pinValidationRules.requireStrongPassword)}
+						{translate text="A strong password from 12 to 50 characters including at least one uppercase, lowercase, number, and special character (-_~!@#$%^&*.+)." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength}
+					{elseif !empty($pinValidationRules.onlyDigitsAllowed)}
 						{translate text="%3% must be between %1% and %2% digits." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength 3=$passwordLabel}
 					{else}
 						{translate text="%3% must be between %1% and %2% characters." isPublicFacing=true 1=$pinValidationRules.minLength 2=$pinValidationRules.maxLength 3=$passwordLabel}

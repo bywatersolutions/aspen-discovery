@@ -1960,4 +1960,8 @@ class CatalogConnection {
 			];
 		}
 	}
+
+	public function hasIlsConsentSupport(): bool {
+		return $this->driver->hasIlsConsentSupport();
+	}
 }

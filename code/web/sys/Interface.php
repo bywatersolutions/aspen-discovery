@@ -669,7 +669,7 @@ class UInterface extends Smarty {
 		$this->assign('showUserCirculationModules', $library->showUserCirculationModules);
 		$this->assign('showUserContactInformation', $library->showUserContactInformation);
 		$this->assign('showUserPreferences', $library->showUserPreferences);
-		$this->assign('cookieConsentEnabled', $library->cookieStorageConsent);
+		$this->assign('privacyConsentEnabled', $library->cookieStorageConsent || $library->ilsConsentEnabled);
 		if ($location != null) { // library and location
 			$groupedWorkDisplaySettings = $location->getGroupedWorkDisplaySettings();
 			$this->assign('showFavorites', $location->showFavorites && $library->showFavorites);

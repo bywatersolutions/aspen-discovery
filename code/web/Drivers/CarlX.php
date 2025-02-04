@@ -693,16 +693,14 @@ class CarlX extends AbstractIlsDriver {
 				$curTitle->dueDate = strtotime($dueDate);
 				$curTitle->checkoutDate = strtotime(strstr($chargeItem->TransactionDate, 'T', true));
 				$curTitle->renewCount = isset($chargeItem->RenewalCount) ? $chargeItem->RenewalCount : 0;
+				$curTitle->ilsStatus = $chargeItem->Status; // CarlX "Charged", "Overdue", "Lost"
+				$curTitle->canRenew = true; // Default for Status = 'Charged' or 'Overdue'
+				$curTitle->showFineButton = false; // Default for Status = 'Charged' or 'Overdue'
 				if ($chargeItem->Status == 'Lost') {
 					$curTitle->canRenew = false;
-				} elseif ($chargeItem->ItemStatus == 'Overdue') {
-					$curTitle->canRenew = true;
-				} else { // Assume "Charged", i.e., Checked Out
-					$curTitle->canRenew = true;
+					$curTitle->showFineButton = true;
 				}
-				$curTitle->ilsStatus = $chargeItem->Status; // CarlX "Charged", "Overdue", "Lost"
 				$curTitle->renewIndicator = $chargeItem->ItemNumber;
-
 				$curTitle->format = 'Unknown';
 				if (!empty($carlID)) {
 					require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
@@ -714,7 +712,6 @@ class CarlX extends AbstractIlsDriver {
 				$checkedOutTitles[] = $curTitle;
 			}
 		}
-
 		return $checkedOutTitles;
 	}
 

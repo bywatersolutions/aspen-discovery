@@ -97,6 +97,7 @@ class MyAccount_MyList extends MyAccount {
 					}
 					$this->reloadCover();
 					$list->update();
+					$list->fixWeights();
 				} elseif ($actionToPerform == 'deleteList') {
 					$list->delete();
 
@@ -112,6 +113,7 @@ class MyAccount_MyList extends MyAccount {
 				$list->removeListEntry($recordToDelete);
 				$this->reloadCover();
 				$list->update();
+				$list->fixWeights();
 			}
 
 			//Redirect back to avoid having the parameters stay in the URL.

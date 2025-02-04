@@ -181,7 +181,7 @@ class UserList extends DataObject {
 	 * @param null $sort optional SQL for the query's ORDER BY clause
 	 * @return array      of list entries
 	 */
-	function getListEntries($sort = null, $forLiDA = false, $appVersion = 0) : array {
+	function getListEntries($sort = null, $forLiDA = false, $appVersion = 0, $start = 0, $numItems = 0) : array {
 		global $interface;
 		require_once ROOT_DIR . '/sys/UserLists/UserListEntry.php';
 		$listEntry = new UserListEntry();
@@ -192,10 +192,6 @@ class UserList extends DataObject {
 			}
 		}
 
-		$entryPosition = 0;
-		$zeroCount = 0;
-		$nullCount = 0;
-
 		//Sort the list appropriately
 		if (!empty($sort)) {
 			$sortOptions = UserList::getSortOptions();
@@ -204,12 +200,17 @@ class UserList extends DataObject {
 			}
 		}
 
+		if ($numItems > 0) {
+			$listEntry->limit($start, $numItems);
+		}
+
 		// These conditions retrieve list items with a valid groupedWorkId or archive ID.
 		// (This prevents list strangeness when our searches don't find the ID in the search indexes)
 
 		$listEntries = [];
 		$idsBySource = [];
 		$listEntry->find();
+		$entryPosition = $start; // Track the actual position.
 		while ($listEntry->fetch()) {
 			$entryPosition++;
 			if (!array_key_exists($listEntry->source, $idsBySource)) {
@@ -225,19 +226,6 @@ class UserList extends DataObject {
 				'listEntry' => $this->cleanListEntry(clone($listEntry)),
 				'weight' => $listEntry->weight,
 			];
-
-			if ($listEntry->weight === '0') {
-				$zeroCount++;
-			}
-
-			if (empty($listEntry->weight)) {
-				$nullCount++;
-			}
-
-			if (($zeroCount >= 1) || ($nullCount >= 1)) {
-				$listEntry->weight = $entryPosition;
-				$listEntry->update();
-			}
 
 			$listEntries[] = $tmpListEntry;
 		}
@@ -615,11 +603,9 @@ class UserList extends DataObject {
 	 * @return array     Array of HTML to display to the user
 	 */
 	public function getBrowseRecords($start, $numItems): array {
-		//Get all entries for the list
-		$listEntryInfo = $this->getListEntries($this->defaultSort);
-
-		//Trim to the number of records we want to return
-		$filteredListEntries = array_slice($listEntryInfo['listEntries'], $start, $numItems);
+		// Get from $start to $numItems entries for the list.
+		$listEntryInfo = $this->getListEntries($this->defaultSort, false, 0, $start, $numItems);
+		$filteredListEntries = $listEntryInfo['listEntries'];
 
 		$filteredIdsBySource = [];
 		foreach ($filteredListEntries as $listItemEntry) {

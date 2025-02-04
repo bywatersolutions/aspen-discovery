@@ -972,43 +972,206 @@ class WebBuilder_AJAX extends JSON_Action {
 	}
 	function saveAsTemplate(){
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
-		$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
-		  $templateId = $newGrapesPageContent['templateId'];
-		  $html = $newGrapesPageContent['html'];
-		  $css = $newGrapesPageContent['css'];
-		  $projectData = json_encode($newGrapesPageContent['projectData']);
+
+		$activeUser = UserAccount::getActiveUserObj();
+		
+		if (!$activeUser) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' =>'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You must be logged in to save grapes templates.',
+					'isPublicFacing' => true
+				])
+			];
+		}
+		if (!UserAccount::userHasPermission([
+			'Administer All Grapes Pages',
+			'Administer Library Custom Pages',
+		])) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' =>'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You do not have the correct permissions to save grapes templates.',
+					'isPublicFacing' => true
+				])
+			];
+		}
+		try {
+			$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
+			$templateId = $newGrapesPageContent['templateId'];
+			$html = $newGrapesPageContent['html'];
+			$css = $newGrapesPageContent['css'];
+			$projectData = json_encode($newGrapesPageContent['projectData']);
+
+			$template = new GrapesTemplate();
+			$template->id = $templateId;
+
+			if (!$template->find(true)) {
+				return [
+					'success' => false,
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => "Template with ID $templateId not found. Unable to update.",
+						'isPublicFacing' => true
+					])
+				];
+			}
+			$template->templateContent = $projectData;
+			$template->htmlData = $html;
+			$template->cssData = $css;
+
+			if(!$template->update()) {
+				return [
+					'success' => false,
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => 'Failed to update the template.',
+						'isPublicFacing' => true
+					])
+				];
+			}
+			return [ 
+				'success' => true,
+				'title' => translate([
+					'text' => 'Success',
+					'isPublicFacing' => true
+				]),
+					'message' => translate([
+					'text' => 'Template saved successfully.',
+					'isPublicFacing' => true
+				])
+			];
+		} catch (Exception $e) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true
+				]),
+				'message' => translate([
+					'text' => 'An unexpected error occurred: ' . $e->getMessage(),
+					'isPublicFacing' => true
+				])
+			];
+		}
+	}
   
-		  $template = new GrapesTemplate();
-		  $template->id = $templateId;
-  
-		  if ($template->find(true)) {
-			  $template->templateContent = $projectData;
-			  $template->htmlData = $html;
-			  $template->cssData = $css;
-		  }
-		  $template->update();
-	  }
-  
-	  function saveAsPage() {
-		  require_once ROOT_DIR .  '/sys/WebBuilder/GrapesPage.php';
-		  $newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
-		  $grapesPageId = $newGrapesPageContent['grapesPageId'];
-		  $grapesGenId = $newGrapesPageContent['grapesGenId'];
-		  $templateId = $newGrapesPageContent['templateId'];
-		  $html = $newGrapesPageContent['html'];
-		  $css = $newGrapesPageContent['css'];
-		  $grapesPage = new GrapesPage();
-		  $grapesPage->id = $grapesPageId;
-		  $projectData = json_encode($newGrapesPageContent['projectData']);
-  
-		  if ($grapesPage->find(true)) {
-			  $grapesPage->grapesGenId = $grapesGenId;
-			  $grapesPage->templateContent = $projectData;
-			  $grapesPage->htmlData = $html;
-			  $grapesPage->cssData = $css;
-		  }
-		  $grapesPage->update();
-	  }
+	function saveAsPage() {
+		require_once ROOT_DIR .  '/sys/WebBuilder/GrapesPage.php';
+
+		$activeUser = UserAccount::getActiveUserObj();
+
+		if (!$activeUser) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' =>'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You must be logged in to save grapes pages.',
+					'isPublicFacing' => true
+				])
+			];
+		}
+		if (!UserAccount::userHasPermission([
+			'Administer All Grapes Pages',
+			'Administer Library Custom Pages',
+		])) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' =>'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You do not have the correct permissions to save grapes pages.',
+					'isPublicFacing' => true
+				])
+			];
+		}
+
+		try {
+			$newGrapesPageContent = json_decode(file_get_contents("php://input"), true);
+			$grapesPageId = $newGrapesPageContent['grapesPageId'];
+			$grapesGenId = $newGrapesPageContent['grapesGenId'];
+			$templateId = $newGrapesPageContent['templateId'];
+			$html = $newGrapesPageContent['html'];
+			$css = $newGrapesPageContent['css'];
+			$grapesPage = new GrapesPage();
+			$grapesPage->id = $grapesPageId;	
+			$projectData = json_encode($newGrapesPageContent['projectData']);
+
+			if (!$grapesPage->find(true)) {
+				return [ 
+					'success' =>false,
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => "Page with ID $grapesPageId not found. Unable to update.",
+						'isPublicFacing' => true
+					])
+				];
+			}
+			$grapesPage->grapesGenId = $grapesGenId;
+			$grapesPage->templateContent = $projectData;
+			$grapesPage->htmlData = $html;
+			$grapesPage->cssData = $css;
+
+			if (!$grapesPage->update()) {
+				return [
+					'success' => false,
+					'title' => translate([
+						'text' => 'Error',
+						'isPublicFacing' => true
+					]),
+					'message' => translate([
+						'text' => 'Failed to update the page.',
+						'isPublicFacing' => true
+					])
+				];
+			}
+			return [
+				'success' => true,
+				'title' => translate([
+					'text' => 'Success',
+					'isPublicFacing' => true
+				]),
+					'message' => translate([
+					'text' => 'Page saved successfully.',
+					'isPublicFacing' => true
+				])
+			];
+		} catch (Exception $e) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true
+				]),
+				'message' => translate([
+					'text' => 'An unexpected error occurred: ' . $e->getMessage(),
+					'isPublicFacing' => true
+				])
+			];
+		}
+	}
   
 	  function loadGrapesPage() {
 		  require_once ROOT_DIR . '/sys/WebBuilder/GrapesPage.php';

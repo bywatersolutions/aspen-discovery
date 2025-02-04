@@ -261,6 +261,7 @@ class Library extends DataObject {
 	public $additionalCss;
 	public $maxRequestsPerYear;
 	public $yearlyRequestLimitType;
+	public $requestCalendarStartDate;
 	public $maxActiveRequests;
 	// Contact Links //
 	public $twitterLink;
@@ -3255,6 +3256,14 @@ class Library extends DataObject {
 						'hideInLists' => true,
 						'default' => 0,
 					],
+					'requestCalendarStartDate' => [
+						'property' => 'requestCalendarStartDate',
+						'type' => 'dayMonth',
+						'label' => 'Yearly Request Calendar Start Date',
+						'description' => 'Sets the date that the request year starts on',
+						'hideInLists' => true,
+						'default' => '01-01',
+					],
 					'maxActiveRequests' => [
 						'property' => 'maxActiveRequests',
 						'type' => 'integer',
@@ -5466,6 +5475,7 @@ class Library extends DataObject {
 		$generalSettings = $this->getLiDAGeneralSettings();
 		$apiInfo['generalSettings']['autoRotateCard'] = $generalSettings->autoRotateCard ?? 0;
 		$apiInfo['enableSelfRegistrationInApp'] = $generalSettings->enableSelfRegistration ?? 0;
+		$apiInfo['showMoreInfoBtn'] = (int)$generalSettings->showMoreInfoBtn ?? 0;
 
 		$apiInfo['hasEventSettings'] = $this->hasEventSettings();
 

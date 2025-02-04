@@ -180,6 +180,7 @@
 					<th class="sorter-false">Student ID</th>
 					<th class="filter">Student Name</th>
 					<th class="sorter-false">Notice</th>
+					<th id="systemSelect" class="filter-select">SYSTEM</th>
 				<tr>
 			</thead>
 			<tbody>
@@ -223,13 +224,13 @@
 							<div class="overdueRecord row d-flex flex-wrap">
 		{assign var=previousPatron value=$dataRow.P_BARCODE}
 	{/if}
-								<div class="overdueRecordContent card col-md-6 mb-4">
+								<div class="overdueRecordContent card col-md-6 mb-4" data-value="{$dataRow.SYSTEM}">
 									<div class="overdueRecordContent card-body">
 											<div class="BOOK_COVER col-md-3"><img class="img-fluid" src="{$dataRow.coverUrl}"></div>
 											<div class="overdueRecordContentDetails col-md-9">
 												<div class="TITLE">{$dataRow.TITLE|regex_replace:"/ *\/ *$/":""}</div>
 												<div class="DUE_DATE_AND_PRICE">DUE: {$dataRow.DUE_DATE} {if $showOverdueOnly == "overdue" || $showOverdueOnly == "checkedOut"}PRICE{elseif $showOverdueOnly == "fees"}OWED{/if}: {$dataRow.OWED|regex_replace:"/^ *0\.00$/":"10.00"}</div>
-												<div class="SYSTEM_AND_ITEM_ID">{$dataRow.SYSTEM|replace:"1":"NPL"|replace:"2":"MNPS"} {$dataRow.ITEM}</div>
+												<div class="SYSTEM_AND_ITEM_ID">{$dataRow.SYSTEM} {$dataRow.ITEM}</div>
 												<div class="CALL_NUMBER">{$dataRow.CALL_NUMBER}</div>
 											</div>
 									</div>
@@ -241,15 +242,62 @@
 		</table>
 		<script type="text/javascript">
 			{literal}
-				$(document).ready(function(){
-					$('#studentReportTable').tablesorter({
-						widgets: ["filter"],
-						widgetOptions: {
-							filter_hideFilters : false,
-							filter_ignoreCase: true
+			$(document).ready(function() {
+				$('#studentReportTable').tablesorter({
+					widgets: ["filter"],
+					widgetOptions: {
+						filter_hideFilters: false,
+						filter_ignoreCase: true,
+						filter_functions: {
+							5: { // Assuming the SYSTEM column is the 6th column (index 5)
+								"NPL": function(e, n, f, i, $r, c, data) {
+									var match = false;
+									$r.find('.overdueRecordContent.card').each(function() {
+										var value = $(this).data('value');
+										if (value !== undefined) {
+											value = value.trim();
+											if (value === "NPL") {
+												match = true;
+												return false; // Break the loop
+											}
+										}
+									});
+									return match;
+								},
+								"MNPS": function(e, n, f, i, $r, c, data) {
+									var match = false;
+									$r.find('.overdueRecordContent.card').each(function() {
+										var value = $(this).data('value');
+										if (value !== undefined) {
+											value = value.trim();
+											if (value === "MNPS") {
+												match = true;
+												return false; // Break the loop
+											}
+										}
+									});
+									return match;
+								}
+							}
+						}
+					}
+				});
+
+				// Custom filter function to show/hide overdueRecordContent card elements
+				// This function shows/hides the "child" card-body element containing the checked out item
+				$('#studentReportTable').on('filterEnd', function() {
+					var selectedSystem = $('#studentReportTable thead tr.tablesorter-filter-row td:eq(5) select').val(); // Get selected filter value for SYSTEM column
+					$('.overdueRecordContent.card').each(function() {
+						var $card = $(this);
+						var systemValue = $card.data('value');
+						if (selectedSystem === "" || systemValue === selectedSystem) {
+							$card.css('display', 'block'); // Explicitly set display to block
+						} else {
+							$card.css('display', 'none'); // Explicitly set display to none
 						}
 					});
 				});
+			});
 			{/literal}
 		</script>
 	{/if}

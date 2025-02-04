@@ -40,9 +40,16 @@ class MaterialsRequest_MyRequests extends MyAccount {
 			if ($homeLibrary->yearlyRequestLimitType == 0) {
 				$materialsRequests->whereAdd('dateCreated >= unix_timestamp(now() - interval 1 year)');
 			}else{
-				$currentYear = date('Y');
-				$januaryOne = strtotime("01-01-$currentYear");
-				$materialsRequests->whereAdd("dateCreated >= $januaryOne");
+				$calendarStartMonthDay = $homeLibrary->requestCalendarStartDate;
+				//Figure out if we're after the calendar start date for the year
+				$currentMonthDay = date('m-d');
+				$requestStartYear = date('Y');
+				if ($currentMonthDay <= $calendarStartMonthDay) {
+					$requestStartYear = $requestStartYear - 1;
+				}
+				$requestStartDate = date_create_from_format('m-d-Y', "$calendarStartMonthDay-$requestStartYear");
+				$requestStartTime = $requestStartDate->getTimestamp();
+				$materialsRequests->whereAdd("dateCreated >= $requestStartTime");
 			}
 
 			$statusQueryNotCancelled = new MaterialsRequestStatus();

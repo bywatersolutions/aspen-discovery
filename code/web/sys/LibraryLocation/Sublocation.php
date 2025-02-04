@@ -32,7 +32,7 @@ class Sublocation extends DataObject {
 		$uneditableForILS = false;
 		global $library;
 		$accountProfile = $library->getAccountProfile();
-		if ($accountProfile->ils == 'polaris') {
+		if ($accountProfile !== false && $accountProfile->ils == 'polaris') {
 			$uneditableForILS = true;
 		}
 

@@ -156,7 +156,7 @@ class EventFieldSet extends DataObject {
 					'type' => $type,
 					'label' => $field->name,
 					'description' => $field->description,
-					'defaultValue' => $field->defaultValue,
+					'default' => $field->defaultValue,
 					'facetName' => $field->facetName,
 				];
 				if ($type == 'enum') {

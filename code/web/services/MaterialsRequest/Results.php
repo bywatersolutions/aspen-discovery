@@ -42,9 +42,16 @@ class MaterialsRequest_Results extends Action {
 				if ($homeLibrary->yearlyRequestLimitType == 0) {
 					$materialsRequestCounts->whereAdd('dateCreated >= unix_timestamp(now() - interval 1 year)');
 				}else{
-					$currentYear = date('Y');
-					$januaryOne = strtotime("01-01-$currentYear");
-					$materialsRequestCounts->whereAdd("dateCreated >= $januaryOne");
+					$calendarStartMonthDay = $homeLibrary->requestCalendarStartDate;
+					//Figure out if we're after the calendar start date for the year
+					$currentMonthDay = date('m-d');
+					$requestStartYear = date('Y');
+					if ($currentMonthDay <= $calendarStartMonthDay) {
+						$requestStartYear = $requestStartYear - 1;
+					}
+					$requestStartDate = date_create_from_format('m-d-Y', "$calendarStartMonthDay-$requestStartYear");
+					$requestStartTime = $requestStartDate->getTimestamp();
+					$materialsRequestCounts->whereAdd("dateCreated >= $requestStartTime");
 				}
 				$statusQuery = new MaterialsRequestStatus();
 				$statusQuery->whereAdd('isPatronCancel = 0 OR ISNULL(isPatronCancel)');

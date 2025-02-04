@@ -35,7 +35,8 @@ class Event extends DataObject {
 	public $recurrenceEnd;
 	public $recurrenceCount;
 	public $_dates; // Used to generate instances
-	public $_instances;
+	public $_instanceCount;
+	public $_datesPreview;
 
 
 
@@ -56,6 +57,7 @@ class Event extends DataObject {
 				'type' => 'enum',
 				'label' => 'Location',
 				'description' => 'Location of the event',
+				'required' => true,
 				'values' => $locationList,
 				'onchange' => 'return AspenDiscovery.Events.getEventTypesForLocation(this.value);',
 			],
@@ -64,6 +66,7 @@ class Event extends DataObject {
 				'type' => 'enum',
 				'label' => 'Event Type',
 				'description' => 'The type of event',
+				'required' => true,
 				'values' => $eventTypes,
 				'onchange' => "return AspenDiscovery.Events.getEventTypeFields(this.value);"
 			],
@@ -225,7 +228,7 @@ class Event extends DataObject {
 						],
 					],
 					'datesPreview' => [
-						'property' => 'datesPreview', // Store dates here
+						'property' => 'datesPreview',
 						'type' => 'hidden',
 					],
 				],
@@ -235,8 +238,8 @@ class Event extends DataObject {
 				'type' => 'hidden',
 				'hideInLists' => true,
 			],
-			'instances' => [
-				'property' => 'instances',
+			'instanceCount' => [
+				'property' => 'instanceCount',
 				'type' => 'integer',
 				'label' => 'Total Upcoming Events',
 				'hiddenByDefault' => true,
@@ -258,11 +261,11 @@ class Event extends DataObject {
 				'property' => 'eventTypeId',
 				'type' => 'enum',
 				'label' => 'Event Type',
+				'required' => true,
 				'description' => 'The type of event',
 				'placeholder' => 'Choose an event type',
 				'values' => $eventTypes,
 				'onchange' => "return AspenDiscovery.Events.getEventTypeFields(this.value);",
-				'hiddenByDefault' => true,
 			];
 			$structure['title']['hiddenByDefault'] = true;
 			$structure['infoSection']['hiddenByDefault'] = true;
@@ -530,6 +533,8 @@ class Event extends DataObject {
 			$this->_startDateForList = $this->startDate;
 		} else if ($name == 'dates') {
 			$this->setDates($value);
+		} else if ($name == 'datesPreview') {
+			$this->setDatesPreview($value);
 		} else {
 			parent::__set($name, $value);
 		}
@@ -544,8 +549,12 @@ class Event extends DataObject {
 			return $this->getTypeField($name);
 		} else if ($name == 'startDateForList') {
 			return parent::__get('startDate');
-		} else if ($name == 'instances') {
+		} else if ($name == 'dates') {
+			return $this->getExistingDates();
+		} else if ($name == 'instanceCount') {
 			return $this->getInstanceCount();
+		} else if ($name == 'datesPreview') {
+			return $this->getDatesPreview();
 		} else if ($name == 'endDate') {
 			return $this->calculateEnd($name);
 		} else if ($name == 'endTime') {
@@ -660,18 +669,19 @@ class Event extends DataObject {
 				}
 			} else { // If event does repeat and there are preview dates
 				if ($this->_dates && is_array($this->_dates)) {
-					// Clear existing events, but only if they haven't already happened and don't have a note
-					// Should add more user options about which events to change
-					$this->clearFutureInstances();
-					foreach ($this->_dates as $date) {
-						// Don't create instances in the past
-						if ($date > $todayDate || ($date == $todayDate && $time > $todayTime)) {
-							$instance = new EventInstance();
-							$instance->eventId = $this->id;
-							$instance->date = $date;
-							$instance->time = $this->startTime;
-							$instance->length = $this->eventLength;
-							$instance->update();
+					if (in_array('dates', $this->_changedFields)) {
+						// Should add more user options about which events to change
+						$this->clearFutureInstances();
+						foreach ($this->_dates as $date) {
+							// Don't create instances in the past
+							if ($date > $todayDate || ($date == $todayDate && $this->startTime > $todayTime)) {
+								$instance = new EventInstance();
+								$instance->eventId = $this->id;
+								$instance->date = $date;
+								$instance->time = $this->startTime;
+								$instance->length = $this->eventLength;
+								$instance->update();
+							}
 						}
 					}
 				}
@@ -721,6 +731,10 @@ class Event extends DataObject {
 		$this->_dates = $value;
 	}
 
+	public function setDatesPreview($value) {
+		$this->_datesPreview = $value;
+	}
+
 	public function getTypeField($fieldId) {
 		if (!isset($this->_typeFields[$fieldId]) && $this->id) {
 			$this->_typeFields[$fieldId] = '';
@@ -734,30 +748,50 @@ class Event extends DataObject {
 		return $this->_typeFields[$fieldId] ?? '';
 	}
 
-	public function getInstances() {
-		if (!isset($this->_instances) && $this->id) {
-			$this->_instances = [];
+	public function getDatesPreview() {
+		if (!isset($this->_dates) && $this->id) {
+			$this->_datesPreview = '';
 			$instance = new EventInstance();
 			$instance->eventId = $this->id;
 			$instance->find();
 			while ($instance->fetch()) {
-				$this->_instances[$instance->id] = $instance->date;
+				$date = strtotime($instance->date);
+				if ($date) {
+					$this->_datesPreview .= date("l, F jS, Y", $date) . "; ";
+				}
 			}
 		}
-		return $this->_instances;
+		return $this->_datesPreview ?? '';
+	}
+
+	public function getExistingDates() {
+		if (!isset($this->_dates) && $this->id) {
+			$this->_dates = [];
+			$instance = new EventInstance();
+			$instance->eventId = $this->id;
+			$instance->find();
+			while ($instance->fetch()) {
+				$this->_dates[] = $instance->date;
+			}
+		}
+		if (is_array($this->_dates)) {
+			return implode(",", $this->_dates);
+		} else {
+			return $this->_dates;
+		}
 	}
 
 	public function getInstanceCount() {
-		if (!isset($this->_instances) && $this->id) {
-			$this->_instances = [];
+		if (!isset($this->_instanceCount) && $this->id) {
+			$this->_instanceCount = '';
 			$instance = new EventInstance();
 			$instance->eventId = $this->id;
 			$todayDate = date('Y-m-d');
 			$todayTime = date('H:i:s');
 			$instance->whereAdd("date > '$todayDate' OR (date = '$todayDate' and time > '$todayTime')");
-			$this->_instances = $instance->count();
+			$this->_instanceCount = $instance->count();
 		}
-		return $this->_instances;
+		return $this->_instanceCount;
 	}
 
 	public function saveFields() {

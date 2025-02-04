@@ -544,12 +544,14 @@ class User extends DataObject {
 			$this->_additionalAdministrationLocations = [];
 			require_once ROOT_DIR . '/sys/Administration/AdministrationLocation.php';
 
-			$locationsList = Location::getLocationList(false);
-			$administrationLocation = new AdministrationLocation();
-			$administrationLocation->userId = $this->id;
-			$administrationLocation->find();
-			while ($administrationLocation->fetch()) {
-				$this->_additionalAdministrationLocations[$administrationLocation->locationId] = $locationsList[$administrationLocation->locationId];
+			if (!empty($this->id)) {
+				$locationsList = Location::getLocationList(false);
+				$administrationLocation = new AdministrationLocation();
+				$administrationLocation->userId = $this->id;
+				$administrationLocation->find();
+				while ($administrationLocation->fetch()) {
+					$this->_additionalAdministrationLocations[$administrationLocation->locationId] = $locationsList[$administrationLocation->locationId];
+				}
 			}
 		}
 
@@ -557,7 +559,7 @@ class User extends DataObject {
 	}
 
 	function saveAdditionalAdministrationLocations(): void {
-		if (isset($this->id) && isset($this->_additionalAdministrationLocations) && is_array($this->_additionalAdministrationLocations)) {
+		if (!empty($this->id) && isset($this->_additionalAdministrationLocations) && is_array($this->_additionalAdministrationLocations)) {
 			require_once ROOT_DIR . '/sys/Administration/AdministrationLocation.php';
 			$userAdministrationLocations = new AdministrationLocation();
 			$userAdministrationLocations->userId = $this->id;
@@ -617,7 +619,11 @@ class User extends DataObject {
 	}
 
 	function getPasswordOrPin() {
-		return empty($this->ils_password) ? '' : $this->ils_password;
+		if ($this->getAccountProfile()->authenticationMethod == 'db') {
+			return empty($this->password) ? '' : $this->password;
+		}else{
+			return empty($this->ils_password) ? '' : $this->ils_password;
+		}
 	}
 
 	function getPasswordOrPinField() {
@@ -1159,6 +1165,8 @@ class User extends DataObject {
 		if ($context != 'development') {
 			$this->saveRoles();
 		}
+		$this->saveAdditionalAdministrationLocations();
+
 		$this->clearCache();
 		return $ret;
 	}
@@ -1273,9 +1281,13 @@ class User extends DataObject {
 			unset($structure['roles']);
 			unset($structure['additionalAdministrationLocations']);
 		}else if ($context == 'localAdministrator') {
+			$structure['username']['required'] = true;
 			$structure['firstname']['type'] = 'text';
+			$structure['firstname']['required'] = true;
 			$structure['lastname']['type'] = 'text';
+			$structure['lastname']['required'] = true;
 			$structure['email']['required'] = true;
+
 			unset($structure['homeLibraryName']);
 			unset($structure['homeLocation']);
 			unset($structure['barcode']);
@@ -5701,9 +5713,16 @@ class User extends DataObject {
 		if ($homeLibrary->yearlyRequestLimitType == 0) {
 			$materialsRequests->whereAdd('dateCreated >= unix_timestamp(now() - interval 1 year)');
 		} else {
-			$currentYear = date('Y');
-			$januaryOne = strtotime("01-01-$currentYear");
-			$materialsRequests->whereAdd("dateCreated >= $januaryOne");
+			$calendarStartMonthDay = $homeLibrary->requestCalendarStartDate;
+			//Figure out if we're after the calendar start date for the year
+			$currentMonthDay = date('m-d');
+			$requestStartYear = date('Y');
+			if ($currentMonthDay <= $calendarStartMonthDay) {
+				$requestStartYear = $requestStartYear - 1;
+			}
+			$requestStartDate = date_create_from_format('m-d-Y', "$calendarStartMonthDay-$requestStartYear");
+			$requestStartTime = $requestStartDate->getTimestamp();
+			$materialsRequest->whereAdd("dateCreated >= $requestStartTime");
 		}
 
 		require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestStatus.php';

@@ -90,9 +90,16 @@ class MaterialsRequest_Submit extends Action {
 					if ($homeLibrary->yearlyRequestLimitType == 0) {
 						$materialsRequest->whereAdd('dateCreated >= unix_timestamp(now() - interval 1 year)');
 					}else{
-						$currentYear = date('Y');
-						$januaryOne = strtotime("01-01-$currentYear");
-						$materialsRequest->whereAdd("dateCreated >= $januaryOne");
+						$calendarStartMonthDay = $homeLibrary->requestCalendarStartDate;
+						//Figure out if we're after the calendar start date for the year
+						$currentMonthDay = date('m-d');
+						$requestStartYear = date('Y');
+						if ($currentMonthDay <= $calendarStartMonthDay) {
+							$requestStartYear = $requestStartYear - 1;
+						}
+						$requestStartDate = date_create_from_format('m-d-Y', "$calendarStartMonthDay-$requestStartYear");
+						$requestStartTime = $requestStartDate->getTimestamp();
+						$materialsRequest->whereAdd("dateCreated >= $requestStartTime");
 					}
 					//To be fair, don't include any requests that were canceled by the patron
 					$statusQuery = new MaterialsRequestStatus();

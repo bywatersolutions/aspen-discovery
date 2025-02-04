@@ -69,7 +69,7 @@ public class NativeEventsIndexer {
 			lastDateToIndex.add(DAY_OF_YEAR, this.numberOfDaysToIndex);
 
 			// Get event instance and event info
-			PreparedStatement eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.code, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ?;");
+			PreparedStatement eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ?;");
 			// Get libraries for this event type
 			PreparedStatement librariesStmt = aspenConn.prepareStatement("SELECT etl.libraryId, l.subdomain FROM event_type_library AS etl LEFT JOIN library as l ON etl.libraryId = l.libraryId WHERE eventTypeId = ?");
 			// Get custom fields
@@ -82,7 +82,7 @@ public class NativeEventsIndexer {
 			while (existingEventsRS.next()) {
 				NativeEvent event = new NativeEvent(existingEventsRS);
 				librariesStmt.clearParameters();
-				librariesStmt.setLong(1, event.getParentEventId());
+				librariesStmt.setLong(1, event.getEventType());
 				ResultSet librariesFieldsRS = librariesStmt.executeQuery();
 				while (librariesFieldsRS.next()) {
 					event.addLibrary(librariesFieldsRS.getString("subdomain").toLowerCase());

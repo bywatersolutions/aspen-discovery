@@ -16,6 +16,7 @@ import java.util.*;
 class NativeEvent {
 	private final long id;
 	private final long eventId;
+	private final int eventType;
 	private final String startDate;
 	private final String startTime;
 	private final int length;
@@ -33,6 +34,7 @@ class NativeEvent {
 	NativeEvent(ResultSet existingEventsRS) throws SQLException{
 		this.id = existingEventsRS.getLong("id"); // The event instance ID
 		this.eventId = existingEventsRS.getLong("eventId"); // The parent event ID
+		this.eventType = existingEventsRS.getInt("eventTypeId");
 		this.startDate = existingEventsRS.getString("date");
 		this.startTime = existingEventsRS.getString("time");
 		this.length = existingEventsRS.getInt("length");
@@ -40,7 +42,7 @@ class NativeEvent {
 		this.description = existingEventsRS.getString("description");
 		this.cover = existingEventsRS.getString("cover");
 		this.locationId = existingEventsRS.getLong("locationId");
-		this.locationCode = existingEventsRS.getString("code");
+		this.locationCode = existingEventsRS.getString("displayName");
 		this.sublocationId = existingEventsRS.getLong("sublocationId");
 		this.status = existingEventsRS.getBoolean("status");
 		this.nonPublic = existingEventsRS.getBoolean("private");
@@ -67,6 +69,8 @@ class NativeEvent {
 	}
 
 	long getParentEventId() { return eventId; }
+
+	int getEventType() { return eventType; }
 
 	public String getStartDate() {
 		return startDate;

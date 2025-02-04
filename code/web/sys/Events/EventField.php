@@ -53,7 +53,7 @@ class EventField extends DataObject {
 				'description' => 'A comma-separated list of allowable values (only for select lists)',
 			],
 			'defaultValue' => [
-				'property' => 'defaultValues',
+				'property' => 'defaultValue',
 				'type' => 'text',
 				'label' => 'Default Value',
 				'description' => 'The default value for the field',

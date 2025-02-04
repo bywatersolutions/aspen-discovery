@@ -57,6 +57,7 @@ class Event extends DataObject {
 				'type' => 'enum',
 				'label' => 'Location',
 				'description' => 'Location of the event',
+				'required' => true,
 				'values' => $locationList,
 				'onchange' => 'return AspenDiscovery.Events.getEventTypesForLocation(this.value);',
 			],
@@ -65,6 +66,7 @@ class Event extends DataObject {
 				'type' => 'enum',
 				'label' => 'Event Type',
 				'description' => 'The type of event',
+				'required' => true,
 				'values' => $eventTypes,
 				'onchange' => "return AspenDiscovery.Events.getEventTypeFields(this.value);"
 			],
@@ -259,11 +261,11 @@ class Event extends DataObject {
 				'property' => 'eventTypeId',
 				'type' => 'enum',
 				'label' => 'Event Type',
+				'required' => true,
 				'description' => 'The type of event',
 				'placeholder' => 'Choose an event type',
 				'values' => $eventTypes,
 				'onchange' => "return AspenDiscovery.Events.getEventTypeFields(this.value);",
-				'hiddenByDefault' => true,
 			];
 			$structure['title']['hiddenByDefault'] = true;
 			$structure['infoSection']['hiddenByDefault'] = true;
@@ -772,7 +774,11 @@ class Event extends DataObject {
 				$this->_dates[] = $instance->date;
 			}
 		}
-		return implode(",", $this->_dates);
+		if (is_array($this->_dates)) {
+			return implode(",", $this->_dates);
+		} else {
+			return $this->_dates;
+		}
 	}
 
 	public function getInstanceCount() {

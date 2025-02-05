@@ -495,7 +495,7 @@ public class KohaExportMain {
 		try{
 			logEntry.addNote("Starting export of volume information");
 			//Get the existing volumes
-			PreparedStatement getExistingVolumes = dbConn.prepareStatement("SELECT volumeId from ils_volume_info", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			PreparedStatement getExistingVolumes = dbConn.prepareStatement("SELECT volumeId from ils_volume_info where recordId like '" + indexingProfile.getName() + ":%'", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			HashSet<Long> existingVolumes = new HashSet<>();
 			ResultSet existingVolumesRS = getExistingVolumes.executeQuery();
 			while (existingVolumesRS.next()){

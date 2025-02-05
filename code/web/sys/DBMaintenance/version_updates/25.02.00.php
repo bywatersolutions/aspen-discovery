@@ -228,7 +228,7 @@ function getUpdates25_02_00(): array {
 				"ALTER TABLE sublocation ADD COLUMN isValidEventLocation TINYINT(1) DEFAULT 0",
 			]
 		], //native_events_tables
-		'native_events_indexing_tables1' => [
+		'native_events_indexing_tables' => [
 			'title' => 'Native Events Indexing Tables',
 			'description' => 'Add new tables for native events related to indexing',
 			'continueOnError' => true,
@@ -240,6 +240,14 @@ function getUpdates25_02_00(): array {
 					lastUpdateOfAllEvents INT,
 					lastUpdateOfChangedEvents INT
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+			]
+		], //native_events_indexing_tables
+		'native_events_system_variable' => [
+			'title' => 'Native Events System Variable',
+			'description' => 'Add system variable to turn on native events',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE system_variables ADD COLUMN enableAspenEvents TINYINT(1) DEFAULT 0"
 			]
 		], //native_events_indexing_tables
 

@@ -20,6 +20,13 @@ class MyAccount_ResetPinPage extends MyAccount {
 				$allowPinReset = ($patronHomeLibrary->allowPinReset == 1);
 			}
 
+			if ($user->hasIlsConnection()) {
+				$interface->assign('hasIlsConnection', true);
+			}else{
+				$interface->assign('hasIlsConnection', false);
+				$interface->assign('passwordLabel', 'Password');
+			}
+
 			$interface->assign('allowPinReset', $allowPinReset);
 			// Save/Update Actions
 			global $offlineMode;

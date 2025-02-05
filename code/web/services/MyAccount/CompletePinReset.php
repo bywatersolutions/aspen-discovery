@@ -52,7 +52,12 @@ class MyAccount_CompletePinReset extends Action {
 			$userToResetPinFor = new User();
 			$userToResetPinFor->id = $pinResetToken->userId;
 			if ($userToResetPinFor->find(true)) {
-				$catalog = CatalogFactory::getCatalogConnectionInstance(null, null);
+				if ($userToResetPinFor->hasIlsConnection()) {
+					$interface->assign('hasIlsConnection', true);
+				}else{
+					$interface->assign('hasIlsConnection', false);
+					$interface->assign('passwordLabel', 'Password');
+				}
 				$pinValidationRules = $userToResetPinFor->getPasswordPinValidationRules();
 				$interface->assign('pinValidationRules', $pinValidationRules);
 				if ((isset($_REQUEST['update']) || (isset($_REQUEST['pin1']) && isset($_REQUEST['pin2']))) && $tokenValid) {

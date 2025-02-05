@@ -1287,6 +1287,10 @@ class User extends DataObject {
 			$structure['lastname']['type'] = 'text';
 			$structure['lastname']['required'] = true;
 			$structure['email']['required'] = true;
+			$structure['password']['minLength'] = 12;
+			$structure['password']['maxLength'] = 50;
+			$structure['password']['note'] = translate(['text'=>'A strong password from 12 to 50 characters including at least one uppercase, lowercase, number, and special character (-_~!@#$%^&*.+).', 'isAdminFacing' => true]);
+			$structure['password']['serverValidation'] = 'validateStrongPassword';
 
 			unset($structure['homeLibraryName']);
 			unset($structure['homeLocation']);
@@ -3178,10 +3182,20 @@ class User extends DataObject {
 		if ($this->hasIlsConnection()) {
 			$result = $this->getCatalogDriver()->updatePin($this, $oldPin, $newPin);
 		}else{
-			$result = [
-				'success' => true,
-				'message' => 'Your password was updated successfully.'
-			];
+			$this->password = $newPin;
+			$passwordValidation = $this->validateStrongPassword();
+			if (!$passwordValidation['validatedOk']) {
+				$this->password = $oldPin;
+				$result = [
+					'success' => false,
+					'message' => implode('<br/>', $passwordValidation['errors'])
+				];
+			}else{
+				$result = [
+					'success' => true,
+					'message' => 'Your password was updated successfully.'
+				];
+			}
 		}
 		if ($result['success']) {
 			if ($this->hasIlsConnection()) {
@@ -4893,7 +4907,7 @@ class User extends DataObject {
 		}
 	}
 
-	public function getPasswordPinValidationRules(): array {
+	public function getPasswordPinValidationRules() : array {
 		if ($this->hasIlsConnection()) {
 			return $this->getCatalogDriver()->getPasswordPinValidationRules();
 		} else {
@@ -4901,6 +4915,7 @@ class User extends DataObject {
 				'minLength' => 12,
 				'maxLength' => 50,
 				'onlyDigitsAllowed' => false,
+				'requireStrongPassword' => true
 			];
 		}
 	}
@@ -5972,6 +5987,39 @@ class User extends DataObject {
 		}
 
 		return $structure;
+	}
+
+	public function validateStrongPassword() : array {
+		$validationResults = [
+			'validatedOk' => true,
+			'errors' => [],
+		];
+		if (strlen($this->password) < 12) {
+			$validationResults['validatedOk'] = false;
+			$validationResults['errors'][] = 'The provided password is too short';
+		}else if (strlen($this->password) > 50) {
+			$validationResults['validatedOk'] = false;
+			$validationResults['errors'][] = 'The provided password is too long';
+		}
+
+		if (!preg_match("/[A-Z]/", $this->password)){
+			$validationResults['validatedOk'] = false;
+			$validationResults['errors'][] = 'At least one upper case letter must be included';
+		}
+		if (!preg_match("/[a-z]/", $this->password)){
+			$validationResults['validatedOk'] = false;
+			$validationResults['errors'][] = 'At least one lower case letter must be included';
+		}
+		if (!preg_match("/[0-9]/", $this->password)){
+			$validationResults['validatedOk'] = false;
+			$validationResults['errors'][] = 'At least one number must be included';
+		}
+		if (!preg_match("/[-_~!@#$%^&*.()+=]/", $this->password)){
+			$validationResults['validatedOk'] = false;
+			$validationResults['errors'][] = 'At least one special character (-_~!@#$%^&*.+=) must be included';
+		}
+
+		return $validationResults;
 	}
 }
 

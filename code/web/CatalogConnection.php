@@ -1604,7 +1604,7 @@ class CatalogConnection {
 		}
 	}
 
-	function getPasswordPinValidationRules() {
+	function getPasswordPinValidationRules() : array {
 		return $this->driver->getPasswordPinValidationRules();
 	}
 
@@ -1959,5 +1959,9 @@ class CatalogConnection {
 				]),
 			];
 		}
+	}
+
+	public function hasIlsConsentSupport(): bool {
+		return $this->driver->hasIlsConsentSupport();
 	}
 }

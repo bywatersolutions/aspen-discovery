@@ -4123,6 +4123,10 @@ class Koha extends AbstractIlsDriver {
 			}
 		}
 
+		if($library->ilsConsentEnabled && $this->areAnyConsentPluginsEnabled()) {
+			$fields['privacySection'] = $this->getSelfRegistrationFormPrivacySection();
+		}
+
 		if ($type == 'selfReg') {
 			$passwordLabel = $library->loginFormPasswordLabel;
 			$passwordNotes = $library->selfRegistrationPasswordNotes;
@@ -4501,9 +4505,28 @@ class Koha extends AbstractIlsDriver {
 					}
 				}
 			}
-
+			
 			$result = $this->postSelfRegistrationToKoha($postVariables);
+
+			if (!$library->ilsConsentEnabled) {
+				return $result;
+			}
+
+			if (!$this->areAnyConsentPluginsEnabled()) {
+				return $result;
+			}
+
+			$consentTypes = $this->getConsentTypes();
+			if (!empty($consentTypes)) {
+				foreach ($consentTypes as $key => $consentType) {
+					if (strtolower($key) == 'gdpr_processing') {
+						continue;
+					}
+					$this->updatePatronConsent($result['patronId'], strtolower($key), isset($_REQUEST['privacy_consent_' . strtolower($key)]));
+				}
+			}
 		}
+
 		return $result;
 	}
 
@@ -4555,6 +4578,7 @@ class Koha extends AbstractIlsDriver {
 
 			} else {
 				$jsonResponse = json_decode($response);
+				$result['patronId'] = $jsonResponse->patron_id;
 				$result['username'] = $jsonResponse->userid;
 				$result['success'] = true;
 				$result['sendWelcomeMessage'] = false;
@@ -6770,6 +6794,10 @@ class Koha extends AbstractIlsDriver {
 		/** @noinspection SqlResolve */
 		$sql = "SELECT * FROM plugin_data WHERE plugin_class LIKE '%$pluginName';";
 		$results = mysqli_query($this->dbConnection, $sql);
+		$plugin = [
+			'installed' => 0,
+			'enabled' => 0,
+		];
 
 		if ($results !== false) {
 			while ($curRow = $results->fetch_assoc()) {
@@ -6789,7 +6817,7 @@ class Koha extends AbstractIlsDriver {
 		return $plugin;
 	}
 
-	function getPasswordPinValidationRules() {
+	function getPasswordPinValidationRules() : array {
 		global $library;
 		$minPasswordLength = max($this->getKohaSystemPreference('minPasswordLength'), $library->minPinLength);
 		$maxPasswordLength = max($library->maxPinLength, $minPasswordLength);
@@ -6797,6 +6825,7 @@ class Koha extends AbstractIlsDriver {
 			'minLength' => $minPasswordLength,
 			'maxLength' => $maxPasswordLength,
 			'onlyDigitsAllowed' => $library->onlyDigitsAllowedInPin,
+			'requireStrongPassword' => false
 		];
 	}
 
@@ -8378,5 +8407,238 @@ class Koha extends AbstractIlsDriver {
 		}*/
 
 		return $result;
+	}
+
+	public function areAnyConsentPluginsEnabled(): bool {
+		global $library;
+		$anyConsentPluginsEnabled = false;
+		$consentPluginNames = $this->getPluginNamesByMethodName('patron_consent_type');
+		foreach($consentPluginNames as $pluginName) {
+			$pluginStatus = $this->getPluginStatus($pluginName);
+			if ($library->ilsConsentEnabled && !$pluginStatus['enabled']) {
+				global $logger;
+				$statusDescription = $pluginStatus['installed'] ? 'disabled' : 'not installed';
+				$logger->log("Consent options could not be presented or recorded because the $pluginName plugin is $statusDescription", Logger::LOG_ERROR);
+				continue;
+			}
+			$anyConsentPluginsEnabled = true;
+		}
+		return $anyConsentPluginsEnabled;
+	}
+
+	public function getPluginNamesByMethodName(string $methodName): array|bool {
+		$this->initDatabaseConnection();
+		/** @noinspection SqlResolve */
+		$sql = 'SELECT plugin_class FROM plugin_methods WHERE plugin_method = "' . $methodName . '"';
+		$results = mysqli_query($this->dbConnection, $sql);
+		$pluginNames = [];
+
+		if ($results === false) {
+			global $logger;
+			$logger->log("Error loading plugins " . mysqli_error($this->dbConnection), Logger::LOG_ERROR);
+			return false;
+		}
+		while ($curRow = $results->fetch_assoc()) {
+			$pluginNames[] = $curRow['plugin_class'];
+		}
+		$results->close();
+
+		return $pluginNames;
+	}
+
+
+	public function getFormattedConsentTypes(): array {
+		$consentTypes = $this->getConsentTypes();
+		if (empty($consentTypes)) {
+			return [];
+		}
+		$formattedConsentTypes = [];
+		foreach ($consentTypes as $key => $consentType) {
+			if (strtolower($key) == 'gdpr_processing') {
+				continue;
+			}
+			$formattedConsentTypes[$key] = [
+				'lowercaseCode' => strtolower($key),
+				'capitalisedCode' => ucfirst(strtolower($key)),
+				'allCapsCode' => $key,
+				'label' => $consentType['title']['en'],
+				'description' => $consentType['description']['en'],
+				'actionConsentedTo' => $consentType['title']['en'] == 'Newsletter' ? "receiving our Newsletter" : $consentType['title']['en'],
+			];
+		}
+		return $formattedConsentTypes;
+	}
+
+	public function getSelfRegistrationFormPrivacySection(): array {
+		$consentTypes = $this->getConsentTypes();
+		if (empty($consentTypes)) {
+			return [];
+		}
+		$privacySection = [
+			'property' => 'privacySection',
+			'type' => 'section',
+			'label' => 'Privacy',
+			'hideInLists' => true,
+			'expandByDefault' => true,
+			'properties' => []
+		];
+
+		foreach ($consentTypes as $key => $consentType) {
+			if (strtolower($key) == 'gdpr_processing') {
+				continue;
+			}
+			$privacySection['properties'][strtolower($key)] = [
+				'property' => 'privacy_consent_' . strtolower($key),
+				'type' => 'section',
+				'label' => $consentType['title']['en'],
+				'properties' => [
+					strtolower($key) => [
+						'property' => 'privacy_consent_' . strtolower($key),
+						'type' => 'checkbox',
+						'default' => false,
+						'label' => $consentType['description']['en'],
+						'description' => $consentType['description']['en'],
+					],
+				],
+			];
+		}
+		return $privacySection;
+	}
+
+	public function updatePatronConsent(int $patronIlsId, string $consentType, $consentEnabled = false): array {
+		$result = ['success' => false,];
+
+		$oauthToken = $this->getOAuthToken();
+		if (!$oauthToken) {
+			$result['message'] = translate([
+				'text' => 'Unable to authenticate with the ILS. Please try again later or contact the library.',
+				'isPublicFacing' => true,
+			]);
+			return $result;
+		}
+
+		$url = $this->getWebServiceURL() . '/api/v1/contrib/newsletterconsent/consents/' . $patronIlsId;
+		$body = [ strtoupper($consentType) => $consentEnabled ? 1 : false ];
+
+		$customHeaders = [];
+
+		$headers = implode($this->apiCurlWrapper->getHeaders());
+		if(strpos($headers, 'Authorization: Bearer ') === false) {
+			$customHeaders[] = 'Authorization: Bearer ' . $oauthToken;
+		};
+		if(strpos($headers, 'Content-type: application/json') === false) {
+			$customHeaders[] = 'Content-type: application/json';
+		};
+		if(strpos($headers, 'User-Agent: Aspen Discovery') === false) {
+			$customHeaders[] = 'User-Agent: Aspen Discovery';
+		};
+		if(strpos($headers, 'Host: ') === false) {
+			$customHeaders[] = 'Host: ' . preg_replace('~http[s]?://~', '', $this->getWebServiceURL());
+		};
+		
+		if ($customHeaders) {
+			$this->apiCurlWrapper->addCustomHeaders($customHeaders, false);
+		}
+
+		$this->apiCurlWrapper->curl_connect($url);
+		$this->apiCurlWrapper->curlSendPage($url, 'PUT' , json_encode($body));
+
+		if ($this->apiCurlWrapper->getResponseCode() == 200) {
+			$result['success'] = true;
+			$result['message'] ='Newsletter content updated successfully.';
+		} else {
+			$result['message'] = "Failed to update newsletter consent.";
+			$result['success'] = false;
+		}
+
+		return $result;
+	}
+
+	public function getPatronConsents($patron): array {	
+		$oauthToken = $this->getOAuthToken();
+		if (!$oauthToken) {
+			$result['message'] = translate([
+				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'isPublicFacing' => true,
+			]);
+			return $result;
+		}
+		
+		$url = $this->getWebServiceURL() . '/api/v1/contrib/newsletterconsent/consents/' . $patron->unique_ils_id;
+		
+		$customHeaders = [];
+
+		$headers = implode($this->apiCurlWrapper->getHeaders());
+		if(strpos($headers, 'Authorization: Bearer ') === false) {
+			$customHeaders[] = 'Authorization: Bearer ' . $oauthToken;
+		};
+		if(strpos($headers, 'User-Agent: Aspen Discovery') === false) {
+			$customHeaders[] = 'User-Agent: Aspen Discovery';
+		};
+		if(strpos($headers, 'Host: ') === false) {
+			$customHeaders[] = 'Host: ' . preg_replace('~http[s]?://~', '', $this->getWebServiceURL());
+		};
+		
+		if ($customHeaders) {
+			$this->apiCurlWrapper->addCustomHeaders($customHeaders, false);
+		}
+
+		$this->apiCurlWrapper->curl_connect($url);
+		$response = $this->apiCurlWrapper->curlGetPage($url);
+
+		if ($this->apiCurlWrapper->getResponseCode() == 200) {
+			return json_decode($response, true);
+		} else {
+			return translate([
+				'text' => 'Error getting a list of consents for this patron from Koha.',
+				'isPublicFacing' => true,
+			]);
+		}
+
+	}
+
+	private function getConsentTypes(): array {
+		$oauthToken = $this->getOAuthToken();
+		if (!$oauthToken) {
+			return translate([
+				'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+				'isPublicFacing' => true,
+			]);
+		}
+		
+		$url = $this->getWebServiceURL() . '/api/v1/contrib/newsletterconsent/consents/';
+
+		$customHeaders = [];
+
+		$headers = implode($this->apiCurlWrapper->getHeaders());
+		if(strpos($headers, 'Authorization: Bearer ') === false) {
+			$customHeaders[] = 'Authorization: Bearer ' . $oauthToken;
+		};
+		if(strpos($headers, 'User-Agent: Aspen Discovery') === false) {
+			$customHeaders[] = 'User-Agent: Aspen Discovery';
+		};
+		if(strpos($headers, 'Host: ') === false) {
+			$customHeaders[] = 'Host: ' . preg_replace('~http[s]?://~', '', $this->getWebServiceURL());
+		};
+		
+		if ($customHeaders) {
+			$this->apiCurlWrapper->addCustomHeaders($customHeaders, false);
+		}
+		
+		$this->apiCurlWrapper->curl_connect($url);
+		$response = $this->apiCurlWrapper->curlGetPage($url);
+
+		if ($this->apiCurlWrapper->getResponseCode() == 200) {
+			return json_decode($response, true);
+		} else {
+			return translate([
+				'text' => 'There was an error while getting existing consent types from Koha.',
+				'isPublicFacing' => true,
+			]);
+		}
+	}
+
+	public function hasIlsConsentSupport(): bool {
+		return true;
 	}
 }

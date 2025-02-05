@@ -2374,11 +2374,12 @@ class CarlX extends AbstractIlsDriver {
 
 
 	//Defaults are correct for this
-//	function getPasswordPinValidationRules(){
+//	function getPasswordPinValidationRules() : array {
 //		return [
 //			'minLength' => 4,
 //			'maxLength' => 6,
 //			'onlyDigitsAllowed' => true,
+//			'requireStrongPassword' => false
 //		];
 //	}
 

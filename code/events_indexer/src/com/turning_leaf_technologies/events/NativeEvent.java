@@ -1,5 +1,6 @@
 package com.turning_leaf_technologies.events;
 
+import com.turning_leaf_technologies.config.ConfigUtil;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
@@ -94,6 +95,10 @@ class NativeEvent {
 
 	public String getCover() {
 		return cover;
+	}
+
+	public String getCoverUrl(String coverPath) {
+		return coverPath + "/aspenEvents/" + cover;
 	}
 
 	public long getLocationId() {

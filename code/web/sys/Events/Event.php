@@ -42,6 +42,8 @@ class Event extends DataObject {
 
 
 	public static function getObjectStructure($context = ''): array {
+		global $configArray;
+		$coverPath = $configArray['Site']['coverPath'];
 		$eventTypes = EventType::getEventTypeList();
 		$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
 		$locationList = Location::getLocationList(!UserAccount::userHasPermission('Administer All Libraries') || UserAccount::userHasPermission('Administer Home Library Locations'));
@@ -95,6 +97,7 @@ class Event extends DataObject {
 						'maxWidth' => 280,
 						'maxHeight' => 280,
 						'description' => 'The cover for this event',
+						'path' => "$coverPath/aspenEvents/",
 						'hideInLists' => true,
 					],
 					'fieldSetFieldSection' => [

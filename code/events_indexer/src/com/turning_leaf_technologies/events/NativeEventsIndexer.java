@@ -1,11 +1,13 @@
 package com.turning_leaf_technologies.events;
 
+import com.turning_leaf_technologies.config.ConfigUtil;
 import com.turning_leaf_technologies.strings.AspenStringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateHttp2SolrClient;
 import org.apache.solr.common.SolrInputDocument;
+import org.ini4j.Ini;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -27,32 +29,26 @@ public class NativeEventsIndexer {
 	private final HashMap<Long, NativeEvent> eventInstances = new HashMap<>();
 	// private final HashSet<String> librariesToShowFor = new HashSet<>();
 	private final static CRC32 checksumCalculator = new CRC32();
+	private final String serverName;
+	private final String coverPath;
 
 	private PreparedStatement addEventStmt;
 	private PreparedStatement deleteEventStmt;
 
 	private final ConcurrentUpdateHttp2SolrClient solrUpdateServer;
 
-	NativeEventsIndexer(long settingsId, int numberOfDaysToIndex, boolean runFullUpdate, ConcurrentUpdateHttp2SolrClient solrUpdateServer, Connection aspenConn, Logger logger) {
+	NativeEventsIndexer(long settingsId, int numberOfDaysToIndex, boolean runFullUpdate, ConcurrentUpdateHttp2SolrClient solrUpdateServer, Connection aspenConn, Logger logger, String serverName) {
 		this.settingsId = settingsId;
 		this.aspenConn = aspenConn;
 		this.solrUpdateServer = solrUpdateServer;
 		this.numberOfDaysToIndex = numberOfDaysToIndex;
 		this.runFullUpdate = runFullUpdate;
+		this.serverName = serverName;
 
 		logEntry = new EventsIndexerLogEntry("Native Events", aspenConn, logger);
 
-//		try {
-//			PreparedStatement getLibraryScopesStmt = aspenConn.prepareStatement("SELECT subdomain from library inner join library_events_setting on library.libraryId = library_events_setting.libraryId WHERE settingSource = 'assabet' AND settingId = ?");
-//			getLibraryScopesStmt.setLong(1, settingsId);
-//			ResultSet getLibraryScopesRS = getLibraryScopesStmt.executeQuery();
-//			while (getLibraryScopesRS.next()){
-//				librariesToShowFor.add(getLibraryScopesRS.getString("subdomain").toLowerCase());
-//			}
-//
-//		} catch (Exception e) {
-//			logEntry.incErrors("Error setting up statements ", e);
-//		}
+		Ini configIni = ConfigUtil.loadConfigFile("config.ini", serverName, logger);
+		coverPath = configIni.get("Site","coverPath");
 
 		loadEvents();
 	}
@@ -183,9 +179,9 @@ public class NativeEventsIndexer {
 					for (NativeEvent.EventField field : extraFields) {
 						solrDocument.addField(field.getSolrFieldName(), field.getValue()); // Add as a dynamic field
 					}
-
-					// need getCoverURL and then
-					// solrDocument.addField("image_url", eventInfo.getCoverUrl());
+					if (eventInfo.getCover() != null && !eventInfo.getCover().isBlank() ) {
+						solrDocument.addField("image_url", eventInfo.getCoverUrl(coverPath));
+					}
 
 					solrDocument.addField("description", eventInfo.getDescription());
 
@@ -197,7 +193,19 @@ public class NativeEventsIndexer {
 
 				} catch (SolrServerException | IOException e) {
 					logEntry.incErrors("Error adding event to solr ", e);
-				}}
+				}
+			}
+
+			try {
+				solrUpdateServer.commit(false, false, true);
+			} catch (Exception e) {
+				logEntry.incErrors("Error in final commit while finishing extract, shutting down", e);
+				logEntry.setFinished();
+				logEntry.saveResults();
+				System.exit(-3);
+			}
+
+			logEntry.setFinished();
 		}
 
 	}

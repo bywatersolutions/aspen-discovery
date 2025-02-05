@@ -122,7 +122,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 		return 'RecordDrivers/Events/nativeEvent_result.tpl';
 	}
 
-	public function getBookcoverUrl($size = 'small', $absolutePath = false) {
+	public function getBookcoverUrl($size = 'small', $absolutePath = false, $type = "nativeEvent_event") {
 		global $configArray;
 
 		if ($absolutePath) {
@@ -130,7 +130,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 		} else {
 			$bookCoverUrl = '';
 		}
-		$bookCoverUrl .= "/bookcover.php?id={$this->getUniqueID()}&size={$size}&type=nativeEvent_event";
+		$bookCoverUrl .= "/bookcover.php?id={$this->getUniqueID()}&size={$size}&type={$type}";
 
 		return $bookCoverUrl;
 	}
@@ -210,11 +210,18 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 	}
 
 	function getEventCoverUrl() {
-		$decodedData = $this->getEventObject();
-		if (!empty($decodedData->image->url)) {
-			return $decodedData->image->url;
+		if (!empty($this->fields['image_url'])) {
+			global $interface;
+			return $this->getBookcoverUrl('medium', false, "nativeEvent_eventRecord");
 		}
-		return null;
+		return $this->getBookcoverUrl('medium');
+	}
+
+	function getCoverImagePath() {
+		if (!empty($this->fields['image_url'])) {
+			return $this->fields['image_url'];
+		}
+		return false;
 	}
 
 	function getEventObject() {

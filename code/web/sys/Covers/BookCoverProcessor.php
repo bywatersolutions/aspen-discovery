@@ -83,7 +83,11 @@ class BookCoverProcessor {
 				return true;
 			}
 		} elseif ($this->type == 'nativeEvent_event') {
-			if ($this->getNativeEventCover($this->id)){
+			if ($this->getNativeEventsDateCover($this->id)){
+				return true;
+			}
+		} elseif ($this->type == 'nativeEvent_eventRecord') {
+			if ($this->getNativeEventsImageCover($this->id)){
 				return true;
 			}
 		} elseif ($this->type == 'webpage' || $this->type == 'WebPage' || $this->type == 'BasicPage' || $this->type == 'WebResource' || $this->type == 'PortalPage' || $this->type == 'GrapesPage') {
@@ -1764,7 +1768,7 @@ class BookCoverProcessor {
 		return false;
 	}
 
-	private function getNativeEventCover($id) {
+	private function getNativeEventsDateCover($id) {
 		if (strpos($id, ':') !== false) {
 			[
 				,
@@ -1809,6 +1813,24 @@ class BookCoverProcessor {
 			];
 			$coverBuilder->getCover($driver->getTitle(), $this->cacheFile, $props);
 			return $this->processImageURL('default_event', $this->cacheFile, false);
+		}
+		return false;
+	}
+
+	private function getNativeEventsImageCover($id) {
+		if (strpos($id, ':') !== false) {
+			[
+				,
+				$id,
+			] = explode(":", $id);
+		}
+		require_once ROOT_DIR . '/RecordDrivers/NativeEventRecordDriver.php';
+		$driver = new NativeEventRecordDriver($id);
+		if (($driver->isValid()) && $driver->getCoverImagePath()) {
+			$uploadedImage = $driver->getCoverImagePath();
+			if (file_exists($uploadedImage)) {
+				return $this->processImageURL('upload', $uploadedImage);
+			}
 		}
 		return false;
 	}

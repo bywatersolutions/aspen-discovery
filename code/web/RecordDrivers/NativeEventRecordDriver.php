@@ -157,6 +157,24 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 		return $description->description;
 	}
 
+	public function getEventTypeFields() {
+		$keys = array_keys($this->fields);
+		$typeFields = [];
+		$html = "";
+		foreach ($keys as $key) {
+			if (str_starts_with($key, 'custom_')) {
+				$typeFields[$key] = $this->fields[$key];
+			}
+		}
+		foreach ($typeFields as $key => $value) {
+			$pattern = '/custom_([a-z]+)_/i';
+			$fieldname = preg_replace($pattern, "", $key);
+			$fieldname = str_replace("_", " ", $fieldname);
+			$html .= "<li>$fieldname: $value[0]</li>";
+		}
+		return $html;
+	}
+
 	/**
 	 * Return the unique identifier of this record within the Solr index;
 	 * useful for retrieving additional information (like tags and user

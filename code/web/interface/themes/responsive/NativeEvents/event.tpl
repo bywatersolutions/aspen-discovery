@@ -67,8 +67,8 @@
 					{if !empty($recordDriver->getRoom())}
 						<li>{translate text="Room: " isPublicFacing=true}{$recordDriver->getRoom()}</li>
 					{/if}
-					{if !empty($recordDriver->getType())}
-						<li>{translate text="Event Type: " isPublicFacing=true}{$recordDriver->getType()}</li>
+					{if !empty($recordDriver->getEventTypeFields())}
+						{$recordDriver->getEventTypeFields()}
 					{/if}
 				</ul>
 			</div>

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <schema name="Aspen Events Index" version="1.5">
 	<types>
-		<fieldType name="unchanged_string" class="StrField"/> 
+		<fieldType name="unchanged_string" class="StrField"/>
 		<fieldType name="integer" class="IntPointField"/>
 		<fieldType name="long" class="LongPointField"/>
 		<fieldType name="float" class="FloatPointField"/>
@@ -129,6 +129,11 @@
 		<!-- Field to get random titles -->
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
 
+		<!-- Custom dynamic fields for Native Events -->
+		<dynamicField name="custom_string_*" type="unchanged_string" indexed="true" stored="true" multiValued="true"/>
+		<dynamicField name="custom_text_*" type="searchable_text" indexed="true" stored="true" multiValued="true"/>
+		<dynamicField name="custom_bool_*" type="integer" indexed="true" stored="true"/>
+
 		<!-- spelling -->
 		<field name="spelling" type="textSpelling" indexed="true" stored="false" multiValued="true"/>
 
@@ -137,7 +142,7 @@
 		<field name="keyword_suggestions" type="textSuggest" indexed="true" stored="true" multiValued="true"/>
 
 	</fields>
-	
+
 	<uniqueKey>identifier</uniqueKey>
 	<copyField source="title" dest="title_sort"/>
 	<copyField source="title" dest="title_suggestions"/>

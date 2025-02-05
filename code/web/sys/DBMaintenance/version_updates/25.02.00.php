@@ -235,9 +235,19 @@ function getUpdates25_02_00(): array {
 			'sql' => [
 				"CREATE TABLE events_indexing_settings (
 					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-					daysToIndex INT DEFAULT 365,
-					runFullUpdate TINYINT(1) DEFAULT 0
+					numberOfDaysToIndex INT DEFAULT 365,
+					runFullUpdate TINYINT(1) DEFAULT 0,
+					lastUpdateOfAllEvents INT,
+					lastUpdateOfChangedEvents INT
 				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+			]
+		], //native_events_indexing_tables
+		'native_events_system_variable' => [
+			'title' => 'Native Events System Variable',
+			'description' => 'Add system variable to turn on native events',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE system_variables ADD COLUMN enableAspenEvents TINYINT(1) DEFAULT 0"
 			]
 		], //native_events_indexing_tables
 

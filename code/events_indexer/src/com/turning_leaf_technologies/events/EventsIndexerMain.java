@@ -131,6 +131,18 @@ public class EventsIndexerMain {
 					indexer.indexEvents();
 				}
 
+				// Native events
+				getEventsSitesToIndexStmt = aspenConn.prepareStatement("SELECT * from events_indexing_settings");
+				eventsSitesRS = getEventsSitesToIndexStmt.executeQuery();
+				while (eventsSitesRS.next()) {
+					NativeEventsIndexer indexer = new NativeEventsIndexer(
+						eventsSitesRS.getLong("id"),
+						eventsSitesRS.getInt("numberOfDaysToIndex"),
+						eventsSitesRS.getBoolean("runFullUpdate"),
+						solrUpdateServer, aspenConn, logger, serverName);
+					indexer.indexEvents();
+				}
+
 				//Index events from other source here
 				try {
 					solrUpdateServer.close();

@@ -762,7 +762,10 @@ EOT;
 					, r.sponsor AS Home_Room
 					, r.name AS Patron_Name
 					, r.patronid AS P_Barcode
-					, itembranch.branchgroup AS SYSTEM
+					, case
+						when itembranch.branchgroup = 2 then 'MNPS'
+						else 'NPL'
+					end AS SYSTEM
 					, r.callnumber AS Call_Number
 					, r.title AS Title
 					, r.due AS Due_Date

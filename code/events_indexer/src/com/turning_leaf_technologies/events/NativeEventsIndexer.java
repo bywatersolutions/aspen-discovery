@@ -102,8 +102,8 @@ public class NativeEventsIndexer {
 
 
 	void indexEvents() {
-
-		if (runFullUpdate) {
+		//MDN 2/6/2025 temporarily run full update always until processing just changes can be done
+		if (true || runFullUpdate) {
 			try {
 				solrUpdateServer.deleteByQuery("type:event AND source:" + this.settingsId);
 			} catch (BaseHttpSolrClient.RemoteSolrException rse) {

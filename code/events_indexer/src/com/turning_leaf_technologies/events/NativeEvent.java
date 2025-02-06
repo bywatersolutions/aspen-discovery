@@ -190,7 +190,12 @@ class NativeEvent {
 
 		public String getValue() {
 			if (allowableValues.length > 0 && StringUtils.isNumeric(value)) {
-				return allowableValues[Integer.parseInt(value)];
+				try {
+					return allowableValues[Integer.parseInt(value)];
+				}catch (ArrayIndexOutOfBoundsException e) {
+					//MDN 2/6/25 do additional handling and logging if we don't get a good value.
+					return "Unknown";
+				}
 			} else {
 				return value;
 			}

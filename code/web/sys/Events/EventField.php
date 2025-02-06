@@ -1,0 +1,92 @@
+<?php
+require_once ROOT_DIR . '/sys/DB/DataObject.php';
+
+class EventField extends DataObject {
+	public $__table = 'event_field';
+	public $id;
+	public $name;
+	public $description;
+	public $type;
+	public $allowableValues; // For select lists
+	public $defaultValue;
+	public $facetName;
+
+	public static function getObjectStructure($context = ''): array {
+		$structure = [
+			'id' => [
+				'property' => 'id',
+				'type' => 'label',
+				'label' => 'Id',
+				'description' => 'The unique id',
+			],
+			'name' => [
+				'property' => 'name',
+				'type' => 'text',
+				'label' => 'Name',
+				'description' => 'A name for the field',
+			],
+			'description' => [
+				'property' => 'description',
+				'type' => 'text',
+				'label' => 'Description/Instructions for usage',
+				'description' => 'A description or instructions for the field',
+			],
+			'type' => [
+				'property' => 'type',
+				'type' => 'enum',
+				'label' => 'Field Type',
+				'description' => 'The type of field',
+				'values' => [
+					'0' => 'Text Field',
+					'1' => 'Text Area',
+					'2' => 'Checkbox',
+					'3' => 'Select List',
+					'4' => 'Email Address',
+					'5' => 'URL',
+				],
+				'default' => '0',
+			],
+			'allowableValues' => [
+				'property' => 'allowableValues',
+				'type' => 'text',
+				'label' => 'Allowable Values for Select Lists',
+				'description' => 'A comma-separated list of allowable values (only for select lists)',
+			],
+			'defaultValue' => [
+				'property' => 'defaultValue',
+				'type' => 'text',
+				'label' => 'Default Value',
+				'description' => 'The default value for the field',
+			],
+			'facetName' => [
+				'property' => 'facetName',
+				'type' => 'enum',
+				'label' => 'Facet Name',
+				'values' => [
+					'0' => 'None',
+					'1' => 'Age Group',
+					'2' => 'Program Type',
+					'3' => 'Category',
+					'4' => 'Custom Facet 1',
+					'5' => 'Custom Facet 2',
+					'6' => 'Custom Facet 3',
+				],
+				'default' => '0',
+			],
+		];
+		return $structure;
+	}
+
+	public static function getEventFieldList(): array {
+		$fieldList = [];
+		$object = new EventField();
+		$object->orderBy('name');
+		$object->find();
+		while ($object->fetch()) {
+			$label = $object->name . " - " . $object->description;
+			$fieldList[$object->id] = $label;
+		}
+		return $fieldList;
+	}
+}
+

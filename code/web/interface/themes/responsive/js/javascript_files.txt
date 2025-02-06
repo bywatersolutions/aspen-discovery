@@ -35,6 +35,7 @@ aspen/course-reserves.js
 aspen/dpla.js
 aspen/ebsco.js
 aspen/econtent-record.js
+aspen/events.js
 aspen/grouped-work.js
 aspen/lists.js
 aspen/collection-spotlights.js

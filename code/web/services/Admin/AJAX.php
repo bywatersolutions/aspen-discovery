@@ -1680,4 +1680,5 @@ class Admin_AJAX extends JSON_Action {
 		$aspenUsageGraph = new Admin_UsageGraphs();
 		$aspenUsageGraph->buildCSV();
 	}
+
 }

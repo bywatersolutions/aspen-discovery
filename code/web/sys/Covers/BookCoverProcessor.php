@@ -82,6 +82,14 @@ class BookCoverProcessor {
 			if ($this->getAssabetCover($this->id)){
 				return true;
 			}
+		} elseif ($this->type == 'nativeEvent_event') {
+			if ($this->getNativeEventsDateCover($this->id)){
+				return true;
+			}
+		} elseif ($this->type == 'nativeEvent_eventRecord') {
+			if ($this->getNativeEventsImageCover($this->id)){
+				return true;
+			}
 		} elseif ($this->type == 'webpage' || $this->type == 'WebPage' || $this->type == 'BasicPage' || $this->type == 'WebResource' || $this->type == 'PortalPage' || $this->type == 'GrapesPage') {
 			if ($this->getWebPageCover($this->id)) {
 				return true;
@@ -1756,6 +1764,73 @@ class BookCoverProcessor {
 			];
 			$coverBuilder->getCover($driver->getTitle(), $this->cacheFile, $props);
 			return $this->processImageURL('default_event', $this->cacheFile, false);
+		}
+		return false;
+	}
+
+	private function getNativeEventsDateCover($id) {
+		if (strpos($id, ':') !== false) {
+			[
+				,
+				$id,
+			] = explode(":", $id);
+		}
+		require_once ROOT_DIR . '/RecordDrivers/NativeEventRecordDriver.php';
+		$driver = new NativeEventRecordDriver($id);
+		if (!($driver->isValid())){ //if driver isn't valid, likely a past event on a list
+			require_once ROOT_DIR . '/sys/Covers/EventCoverBuilder.php';
+			require_once ROOT_DIR . '/sys/Events/UserEventsEntry.php';
+			$coverBuilder = new EventCoverBuilder();
+			$userEntry = new UserEventsEntry();
+			$userEntry->sourceId = $id;
+			if ($userEntry->find(true)){
+				$startDate = new DateTime("@$userEntry->eventDate");
+				$startDate->setTimezone(new DateTimeZone(date_default_timezone_get()));
+				$props = [
+					'eventDate' => $startDate,
+					'isPastEvent' => true,
+				];
+				$title = $userEntry->title;
+			} else{
+				$props = [
+					'eventDate' => $driver->getStartDateFromDB($id),
+					'isPastEvent' => true,
+				];
+				$title = $driver->getTitleFromDB($id);
+			}
+			$coverBuilder->getCover($title, $this->cacheFile, $props);
+			return $this->processImageURL('default_event', $this->cacheFile, false);
+		} else if ($driver) {
+			require_once ROOT_DIR . '/sys/Covers/EventCoverBuilder.php';
+			$coverBuilder = new EventCoverBuilder();
+			$isPast = false;
+			if (array_key_exists('isPast', $_REQUEST)){
+				$isPast = $_REQUEST['isPast'];
+			}
+			$props = [
+				'eventDate' => $driver->getStartDate(),
+				'isPastEvent' => $isPast,
+			];
+			$coverBuilder->getCover($driver->getTitle(), $this->cacheFile, $props);
+			return $this->processImageURL('default_event', $this->cacheFile, false);
+		}
+		return false;
+	}
+
+	private function getNativeEventsImageCover($id) {
+		if (strpos($id, ':') !== false) {
+			[
+				,
+				$id,
+			] = explode(":", $id);
+		}
+		require_once ROOT_DIR . '/RecordDrivers/NativeEventRecordDriver.php';
+		$driver = new NativeEventRecordDriver($id);
+		if (($driver->isValid()) && $driver->getCoverImagePath()) {
+			$uploadedImage = $driver->getCoverImagePath();
+			if (file_exists($uploadedImage)) {
+				return $this->processImageURL('upload', $uploadedImage);
+			}
 		}
 		return false;
 	}

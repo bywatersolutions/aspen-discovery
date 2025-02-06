@@ -132,6 +132,140 @@ function getUpdates25_02_00(): array {
 		],
 
 		//katherine
+		'native_events_permissions' => [
+			'title' => 'Native Events Permissions',
+			'description' => 'Add new permissions for native events',
+			'continueOnError' => true,
+			'sql' => [
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Administer Field Sets', 'Events', 30, 'Allows the user to administer field sets for native events.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Administer Event Types', 'Events', 40, 'Allows the user to administer native event types.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Administer Events for All Locations', 'Events', 50, 'Allows the user to administer native events for all locations.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Administer Events for Home Library Locations', 'Events', 51, 'Allows the user to administer native events for home library locations.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Administer Events for Home Location', 'Events', 52, 'Allows the user to administer native events for home location.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'View Private Events for All Locations', 'Events', 60, 'Allows the user to view private native events for all locations.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'View Private Events for Home Library Locations', 'Events', 61, 'Allows the user to view private native events for home library locations.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'View Private Events for Home Location', 'Events', 62, 'Allows the user to view private native events for home location.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'View Event Reports for All Libraries', 'Events', 70, 'Allows the user to view event reports for all libraries.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'View Event Reports for Home Library', 'Events', 71, 'Allows the user to view event reports for their home library.')",
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Print Calendars with Header Images', 'Events', 80, 'Allows the user to print calendars with header images.')",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer Field Sets'))",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer Event Types'))",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer Events for All Locations'))",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='View Private Events for All Locations'))",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='View Event Reports for All Libraries'))",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Print Calendars with Header Images'))",
+			],
+		], //native_events_permissions
+		'native_event_tables' => [
+			'title' => 'Native Event Tables',
+			'description' => 'Add new tables for native events',
+			'continueOnError' => true,
+			'sql' => [
+				"CREATE TABLE event_field (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					name VARCHAR(50) NOT NULL UNIQUE,
+					description VARCHAR(100) NOT NULL,
+					type TINYINT NOT NULL DEFAULT 0,
+					allowableValues VARCHAR(150),
+					defaultValue VARCHAR(150),
+					facetName INT NOT NULL DEFAULT 0
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_field_set (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					name VARCHAR(50) NOT NULL UNIQUE
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_field_set_field (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventFieldId INT NOT NULL,
+					eventFieldSetId INT NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_type (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventFieldSetId INT NOT NULL,
+					title VARCHAR(50) NOT NULL UNIQUE,
+					titleCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					description VARCHAR(100) NOT NULL,
+					descriptionCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					cover VARCHAR(100) DEFAULT NULL,
+					coverCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					eventLength FLOAT NOT NULL DEFAULT 1,
+					lengthCustomizable TINYINT(1) NOT NULL DEFAULT 1,
+					archived TINYINT(1) NOT NULL DEFAULT 0
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_type_library (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventTypeId INT NOT NULL,
+					libraryId INT NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_type_location (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventTypeId INT NOT NULL,
+					locationId INT NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventTypeId INT NOT NULL,
+					locationId INT NOT NULL,
+					sublocationId INT,
+					title VARCHAR(50),
+					description VARCHAR(500),
+					cover VARCHAR(100) DEFAULT NULL,
+					private TINYINT(1) NOT NULL DEFAULT 1,
+					startDate DATE NOT NULL DEFAULT (CURRENT_DATE),
+					startTime TIME NOT NULL DEFAULT (CURRENT_TIME),
+					eventLength INT NOT NULL DEFAULT 60,
+					recurrenceOption TINYINT,
+					recurrenceFrequency TINYINT,
+					recurrenceInterval INT NOT NULL DEFAULT 1,
+					weekDays VARCHAR(25),
+					monthlyOption TINYINT,
+					monthDay TINYINT,
+					monthDate TINYINT,
+					monthOffset TINYINT,
+					endOption TINYINT,
+					recurrenceEnd DATE,
+					recurrenceCount INT
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_event_field (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventId INT NOT NULL,
+					eventFieldId INT NOT NULL,
+					value VARCHAR(150) NOT NULL
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"CREATE TABLE event_instance (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					eventId INT NOT NULL,
+					date DATE NOT NULL,
+					time TIME NOT NULL,
+					length INT NOT NULL,
+					status TINYINT(1) NOT NULL DEFAULT 1,
+					note VARCHAR(150)
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+				"ALTER TABLE sublocation ADD COLUMN isValidEventLocation TINYINT(1) DEFAULT 0",
+			]
+		], //native_events_tables
+		'native_events_indexing_tables' => [
+			'title' => 'Native Events Indexing Tables',
+			'description' => 'Add new tables for native events related to indexing',
+			'continueOnError' => true,
+			'sql' => [
+				"CREATE TABLE events_indexing_settings (
+					id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+					numberOfDaysToIndex INT DEFAULT 365,
+					runFullUpdate TINYINT(1) DEFAULT 0,
+					lastUpdateOfAllEvents INT,
+					lastUpdateOfChangedEvents INT
+				) ENGINE INNODB CHARACTER SET utf8 COLLATE utf8_general_ci",
+			]
+		], //native_events_indexing_tables
+		'native_events_system_variable' => [
+			'title' => 'Native Events System Variable',
+			'description' => 'Add system variable to turn on native events',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE system_variables ADD COLUMN enableAspenEvents TINYINT(1) DEFAULT 0"
+			]
+		], //native_events_indexing_tables
 
 		//kirstien - Grove
 		'lida_general_settings_add_more_info' => [

@@ -266,6 +266,16 @@ function getUpdates25_02_00(): array {
 				"ALTER TABLE system_variables ADD COLUMN enableAspenEvents TINYINT(1) DEFAULT 0"
 			]
 		], //native_events_indexing_tables
+		'increase_event_field_lengths' => [
+			'title' => 'Increase field lengths for some Aspen Events tables',
+			'description' => 'Increase field lengths for some Aspen Events tables',
+			'sql' => [
+				'ALTER TABLE event_field CHANGE COLUMN allowableValues allowableValues TEXT',
+				'ALTER TABLE event CHANGE COLUMN description description TEXT',
+				'ALTER TABLE event_type CHANGE COLUMN description description TEXT',
+				'ALTER TABLE event_instance CHANGE COLUMN note note TEXT',
+			]
+		], //increase_event_field_lengths
 
 		//kirstien - Grove
 		'lida_general_settings_add_more_info' => [

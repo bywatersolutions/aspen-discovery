@@ -188,7 +188,7 @@ AspenDiscovery.MaterialsRequest = (function(){
 			var params = {
 				'method': 'selectHoldCandidate',
 				requestId: document.querySelector('input[name="requestId"]').value,
-				holdCandidateId: document.querySelector('input[name="holdCandidateId"]:checked').value,
+				holdCandidateId: document.querySelector('input[name="holdCandidateId"]:checked').value
 			};
 			var url = Globals.path + '/MaterialsRequest/AJAX';
 			$.getJSON(url, params, function (data){
@@ -197,6 +197,80 @@ AspenDiscovery.MaterialsRequest = (function(){
 				}
 			);
 			return false;
+		},
+
+		'checkForExistingRecord' : function () {
+			var formatControl = $("#format option:selected");
+			var titleControl = $("#title");
+			var authorControl = $("#author");
+			var isbnControl = $("#isbn");
+			var issnControl = $("#issn");
+			var upcControl = $("#upc");
+
+			var params = {
+				'method': 'checkForExistingRecord',
+				'format' : formatControl !== undefined ? formatControl.val() : '',
+				'title' : titleControl !== undefined ? titleControl.val() : '',
+				'author' : authorControl !== undefined ? authorControl.val() : '',
+				'isbn' : isbnControl !== undefined ? isbnControl.val() : '',
+				'issn' : issnControl !== undefined ? issnControl.val() : '',
+				'upc' : upcControl !== undefined ? upcControl.val() : ''
+			};
+
+			//Don't bother checking if we don't have a format
+			var enoughDataToCheckForExistingRecord = false;
+			if (params.format !== '') {
+				if (params.isbn !== '') {
+					enoughDataToCheckForExistingRecord = true;
+				}
+				if (params.issn !== '') {
+					enoughDataToCheckForExistingRecord = true;
+				}
+				if (params.upc !== '') {
+					enoughDataToCheckForExistingRecord = true;
+				}
+				if (params.title !== '' && params.author !== undefined) {
+					enoughDataToCheckForExistingRecord = true;
+				}
+			}
+
+			if (enoughDataToCheckForExistingRecord) {
+				var url = Globals.path + '/MaterialsRequest/AJAX';
+				$.getJSON(url, params, function (data){
+					// noinspection JSUnresolvedReference
+					if (data.success && data.hasExistingRecord) {
+						// noinspection JSUnresolvedReference
+						$("#existingTitleForRequestLink a").attr("href", data.existingRecordLink);
+						// noinspection JSUnresolvedReference
+						$("#existingTitleForRequestCover a").attr("href", data.existingRecordLink);
+						// noinspection JSUnresolvedReference
+						$("#existingTitleForRequestCover img").attr("src", data.existingRecordCover);
+						$("#existingTitleForRequestAlert").show();
+					}else{
+						$("#existingTitleForRequestAlert").hide();
+					}
+				});
+			}else{
+				$("#existingTitleForRequestAlert").hide();
+			}
+
+			return false;
+		},
+
+		'checkRequestForExistingRecord' : function (id) {
+			var params = {
+				'method': 'checkRequestForExistingRecord',
+				'id' : id
+			};
+
+			var url = Globals.path + '/MaterialsRequest/AJAX';
+			$.getJSON(url, params, function (data){
+				// noinspection JSUnresolvedReference
+				if (data.success) {
+					// noinspection JSUnresolvedReference
+					$("#existingTitleInformation" + id).html(data.existingRecordInformation);
+				}
+			});
 		}
 	};
 }(AspenDiscovery.MaterialsRequest || {}));

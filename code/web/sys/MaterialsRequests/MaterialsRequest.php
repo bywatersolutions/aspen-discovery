@@ -50,6 +50,10 @@ class MaterialsRequest extends DataObject {
 
 	public $holdFailureMessage;
 
+	public $hasExistingRecord;
+	public $lastCheckForExistingRecord;
+	public $existingRecordUrl;
+
 	protected $_holdCandidateRecords;
 	protected $_selectedHoldCandidate;
 
@@ -878,4 +882,9 @@ class MaterialsRequest extends DataObject {
 		return $this->_selectedHoldCandidate;
 	}
 
+	/** @noinspection PhpUnused */
+	public function automaticCheckForExistingRecordNeedsToBeDone() : bool {
+		//Automatically check for existing records if it has been an hour and an existing record with the same format has not been found.
+		return ((time() - $this->lastCheckForExistingRecord) > 60 * 60) && !$this->hasExistingRecord;
+	}
 }

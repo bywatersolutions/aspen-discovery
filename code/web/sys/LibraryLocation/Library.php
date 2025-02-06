@@ -364,6 +364,7 @@ class Library extends DataObject {
 	public $materialsRequestSendStaffEmailOnNew;
 	public $materialsRequestSendStaffEmailOnAssign;
 	public $materialsRequestNewEmail;
+	public $checkRequestsForExistingTitles;
 	public $showGroupedHoldCopiesCount;
 	public $localIllRequestType;
 	public $maximumLocalIllRequests;
@@ -3293,7 +3294,13 @@ class Library extends DataObject {
 						'hideInLists' => true,
 						'default' => 396,
 					],
-
+					'checkRequestsForExistingTitles' => [
+						'property' => 'checkRequestsForExistingTitles',
+						'type' => 'checkbox',
+						'label' => 'Check Requests for Existing Titles in the Catalog',
+						'description' => 'Checks requests for existing titles within the catalog based on title, author, format, ISBN, UPC and displays a note if a record already exists',
+						'default' => true
+					],
 					'materialsRequestFieldsToDisplay' => [
 						'property' => 'materialsRequestFieldsToDisplay',
 						'type' => 'oneToMany',

@@ -185,6 +185,8 @@ class MaterialsRequest_AJAX extends Action {
 									$interface->assign('materialsRequest', $materialsRequest);
 									$interface->assign('showUserInformation', true);
 
+									$interface->assign('checkRequestsForExistingTitles', $staffLibrary->checkRequestsForExistingTitles);
+
 									// Hold Pick-up Locations
 									$location = new Location();
 									$locationList = $location->getPickupBranches($requestUser);
@@ -491,6 +493,93 @@ class MaterialsRequest_AJAX extends Action {
 				];
 			}
 		}
+	}
+
+	/** @noinspection PhpUnused */
+	function checkForExistingRecord() : array {
+		$result = [
+			'success' => false,
+			'hasExistingRecord' => false,
+			'existingRecordCover' => '',
+			'existingRecordLink' => '',
+		];
+		$format = $_REQUEST['format'] ?? '';
+		$title = $_REQUEST['title'] ?? '';
+		$author = $_REQUEST['author'] ?? '';
+		$isbn = $_REQUEST['isbn'] ?? '';
+		$issn = $_REQUEST['issn'] ?? '';
+		$upc = $_REQUEST['upc'] ?? '';
+
+		//Need the format as well as isbn, issn or title + author
+		if (!empty($format)) {
+			$okToProcess = false;
+			if (!empty($isbn) || !empty($issn) || !empty($upc)) {
+				$okToProcess = true;
+			}else if (!empty($title) && !empty($author)){
+				$okToProcess = true;
+			}
+			if ($okToProcess) {
+				require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestHoldCandidateGenerator.php';
+				$existingRecords = checkForExistingTitleForRequest($format, $title, $author, $isbn, $issn, $upc);
+				$result['success'] = true;
+				if ($existingRecords !== false && count($existingRecords) > 0) {
+					$result['success'] = true;
+					/** @var GroupedWorkDriver $firstRecord */
+					$firstRecord = $existingRecords[0];
+					$result['hasExistingRecord'] = true;
+					$result['existingRecordCover'] = $firstRecord->getBookcoverUrl();
+					$result['existingRecordLink'] = $firstRecord->getLinkUrl();
+				}
+			}else{
+				$result['message'] = translate(['text' => 'Format must be provided to look for an existing record', 'isPublicFacing' => true]);
+			}
+		}else{
+			$result['message'] = translate(['text' => 'Format must be provided to look for an existing record', 'isPublicFacing' => true]);
+		}
+
+		return $result;
+	}
+
+	function checkRequestForExistingRecord() : array {
+		$id = $_REQUEST['id'];
+		$result = [
+			'success' => false,
+			'existingRecordInformation' => ''
+		];
+		if (empty($id) || !is_numeric($id)) {
+			$result['message'] = 'Invalid ID provided';
+		}else{
+			require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequest.php';
+			$request = new MaterialsRequest();
+			$request->id = $id;
+			if ($request->find(true)) {
+				require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestHoldCandidateGenerator.php';
+				$existingRecords = checkForExistingTitleForRequest($request->format, $request->title, $request->author, $request->isbn, $request->issn, $request->upc);
+				$request->lastCheckForExistingRecord = time();
+
+				if (count($existingRecords) == 0) {
+					$infoChanged = $request->hasExistingRecord != 0;
+					$request->hasExistingRecord = 0;
+					$existingRecordInformation = translate(['text'=>'No', 'isAdminFacing'=>true]);
+				}else{
+					$infoChanged = $request->hasExistingRecord == 0;
+
+					$firstRecord = $existingRecords[0];
+					$request->hasExistingRecord = 1;
+					$request->existingRecordUrl = $firstRecord->getLinkUrl();
+					$existingRecordInformation = "<a href='{$request->existingRecordUrl}' target='_blank'>" . translate(['text'=>'Yes', 'isAdminFacing'=>true]) . "</a>";
+				}
+				$existingRecordInformation .= '<br/>' . translate(['text'=>'Checked %1%', 1=> date('m/d/Y H:i:s', $request->lastCheckForExistingRecord), 'isAdminFacing'=>true]);
+				$request->update();
+
+				$result['success'] = true;
+				$result['existingRecordInformation'] = $existingRecordInformation;
+			}else{
+				$result['message'] = 'Invalid ID provided';
+			}
+		}
+
+		return $result;
 	}
 
 	function getBreadcrumbs(): array {

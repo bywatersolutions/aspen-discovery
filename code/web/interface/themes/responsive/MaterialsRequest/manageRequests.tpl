@@ -117,6 +117,9 @@
 							{foreach from=$columnsToDisplay item=label}
 								<th>{translate text=$label isAdminFacing=true}</th>
 							{/foreach}
+							{if $showExistingTitleInformation}
+								<th>{translate text="Exists In Catalog?" isAdminFacing=true}</th>
+							{/if}
 							<th>&nbsp;</th> {* Action Buttons Column *}
 						</tr>
 					</thead>
@@ -174,8 +177,31 @@
 										<td>{$request->$column}</td>
 									{/if}
 								{/foreach}
+								{if $showExistingTitleInformation}
+									<td id="existingTitleInformation{$request->id}">
+										{if $request->hasExistingRecord == 0}
+											<span title="{translate text="Checked %1%" 1=$request->lastCheckForExistingRecord|date_format:"%D %T" isAdminFacing=true inAttribute=true}">{translate text="No" isAdminFacing=true}</span>
+										{else}
+											<a href="{$request->existingRecordUrl}" target="_blank" title="{translate text="Checked %1%" 1=$request->lastCheckForExistingRecord|date_format:"%D %T" isAdminFacing=true inAttribute=true}">
+												<strong>{translate text="Yes" isAdminFacing=true}</strong>
+											</a>
+										{/if}
+										{if $request->automaticCheckForExistingRecordNeedsToBeDone()}
+											<script>
+												{literal}
+												$(document).ready(function (){
+													AspenDiscovery.MaterialsRequest.checkRequestForExistingRecord({/literal}{$request->id}{literal});
+												});
+												{/literal}
+											</script>
+										{/if}
+									</td>
+								{/if}
 								<td>
 									<div class="btn-group btn-group-vertical btn-group-sm">
+										{if $showExistingTitleInformation && !$request->hasExistingRecord}
+											<button type="button" onclick="AspenDiscovery.MaterialsRequest.checkRequestForExistingRecord('{$request->id}')" class="btn btn-sm btn-info btn-wrap">{translate text="Check for Existing Title" isAdminFacing=true}</button>
+										{/if}
 										<button type="button" onclick="AspenDiscovery.MaterialsRequest.showMaterialsRequestDetails('{$request->id}', true)" class="btn btn-sm btn-info btn-wrap">{translate text="Details" isAdminFacing=true}</button>
 										<button type="button" onclick="AspenDiscovery.MaterialsRequest.updateMaterialsRequest('{$request->id}')" class="btn btn-sm btn-primary btn-wrap">{translate text="Update Request" isAdminFacing=true}</button>
 									</div>

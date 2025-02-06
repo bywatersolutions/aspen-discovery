@@ -114,6 +114,22 @@ function getUpdates25_02_00(): array {
 				"ALTER TABLE library add COLUMN requestCalendarStartDate CHAR(5) DEFAULT '01-01'"
 			]
 		], //library_requestCalendarStartDate
+		'library_checkRequestsForExistingTitles' => [
+			'title' => 'Library - Check Requests for Existing Titles',
+			'description' => 'Add a toggle for whether or not requests should be checked for existing titles',
+			'sql' => [
+				"ALTER TABLE library add COLUMN checkRequestsForExistingTitles TINYINT DEFAULT 1"
+			]
+		], //library_checkRequestsForExistingTitles
+		'materialsRequestExistingTitle' => [
+			'title' => 'Materials Request - Existing Title Fields',
+			'description' => 'Add fields for determining if a materials request has an existing record in the catalog',
+			'sql' => [
+				"ALTER TABLE materials_request ADD COLUMN hasExistingRecord TINYINT(1) DEFAULT 0",
+				"ALTER TABLE materials_request ADD COLUMN lastCheckForExistingRecord INT DEFAULT -1",
+				"ALTER TABLE materials_request ADD COLUMN existingRecordUrl TINYTEXT"
+			],
+		],
 
 		//katherine
 

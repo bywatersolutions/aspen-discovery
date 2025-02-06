@@ -133,6 +133,8 @@ class MaterialsRequest_NewRequest extends MyAccount {
 		$interface->assign('usernameLabel', !empty($library->loginFormUsernameLabel) ? $library->loginFormUsernameLabel : 'Your Name');
 		$interface->assign('passwordLabel', !empty($library->loginFormPasswordLabel) ? $library->loginFormPasswordLabel : 'Library Card Number');
 
+		$interface->assign('checkRequestsForExistingTitles', $library->checkRequestsForExistingTitles);
+
 		$this->display('new.tpl', 'Materials Request');
 	}
 

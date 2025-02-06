@@ -202,3 +202,126 @@ function generateMaterialsRequestsHoldCandidates() : int {
 
 	return $logEntry->numRequestsWithNewSuggestions;
 }
+
+function checkForExistingTitleForRequest($format, $title, $author, $isbn, $issn, $upc) : false|array {
+
+	require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestFormat.php';
+	require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestFormatMapping.php';
+	require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
+
+	/** @var SearchObject_GroupedWorkSearcher2 $searchObject */
+	$searchObject = SearchObjectFactory::initSearchObject();
+	$searchObject->init();
+	$searchObject->clearFacets();
+
+	//Get the format id for the textual format
+	$materialsRequestFormat = new MaterialsRequestFormat();
+	$materialsRequestFormat->format = $format;
+	global $library;
+	$requestLibrary = $library;
+	if (UserAccount::isLoggedIn()) {
+		$user = UserAccount::getLoggedInUser();
+		$homeLibrary = $user->getHomeLibrary();
+		if (isset($homeLibrary)) {
+			$requestLibrary = $homeLibrary;
+		}
+	}
+	$materialsRequestFormat->libraryId = $requestLibrary->libraryId;
+	if ($materialsRequestFormat->find(true)) {
+		$formatId = $materialsRequestFormat->id;
+	}else{
+		//Incorrect format specified
+		return false;
+	}
+
+	//Load request format mappings
+	$requestFormatMapping = new MaterialsRequestFormatMapping();
+	$requestFormatMapping->materialsRequestFormatId = $formatId;
+	$requestFormatMapping->find();
+	$formatMappingsForRequest = [];
+	while ($requestFormatMapping->fetch()) {
+		$formatMappingsForRequest[] = $requestFormatMapping->catalogFormat;
+	}
+
+	if (empty($formatMappingsForRequest)) {
+		//No formats are mapped
+		return false;
+	}
+
+	//Check to see if we have an ISBN, UPC, or ISSN
+	$controlNumber = $isbn;
+	if (empty($controlNumber)) {
+		$controlNumber = $upc;
+	}
+	if (empty($controlNumber)) {
+		$controlNumber = $issn;
+	}
+	//Set scoping for the search based on the request library
+	$searchObject->disableScoping();
+	$searchObject->disableSpelling();
+
+	if (!empty($controlNumber)) {
+		//Do a search of the catalog by control number,
+		$searchObject->setSearchTerms([
+			'index' => 'ISN',
+			'lookfor' => $controlNumber,
+		]);
+	} else {
+		//Do a title author search, this may want to be an advanced search
+		$trimmedTitle = trim($title);
+		if (str_starts_with($trimmedTitle, '"') && str_ends_with($trimmedTitle, '"')) {
+			$trimmedTitle = substr($trimmedTitle, 1, -1);
+		}
+
+		$searchObject->setSearchTerms([
+			'index' => 'Keyword',
+			'lookfor' => "(title_exact:\"$trimmedTitle\" AND (author:$author OR author_exact:$author))",
+		]);
+	}
+
+	$results = $searchObject->processSearch();
+	if ($results instanceof AspenError) {
+		//For now, go to the next one
+		return false;
+	}
+
+	// 'Finish' the search... complete timers and log search history.
+	$existingRecords = [];
+	$searchObject->close();
+	if ($searchObject->getResultTotal() > 0) {
+		$recordSet = $searchObject->getResultRecordSet();
+		foreach ($recordSet as $recordKey => $record) {
+			//If we are doing a title/author search, make sure the title and author are correct?
+
+			//If we find anything, verify that the formats of the items are correct
+			$isFormatValid = false;
+			foreach ($record['format'] as $activeFormat) {
+				if (in_array($activeFormat, $formatMappingsForRequest)) {
+					$isFormatValid = true;
+					break;
+				}
+			}
+			if ($isFormatValid) {
+				//Loop through the actual records to figure out which specific record or records are correct
+				$recordDriver = $searchObject->getRecordDriverForResult($record);
+				$recordAdded = false;
+				foreach ($recordDriver->getRelatedManifestations() as $manifestation) {
+					if (in_array($manifestation->format, $formatMappingsForRequest)) {
+						foreach ($manifestation->getRelatedRecords() as $record) {
+							//We found the record that matches
+							//$shortId = substr($record->id, strlen($record->source) + 1);
+							$existingRecords[] = $recordDriver;
+							$recordAdded = true;
+							break;
+						}
+					}
+					if ($recordAdded) {
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	return $existingRecords;
+}

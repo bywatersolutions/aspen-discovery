@@ -52,6 +52,8 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 		$showUnassigned = !empty($_REQUEST['showUnassigned']) && $_REQUEST['showUnassigned'] == 'on';
 		$interface->assign('showUnassigned', $showUnassigned);
 
+		$interface->assign('showExistingTitleInformation', $homeLibrary->checkRequestsForExistingTitles);
+
 		//Process status change if needed
 		if (isset($_REQUEST['newStatus']) && isset($_REQUEST['select']) && $_REQUEST['newStatus'] != 'unselected') {
 			//Look for which titles should be modified

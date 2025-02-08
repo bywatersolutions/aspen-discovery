@@ -1,18 +1,15 @@
 package com.turning_leaf_technologies.events;
 
 import com.turning_leaf_technologies.config.ConfigUtil;
-import com.turning_leaf_technologies.strings.AspenStringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateHttp2SolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.ini4j.Ini;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.sql.*;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
@@ -20,13 +17,13 @@ import java.util.zip.CRC32;
 
 import static java.util.Calendar.DAY_OF_YEAR;
 
-public class NativeEventsIndexer {
+public class AspenEventsIndexer {
 	private final long settingsId;
 	private final int numberOfDaysToIndex;
 	private final boolean runFullUpdate;
 	private final Connection aspenConn;
 	private final EventsIndexerLogEntry logEntry;
-	private final HashMap<Long, NativeEvent> eventInstances = new HashMap<>();
+	private final HashMap<Long, AspenEvent> eventInstances = new HashMap<>();
 	// private final HashSet<String> librariesToShowFor = new HashSet<>();
 	private final static CRC32 checksumCalculator = new CRC32();
 	private final String serverName;
@@ -37,7 +34,7 @@ public class NativeEventsIndexer {
 
 	private final ConcurrentUpdateHttp2SolrClient solrUpdateServer;
 
-	NativeEventsIndexer(long settingsId, int numberOfDaysToIndex, boolean runFullUpdate, ConcurrentUpdateHttp2SolrClient solrUpdateServer, Connection aspenConn, Logger logger, String serverName) {
+	AspenEventsIndexer(long settingsId, int numberOfDaysToIndex, boolean runFullUpdate, ConcurrentUpdateHttp2SolrClient solrUpdateServer, Connection aspenConn, Logger logger, String serverName) {
 		this.settingsId = settingsId;
 		this.aspenConn = aspenConn;
 		this.solrUpdateServer = solrUpdateServer;
@@ -45,7 +42,7 @@ public class NativeEventsIndexer {
 		this.runFullUpdate = runFullUpdate;
 		this.serverName = serverName;
 
-		logEntry = new EventsIndexerLogEntry("Native Events", aspenConn, logger);
+		logEntry = new EventsIndexerLogEntry("Aspen Events", aspenConn, logger);
 
 		Ini configIni = ConfigUtil.loadConfigFile("config.ini", serverName, logger);
 		coverPath = configIni.get("Site","coverPath");
@@ -76,7 +73,7 @@ public class NativeEventsIndexer {
 
 
 			while (existingEventsRS.next()) {
-				NativeEvent event = new NativeEvent(existingEventsRS);
+				AspenEvent event = new AspenEvent(existingEventsRS);
 				librariesStmt.clearParameters();
 				librariesStmt.setLong(1, event.getEventType());
 				ResultSet librariesFieldsRS = librariesStmt.executeQuery();
@@ -96,7 +93,7 @@ public class NativeEventsIndexer {
 				eventInstances.put(event.getId(), event);
 			}
 		} catch (SQLException e) {
-			logEntry.incErrors("Error loading event instances for Native Events ", e);
+			logEntry.incErrors("Error loading event instances for Aspen Events ", e);
 		}
 	}
 
@@ -113,13 +110,13 @@ public class NativeEventsIndexer {
 				logEntry.incErrors("Error deleting from index ", e);
 			}
 
-			for (NativeEvent eventInfo : eventInstances.values()) {
+			for (AspenEvent eventInfo : eventInstances.values()) {
 				//Add the event to solr
 				try {
 					SolrInputDocument solrDocument = new SolrInputDocument();
-					solrDocument.addField("id", "nativeEvent_" + settingsId + "_" + eventInfo.getId());
+					solrDocument.addField("id", "aspenEvent_" + settingsId + "_" + eventInfo.getId());
 					solrDocument.addField("identifier", eventInfo.getId());
-					solrDocument.addField("type", "event_nativeEvent");
+					solrDocument.addField("type", "event_aspenEvent");
 					solrDocument.addField("source", settingsId);
 
 					int boost = 1;
@@ -177,8 +174,8 @@ public class NativeEventsIndexer {
 					solrDocument.addField("reservation_state", eventInfo.getStatus());
 
 					// Extra fields
-					ArrayList<NativeEvent.EventField> extraFields = eventInfo.getFields();
-					for (NativeEvent.EventField field : extraFields) {
+					ArrayList<AspenEvent.EventField> extraFields = eventInfo.getFields();
+					for (AspenEvent.EventField field : extraFields) {
 						solrDocument.addField(field.getSolrFieldName(), field.getValue()); // Add as a dynamic field
 						if (field.getType() == 2) { // Handle checkbox/boolean facets
 							solrDocument.addField(field.getFacetName(), field.getValue().equals("1") ? "Yes" : "No");

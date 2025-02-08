@@ -4,9 +4,9 @@ require_once 'IndexRecordDriver.php';
 require_once ROOT_DIR . '/sys/Events/EventInstance.php';
 require_once ROOT_DIR . '/sys/Events/Event.php';
 
-class NativeEventRecordDriver extends IndexRecordDriver {
+class AspenEventRecordDriver extends IndexRecordDriver {
 	private $valid;
-	/** @var NativeEventRecordDriver */
+	/** @var AspenEventRecordDriver */
 	private $eventObject;
 
 	public function __construct($recordData) {
@@ -41,7 +41,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 		$this->getSearchResult('list', false);
 
 		global $interface;
-		$interface->assign('eventVendor', 'nativeEvent');
+		$interface->assign('eventVendor', 'aspenEvent');
 
 		//Switch template
 		return 'RecordDrivers/Events/listEntry.tpl';
@@ -119,10 +119,10 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 //			$eventsUsage->insert();
 //		}
 
-		return 'RecordDrivers/Events/nativeEvent_result.tpl';
+		return 'RecordDrivers/Events/aspenEvent_result.tpl';
 	}
 
-	public function getBookcoverUrl($size = 'small', $absolutePath = false, $type = "nativeEvent_event") {
+	public function getBookcoverUrl($size = 'small', $absolutePath = false, $type = "aspenEvent_event") {
 		global $configArray;
 
 		if ($absolutePath) {
@@ -207,7 +207,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 	}
 
 	public function getLinkUrl($absolutePath = false) {
-		return '/NativeEvents/' . $this->getId() . '/Event';
+		return '/AspenEvents/' . $this->getId() . '/Event';
 	}
 
 	public function getExternalUrl($absolutePath = false) {
@@ -249,7 +249,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 	function getEventCoverUrl() {
 		if (!empty($this->fields['image_url'])) {
 			global $interface;
-			return $this->getBookcoverUrl('medium', false, "nativeEvent_eventRecord");
+			return $this->getBookcoverUrl('medium', false, "aspenEvent_eventRecord");
 		}
 		return $this->getBookcoverUrl('medium');
 	}
@@ -437,7 +437,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 			'registration_required' => $this->isRegistrationRequired(),
 			'bypass' => $this->getBypassSetting(),
 			'url' => null,
-			'source' => 'nativeEvents',
+			'source' => 'aspenEvents',
 			'author' => null,
 			'format' => null,
 			'ratingData' => null,

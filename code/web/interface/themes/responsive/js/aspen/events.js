@@ -5,7 +5,7 @@ AspenDiscovery.Events = (function(){
 			$.getJSON(ajaxUrl);
 		},
 
-		//For native events
+		//For Aspen Events
 		getEventTypesForLocation: function(locationId) {
 			var url = Globals.path + '/Events/AJAX';
 			var params = {

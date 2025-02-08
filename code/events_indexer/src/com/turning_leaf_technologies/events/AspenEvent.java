@@ -1,6 +1,5 @@
 package com.turning_leaf_technologies.events;
 
-import com.turning_leaf_technologies.config.ConfigUtil;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
@@ -14,7 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.time.zone.ZoneRules;
 import java.util.*;
 
-class NativeEvent {
+class AspenEvent {
 	private final long id;
 	private final long eventId;
 	private final int eventType;
@@ -32,7 +31,7 @@ class NativeEvent {
 	private final Boolean nonPublic;
 	private final ArrayList<EventField> fields = new ArrayList<EventField>();
 
-	NativeEvent(ResultSet existingEventsRS) throws SQLException{
+	AspenEvent(ResultSet existingEventsRS) throws SQLException{
 		this.id = existingEventsRS.getLong("id"); // The event instance ID
 		this.eventId = existingEventsRS.getLong("eventId"); // The parent event ID
 		this.eventType = existingEventsRS.getInt("eventTypeId");

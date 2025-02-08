@@ -153,8 +153,11 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 	}
 
 	public function getFullDescription() {
-		$description = $this->getEventObject();
-		return $description->description;
+		if (isset($this->fields['description'])) {
+			return $this->fields['description'];
+		} else {
+			return '';
+		}
 	}
 
 	public function getEventTypeFields() {
@@ -173,7 +176,7 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 			if (str_contains($key, "custom_facet")) {
 				continue;
 			}
-			if (is_array($value)) {
+			if (is_array($value) && count($value) > 0) {
 				if (str_contains($key, "url")) {
 					$html .= "<li>$fieldname: <a href='$value[0]'>$value[0]</a></li>";
 				} else if (str_contains($key, "email")) {

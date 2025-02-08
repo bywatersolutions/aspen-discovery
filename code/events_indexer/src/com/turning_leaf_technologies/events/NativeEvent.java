@@ -113,8 +113,11 @@ class NativeEvent {
 		return sublocationId;
 	}
 
-	public Boolean getStatus() {
-		return status;
+	public String getStatus() {
+		if (status) {
+			return "Active";
+		}
+		return "Cancelled";
 	}
 
 	public Boolean getNonPublic() {
@@ -163,6 +166,29 @@ class NativeEvent {
 			this.facet = facet;
 		}
 
+		public String getFacetName() {
+			switch (this.facet) {
+				case 0:
+					return "";
+				case 1:
+					return "age_group_facet";
+				case 2:
+					return "program_type_facet";
+				case 3:
+					return "internal_category_facet";
+				case 4:
+					return "event_type";
+				case 5:
+					return "custom_facet_1";
+				case 6:
+					return "custom_facet_2";
+				case 7:
+					return "custom_facet_3";
+				default:
+					return "";
+			}
+		}
+
 		public String getName() {
 			return name;
 		}
@@ -177,9 +203,11 @@ class NativeEvent {
 				case 2: // Checkbox
 					return "custom_bool_" + sanitized_name;
 				case 3: // Select list
-				case 4: // Email
-				case 5: // URL
 					return "custom_string_" + sanitized_name;
+				case 4: // Email
+					return "custom_email_" + sanitized_name;
+				case 5: // URL
+					return "custom_url_" + sanitized_name;
 			}
 			return sanitized_name;
 		}

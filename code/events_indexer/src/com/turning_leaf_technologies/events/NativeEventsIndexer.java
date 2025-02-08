@@ -174,10 +174,17 @@ public class NativeEventsIndexer {
 					solrDocument.addField("branch", eventInfo.getLocationCode());
 					// Also get sublocation
 
+					solrDocument.addField("reservation_state", eventInfo.getStatus());
+
 					// Extra fields
 					ArrayList<NativeEvent.EventField> extraFields = eventInfo.getFields();
 					for (NativeEvent.EventField field : extraFields) {
 						solrDocument.addField(field.getSolrFieldName(), field.getValue()); // Add as a dynamic field
+						if (field.getType() == 2) { // Handle checkbox/boolean facets
+							solrDocument.addField(field.getFacetName(), field.getValue().equals("1") ? "Yes" : "No");
+						} else if (!field.getFacetName().isEmpty()) {
+							solrDocument.addField(field.getFacetName(), field.getValue());
+						}
 					}
 					if (eventInfo.getCover() != null && !eventInfo.getCover().isBlank() ) {
 						solrDocument.addField("image_url", eventInfo.getCoverUrl(coverPath));

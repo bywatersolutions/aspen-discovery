@@ -170,7 +170,23 @@ class NativeEventRecordDriver extends IndexRecordDriver {
 			$pattern = '/custom_([a-z]+)_/i';
 			$fieldname = preg_replace($pattern, "", $key);
 			$fieldname = str_replace("_", " ", $fieldname);
-			$html .= "<li>$fieldname: $value[0]</li>";
+			if (str_contains($key, "custom_facet")) {
+				continue;
+			}
+			if (is_array($value)) {
+				if (str_contains($key, "url")) {
+					$html .= "<li>$fieldname: <a href='$value[0]'>$value[0]</a></li>";
+				} else if (str_contains($key, "email")) {
+					$html .= "<li>$fieldname: <a href='mailto:$value[0]'>$value[0]</a></li>";
+				} else {
+					$html .= "<li>$fieldname: $value[0]</li>";
+				}
+			} else if (str_contains($key, "bool")) {
+				$value = $value == 1 ? "true" : "false";
+				$html .= "<li>$fieldname: " . $value . "</li>";
+			} else {
+				$html .= "<li>$fieldname: $value</li>";
+			}
 		}
 		return $html;
 	}

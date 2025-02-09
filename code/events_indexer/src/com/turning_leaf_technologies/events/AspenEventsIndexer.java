@@ -30,8 +30,7 @@ public class AspenEventsIndexer {
 	private final static CRC32 checksumCalculator = new CRC32();
 	private final String coverPath;
 
-	private PreparedStatement addEventStmt;
-	private PreparedStatement deleteEventStmt;
+	private final List<String> idsToDelete = new ArrayList<>();
 
 	private final ConcurrentUpdateHttp2SolrClient solrUpdateServer;
 
@@ -64,26 +63,34 @@ public class AspenEventsIndexer {
 			lastDateToIndex.add(DAY_OF_YEAR, this.numberOfDaysToIndex);
 
 			// Get total number of events for log
-			PreparedStatement eventCountStmt = aspenConn.prepareStatement("SELECT COUNT(*) FROM event_instance");
+			PreparedStatement eventCountStmt = aspenConn.prepareStatement("SELECT COUNT(*) FROM event_instance WHERE deleted = 0;");
 			ResultSet eventCountRS = eventCountStmt.executeQuery();
 			if (eventCountRS.next()) {
 				logEntry.incNumEvents(eventCountRS.getInt("COUNT(*)"));
 			}
 
 			PreparedStatement eventsStmt;
+			PreparedStatement deleteEventsStmt;
 			if (runFullUpdate) {
 				// Get event instance and event info
-				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ?;");
+				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ? AND ei.deleted = 0;");
 			} else {
-				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ? AND (e.dateUpdated > ? OR ei.dateUpdated > ?);");
+				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ? AND (e.dateUpdated > ? OR ei.dateUpdated > ?) AND ei.deleted = 0;");
+				deleteEventsStmt = aspenConn.prepareStatement("SELECT id FROM event_instance WHERE deleted = 1 AND dateUpdated > ?;");
 				eventsStmt.setLong(2, lastUpdateOfChangedEvents);
 				eventsStmt.setLong(3, lastUpdateOfChangedEvents);
+				deleteEventsStmt.setLong(1, lastUpdateOfChangedEvents);
+				ResultSet deleteEventsRS = deleteEventsStmt.executeQuery();
+				while (deleteEventsRS.next()) {
+					idsToDelete.add("aspenEvent_" + settingsId + "_" + deleteEventsRS.getString("id"));
+				}
 			}
 			eventsStmt.setString(1, dateFormat.format(lastDateToIndex.getTime()));
 			// Get libraries for this event type
 			PreparedStatement librariesStmt = aspenConn.prepareStatement("SELECT etl.libraryId, l.subdomain FROM event_type_library AS etl LEFT JOIN library as l ON etl.libraryId = l.libraryId WHERE eventTypeId = ?");
 			// Get custom fields
 			PreparedStatement eventFieldStmt = aspenConn.prepareStatement("SELECT ef.name, ef.allowableValues, ef.type, ef.facetName, eef.value from event_event_field AS eef LEFT JOIN event_field AS ef ON ef.id = eef.eventFieldId WHERE eef.eventId = ?;");
+
 
 			ResultSet existingEventsRS = eventsStmt.executeQuery();
 
@@ -115,13 +122,26 @@ public class AspenEventsIndexer {
 
 
 	void indexEvents() {
-		try {
-			solrUpdateServer.deleteByQuery("type:event AND source:" + this.settingsId);
-		} catch (BaseHttpSolrClient.RemoteSolrException rse) {
-			logEntry.incErrors("Solr is not running properly, try restarting " + rse);
-			System.exit(-1);
-		} catch (Exception e) {
-			logEntry.incErrors("Error deleting from index ", e);
+
+		// Delete everything and start fresh for full index
+		if (runFullUpdate) {
+			try {
+				solrUpdateServer.deleteByQuery("type:event_aspenEvent AND source:" + this.settingsId);
+			} catch (BaseHttpSolrClient.RemoteSolrException rse) {
+				logEntry.incErrors("Solr is not running properly, try restarting " + rse);
+				System.exit(-1);
+			} catch (Exception e) {
+				logEntry.incErrors("Error deleting from index ", e);
+			}
+		} else if (!idsToDelete.isEmpty()) {
+			try {
+				for (String id : idsToDelete) {
+					solrUpdateServer.deleteByQuery("type:event_aspenEvent AND id:" + id);
+					logEntry.incDeleted();
+				}
+			} catch (Exception e) {
+				logEntry.incErrors("Error deleting event by id ", e);
+			}
 		}
 
 		for (AspenEvent eventInfo : eventInstances.values()) {
@@ -219,7 +239,7 @@ public class AspenEventsIndexer {
 			//Update the last time we ran the update in settings
 			PreparedStatement updateExtractTime;
 			try {
-				if (runFullUpdate || lastUpdateOfAllEvents == 0) {
+				if (runFullUpdate) {
 					updateExtractTime = aspenConn.prepareStatement("UPDATE events_indexing_settings set lastUpdateOfAllEvents = ? WHERE id = ?");
 				} else {
 					updateExtractTime = aspenConn.prepareStatement("UPDATE events_indexing_settings set lastUpdateOfChangedEvents = ? WHERE id = ?");

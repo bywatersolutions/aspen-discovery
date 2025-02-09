@@ -26,6 +26,7 @@ class Events_EventInstances extends ObjectEditor {
 
 	function getAllObjects($page, $recordsPerPage): array {
 		$object = new EventInstanceGroup();
+		$object->deleted = 0;
 		$object->orderBy($this->getSort());
 		$this->applyFilters($object);
 		$object->limit(($page - 1) * $recordsPerPage, $recordsPerPage);

@@ -13,6 +13,7 @@ class EventInstance extends DataObject {
 	public $note;
 
 	public $dateUpdated;
+	public $deleted;
 
 	public static function getObjectStructure($context = ''): array {
 		$structure = [
@@ -89,6 +90,16 @@ class EventInstance extends DataObject {
 	public function insert($context = '') {
 		$this->dateUpdated = time();
 		return parent::insert();
+	}
+
+	function delete($useWhere = false) : int {
+		if (!$useWhere) {
+			$this->deleted = 1;
+			$this->dateUpdated = time();
+			return parent::update();
+		} else {
+			return parent::delete($useWhere);
+		}
 	}
 
 }

@@ -39,6 +39,7 @@ class Event extends DataObject {
 	public $_datesPreview;
 
 	public $dateUpdated;
+	public $deleted;
 
 
 
@@ -538,6 +539,27 @@ class Event extends DataObject {
 		return $ret;
 	}
 
+	function delete($useWhere = false) : int {
+		if (!$useWhere) {
+			$this->deleted = 1;
+			$this->dateUpdated = time();
+			$ret = parent::update();
+
+			if ($ret) {
+				$instance = new EventInstance();
+				$instance->eventId = $this->id;
+				$instance->find();
+				while ($instance->fetch()) {
+					$instance->delete(false);
+				}
+				return true;
+			}
+			return false;
+		} else {
+			return parent::delete($useWhere);
+		}
+	}
+
 	public function __set($name, $value) {
 		if ($name == 'libraries') {
 			$this->setLibraries($value);
@@ -713,8 +735,9 @@ class Event extends DataObject {
 		$todayDate = date('Y-m-d');
 		$todayTime = date('H:i:s');
 		$instance->whereAdd("date > '$todayDate' OR (date = '$todayDate' and time > '$todayTime')");
+		$instance->deleted = 1;
 		while ($instance->fetch()) {
-			$instance->delete(true);
+			$instance->update();
 		}
 	}
 
@@ -805,7 +828,7 @@ class Event extends DataObject {
 			$instance->eventId = $this->id;
 			$todayDate = date('Y-m-d');
 			$todayTime = date('H:i:s');
-			$instance->whereAdd("date > '$todayDate' OR (date = '$todayDate' and time > '$todayTime')");
+			$instance->whereAdd("deleted = 0 AND date > '$todayDate' OR (date = '$todayDate' and time > '$todayTime')");
 			$this->_instanceCount = $instance->count();
 		}
 		return $this->_instanceCount;

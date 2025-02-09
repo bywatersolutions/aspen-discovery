@@ -38,6 +38,8 @@ class Event extends DataObject {
 	public $_instanceCount;
 	public $_datesPreview;
 
+	public $dateUpdated;
+
 
 
 
@@ -248,6 +250,13 @@ class Event extends DataObject {
 				'hiddenByDefault' => true,
 				'readOnly' => true,
 			],
+			'dateUpdated' => [
+				'property' => 'dateUpdated',
+				'label' => 'Date Updated',
+				'type' => 'integer',
+				'hiddenByDefault' => true,
+				'hideInLists' => true,
+			]
 		];
 		// Add empty, hidden, readonly copies of all potential fields so that data can be added if they exist for any selected event type
 		$eventFieldList = EventField::getEventFieldList();
@@ -504,6 +513,7 @@ class Event extends DataObject {
 	}
 
 	public function update($context = '') {
+		$this->dateUpdated = time();
 		$ret = parent::update();
 		if ($ret !== FALSE) {
 			$this->saveLibraries();
@@ -515,6 +525,9 @@ class Event extends DataObject {
 	}
 
 	public function insert($context = '') {
+		if (empty($this->dateUpdated)) {
+			$this->dateUpdated = time(); // Set to 0 for new events
+		}
 		$ret = parent::insert();
 		if ($ret !== FALSE) {
 			$this->saveLibraries();
@@ -580,6 +593,7 @@ class Event extends DataObject {
 			'monthDate',
 			'monthOffset',
 			'endOption',
+			'dateUpdated'
 		];
 	}
 
@@ -946,6 +960,7 @@ class Event extends DataObject {
 				}
 			}
 		}
+		$this->dateUpdated = time();
 		return $structure;
 	}
 }

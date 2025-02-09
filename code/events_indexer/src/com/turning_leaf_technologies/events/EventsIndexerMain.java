@@ -139,6 +139,8 @@ public class EventsIndexerMain {
 						eventsSitesRS.getLong("id"),
 						eventsSitesRS.getInt("numberOfDaysToIndex"),
 						eventsSitesRS.getBoolean("runFullUpdate"),
+						eventsSitesRS.getLong("lastUpdateOfAllEvents"),
+						eventsSitesRS.getLong("lastUpdateOfChangedEvents"),
 						solrUpdateServer, aspenConn, logger, serverName);
 					indexer.indexEvents();
 				}

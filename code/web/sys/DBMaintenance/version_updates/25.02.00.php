@@ -276,6 +276,14 @@ function getUpdates25_02_00(): array {
 				'ALTER TABLE event_instance CHANGE COLUMN note note TEXT',
 			]
 		], //increase_event_field_lengths
+		'add_dateUpdated_to_event_and_eventInstance' => [
+			'title' => 'Add dateUpdated to Event and Event_Instance',
+			'description' => 'Add dateUpdated to Event and Event_Instance to allow incremental indexing',
+			'sql' => [
+				'ALTER TABLE event ADD COLUMN dateUpdated INT(11)',
+				'ALTER TABLE event_instance ADD COLUMN dateUpdated INT(11)',
+			]
+		], //add_dateUpdated_to_event_and_eventInstance
 
 		//kirstien - Grove
 		'lida_general_settings_add_more_info' => [

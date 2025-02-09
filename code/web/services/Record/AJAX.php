@@ -1004,7 +1004,7 @@ class Record_AJAX extends Action {
 
 								require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
 								$sublocation = new Sublocation();
-								if ($sublocation->get('ilsId', $pickupSublocation)) {
+								if ($sublocation->get('id', $pickupSublocationId)) {
 									if ($pickupLocation->locationId == $sublocation->locationId) {
 										if ($sublocation->id != $user->pickupSublocationId) {
 											$patron->setPickupSublocationId($sublocation->id);

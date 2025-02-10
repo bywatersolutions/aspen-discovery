@@ -1,5 +1,6 @@
 <?php
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
+require_once ROOT_DIR . '/sys/Events/EventFieldSetField.php';
 
 class EventField extends DataObject {
 	public $__table = 'event_field';
@@ -76,6 +77,15 @@ class EventField extends DataObject {
 			],
 		];
 		return $structure;
+	}
+
+	function delete($useWhere = false) : int {
+		$fieldSet = new EventFieldSetField();
+		$fieldSet->eventFieldId = $this->id;
+		if ($fieldSet->count() == 0) {
+			return parent::delete($useWhere);
+		}
+		return 0;
 	}
 
 	public static function getEventFieldList(): array {

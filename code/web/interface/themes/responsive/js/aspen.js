@@ -15116,6 +15116,12 @@ AspenDiscovery.Record = (function () {
 		},
 
 		placeVolumeHold: function () {
+			var selectedVolume = $("#selectedVolume option:selected").val() ;
+			if (selectedVolume === 'unselected'){
+				alert("You must select a volume before continuing");
+				return false;
+			}
+
 			var requestTitleButton = $('#requestTitleButton');
 			requestTitleButton.prop('disabled', true);
 			requestTitleButton.addClass('disabled');
@@ -15124,7 +15130,7 @@ AspenDiscovery.Record = (function () {
 			var id = $('#id').val();
 			var autoLogOut = $('#autologout').prop('checked');
 			var module = $('#module').val();
-			var volume = $('#selectedVolume');
+
 			var params = {
 				'method': 'placeHold',
 				pickupBranch: $('#pickupBranch').val(),
@@ -15137,11 +15143,8 @@ AspenDiscovery.Record = (function () {
 			if (autoLogOut) {
 				params['autologout'] = true;
 			}
-			if (volume.length > 0) {
-				params['volume'] = volume.val();
-			} else {
-				alert("Please select a volume to place a hold on.");
-				return false;
+			if (selectedVolume.length > 0) {
+				params['volume'] = selectedVolume;
 			}
 			if (params['pickupBranch'] === 'undefined') {
 				alert("Please select a location to pick up your hold when it is ready.");

@@ -758,20 +758,6 @@ class Record_AJAX extends Action {
 
 			$numItemsWithVolumes = 0;
 			$numItemsWithoutVolumes = 0;
-			/*foreach ($relatedRecord->getItems() as $item) {
-				if (!$item->isEContent){
-					if (empty($item->volume)) {
-						$numItemsWithoutVolumes++;
-					} else {
-						if ($item->libraryOwned || $item->locallyOwned) {
-							if (array_key_exists($item->volumeId, $volumeData)) {
-								$volumeData[$item->volumeId]->setHasLocalItems(true);
-							}
-						}
-						$numItemsWithVolumes++;
-					}
-				}
-			}*/
 			foreach ($relatedRecord->recordVariations as $variation) { // check variations for non-econtent items for records that have both econtent and physical items attached
 				if (!($variation->isEContent())) {
 					foreach ($variation->getRecords() as $record) {
@@ -780,8 +766,9 @@ class Record_AJAX extends Action {
 								if (empty($item->volume)) {
 									$numItemsWithoutVolumes++;
 								} else {
-									if ($item->libraryOwned || $item->locallyOwned) {
-										if (array_key_exists($item->volumeId, $volumeData)) {
+									if (array_key_exists($item->volumeId, $volumeData)) {
+										$volumeData[$item->volumeId]->addItem($item);
+										if ($item->libraryOwned || $item->locallyOwned) {
 											$volumeData[$item->volumeId]->setHasLocalItems(true);
 										}
 									}
@@ -789,6 +776,17 @@ class Record_AJAX extends Action {
 								}
 							}
 						}
+					}
+				}
+			}
+
+			list($interLibraryLoanType, , $homeLocation, $holdGroups) = $marcRecord->getInterLibraryLoanIntegrationInformation($relatedRecord, 'any');
+			if ($interLibraryLoanType != null) {
+				foreach ($volumeData as $key => $volumeInfo) {
+					if ($marcRecord->oneOrMoreHoldableItemsOwnedByPatronHoldGroups($volumeInfo->getItems(), $holdGroups, 'any', $homeLocation->code)){
+						$volumeInfo->setNeedsIllRequest(false);
+					}else{
+						$volumeInfo->setNeedsIllRequest(true);
 					}
 				}
 			}
@@ -974,7 +972,15 @@ class Record_AJAX extends Action {
 						$return = $patron->placeItemHold($shortId, $_REQUEST['selectedItem'], $pickupBranch, $cancelDate, $pickupSublocation);
 					} else {
 						if (isset($_REQUEST['volume']) && $holdType == 'volume') {
-							$return = $patron->placeVolumeHold($shortId, $_REQUEST['volume'], $pickupBranch, $pickupSublocation);
+							if ($_REQUEST['volume'] === 'unselected') {
+								return [
+									'success' => false,
+									'message' => 'You must select a volume to place the hold on.',
+									'title' => 'Select a volume',
+								];
+							}else {
+								$return = $patron->placeVolumeHold($shortId, $_REQUEST['volume'], $pickupBranch, $pickupSublocation);
+							}
 						} else {
 							$return = $patron->placeHold($shortId, $pickupBranch, $cancelDate, $pickupSublocation);
 						}

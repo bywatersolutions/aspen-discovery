@@ -4547,7 +4547,11 @@ class User extends DataObject {
 			$sections['events'] = new AdminSection('Events');
 			if (SystemVariables::getSystemVariables()->enableAspenEvents) {
 				$aspenEventsAction = new AdminAction('Aspen Events - Manage Events', 'Add and manage Aspen Events.', '/Events/Events');
-				if ($sections['events']->addAction($aspenEventsAction, 'Administer Events for All Locations')) {
+				if ($sections['events']->addAction($aspenEventsAction, [
+					'Administer Events for All Locations',
+					'Administer Events for Home Library Locations',
+					'Administer Events for Home Location']
+				)) {
 					$aspenEventsAction->addSubAction(new AdminAction('Configure Event Fields', 'Define event fields for Aspen Events.', '/Events/EventFields'), 'Administer Field Sets');
 					$aspenEventsAction->addSubAction(new AdminAction('Configure Event Field Sets', 'Define sets of event fields to use for Aspen Events.', '/Events/EventFieldSets'), 'Administer Field Sets');
 					$aspenEventsAction->addSubAction(new AdminAction('Configure Event Types', 'Define event types to use for Aspen Events.', '/Events/EventTypes'), 'Administer Event Types');

@@ -73,9 +73,9 @@ public class AspenEventsIndexer {
 			PreparedStatement deleteEventsStmt;
 			if (runFullUpdate) {
 				// Get event instance and event info
-				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ? AND ei.deleted = 0;");
+				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, sl.name AS sublocationName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId LEFT JOIN sublocation AS sl on e.sublocationId = sl.id WHERE ei.date > ? AND ei.deleted = 0;");
 			} else {
-				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId WHERE ei.date < ? AND (e.dateUpdated > ? OR ei.dateUpdated > ?) AND ei.deleted = 0;");
+				eventsStmt = aspenConn.prepareStatement("SELECT ei.*, e.title, e.description, e.eventTypeId, e.locationId, l.displayName, sl.name AS sublocationName, e.sublocationId, e.cover, e.private FROM event_instance AS ei LEFT JOIN event as e ON e.id = ei.eventID LEFT JOIN location AS l ON e.locationId = l.locationId LEFT JOIN sublocation AS sl on e.sublocationId = sl.id WHERE ei.date < ? AND (e.dateUpdated > ? OR ei.dateUpdated > ?) AND ei.deleted = 0;");
 				deleteEventsStmt = aspenConn.prepareStatement("SELECT id FROM event_instance WHERE deleted = 1 AND dateUpdated > ?;");
 				eventsStmt.setLong(2, lastUpdateOfChangedEvents);
 				eventsStmt.setLong(3, lastUpdateOfChangedEvents);
@@ -202,8 +202,11 @@ public class AspenEventsIndexer {
 				solrDocument.addField("title", eventInfo.getName());
 
 				// Locations
-				solrDocument.addField("branch", eventInfo.getLocationCode());
+				solrDocument.addField("branch", eventInfo.getLocationName());
 				// Also get sublocation
+				if (!eventInfo.getSublocationName().isEmpty()) {
+					solrDocument.addField("room", eventInfo.getSublocationName());
+				}
 
 				solrDocument.addField("reservation_state", eventInfo.getStatus());
 

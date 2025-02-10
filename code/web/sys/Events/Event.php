@@ -66,6 +66,14 @@ class Event extends DataObject {
 				'values' => $locationList,
 				'onchange' => 'return AspenDiscovery.Events.getEventTypesForLocation(this.value);',
 			],
+			'sublocationId' => [
+				'property' => 'sublocationId',
+				'type' => 'enum',
+				'label' => 'Sublocation',
+				'description' => 'Sublocation of the event',
+				'values' => [],
+				'hiddenByDefault' => true,
+			],
 			'eventTypeId' => [
 				'property' => 'eventTypeId',
 				'type' => 'enum',
@@ -162,6 +170,7 @@ class Event extends DataObject {
 					'frequencySection' => [
 						'property' => 'frequencySection',
 						'type' => 'section',
+						'label' => 'Event Frequency',
 						'hiddenByDefault' => true,
 						'properties' => [
 							'recurrenceInterval' => [
@@ -179,6 +188,7 @@ class Event extends DataObject {
 					'weeklySection' => [
 						'property' => 'weeklySection',
 						'type' => 'section',
+						'label' => 'Repeat Based on Week',
 						'hiddenByDefault' => true,
 						'properties' => [
 							'weekDays' => [
@@ -190,6 +200,7 @@ class Event extends DataObject {
 					'monthlySection' => [
 						'property' => 'monthlySection',
 						'type' => 'section',
+						'label' => 'Repeat Based on Month',
 						'hiddenByDefault' => true,
 						'properties' => [
 							'monthlyOption' => [
@@ -215,6 +226,7 @@ class Event extends DataObject {
 					'repeatEndsSection' => [
 						'property' => 'repeatEndsSection',
 						'type' => 'section',
+						'label' => 'Repeat Ends',
 						'hiddenByDefault' => true,
 						'properties' => [
 							'endOption' => [
@@ -982,6 +994,10 @@ class Event extends DataObject {
 						$structure['scheduleSection']['properties']['repeatEndsSection']['properties']['recurrenceCount']['hiddenByDefault'] = false;
 				}
 			}
+		}
+		if ($this->locationId) {
+			$structure['sublocationId']['values'] = Location::getEventSublocations($this->locationId);
+			$structure['sublocationId']['hiddenByDefault'] = false;
 		}
 		$this->dateUpdated = time();
 		return $structure;

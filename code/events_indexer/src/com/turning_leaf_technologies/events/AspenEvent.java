@@ -25,6 +25,7 @@ class AspenEvent {
 	private final String cover;
 	private final long locationId;
 	private final String locationCode;
+	private final String sublocationName;
 	private final HashSet<String> libraries = new HashSet<>();
 	private final long sublocationId;
 	private final Boolean status;
@@ -43,6 +44,7 @@ class AspenEvent {
 		this.cover = existingEventsRS.getString("cover");
 		this.locationId = existingEventsRS.getLong("locationId");
 		this.locationCode = existingEventsRS.getString("displayName");
+		this.sublocationName = existingEventsRS.getString("sublocationName");
 		this.sublocationId = existingEventsRS.getLong("sublocationId");
 		this.status = existingEventsRS.getBoolean("status");
 		this.nonPublic = existingEventsRS.getBoolean("private");
@@ -104,8 +106,12 @@ class AspenEvent {
 		return locationId;
 	}
 
-	public String getLocationCode() {
+	public String getLocationName() {
 		return locationCode;
+	}
+
+	public String getSublocationName() {
+		return sublocationName;
 	}
 
 	public long getSublocationId() {

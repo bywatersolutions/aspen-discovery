@@ -231,7 +231,7 @@ class AspenEventRecordDriver extends IndexRecordDriver {
 	}
 
 	public function getRoom() {
-		return array_key_exists("room", $this->fields) ? $this->fields['room'] : '';
+		return implode(", ", array_key_exists("room", $this->fields) ? $this->fields['room'] : []);
 	}
 
 	public function getType() {

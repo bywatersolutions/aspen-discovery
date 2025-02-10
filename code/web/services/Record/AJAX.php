@@ -1820,27 +1820,37 @@ class Record_AJAX extends Action {
 		if (!$multipleAccountPickupLocations && !$promptForHoldNotifications && $library->allowRememberPickupLocation) {
 			//If the patron's preferred pickup location is not valid, then force them to pick a new location
 			$preferredPickupLocationIsValid = false;
+			$preferredPickupLocation = null;
 			$preferredPickupSublocationIsValid = false;
 			foreach ($locations as $location) {
 				if (is_object($location) && ($location->locationId == $user->pickupLocationId)) {
 					$preferredPickupLocationIsValid = true;
+					$preferredPickupLocation = $location;
 					break;
 				}
 			}
 
-			require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
-			require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
-			$patronType = $user->getPTypeObj();
-			$sublocationLookup = new Sublocation();
-			$sublocationLookup->id = $user->pickupSublocationId;
-			$sublocationLookup->isValidHoldPickupAreaILS = 1;
-			$sublocationLookup->isValidHoldPickupAreaAspen = 1;
-			if ($sublocationLookup->find(true)) {
-				$sublocationPType = new SublocationPatronType();
-				$sublocationPType->patronTypeId = $patronType->id;
-				$sublocationPType->sublocationId = $sublocationLookup->id;
-				if ($sublocationPType->find(true)) {
-					$preferredPickupSublocationIsValid = true;
+			$preferredPickupSublocationIsValid = true;
+			if ($preferredPickupLocationIsValid) {
+				//The preferred location is valid, check to see if sublocations are in use and if so if the preferred pickup area is valid
+				$preferredSublocationsAtPreferredLocation = $preferredPickupLocation->getPickupSublocations($user);
+				if (count($preferredSublocationsAtPreferredLocation) > 1) {
+					$preferredPickupSublocationIsValid = false;
+					require_once ROOT_DIR . '/sys/LibraryLocation/Sublocation.php';
+					require_once ROOT_DIR . '/sys/LibraryLocation/SublocationPatronType.php';
+					$patronType = $user->getPTypeObj();
+					$sublocationLookup = new Sublocation();
+					$sublocationLookup->id = $user->pickupSublocationId;
+					$sublocationLookup->isValidHoldPickupAreaILS = 1;
+					$sublocationLookup->isValidHoldPickupAreaAspen = 1;
+					if ($sublocationLookup->find(true)) {
+						$sublocationPType = new SublocationPatronType();
+						$sublocationPType->patronTypeId = $patronType->id;
+						$sublocationPType->sublocationId = $sublocationLookup->id;
+						if ($sublocationPType->find(true)) {
+							$preferredPickupSublocationIsValid = true;
+						}
+					}
 				}
 			}
 
@@ -1848,7 +1858,8 @@ class Record_AJAX extends Action {
 				$rememberHoldPickupLocation = $user->rememberHoldPickupLocation;
 			} else {
 				$rememberHoldPickupLocation = false;
-			}		} else {
+			}
+		} else {
 			$rememberHoldPickupLocation = false;
 		}
 		$interface->assign('rememberHoldPickupLocation', $rememberHoldPickupLocation);

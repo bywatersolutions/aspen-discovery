@@ -32,4 +32,12 @@ class UsageByIPAddress extends DataObject {
 		}
 		return $okToExport;
 	}
+
+	public function incrementNumRequests(): bool {
+		return $this->query("UPDATE usage_by_ip_address SET numRequests = numRequests + 1 WHERE id = {$this->id}");
+	}
+
+	public function incrementNumBlockedRequests(): bool {
+		return $this->query("UPDATE usage_by_ip_address SET numBlockedRequests = numBlockedRequests + 1 WHERE id = {$this->id}");
+	}
 }

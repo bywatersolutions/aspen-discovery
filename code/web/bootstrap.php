@@ -64,6 +64,9 @@ ob_start();
 
 initMemcache();
 initDatabase();
+$timer->logTime("Initialized Database");
+requireSystemLibraries();
+initLocale();
 
 if ($aspenUsage->getInstance() != 'aspen_internal') {
 	$isValidServerName = true;
@@ -146,19 +149,35 @@ try {
 	$foundExisting = $usageByUserAgent->find(true);
 
 	if ($userAgent->blockAccess) {
-		$usageByUserAgent->numBlockedRequests++;
-		if ($usageByUserAgent->update() == 0){
-			$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
-			$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+		if ($foundExisting) {
+			$updateResult = $usageByUserAgent->incrementNumBlockedRequests();
+			if ($updateResult === false) {
+				$logger->log("Could not update blocked user agent usage", Logger::LOG_ERROR);
+				$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+			}
+		} else {
+			$usageByUserAgent->numBlockedRequests = 1;
+			if (!$usageByUserAgent->insert()) {
+				$logger->log("Could not insert blocked user agent usage", Logger::LOG_ERROR);
+				$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+			}
 		}
 		http_response_code(403);
 		echo("<h1>Forbidden</h1><p><strong>We are unable to handle your request.</strong></p>");
 		die();
 	}else{
-		$usageByUserAgent->numRequests++;
-		if ($usageByUserAgent->update() == 0){
-			$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
-			$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+		if ($foundExisting) {
+			$updateResult = $usageByUserAgent->incrementNumRequests();
+			if ($updateResult === false) {
+				$logger->log("Could not update user agent usage", Logger::LOG_ERROR);
+				$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+			}
+		} else {
+			$usageByUserAgent->numRequests = 1;
+			if (!$usageByUserAgent->insert()) {
+				$logger->log("Could not insert user agent usage", Logger::LOG_ERROR);
+				$logger->log($usageByUserAgent->getLastError(), Logger::LOG_ERROR);
+			}
 		}
 	}
 }catch (Exception $e) {
@@ -173,17 +192,13 @@ $usageByIPAddress->month = date('n');
 $usageByIPAddress->ipAddress = IPAddress::getClientIP();
 $usageByIPAddress->instance = $aspenUsage->getInstance();
 
-try {
-	$usageByIPAddress->find(true);
-} catch (Exception $e) {
-	//Table has not been created yet, ignore it
-}
 $usageByIPAddress->lastRequest = time();
-$usageByIPAddress->numRequests++;
-
-$timer->logTime("Initialized Database");
-requireSystemLibraries();
-initLocale();
+if ($usageByIPAddress->find(true)) {
+	$usageByIPAddress->incrementNumRequests();
+} else {
+	$usageByIPAddress->numRequests = 1;
+	$usageByIPAddress->insert();
+}
 
 //Check to see if we should be blocking based on the IP address
 if (IPAddress::isClientIpBlocked()) {
@@ -192,7 +207,12 @@ if (IPAddress::isClientIpBlocked()) {
 	try {
 		$usageByIPAddress->numBlockedRequests++;
 		if (SystemVariables::getSystemVariables()->trackIpAddresses) {
-			$usageByIPAddress->update();
+			if ($usageByIPAddress->find(true)) {
+				$usageByIPAddress->incrementNumBlockedRequests();
+			} else {
+				$usageByIPAddress->numBlockedRequests = 1;
+				$usageByIPAddress->insert();
+			}
 		}
 	} catch (Exception $e) {
 		//Ignore this, the class has not been created yet

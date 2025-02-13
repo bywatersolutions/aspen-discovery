@@ -192,13 +192,13 @@ $usageByIPAddress->month = date('n');
 $usageByIPAddress->ipAddress = IPAddress::getClientIP();
 $usageByIPAddress->instance = $aspenUsage->getInstance();
 
-$usageByIPAddress->lastRequest = time();
-if ($usageByIPAddress->find(true)) {
-	$usageByIPAddress->incrementNumRequests();
-} else {
-	$usageByIPAddress->numRequests = 1;
-	$usageByIPAddress->insert();
+try {
+	$usageByIPAddress->find(true);
+} catch (Exception $e) {
+	//Table has not been created yet, ignore it
 }
+$usageByIPAddress->lastRequest = time();
+$usageByIPAddress->numRequests++;
 
 //Check to see if we should be blocking based on the IP address
 if (IPAddress::isClientIpBlocked()) {
@@ -207,12 +207,7 @@ if (IPAddress::isClientIpBlocked()) {
 	try {
 		$usageByIPAddress->numBlockedRequests++;
 		if (SystemVariables::getSystemVariables()->trackIpAddresses) {
-			if ($usageByIPAddress->find(true)) {
-				$usageByIPAddress->incrementNumBlockedRequests();
-			} else {
-				$usageByIPAddress->numBlockedRequests = 1;
-				$usageByIPAddress->insert();
-			}
+			$usageByIPAddress->update();
 		}
 	} catch (Exception $e) {
 		//Ignore this, the class has not been created yet

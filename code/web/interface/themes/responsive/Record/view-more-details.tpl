@@ -1,6 +1,6 @@
 {strip}
 	{* Details not shown in the Top/Main Section of the Record view should be shown here *}
-	{if !empty($recordDriver) && !empty($showPublicationDetails) && $recordDriver->getPublicationDetails()}
+	{if !empty($recordDriver) && empty($showPublicationDetails) && $recordDriver->getPublicationDetails()}
 		<div class="row">
 			<div class="result-label col-xs-3">{translate text='Published' isPublicFacing=true}</div>
 			<div class="col-xs-9 result-value">
@@ -18,7 +18,7 @@
 		</div>
 	{/if}
 
-	{if !empty($recordDriver) && !empty($showEditions) && $recordDriver->getEditions()}
+	{if !empty($recordDriver) && empty($showEditions) && $recordDriver->getEditions()}
 		<div class="row">
 			<div class="result-label col-xs-3">{translate text='Edition' isPublicFacing=true}</div>
 			<div class="col-xs-9 result-value">
@@ -52,22 +52,23 @@
 		</div>
 	</div>
 
-	{if !empty($recordDriver) && !empty($showISBNs) && count($recordDriver->getISBNs()) > 0}
-		<div class="row">
-			<div class="result-label col-xs-3">{translate text='ISBN' isPublicFacing=true}</div>
-			<div class="col-xs-9 result-value">
-				{implode subject=$recordDriver->getISBNs() glue=", "}
+	{if !empty($recordDriver) && empty($showISBNs)}
+		{if count($recordDriver->getISBNs()) > 0}
+			<div class="row">
+				<div class="result-label col-xs-3">{translate text='ISBN' isPublicFacing=true}</div>
+				<div class="col-xs-9 result-value">
+					{implode subject=$recordDriver->getISBNs() glue=", "}
+				</div>
 			</div>
-		</div>
-	{/if}
-
-	{if !empty($recordDriver) && count($recordDriver->getISSNs()) > 0}
-		<div class="row">
-			<div class="result-label col-xs-3">{translate text='ISSN' isPublicFacing=true}</div>
-			<div class="col-xs-9 result-value">
-				{implode subject=$recordDriver->getISSNs() glue=", "}
+		{/if}
+		{if count($recordDriver->getISSNs()) > 0}
+			<div class="row">
+				<div class="result-label col-xs-3">{translate text='ISSN' isPublicFacing=true}</div>
+				<div class="col-xs-9 result-value">
+					{implode subject=$recordDriver->getISSNs() glue=", "}
+				</div>
 			</div>
-		</div>
+		{/if}
 	{/if}
 
 	{if !empty($recordDriver) && count($recordDriver->getUPCs()) > 0}

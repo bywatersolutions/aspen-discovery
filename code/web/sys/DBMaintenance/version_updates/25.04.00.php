@@ -99,6 +99,22 @@ function getUpdates25_04_00(): array {
 				'moveUploadedListImages'
 			]
 		], //move_list_images
+		'ip_lookup_ipv6_support' => [
+			'title' => 'Add Support for IPv6 Addresses',
+			'description' => 'Add support for IPv6 addresses in ip_lookup table.',
+			'continueOnError' => true,
+			'sql' => [
+				"ALTER TABLE ip_lookup MODIFY startIpVal VARCHAR(255) NULL COMMENT 'Numeric value for IPv4 or encoded string for IPv6'",
+				"ALTER TABLE ip_lookup MODIFY endIpVal VARCHAR(255) NULL COMMENT 'Numeric value for IPv4 or encoded string for IPv6'"
+			],
+		], //ip_lookup_ipv6_support
+		'custom_form_field_enums_to_text' => [
+			'title' => 'Increase Custom Form Field EnumValues Size',
+			'description' => 'Changes the enumValues column in web_builder_custom_form_field from VARCHAR(255) to TEXT to allow for longer select lists.',
+			'sql' => [
+				"ALTER TABLE web_builder_custom_form_field MODIFY COLUMN enumValues TEXT DEFAULT NULL",
+			]
+		],
 
 		//alexander - PTFS-Europe
 

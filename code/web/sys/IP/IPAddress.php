@@ -4,11 +4,11 @@ require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
 class IPAddress extends DataObject {
 	public $__table = 'ip_lookup';    //	table name
-	public $id;                        //	int(25)
-	public $locationid;                //	int(5)
-	public $location;                //	varchar(255)
-	public $ip;                        //	varchar(255) - IPv4 or IPv6 address or range
-	public $isOpac;                    //	tinyint(1)
+	public $id;                       //	int(25)
+	public $locationid;               //	int(5)
+	public $location;                 //	varchar(255)
+	public $ip;                       //	varchar(255) - IPv4 or IPv6 address or range
+	public $isOpac;                   //	tinyint(1)
 	public $defaultLogMeOutAfterPlacingHoldOn;
 	public $blockAccess;
 	public $blockedForSpam;
@@ -16,7 +16,7 @@ class IPAddress extends DataObject {
 	public $showDebuggingInformation;
 	public $logTimingInformation;
 	public $logAllQueries;
-	public $startIpVal;                //	varchar(255) - Numeric for IPv4, string with 'ipv6:' prefix for IPv6
+	public $startIpVal;              //	varchar(255) - Numeric for IPv4, string with 'ipv6:' prefix for IPv6
 	public $endIpVal;                //	varchar(255) - Numeric for IPv4, string with 'ipv6:' prefix for IPv6
 	public $authenticatedForEBSCOhost;
 	public $masqueradeMode;

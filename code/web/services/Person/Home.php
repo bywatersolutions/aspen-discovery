@@ -28,6 +28,7 @@ class Person_Home extends Action {
 		//Load basic information needed in subclasses
 		$id = $_GET['id'];
 		$_SESSION['returnToAction'] = $id;
+		$_SESSION['returnToModule'] = 'Person';
 
 		// Setup Search Engine Connection
 		// Include Search Engine Class

@@ -227,6 +227,7 @@ class Record_Home extends GroupedWorkSubRecordHomeAction {
 		}
 
 		$_SESSION['returnToAction'] = $this->id;
+		$_SESSION['returnToModule'] = 'Record';
 
 		// Retrieve User Search History
 		$this->lastSearch = isset($_SESSION['lastSearchURL']) ? $_SESSION['lastSearchURL'] : false;

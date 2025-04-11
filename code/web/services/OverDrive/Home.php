@@ -61,6 +61,9 @@ class OverDrive_Home extends GroupedWorkSubRecordHomeAction {
 
 			$interface->assign('semanticData', json_encode($this->recordDriver->getSemanticData()));
 
+			$_SESSION['returnToAction'] = $this->id;
+			$_SESSION['returnToModule'] = 'OverDrive';
+
 			// Display Page
 			$this->display('full-record.tpl', $this->recordDriver->getTitle(), '', false);
 

@@ -62,6 +62,7 @@ class CloudLibrary_Home extends GroupedWorkSubRecordHomeAction {
 
 
 			$_SESSION['returnToAction'] = $this->id;
+			$_SESSION['returnToModule'] = 'CloudLibrary';
 
 			// Display Page
 			$this->display('full-record.tpl', $this->recordDriver->getTitle(), '', false);

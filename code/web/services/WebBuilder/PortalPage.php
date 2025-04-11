@@ -13,6 +13,8 @@ class WebBuilder_PortalPage extends Action {
 		$this->portalPage = new PortalPage();
 		$id = strip_tags($_REQUEST['id']);
 		$_SESSION['returnToId'] = $_REQUEST['id'];
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'PortalPage';
 		$this->portalPage->id = $id;
 		$this->portalPageFound = $this->portalPage->find(true);
 

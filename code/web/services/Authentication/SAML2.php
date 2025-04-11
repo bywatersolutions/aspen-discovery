@@ -25,7 +25,10 @@ class Authentication_SAML2 extends Action {
 				Logger::LOG_ERROR
 			);
 			if($followupModule && $followupAction) {
-				if($followupModule == 'WebBuilder' && $followupAction == 'PortalPage' && $followupPageId) {
+				if ($followupModule == 'Search' && $followupAction == 'Results' && isset($_SESSION['lastSearchURL'])) {
+					$returnTo = $_SESSION['lastSearchURL'];
+					unset($_SESSION['lastSearchURL']);
+				} elseif($followupModule == 'WebBuilder' && $followupAction == 'PortalPage' && $followupPageId) {
 					require_once ROOT_DIR . '/sys/WebBuilder/PortalPage.php';
 					$portalPage = new PortalPage();
 					$portalPage->id = $followupPageId;

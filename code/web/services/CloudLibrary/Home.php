@@ -60,7 +60,6 @@ class CloudLibrary_Home extends GroupedWorkSubRecordHomeAction {
 
 			$interface->assign('semanticData', json_encode($this->recordDriver->getSemanticData()));
 
-
 			$_SESSION['returnToAction'] = $this->id;
 			$_SESSION['returnToModule'] = 'CloudLibrary';
 

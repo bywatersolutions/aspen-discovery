@@ -402,11 +402,13 @@ class Search_Results extends ResultsAction {
 			}
 		}
 
-		// Save the ID of this search to the session so we can return to it easily:
+		// Save the ID of this search to the session so we can return to it easily.
 		$_SESSION['lastSearchId'] = $searchObject->getSearchId();
 
-		// Save the URL of this search to the session so we can return to it easily:
+		// Save the URL of this search to the session so we can return to it easily.
 		$_SESSION['lastSearchURL'] = $searchObject->renderSearchUrl();
+		$_SESSION['returnToModule'] = 'Search';
+		$_SESSION['returnToAction'] = 'Results';
 
 		//Always get spelling suggestions to account for cases where something is misspelled, but still gets results
 		$spellingSuggestions = $searchObject->getSpellingSuggestions();

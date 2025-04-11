@@ -8,6 +8,9 @@ class WebBuilder_Form extends Action {
 		global $interface;
 
 		$id = strip_tags($_REQUEST['id']);
+		$_SESSION['returnToId'] = $id;
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'Form';
 		$interface->assign('id', $id);
 
 		require_once ROOT_DIR . '/sys/WebBuilder/CustomForm.php';

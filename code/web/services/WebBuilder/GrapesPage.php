@@ -13,6 +13,9 @@ class WebBuilder_GrapesPage extends Action {
 		global $interface;
 
 		$id = strip_tags($_REQUEST['id']);
+		$_SESSION['returnToId'] = $id;
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'GrapesPage';
 		$this->grapesPage = new GrapesPage();
 		$this->grapesPage->id = $id;
 

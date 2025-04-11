@@ -3,9 +3,10 @@ require_once ROOT_DIR . '/sys/Authentication/SAMLAuthentication.php';
 
 class Authentication_SAML2 extends Action {
 	/**
-	 * @throws UnknownAuthenticationMethodException
+	 * @throws UnknownAuthenticationMethodException|OneLogin_Saml2_Error
 	 */
-	public function launch() {
+	public function launch(): void
+	{
 		global $configArray;
 
 		if(isset($_GET['init'])) {
@@ -18,16 +19,14 @@ class Authentication_SAML2 extends Action {
 			$followupAction = $_SESSION['returnToAction'] ?? $action;
 			$followupModule = $_SESSION['returnToModule'] ?? $module;
 			$followupPageId = $_SESSION['returnToId'] ?? null;
-			$logger->log("SSO: " .
-				($_SESSION['returnToAction'] ?? 'not set') . ', ' .
-				($_SESSION['returnToModule'] ?? 'not set') . ', ' .
-				($_SESSION['returnToId'] ?? 'not set'),
-				Logger::LOG_ERROR
-			);
+
 			if($followupModule && $followupAction) {
 				if ($followupModule == 'Search' && $followupAction == 'Results' && isset($_SESSION['lastSearchURL'])) {
 					$returnTo = $_SESSION['lastSearchURL'];
 					unset($_SESSION['lastSearchURL']);
+				}
+				elseif ($followupModule == 'MyAccount' && $followupPageId) {
+					$returnTo = $configArray['Site']['url'] . '/' . $followupModule . '/' . $followupAction . '/' . $followupPageId;
 				} else {
 					$returnTo = $configArray['Site']['url'] . '/' . $followupModule . '/' . $followupAction;
 					if ($followupPageId) {

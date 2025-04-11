@@ -37,6 +37,9 @@ class MyAccount_MyList extends MyAccount {
 
 		// Fetch List object
 		$listId = $_REQUEST['id'];
+		$_SESSION['returnToModule'] = 'MyAccount';
+		$_SESSION['returnToAction'] = 'MyList';
+		$_SESSION['returnToId'] = $listId;
 		require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 		require_once ROOT_DIR . '/sys/UserLists/UserListEntry.php';
 		$list = new UserList();

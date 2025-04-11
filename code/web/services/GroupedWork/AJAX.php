@@ -477,6 +477,9 @@ class GroupedWork_AJAX extends JSON_Action {
 
 		require_once ROOT_DIR . '/RecordDrivers/GroupedWorkDriver.php';
 		$id = $_REQUEST['id'];
+		$_SESSION['returnToModule'] = 'GroupedWork';
+		$_SESSION['returnToAction'] = $id;
+
 		$recordDriver = new GroupedWorkDriver($id);
 
 		if (!empty($_REQUEST['browseCategoryId'])) { // TODO need to check for $_REQUEST['subCategory'] ??

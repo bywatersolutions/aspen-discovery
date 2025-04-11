@@ -13,6 +13,9 @@ class WebBuilder_BasicPage extends Action {
 		global $interface;
 
 		$id = strip_tags($_REQUEST['id']);
+		$_SESSION['returnToId'] = $id;
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'BasicPage';
 		$this->basicPage = new BasicPage();
 		$this->basicPage->id = $id;
 

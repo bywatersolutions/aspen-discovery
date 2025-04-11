@@ -6,6 +6,9 @@ abstract class Admin_Admin extends Action {
 	function __construct($isStandalonePage = false) {
 		parent::__construct($isStandalonePage);
 
+		$_SESSION['returnToModule'] = 'Admin';
+		$_SESSION['returnToAction'] = 'Home';
+
 		$user = UserAccount::getLoggedInUser();
 
 		//If the user isn't logged in, take them to the login page

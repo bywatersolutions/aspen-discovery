@@ -43,7 +43,18 @@ class MySQLSession extends SessionInterface {
 			//Don't update sessions on AJAX and JSON calls
 			if (isset($_REQUEST['method'])) {
 				$method = $_REQUEST['method'];
-				if ($method != 'loginUser' && $method != 'login' && $method != 'initiateMasquerade' && $method != 'endMasquerade' && $method != 'lockFacet' && $method != 'unlockFacet' && $method != 'updateDisplaySettings' && !isset($_REQUEST['showCovers']) && !isset($_REQUEST['sort']) && !isset($_REQUEST['availableHoldSort']) && !isset($_REQUEST['unavailableHoldSort']) && !isset($_REQUEST['autologout'])) {
+				$skipWrite = (
+					$method != 'loginUser' && $method != 'login' &&
+					$method != 'initiateMasquerade' && $method != 'endMasquerade' &&
+					$method != 'lockFacet' && $method != 'unlockFacet' &&
+					$method != 'updateDisplaySettings' && !isset($_REQUEST['showCovers']) &&
+					!isset($_REQUEST['sort']) && !isset($_REQUEST['availableHoldSort']) &&
+					!isset($_REQUEST['unavailableHoldSort']) && !isset($_REQUEST['autologout']) &&
+					// Do not skip session writes for AJAX calls that have set returnToModule or returnToAction.
+					!(isset($_SESSION['returnToModule']) || isset($_SESSION['returnToAction']))
+				);
+
+				if ($skipWrite) {
 					//$logger->log("Not updating session $sess_id $module $action $method", Logger::LOG_DEBUG);
 					return true;
 				}

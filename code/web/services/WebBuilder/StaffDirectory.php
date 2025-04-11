@@ -6,6 +6,9 @@ class StaffDirectory extends Action {
 		global $interface;
 		global $library;
 
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'StaffDirectory';
+
 		require_once ROOT_DIR . '/sys/WebBuilder/StaffMember.php';
 		$staffMember = new StaffMember();
 		$staffMember->orderBy('name');

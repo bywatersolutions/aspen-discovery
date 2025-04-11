@@ -8,6 +8,9 @@ class WebBuilder_QuickPoll extends Action {
 		global $interface;
 
 		$id = strip_tags($_REQUEST['id']);
+		$_SESSION['returnToId'] = $id;
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'QuickPoll';
 		$interface->assign('id', $id);
 
 		require_once ROOT_DIR . '/sys/WebBuilder/QuickPoll.php';

@@ -12,6 +12,9 @@ class WebBuilder_CustomWebResourcePage extends Action {
 		global $interface;
 
 		$id = strip_tags($_REQUEST['id']);
+		$_SESSION['returnToId'] = $id;
+		$_SESSION['returnToModule'] = 'WebBuilder';
+		$_SESSION['returnToAction'] = 'CustomWebResourcePage';
 		$this->customWebResourcePage = new CustomWebResourcePage();
 		$this->customWebResourcePage->id = $id;
 

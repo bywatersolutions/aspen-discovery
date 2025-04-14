@@ -580,7 +580,7 @@ abstract class ObjectEditor extends Admin_Admin {
 		$errorOccurred = false;
 		$user = UserAccount::getLoggedInUser();
 		$samePatron = true;
-		if ($_REQUEST['patronIdCheck'] != 0 && $_REQUEST['patronIdCheck'] != $user->id){
+		if (isset($_REQUEST['patronIdCheck']) && $_REQUEST['patronIdCheck'] != 0 && $_REQUEST['patronIdCheck'] != $user->id){
 			$samePatron = false;
 		}
 		if ($samePatron) {

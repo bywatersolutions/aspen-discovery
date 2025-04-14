@@ -900,8 +900,8 @@ public class KohaExportMain {
 			//Prepared queries
 			PreparedStatement kohaPatronTypeStmt = kohaConn.prepareStatement("SELECT * from categories");
 			PreparedStatement existingAspenPatronTypesStmt = dbConn.prepareStatement("SELECT id from ptype where pType = ?");
-			PreparedStatement addAspenPatronTypeStmt = dbConn.prepareStatement("INSERT INTO ptype (pType) VALUES (?)");
-
+			PreparedStatement addAspenPatronTypeStmt = dbConn.prepareStatement("INSERT INTO ptype (pType, accountProfileId) VALUES (?, ?)");
+			PreparedStatement getAccountProfileIdStmt = dbConn.prepareStatement("SELECT id FROM account_profiles WHERE name = ?");
 			PreparedStatement getKohaPSLimits = kohaConn.prepareStatement("SELECT value FROM systempreferences WHERE variable = 'suggestionPatronCategoryExceptions'");
 			PreparedStatement getPatronTypeSuggestLimit = dbConn.prepareStatement("SELECT canSuggestMaterials FROM ptype WHERE pType = ?");
 			PreparedStatement updatePatronTypeCannotSuggest = dbConn.prepareStatement("UPDATE ptype SET canSuggestMaterials = 0 WHERE pType = ?");
@@ -937,7 +937,20 @@ public class KohaExportMain {
 				String ptype = kohaPTypes.getString("categorycode");
 
 				if (!existingAspenPatronTypesRS.next()) {
+					// Get the account profile ID using the indexing profile name.
+					long accountProfileId = -1;
+					getAccountProfileIdStmt.setString(1, indexingProfile.getName());
+					ResultSet accountProfileRS = getAccountProfileIdStmt.executeQuery();
+					if (accountProfileRS.next()) {
+						accountProfileId = accountProfileRS.getLong("id");
+					}
+					accountProfileRS.close();
+
 					addAspenPatronTypeStmt.setString(1, kohaPTypes.getString("categorycode"));
+					// If an account profile was found, set the import patron type's account profile to it.
+					if (accountProfileId != -1) {
+						addAspenPatronTypeStmt.setString(2, String.valueOf(accountProfileId));
+					}
 					addAspenPatronTypeStmt.executeUpdate();
 				}
 

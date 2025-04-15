@@ -9474,7 +9474,7 @@ a.placard-link {
   transition: all 0.2s ease-in-out;
   break-inside: avoid-column;
   -webkit-column-break-inside: avoid;
-  display: inline-block;
+  display: inline-flex;
   text-align: center;
   position: relative;
 }

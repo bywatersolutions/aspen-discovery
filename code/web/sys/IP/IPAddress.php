@@ -256,9 +256,6 @@ class IPAddress extends DataObject {
 			$ipv6Binary = 'ipv6:' . bin2hex(inet_pton($ipAddress));
 			$this->setProperty('startIpVal', $ipv6Binary, $objectStructure);
 			$this->setProperty('endIpVal', $ipv6Binary, $objectStructure);
-
-			global $logger;
-			$logger->log("IPv6 address calculated: $ipAddress as $ipv6Binary.", Logger::LOG_DEBUG);
 			return true;
 		}
 
@@ -286,8 +283,6 @@ class IPAddress extends DataObject {
 				$this->setProperty('startIpVal', $startHex, $objectStructure);
 				$this->setProperty('endIpVal', $endHex, $objectStructure);
 
-				global $logger;
-				$logger->log("IPv6 range calculated: $startVal-$endVal as $startHex-$endHex.", Logger::LOG_DEBUG);
 				return true;
 			}
 		}
@@ -394,14 +389,9 @@ class IPAddress extends DataObject {
 			return false;
 		}
 
-		global $logger;
-		$logger->log("Checking IP access for: $activeIP.", Logger::LOG_DEBUG);
-
 		// Handle IPv6 addresses
 		if (filter_var($activeIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
 			$ipVal = 'ipv6:' . bin2hex(inet_pton($activeIP));
-
-			$logger->log("IPv6 converted to: $ipVal.", Logger::LOG_DEBUG);
 
 			if (array_key_exists($ipVal, IPAddress::$ipAddressesForIP)) {
 				return IPAddress::$ipAddressesForIP[$ipVal];
@@ -413,7 +403,6 @@ class IPAddress extends DataObject {
 			$ipObject = new IPAddress();
 			$ipObject->ip = $activeIP;
 			if ($ipObject->find(true)) {
-				$logger->log("Found exact match for IP: $activeIP.", Logger::LOG_DEBUG);
 				enableErrorHandler();
 				IPAddress::$ipAddressesForIP[$ipVal] = $ipObject;
 				return $ipObject;
@@ -424,7 +413,6 @@ class IPAddress extends DataObject {
 			$ipObject->startIpVal = $ipVal;
 			$ipObject->endIpVal = $ipVal;
 			if ($ipObject->find(true)) {
-				$logger->log("Found match by startIpVal/endIpVal for: $ipVal.", Logger::LOG_DEBUG);
 				enableErrorHandler();
 				IPAddress::$ipAddressesForIP[$ipVal] = $ipObject;
 				return $ipObject;
@@ -445,11 +433,8 @@ class IPAddress extends DataObject {
 				// Current IP as hex without prefix.
 				$currentHex = substr($ipVal, 5);
 
-				$logger->log("Checking range: $startHex - $endHex against $currentHex.", Logger::LOG_DEBUG);
-
 				// Check if the IP is within the range.
 				if (IPAddress::ipv6HexInRange($currentHex, $startHex, $endHex)) {
-					$logger->log("IP is in range.", Logger::LOG_DEBUG);
 					enableErrorHandler();
 					IPAddress::$ipAddressesForIP[$ipVal] = $ipObject;
 					return $ipObject;
@@ -457,7 +442,6 @@ class IPAddress extends DataObject {
 			}
 
 			enableErrorHandler();
-			$logger->log("No matching IP rule found for $activeIP.", Logger::LOG_DEBUG);
 			IPAddress::$ipAddressesForIP[$ipVal] = false;
 			$ipObject->__destruct();
 			$ipObject = null;

@@ -258,7 +258,7 @@ class IPAddress extends DataObject {
 			$this->setProperty('endIpVal', $ipv6Binary, $objectStructure);
 
 			global $logger;
-			$logger->log("IPv6 address calculated: $ipAddress as $ipv6Binary.", Logger::LOG_ERROR);
+			$logger->log("IPv6 address calculated: $ipAddress as $ipv6Binary.", Logger::LOG_DEBUG);
 			return true;
 		}
 
@@ -287,7 +287,7 @@ class IPAddress extends DataObject {
 				$this->setProperty('endIpVal', $endHex, $objectStructure);
 
 				global $logger;
-				$logger->log("IPv6 range calculated: $startVal-$endVal as $startHex-$endHex.", Logger::LOG_ERROR);
+				$logger->log("IPv6 range calculated: $startVal-$endVal as $startHex-$endHex.", Logger::LOG_DEBUG);
 				return true;
 			}
 		}
@@ -395,13 +395,13 @@ class IPAddress extends DataObject {
 		}
 
 		global $logger;
-		$logger->log("Checking IP access for: $activeIP.", Logger::LOG_ERROR);
+		$logger->log("Checking IP access for: $activeIP.", Logger::LOG_DEBUG);
 
 		// Handle IPv6 addresses
 		if (filter_var($activeIP, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
 			$ipVal = 'ipv6:' . bin2hex(inet_pton($activeIP));
 
-			$logger->log("IPv6 converted to: $ipVal.", Logger::LOG_ERROR);
+			$logger->log("IPv6 converted to: $ipVal.", Logger::LOG_DEBUG);
 
 			if (array_key_exists($ipVal, IPAddress::$ipAddressesForIP)) {
 				return IPAddress::$ipAddressesForIP[$ipVal];
@@ -409,17 +409,11 @@ class IPAddress extends DataObject {
 
 			disableErrorHandler();
 
-			$allIPs = new IPAddress();
-			$allIPs->find();
-			while ($allIPs->fetch()) {
-				$logger->log("IP in DB: {$allIPs->ip}, startIpVal: {$allIPs->startIpVal}, endIpVal: {$allIPs->endIpVal}.", Logger::LOG_ERROR);
-			}
-
 			// First, check exact matches.
 			$ipObject = new IPAddress();
 			$ipObject->ip = $activeIP;
 			if ($ipObject->find(true)) {
-				$logger->log("Found exact match for IP: $activeIP.", Logger::LOG_ERROR);
+				$logger->log("Found exact match for IP: $activeIP.", Logger::LOG_DEBUG);
 				enableErrorHandler();
 				IPAddress::$ipAddressesForIP[$ipVal] = $ipObject;
 				return $ipObject;
@@ -430,7 +424,7 @@ class IPAddress extends DataObject {
 			$ipObject->startIpVal = $ipVal;
 			$ipObject->endIpVal = $ipVal;
 			if ($ipObject->find(true)) {
-				$logger->log("Found match by startIpVal/endIpVal for: $ipVal.", Logger::LOG_ERROR);
+				$logger->log("Found match by startIpVal/endIpVal for: $ipVal.", Logger::LOG_DEBUG);
 				enableErrorHandler();
 				IPAddress::$ipAddressesForIP[$ipVal] = $ipObject;
 				return $ipObject;
@@ -442,8 +436,6 @@ class IPAddress extends DataObject {
 			$ipObject->whereAdd('startIpVal != endIpVal');
 			$numRows = $ipObject->find();
 
-			$logger->log("Found $numRows IPv6 ranges to check.", Logger::LOG_ERROR);
-
 			for ($i = 0; $i < $numRows; $i++) {
 				$ipObject->fetch();
 				// Extract hex values from stored format.
@@ -453,11 +445,11 @@ class IPAddress extends DataObject {
 				// Current IP as hex without prefix.
 				$currentHex = substr($ipVal, 5);
 
-				$logger->log("Checking range: $startHex - $endHex against $currentHex.", Logger::LOG_ERROR);
+				$logger->log("Checking range: $startHex - $endHex against $currentHex.", Logger::LOG_DEBUG);
 
 				// Check if the IP is within the range.
 				if (IPAddress::ipv6HexInRange($currentHex, $startHex, $endHex)) {
-					$logger->log("IP is in range.", Logger::LOG_ERROR);
+					$logger->log("IP is in range.", Logger::LOG_DEBUG);
 					enableErrorHandler();
 					IPAddress::$ipAddressesForIP[$ipVal] = $ipObject;
 					return $ipObject;
@@ -465,7 +457,7 @@ class IPAddress extends DataObject {
 			}
 
 			enableErrorHandler();
-			$logger->log("No matching IP rule found for $activeIP.", Logger::LOG_ERROR);
+			$logger->log("No matching IP rule found for $activeIP.", Logger::LOG_DEBUG);
 			IPAddress::$ipAddressesForIP[$ipVal] = false;
 			$ipObject->__destruct();
 			$ipObject = null;
@@ -583,11 +575,10 @@ class IPAddress extends DataObject {
 		$ipInfo = IPAddress::getIPAddressForIP($clientIP);
 
 		global $logger;
-		$logger->log("API access check for IP: $clientIP.", Logger::LOG_ERROR);
 		if ($ipInfo) {
-			$logger->log("IP rule found with allowAPIAccess: " . ($ipInfo->allowAPIAccess ? 'true.' : 'false.'), Logger::LOG_ERROR);
+			$logger->log("IP rule found with allowAPIAccess: " . ($ipInfo->allowAPIAccess ? 'true.' : 'false.'), Logger::LOG_DEBUG);
 		} else {
-			$logger->log("No IP rule found for $clientIP, denying API access.", Logger::LOG_ERROR);
+			$logger->log("No IP rule found for $clientIP, denying API access.", Logger::LOG_DEBUG);
 		}
 
 		if (!empty($ipInfo)) {

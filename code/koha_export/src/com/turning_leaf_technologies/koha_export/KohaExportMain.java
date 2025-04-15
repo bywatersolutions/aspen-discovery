@@ -939,19 +939,23 @@ public class KohaExportMain {
 				if (!existingAspenPatronTypesRS.next()) {
 					// Get the account profile ID using the indexing profile name.
 					long accountProfileId = -1;
-					getAccountProfileIdStmt.setString(1, indexingProfile.getName());
+					String indexingProfileName = indexingProfile.getName();
+					getAccountProfileIdStmt.setString(1, indexingProfileName);
 					ResultSet accountProfileRS = getAccountProfileIdStmt.executeQuery();
 					if (accountProfileRS.next()) {
 						accountProfileId = accountProfileRS.getLong("id");
 					}
 					accountProfileRS.close();
 
-					addAspenPatronTypeStmt.setString(1, ptype);
-					// If an account profile was found, set the import patron type's account profile to it.
+					// If an account profile was found, set the imported patron type's account profile to it.
 					if (accountProfileId != -1) {
+						addAspenPatronTypeStmt.setString(1, ptype);
 						addAspenPatronTypeStmt.setString(2, String.valueOf(accountProfileId));
+						addAspenPatronTypeStmt.executeUpdate();
 					}
-					addAspenPatronTypeStmt.executeUpdate();
+					else {
+						logEntry.incErrors("Failed to add patron type " + ptype + " because there is no such account profile \"" + indexingProfileName + "\".");
+					}
 				}
 
 				// If >= 22.11, check if the current pType is in kohaPSLimitsSet.

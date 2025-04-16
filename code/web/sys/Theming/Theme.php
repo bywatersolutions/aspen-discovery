@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpMissingFieldTypeInspection */
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
 class Theme extends DataObject {
@@ -13,6 +13,12 @@ class Theme extends DataObject {
 	public $defaultCover;
 	public $logoApp;
 	public $headerLogoApp;
+	public $headerLogoAlignmentApp;
+	public $headerLogoBackgroundColorApp;
+	public static $defaultHeaderLogoBackgroundColorApp = '#FFFFFF';
+	public /** @noinspection PhpUnused */
+		$headerLogoBackgroundColorAppDefault;
+
 	public $fullWidth;
 
 	//Format Icons
@@ -28,12 +34,19 @@ class Theme extends DataObject {
 	public $moviesImageSelected;
 
 	//Explore More Images
+	/** @noinspection PhpUnused */
 	public $catalogImage;
+	/** @noinspection PhpUnused */
 	public $genealogyImage;
+	/** @noinspection PhpUnused */
 	public $articlesDBImage;
+	/** @noinspection PhpUnused */
 	public $eventsImage;
+	/** @noinspection PhpUnused */
 	public $listsImage;
+	/** @noinspection PhpUnused */
 	public $libraryWebsiteImage;
+	/** @noinspection PhpUnused */
 	public $historyArchivesImage;
 
 	public static $defaultHeaderBackgroundColor = '#ffffff';
@@ -543,6 +556,7 @@ class Theme extends DataObject {
 			'capitalizeBrowseCategories',
 			'browseCategoryImageSize',
 			'browseImageLayout',
+			'headerLogoAlignmentApp',
 		];
 	}
 
@@ -698,28 +712,6 @@ class Theme extends DataObject {
 				'required' => false,
 				'maxWidth' => 32,
 				'maxHeight' => 32,
-				'hideInLists' => true,
-			],
-			'logoApp' => [
-				'property' => 'logoApp',
-				'type' => 'image',
-				'label' => 'Logo for Aspen LiDA (512x512 pixels)',
-				'description' => 'The logo for use in Aspen LiDA. If none provided, Aspen will use the favicon.',
-				'required' => false,
-				'thumbWidth' => 180,
-				'maxWidth' => 512,
-				'maxHeight' => 512,
-				'hideInLists' => true,
-			],
-			'headerLogoApp' => [
-				'property' => 'headerLogoApp',
-				'type' => 'image',
-				'label' => 'Logo to show above the screen title in LiDA (1536x200 pixels)',
-				'description' => 'The logo to display above the title in Aspen LiDA. If none provided, LiDA will only show the screen title.',
-				'required' => false,
-				'thumbWidth' => 180,
-				'maxWidth' => 1536,
-				'maxHeight' => 200,
 				'hideInLists' => true,
 			],
 			'defaultCover' => [
@@ -1107,6 +1099,60 @@ class Theme extends DataObject {
 				'required' => false,
 				'default' => 0,
 				'hideInLists' => true,
+			],
+
+			//Aspen LiDA
+			'lidaSection' => [
+				'property' => 'lidaSection',
+				'type' => 'section',
+				'label' => 'Aspen LiDA',
+				'hideInLists' => true,
+				'properties' => [
+					'logoApp' => [
+						'property' => 'logoApp',
+						'type' => 'image',
+						'label' => 'Logo for Aspen LiDA (512x512 pixels)',
+						'description' => 'The logo for use in Aspen LiDA. If none provided, Aspen will use the favicon.',
+						'required' => false,
+						'thumbWidth' => 180,
+						'maxWidth' => 512,
+						'maxHeight' => 512,
+						'hideInLists' => true,
+					],
+					'headerLogoApp' => [
+						'property' => 'headerLogoApp',
+						'type' => 'image',
+						'label' => 'Logo to show above the screen title in LiDA (1536x200 pixels)',
+						'description' => 'The logo to display above the title in Aspen LiDA. If none provided, LiDA will only show the screen title.',
+						'required' => false,
+						'thumbWidth' => 180,
+						'maxWidth' => 1536,
+						'maxHeight' => 200,
+						'hideInLists' => true,
+					],
+					'headerLogoAlignmentApp' => [
+						'property' => 'headerLogoAlignmentApp',
+						'type' => 'enum',
+						'values' => [
+							1 => 'left',
+							2 => 'center',
+							3 => 'right'
+						],
+						'label' => 'Header Logo Alignment',
+						'description' => 'The alignment of the logo within Aspen LiDA.',
+						'default' => 2,
+						'hideInLists' => true,
+					],
+					'headerLogoBackgroundColorApp' => [
+						'property' => 'headerLogoBackgroundColorApp',
+						'type' => 'color',
+						'label' => 'Header Logo Background Color',
+						'description' => 'The background color to show behind the header logo',
+						'required' => false,
+						'hideInLists' => true,
+						'default' => '#FFFFFF',
+					],
+				],
 			],
 
 			//Menu
@@ -2644,13 +2690,6 @@ class Theme extends DataObject {
 	}
 
 	public function update($context = '') {
-		if (!empty($this->extendsTheme) && $this->extendsTheme === $this->themeName) {
-			// Despite not having the option, if the user somehow chooses to extend the theme being updated, then prevent it.
-			$this->extendsTheme = '';
-			global $logger;
-			$logger->log("Fixed self-referential theme: {$this->themeName} was extending itself.", Logger::LOG_ERROR);
-		}
-
 		$this->generatedCss = $this->generateCss();
 		$this->clearDefaultCovers();
 		$updateDerivedThemes = false;
@@ -2827,6 +2866,7 @@ class Theme extends DataObject {
 		$this->getValueForPropertyUsingDefaults('cookieConsentButtonTextColor', Theme::$defaultCookieConsentButtonTextColor, $appliedThemes);
 		$this->getValueForPropertyUsingDefaults('cookieConsentButtonHoverTextColor', Theme::$defaultCookieConsentButtonHoverTextColor, $appliedThemes);
 		$this->getValueForPropertyUsingDefaults('cookieConsentButtonBorderColor', Theme::$defaultCookieConsentButtonBorderColor, $appliedThemes);
+		$this->getValueForPropertyUsingDefaults('headerLogoBackgroundColorApp', Theme::$defaultHeaderLogoBackgroundColorApp, $appliedThemes);
 	}
 
 	public function getValueForPropertyUsingDefaults($propertyName, $defaultValue, $appliedThemes) {

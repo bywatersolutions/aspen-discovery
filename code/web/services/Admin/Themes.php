@@ -214,4 +214,17 @@ class Admin_Themes extends ObjectEditor {
 		header("Location: /Admin/Themes?objectAction=edit&id=" . $themeId);
 	}
 
+	function getInitializationAdditionalJs(): string {
+		$currentThemeName = 'null'; // Default to null for new themes.
+		// Fetch theme name directly because activeObject might not be loaded yet.
+		if ($this->objectAction === 'edit' && isset($_REQUEST['id'])) {
+			$theme = new Theme();
+			$theme->id = $_REQUEST['id'];
+			if ($theme->find(true) && !empty($theme->themeName)) {
+				$currentThemeName = json_encode($theme->themeName);
+			}
+		}
+		return "AspenDiscovery.Admin.filterThemeExtendsDropdown($currentThemeName);";
+	}
+
 }

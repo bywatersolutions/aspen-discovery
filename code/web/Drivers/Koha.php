@@ -1166,13 +1166,25 @@ class Koha extends AbstractIlsDriver {
 			$forceDisplayNameUpdate = false;
 			$firstName = $userFromDb['firstname'];
 			if ($user->firstname != $firstName) {
-				$user->firstname = $firstName;
+				$user->firstname = $firstName ?? '';
 				$forceDisplayNameUpdate = true;
+			}
+			else {
+				if (!$user->firstname) {
+					$user->firstname = '';
+					$forceDisplayNameUpdate = true;
+				}
 			}
 			$lastName = $userFromDb['surname'];
 			if ($user->lastname != $lastName) {
-				$user->lastname = isset($lastName) ? $lastName : '';
+				$user->lastname = $lastName ?? '';
 				$forceDisplayNameUpdate = true;
+			}
+			else {
+				if (!$user->lastname) {
+					$user->lastname = '';
+					$forceDisplayNameUpdate = true;
+				}
 			}
 			if ($forceDisplayNameUpdate) {
 				$user->displayName = '';

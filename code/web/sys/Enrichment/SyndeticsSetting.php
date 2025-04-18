@@ -51,6 +51,12 @@ class SyndeticsSetting extends DataObject {
 				'maxlength' => 255,
 				'required' => true,
 			],
+			'syndeticsKey' => [
+				'property' => 'syndeticsKey',
+				'type' => 'text',
+				'label' => 'Syndetics Key (Client Code)',
+				'description' => 'The key/client code for the subscription and required for providing cover images.',
+			],
 			'syndeticsUnbound' => [
 				'property' => 'syndeticsUnbound',
 				'type' => 'checkbox',
@@ -58,12 +64,6 @@ class SyndeticsSetting extends DataObject {
 				'description' => 'Check this option if this is a Syndetics Unbound Subscription',
 				'default' => 0,
 				'onchange' => "return AspenDiscovery.Admin.updateSyndeticsFields();"
-			],
-			'syndeticsKey' => [
-				'property' => 'syndeticsKey',
-				'type' => 'text',
-				'label' => 'Syndetics Key',
-				'description' => 'The Key for the subscription',
 			],
 			'unboundAccountNumber' => [
 				'property' => 'unboundAccountNumber',

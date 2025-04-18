@@ -2284,7 +2284,6 @@ AspenDiscovery.Admin = (function () {
 			if (isUnbound) {
 				$("#propertyRowunboundAccountNumber").show();
 				$("#propertyRowunboundInstanceNumber").show();
-				$("#propertyRowsyndeticsKey").hide();
 				$("#propertyRowhasSummary").hide();
 				$("#propertyRowhasAvSummary").hide();
 				$("#propertyRowhasAvProfile").hide();
@@ -2296,7 +2295,6 @@ AspenDiscovery.Admin = (function () {
 			} else {
 				$("#propertyRowunboundAccountNumber").hide();
 				$("#propertyRowunboundInstanceNumber").hide();
-				$("#propertyRowsyndeticsKey").show();
 				$("#propertyRowhasSummary").show();
 				$("#propertyRowhasAvSummary").show();
 				$("#propertyRowhasAvProfile").show();
@@ -2527,6 +2525,24 @@ AspenDiscovery.Admin = (function () {
 						Please complete initial SSO setup first and ensure it is spelled and formatted correctly.
 					</div>
 				`);
+			}
+		},
+		/**
+		 * Removes the currently edited theme from the "Extends Theme" dropdown to prevent self-reference.
+		 * @param {string|null} currentThemeName - The name of the theme being edited, or null if creating a new theme.
+		 */
+		filterThemeExtendsDropdown: function(currentThemeName) {
+			if (currentThemeName !== null) {
+				/** @type {HTMLSelectElement|null} */
+				const extendsDropdown = document.querySelector('select[name="extendsTheme"]');
+				if (extendsDropdown) {
+					for (let i = 0; i < extendsDropdown.options.length; i++) {
+						if (extendsDropdown.options[i].value === currentThemeName) {
+							extendsDropdown.remove(i);
+							break;
+						}
+					}
+				}
 			}
 		}
 	};

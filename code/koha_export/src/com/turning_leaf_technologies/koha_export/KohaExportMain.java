@@ -908,7 +908,8 @@ public class KohaExportMain {
 			PreparedStatement updatePatronTypeCanSuggest = dbConn.prepareStatement("UPDATE ptype SET canSuggestMaterials = 1 WHERE pType = ?");
 
 			//variables
-			String kohaPSLimits = "";
+			String kohaPSLimitsString = "";
+			Set<String> kohaPSLimitsSet = new HashSet<>();
 			float kohaVersion = getKohaVersion(kohaConn);
 
 			//get purchase suggestion limit rules if possible
@@ -917,7 +918,10 @@ public class KohaExportMain {
 					ResultSet kohaPSLimitsRS = getKohaPSLimits.executeQuery();
 
 					if (kohaPSLimitsRS.next()){
-						kohaPSLimits = kohaPSLimitsRS.getString("value");
+						kohaPSLimitsString = kohaPSLimitsRS.getString("value");
+						if (kohaPSLimitsString != null && !kohaPSLimitsString.isEmpty()) {
+							kohaPSLimitsSet.addAll(Arrays.asList(kohaPSLimitsString.split(",")));
+						}
 					}
 
 				} catch (SQLException e) {
@@ -937,17 +941,17 @@ public class KohaExportMain {
 					addAspenPatronTypeStmt.executeUpdate();
 				}
 
-				//if 22.11, check if the current pType is in kohaPSLimits
+				// If >= 22.11, check if the current pType is in kohaPSLimitsSet.
 				if(kohaVersion >= 22.11 ){
 					getPatronTypeSuggestLimit.setString(1, kohaPTypes.getString("categorycode"));
 					ResultSet currentSetting = getPatronTypeSuggestLimit.executeQuery();
 
 					if (currentSetting.next()) {
-						if (kohaPSLimits.contains(ptype) && currentSetting.getString("canSuggestMaterials").equals("1")) {
+						if (kohaPSLimitsSet.contains(ptype) && currentSetting.getString("canSuggestMaterials").equals("1")) {
 							updatePatronTypeCannotSuggest.setString(1, ptype);
 							updatePatronTypeCannotSuggest.executeUpdate();
 						}
-						if (!(kohaPSLimits.contains(ptype)) && currentSetting.getString("canSuggestMaterials").equals("0")) {
+						if (!(kohaPSLimitsSet.contains(ptype)) && currentSetting.getString("canSuggestMaterials").equals("0")) {
 							updatePatronTypeCanSuggest.setString(1, ptype);
 							updatePatronTypeCanSuggest.executeUpdate();
 						}

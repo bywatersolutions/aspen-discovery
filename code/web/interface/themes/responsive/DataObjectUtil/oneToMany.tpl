@@ -161,9 +161,8 @@
 	</div>
 	{/strip}
 	<script type="text/javascript">
-		// Auto-grow textareas
 		function autoGrowTextarea(element) {
-			element.style.height = 'auto'; // Reset height to recalculate
+			element.style.height = 'auto';
 			element.style.height = (element.scrollHeight) + 'px';
 		}
 		{literal}$(function () {{/literal}
@@ -178,16 +177,12 @@
 			});
 			{/literal}
 			{/if}
-			// Apply to existing textareas on load
 			document.querySelectorAll('.auto-grow-textarea').forEach(textarea => {
-				// Initial resize
 				autoGrowTextarea(textarea);
-				// Resize on input
 				textarea.addEventListener('input', function() {
 					autoGrowTextarea(this);
 				});
 			});
-			// Re-run resizing on window resize
 			window.addEventListener('resize', function() {
 				document.querySelectorAll('.auto-grow-textarea').forEach(textarea => {
 					autoGrowTextarea(textarea);
@@ -251,11 +246,9 @@
 			{/foreach}
 			newRow += "</tr>";
 			{literal}
-			// Append the new row
 			const $newRow = $(newRow);
 			$('#{/literal}{$propName}{literal} tbody').append($newRow);
 
-			// Find the new textarea, trigger initial resize, and add listener
 			const $newTextarea = $newRow.find('.auto-grow-textarea');
 			if ($newTextarea.length) {
 				$newTextarea.each(function() {

@@ -2526,24 +2526,6 @@ AspenDiscovery.Admin = (function () {
 					</div>
 				`);
 			}
-		},
-		/**
-		 * Removes the currently edited theme from the "Extends Theme" dropdown to prevent self-reference.
-		 * @param {string|null} currentThemeName - The name of the theme being edited, or null if creating a new theme.
-		 */
-		filterThemeExtendsDropdown: function(currentThemeName) {
-			if (currentThemeName !== null) {
-				/** @type {HTMLSelectElement|null} */
-				const extendsDropdown = document.querySelector('select[name="extendsTheme"]');
-				if (extendsDropdown) {
-					for (let i = 0; i < extendsDropdown.options.length; i++) {
-						if (extendsDropdown.options[i].value === currentThemeName) {
-							extendsDropdown.remove(i);
-							break;
-						}
-					}
-				}
-			}
 		}
 	};
 }(AspenDiscovery.Admin || {}));

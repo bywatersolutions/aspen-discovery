@@ -94,11 +94,10 @@ class CustomFormField extends DataObject {
 			],
 			'enumValues' => [
 				'property' => 'enumValues',
-				'type' => 'text',
+				'type' => 'textarea',
 				'label' => 'Select List Values (separate values with commas)',
 				'description' => 'A list of valid values for the select list',
-				'size' => '40',
-				'maxLength' => 255,
+				'autoResizeTextArea' => true,
 				'required' => false,
 			],
 			'defaultValue' => [

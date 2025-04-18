@@ -42,7 +42,7 @@
 								{elseif $subProperty.type=='dynamic_label'}
 									<span id="{$propName}_{$subPropName}_{$subObject->id}" data-id="{$subObject->id}">{$subPropValue|escape}<span>
 								{elseif $subProperty.type=='textarea' || $subProperty.type=='multilineRegularExpression'}
-									<textarea name="{$propName}_{$subPropName}[{$subObject->id}]" class="form-control"{if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly{/if} data-id="{$subObject->id}">{$subPropValue|escape}</textarea>
+									<textarea name="{$propName}_{$subPropName}[{$subObject->id}]" class="form-control{if !empty($subProperty.autoResizeTextArea)} auto-grow-textarea{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly{/if} data-id="{$subObject->id}">{$subPropValue|escape}</textarea>
 								{elseif $subProperty.type=='checkbox'}
 									{if !empty($subProperty.readOnly) || !empty($property.readOnly)}
 										{if $subPropValue == 1}{translate text='Yes' isAdminFacing=true}{else}{translate text='No' isAdminFacing=true}{/if}
@@ -161,6 +161,11 @@
 	</div>
 	{/strip}
 	<script type="text/javascript">
+		// Auto-grow textareas
+		function autoGrowTextarea(element) {
+			element.style.height = 'auto'; // Reset height to recalculate
+			element.style.height = (element.scrollHeight) + 'px';
+		}
 		{literal}$(function () {{/literal}
 			{if !empty($property.sortable)}
 			{literal}$('#{/literal}{$propName}{literal} tbody').sortable({
@@ -173,8 +178,23 @@
 			});
 			{/literal}
 			{/if}
-		{literal}});{/literal}
-		var numAdditional{$propName} = 0;
+			// Apply to existing textareas on load
+			document.querySelectorAll('.auto-grow-textarea').forEach(textarea => {
+				// Initial resize
+				autoGrowTextarea(textarea);
+				// Resize on input
+				textarea.addEventListener('input', function() {
+					autoGrowTextarea(this);
+				});
+			});
+			// Re-run resizing on window resize
+			window.addEventListener('resize', function() {
+				document.querySelectorAll('.auto-grow-textarea').forEach(textarea => {
+					autoGrowTextarea(textarea);
+				});
+			});
+			{literal}});{/literal}
+		let numAdditional{$propName} = 0;
 
 		function addNew{$propName}{literal}() {
 			numAdditional{/literal}{$propName}{literal} = numAdditional{/literal}{$propName}{literal} - 1;
@@ -192,7 +212,12 @@
 						newRow += "<td>";
 						{assign var=subPropName value=$subProperty.property}
 						{if $subProperty.type=='text' || $subProperty.type=='regularExpression' || $subProperty.type=='multilineRegularExpression' || $subProperty.type=='integer' || $subProperty.type=='textarea'|| $subProperty.type=='html'}
-							newRow += "<input type='text' name='{$propName}_{$subPropName}[" + numAdditional{$propName} + "]' value='{if !empty($subProperty.default)}{$subProperty.default}{/if}' class='form-control{if $subProperty.type=="integer"} integer{/if}{if !empty($subProperty.required)} required{/if}' data-id='" + numAdditional{$propName} + "'>";
+							{if ($subProperty.type=='textarea' || $subProperty.type=='multilineRegularExpression')}
+								const autoGrowClass = '{if !empty($subProperty.autoResizeTextArea)} auto-grow-textarea{/if}';
+								newRow += "<textarea name='{$propName}_{$subPropName}[" + numAdditional{$propName} + "]' class='form-control" + autoGrowClass + "' data-id='" + numAdditional{$propName} + "'>{if !empty($subProperty.default)}{$subProperty.default}{/if}</textarea>";
+							{else}
+								newRow += "<input type='text' name='{$propName}_{$subPropName}[" + numAdditional{$propName} + "]' value='{if !empty($subProperty.default)}{$subProperty.default}{/if}' class='form-control{if $subProperty.type=="integer"} integer{/if}{if !empty($subProperty.required)} required{/if}' data-id='" + numAdditional{$propName} + "'>";
+							{/if}
 						{elseif $subProperty.type=='date'}
 							newRow += "<input type='date' name='{$propName}_{$subPropName}[" + numAdditional{$propName} + "]' value='{if !empty($subProperty.default)}{$subProperty.default}{/if}' class='form-control{if !empty($subProperty.required)} required{/if}' data-id='" + numAdditional{$propName} + "'>";
 						{elseif $subProperty.type=='time'}
@@ -226,8 +251,20 @@
 			{/foreach}
 			newRow += "</tr>";
 			{literal}
-			$('#{/literal}{$propName}{literal} tr:last').after(newRow);
-			return false;
+			// Append the new row
+			const $newRow = $(newRow);
+			$('#{/literal}{$propName}{literal} tbody').append($newRow);
+
+			// Find the new textarea, trigger initial resize, and add listener
+			const $newTextarea = $newRow.find('.auto-grow-textarea');
+			if ($newTextarea.length) {
+				$newTextarea.each(function() {
+					autoGrowTextarea(this);
+					$(this).on('input', function() {
+						autoGrowTextarea(this);
+					});
+				});
+			}
 		}
 		{/literal}
 	</script>

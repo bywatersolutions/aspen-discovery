@@ -1,6 +1,6 @@
-{if isset($showAccountProfileAlert) && $showAccountProfileAlert}
+{if isset($propertiesListWarningMessage) && !empty($propertiesListWarningMessage)}
 	<div class="alert alert-warning" role="alert">
-		<strong>Warning:</strong> No valid ILS Account Profiles found. You must <a href="/Admin/AccountProfiles?action=addNew">create an Account Profile</a> for your ILS before you can add an Indexing Profile.
+		{$propertiesListWarningMessage nofilter} {* Use nofilter as the message contains HTML. *}
 	</div>
 {/if}
 

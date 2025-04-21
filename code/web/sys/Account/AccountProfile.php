@@ -574,13 +574,13 @@ class AccountProfile extends DataObject {
 	 * @return bool True if at least one ILS profile exists, false otherwise.
 	 */
 	public static function hasValidILSProfiles(): bool {
-		$accountProfile = new AccountProfile();
-		$accountProfile->find();
-		while ($accountProfile->fetch()) {
-			if ($accountProfile->name != "admin" && $accountProfile->name != "admin_sso") {
-				return true; // Found one, no need to check further.
-			}
-		}
+//		$accountProfile = new AccountProfile();
+//		$accountProfile->find();
+//		while ($accountProfile->fetch()) {
+//			if ($accountProfile->name != "admin" && $accountProfile->name != "admin_sso") {
+//				return true; // Found one, no need to check further.
+//			}
+//		}
 		return false;
 	}
 

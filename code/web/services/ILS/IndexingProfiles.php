@@ -72,7 +72,8 @@ class ILS_IndexingProfiles extends ObjectEditor {
 			parent::launch();
 		} else {
 			if (!AccountProfile::hasValidILSProfiles()) {
-				$interface->assign('showAccountProfileAlert', true);
+				$warningMessage = translate(['text' => '<strong>Warning:</strong> No available Account Profiles found to associate with a new Indexing Profile. You must <a href="/Admin/AccountProfiles?objectAction=addNew">create a new Account Profile</a> first. Each Indexing Profile requires its own unique Account Profile.', 'isAdminFacing' => true]);
+				$interface->assign('propertiesListWarningMessage', $warningMessage);
 			}
 			parent::launch();
 		}

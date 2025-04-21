@@ -288,7 +288,7 @@ class IndexingProfile extends DataObject {
 				'type' => 'enum',
 				'label' => 'Account Profile',
 				'values' => $accountProfiles,
-				'description' => 'Select the Account Profile that will correspond to this Indexing Profile.',
+				'description' => 'Select the unique Account Profile that will correspond to this Indexing Profile according to its set Record Source.',
 				'required' => true,
 				'readOnly' => $context != 'addNew',
 				'serverValidation' => 'validateName',

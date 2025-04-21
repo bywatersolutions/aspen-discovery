@@ -268,8 +268,9 @@ class IndexingProfile extends DataObject {
 		$accountProfile->orderBy('name');
 		$accountProfile->find();
 		while ($accountProfile->fetch()) {
-			if ($accountProfile->name != "admin" && $accountProfile->name != "admin_sso") {
-				$accountProfiles[$accountProfile->name] = $accountProfile->name;
+			// The 'admin' and 'admin_sso' account profiles do not use the recordSource, so check them by 'name'.
+			if ($accountProfile->name != "admin" && $accountProfile->name != "admin_sso" && !empty($accountProfile->recordSource)) {
+				$accountProfiles[$accountProfile->recordSource] = $accountProfile->recordSource;
 			}
 		}
 		unset($accountProfile);

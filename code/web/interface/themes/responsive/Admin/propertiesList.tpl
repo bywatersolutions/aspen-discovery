@@ -1,3 +1,9 @@
+{if isset($showAccountProfileAlert) && $showAccountProfileAlert}
+	<div class="alert alert-warning" role="alert">
+		<strong>Warning:</strong> No valid ILS Account Profiles found. You must <a href="/Admin/AccountProfiles?action=addNew">create an Account Profile</a> for your ILS before you can add an Indexing Profile.
+	</div>
+{/if}
+
 <div class="row">
 	<div class="col-xs-12 col-md-9">
 		<h1 id="pageTitle">{$pageTitleShort}</h1>

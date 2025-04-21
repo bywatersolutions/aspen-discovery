@@ -4,6 +4,7 @@ require_once ROOT_DIR . '/Action.php';
 require_once ROOT_DIR . '/services/Admin/Admin.php';
 require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
 require_once ROOT_DIR . '/sys/Indexing/IndexingProfile.php';
+require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
 
 class ILS_IndexingProfiles extends ObjectEditor {
 	function launch() : void {
@@ -70,6 +71,9 @@ class ILS_IndexingProfiles extends ObjectEditor {
 			}
 			parent::launch();
 		} else {
+			if (!AccountProfile::hasValidILSProfiles()) {
+				$interface->assign('showAccountProfileAlert', true);
+			}
 			parent::launch();
 		}
 	}
@@ -122,7 +126,7 @@ class ILS_IndexingProfiles extends ObjectEditor {
 	}
 
 	function canAddNew() : bool {
-		return true;
+		return AccountProfile::hasValidILSProfiles();
 	}
 
 	function canDelete() : bool {

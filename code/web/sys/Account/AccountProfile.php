@@ -569,6 +569,23 @@ class AccountProfile extends DataObject {
 	}
 
 	/**
+	 * Checks if there are any Account Profiles other than 'admin' or 'admin_sso'.
+	 *
+	 * @return bool True if at least one ILS profile exists, false otherwise.
+	 */
+	public static function hasValidILSProfiles(): bool {
+		$accountProfile = new AccountProfile();
+		$accountProfile->find();
+		while ($accountProfile->fetch()) {
+			if ($accountProfile->name != "admin" && $accountProfile->name != "admin_sso") {
+				return true; // Found one, no need to check further.
+			}
+		}
+		return false;
+	}
+
+
+	/**
 	 * Modify the structure of the object based on the object currently being edited.
 	 * This can be used to change enums or other values based on the object being edited, so we know relationships
 	 *

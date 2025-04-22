@@ -745,7 +745,7 @@ class Polaris extends AbstractIlsDriver {
 	}
 
 	function placeItemHold($patron, $recordId, $itemId, $pickupBranch, $cancelDate = null, $pickupSublocation = null) {
-		if (strpos($recordId, ':') !== false) {
+		if (str_contains($recordId, ':')) {
 			[
 				,
 				$shortId,
@@ -767,30 +767,38 @@ class Polaris extends AbstractIlsDriver {
 		$body->PatronID = (int)$patron->unique_ils_id;
 		$body->BibID = (int)$shortId;
 		if (!empty($itemId)) {
-			//Check to see if we also have a volume
-			$relatedRecord = $record->getRelatedRecord();
-			foreach ($relatedRecord->getItems() as $item) {
-				if ($item->itemId == $itemId) {
-					if (!empty($item->volume)) {
-						//Volume holds just need the volume
-						$body->VolumeNumber = $item->volume;
-					} else {
-						$marcRecord = $record->getMarcRecord();
-						//If we place a hold on just an item, we need a barcode for the item rather than the record number
-						/** @var File_MARC_Data_Field[] $marcItems */
-						$marcItems = $marcRecord->getFields($this->getIndexingProfile()->itemTag);
-						foreach ($marcItems as $marcItem) {
-							$itemSubField = $marcItem->getSubfield($this->getIndexingProfile()->itemRecordNumber);
-							if ($itemSubField->getData() == $itemId) {
-								$barcodeSubfield = $marcItem->getSubfield($this->getIndexingProfile()->barcode);
-								if ($barcodeSubfield != null) {
-									$body->ItemBarcode = $barcodeSubfield->getData();
-									break;
+			$itemFound = false;
+			// Prioritize checking record variations if a specific variationId is requested.
+			if (isset($_REQUEST['variationId'])) {
+				$targetVariationId = $_REQUEST['variationId'];
+				$recordVariations = $record->getRecordVariations();
+				foreach ($recordVariations as $variation) {
+					if ($variation->variationId == $targetVariationId) {
+						// Found the target variation, now check its items.
+						foreach ($variation->getItems() as $item) {
+							if ($item->itemId == $itemId) {
+								// Found the target item within the target variation
+								$itemFound = $this->findItemHoldDetails($item, $itemId, $record, $body);
+								if ($itemFound) {
+									break; // Found item in variation's items.
 								}
 							}
 						}
+						if ($itemFound) break; // Found the target variation and item.
 					}
-					break;
+				}
+			}
+
+			// If not found in variations, or no specific variation requested, check related record items.
+			if (!$itemFound) {
+				$relatedRecord = $record->getRelatedRecord();
+				foreach ($relatedRecord->getItems() as $item) {
+					if ($item->itemId == $itemId) {
+						$itemFound = $this->findItemHoldDetails($item, $itemId, $record, $body);
+						if ($itemFound) {
+							break; // Found item in related records.
+						}
+					}
 				}
 			}
 		}
@@ -820,7 +828,9 @@ class Polaris extends AbstractIlsDriver {
 					}
 					if (!$sublocationIsValid) {
 						$firstSublocation = reset($sublocations);
-						$body->HoldPickupAreaID = (int)$firstSublocation->ilsId;
+						if ($firstSublocation) {
+							$body->HoldPickupAreaID = (int)$firstSublocation->ilsId;
+						}
 					}
 				}
 			}
@@ -849,6 +859,39 @@ class Polaris extends AbstractIlsDriver {
 		$hold_result['bid'] = $shortId;
 
 		return $hold_result;
+	}
+
+	/**
+	 * Helper method to find volume number or barcode for a specific item.
+	 *
+	 * @param Grouping_Item $item The item object to check.
+	 * @param int $itemId The target item ID to match against MARC.
+	 * @param MarcRecordDriver $record The record driver containing the MARC data.
+	 * @param stdClass &$body The API request body object to populate (without reference because only its properties are being mutated).
+	 * @return bool True if the item details (volume or barcode) were found and added to the body, false otherwise.
+	 */
+	private function findItemHoldDetails(Grouping_Item $item, int $itemId, MarcRecordDriver $record, stdClass &$body): bool
+	{
+		if (!empty($item->volume)) {
+			$body->VolumeNumber = $item->volume;
+			return true;
+		} else {
+			// Need to get barcode from MARC.
+			$marcRecord = $record->getMarcRecord();
+			/** @var File_MARC_Data_Field[] $marcItems */
+			$marcItems = $marcRecord->getFields($this->getIndexingProfile()->itemTag);
+			foreach ($marcItems as $marcItem) {
+				$itemSubField = $marcItem->getSubfield($this->getIndexingProfile()->itemRecordNumber);
+				if ($itemSubField && $itemSubField->getData() == $itemId) {
+					$barcodeSubfield = $marcItem->getSubfield($this->getIndexingProfile()->barcode);
+					if ($barcodeSubfield != null) {
+						$body->ItemBarcode = $barcodeSubfield->getData();
+						return true; // Found barcode.
+					}
+				}
+			}
+		}
+		return false; // Details not found.
 	}
 
 	public function placeVolumeHold(User $patron, $recordId, $volumeId, $pickupBranch, $pickupSublocation = null) {

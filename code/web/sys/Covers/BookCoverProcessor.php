@@ -682,6 +682,10 @@ class BookCoverProcessor {
 			return false;
 		}
 
+		if ($this->bookCoverInfo->imageSource === '') {
+			return false;
+		}
+
 		$hasCachedImage = false;
 		if ($this->bookCoverInfo->getNumResults() == 1) {
 			if ($this->size == 'small' && $this->bookCoverInfo->thumbnailLoaded == 1) {

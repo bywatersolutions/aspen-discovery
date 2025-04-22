@@ -114,7 +114,7 @@ class Record_Home extends GroupedWorkSubRecordHomeAction {
 					]);
 					if ($description != 'p. cm.') {
 						$description = preg_replace("/[\/|;:]$/", '', $description);
-						$description = preg_replace("/p\./", 'pages', $description);
+						$description = preg_replace('/\bp\./', 'pages', $description);
 						$physicalDescriptions[] = $description;
 					}
 				}

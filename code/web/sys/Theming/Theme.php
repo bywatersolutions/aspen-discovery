@@ -3412,4 +3412,19 @@ class Theme extends DataObject {
 		}
 		return false;
 	}
+
+	/**
+	 * Modify the structure of the object based on the object currently being edited.
+	 * This can be used to change enums or other values based on the object being edited, so we know relationships.
+	 *
+	 * @param $structure
+	 * @return array
+	 */
+	public function updateStructureForEditingObject($structure) : array {
+		// Remove the current theme from the list of available themes to extend.
+		if (!empty($this->themeName) && isset($structure['extendsTheme']['values'][$this->themeName])) {
+			unset($structure['extendsTheme']['values'][$this->themeName]);
+		}
+		return $structure;
+	}
 }

@@ -101,11 +101,11 @@ class Placard extends DB_LibraryLocationLinkedObject {
 			'image' => [
 				'property' => 'image',
 				'type' => 'image',
-				'label' => 'Image (800px x 150px max)',
+				'label' => 'Image (Max Width: 800px)',
 				'description' => 'Image to use for the placard',
+				'note' => 'Placard image maximum height is configured under Themes for selected libraries and locations. By default, there is no height constraint.',
 				'required' => false,
 				'maxWidth' => 800,
-				'maxHeight' => 150,
 				'hideInLists' => true,
 			],
 			'altText' => [

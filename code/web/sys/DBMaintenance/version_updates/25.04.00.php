@@ -115,6 +115,13 @@ function getUpdates25_04_00(): array {
 				"ALTER TABLE web_builder_custom_form_field MODIFY COLUMN enumValues TEXT DEFAULT NULL",
 			]
 		],
+		'add_placard_image_max_height_to_themes' => [
+			'title' => 'Add Placard Image Max Height to Themes',
+			'description' => 'Adds a placardImageMaxHeight column to the themes table to control placard image height.',
+			'sql' => [
+				"ALTER TABLE themes ADD COLUMN IF NOT EXISTS `placardImageMaxHeight` INT DEFAULT 0",
+			]
+		], //add_placard_image_max_height_to_themes
 
 		//alexander - PTFS-Europe
 

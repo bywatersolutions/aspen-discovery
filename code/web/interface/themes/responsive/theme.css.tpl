@@ -716,6 +716,12 @@ label{ldelim}
     color: {$searchToolsForegroundColor} !important;
 {rdelim}
 
+.placard-image{ldelim}
+{if !empty($placardImageMaxHeight) && $placardImageMaxHeight > 0}
+    max-height: {$placardImageMaxHeight}px;
+{/if}
+{rdelim}
+
 {* Browse Category Carousel *}
 .jcarousel-pagination a{ldelim}
     {if !empty($smallButtonRadius)}

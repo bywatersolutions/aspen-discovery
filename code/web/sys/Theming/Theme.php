@@ -546,6 +546,10 @@ class Theme extends DataObject {
 	public /** @noinspection PhpUnused */
 		$cookieConsentButtonBorderColorDefault;
 
+	/** @noinspection PhpUnused */
+	public static int $defaultPlacardImageMaxHeight = 0;
+	public int $placardImageMaxHeight;
+
 
 	private $_libraries;
 	private $_locations;
@@ -557,6 +561,7 @@ class Theme extends DataObject {
 			'browseCategoryImageSize',
 			'browseImageLayout',
 			'headerLogoAlignmentApp',
+			'placardImageMaxHeight',
 		];
 	}
 
@@ -734,7 +739,6 @@ class Theme extends DataObject {
 				'hideInLists' => true,
 				'default' => 'floating'
 			],
-
 			//Overall page colors
 			'pageBackgroundColor' => [
 				'property' => 'pageBackgroundColor',
@@ -2313,6 +2317,22 @@ class Theme extends DataObject {
 					],
 				]
 			],
+			'placardSection' => [
+				'property' => 'placardSection',
+				'type' => 'section',
+				'label' => 'Placards',
+				'hideInLists' => true,
+				'properties' => [
+					'placardImageMaxHeight' => [
+						'property' => 'placardImageMaxHeight',
+						'type' => 'integer',
+						'label' => 'Image Max Height (pixels)',
+						'description' => 'Maximum height for placard images (0 = no restriction).',
+						'default' => 0,
+						'hideInLists' => true,
+					],
+				],
+			],
 			'cookieConsentSection' => [
 				'property' => 'cookieConsentSection',
 				'type' => 'section',
@@ -2873,6 +2893,7 @@ class Theme extends DataObject {
 		$this->getValueForPropertyUsingDefaults('cookieConsentButtonHoverTextColor', Theme::$defaultCookieConsentButtonHoverTextColor, $appliedThemes);
 		$this->getValueForPropertyUsingDefaults('cookieConsentButtonBorderColor', Theme::$defaultCookieConsentButtonBorderColor, $appliedThemes);
 		$this->getValueForPropertyUsingDefaults('headerLogoBackgroundColorApp', Theme::$defaultHeaderLogoBackgroundColorApp, $appliedThemes);
+		$this->getValueForPropertyUsingDefaults('placardImageMaxHeight', Theme::$defaultPlacardImageMaxHeight, $appliedThemes);
 	}
 
 	public function getValueForPropertyUsingDefaults($propertyName, $defaultValue, $appliedThemes) {
@@ -3019,6 +3040,7 @@ class Theme extends DataObject {
 		$interface->assign('customBodyFont', $this->customBodyFont);
 		$interface->assign('customBodyFontName', '');
 		$interface->assign('bodyFont', '');
+		$interface->assign('placardImageMaxHeight', $this->placardImageMaxHeight);
 		if ($this->customHeadingFont != null) {
 			$customHeadingFontName = substr($this->customHeadingFont, 0, strrpos($this->customHeadingFont, '.'));
 			$interface->assign('customHeadingFontName', $customHeadingFontName);

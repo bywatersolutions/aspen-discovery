@@ -863,7 +863,7 @@ class User extends DataObject {
 				} elseif ($source == 'axis360') {
 					return array_key_exists('Axis 360', $enabledModules) && ($userHomeLibrary->axis360ScopeId > 0);
 				} elseif ($source == 'palace_project') {
-					return array_key_exists('Palace Project', $enabledModules) && ($userHomeLibrary->palaceProjectScopeId > 0);
+					return array_key_exists('Palace Project', $enabledModules) && ($userHomeLibrary->palaceProjectLibraryId > 0 || $userHomeLibrary->palaceProjectScopeId > 0);
 				}
 			}
 		}

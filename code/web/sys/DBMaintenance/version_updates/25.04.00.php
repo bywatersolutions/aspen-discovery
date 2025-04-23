@@ -74,6 +74,14 @@ function getUpdates25_04_00(): array {
 		//kodi - Grove
 
 		//Yanjun Li - ByWater
+		'library_add_palace_project_library_id' => [
+			'title' => 'library_add_palace_project_library_id',
+			'description' => 'Add a field to store the palace project library id for the library',
+			'continueOnError' => false,
+			'sql' => [
+				"ALTER TABLE library add column palaceProjectLibraryId VARCHAR(50) DEFAULT NULL",
+			]
+		], //library_add_palace_project_library_id
 
 		// Leo Stoyanov - BWS
 		'remove_palace_project_regroup_flag' => [

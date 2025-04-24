@@ -56,10 +56,6 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 		$homeLibrary = $patron->getHomeLibrary();
 		if (!empty($homeLibrary)) {
 			$homePalaceProjectLibraryId = $homeLibrary->palaceProjectLibraryId;
-			global $logger;
-			$logger->log('patron Home Library ' . $homeLibrary, Logger::LOG_ERROR);
-			$logger->log('homePalaceProjectLibraryId ' . $homePalaceProjectLibraryId, Logger::LOG_ERROR);
-
 			if (!empty($homePalaceProjectLibraryId)) {
 				$checkoutsUrl = $settings->apiUrl . "/" . $homePalaceProjectLibraryId . "/loans?refresh=false";
 			} else {
@@ -68,8 +64,6 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 		} else {
 			$checkoutsUrl = $settings->apiUrl . "/" . $settings->libraryId . "/loans?refresh=false";
 		}
-		global $logger;
-		$logger->log('loadCirculationInformation URL ' . $checkoutsUrl, Logger::LOG_ERROR);
 
 		$this->initCurlWrapper();
 		$this->curlWrapper->addCustomHeaders($headers, true);
@@ -403,9 +397,6 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 					);
 				}
 			}
-			global $logger;
-			$logger->log('placeHold URL ' . $borrowLink, Logger::LOG_ERROR);
-
 			$headers = $this->getPalaceProjectHeaders($patron);
 			$this->initCurlWrapper();
 			$this->curlWrapper->addCustomHeaders($headers, true);
@@ -642,8 +633,6 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 					);
 				}
 			}
-			global $logger;
-			$logger->log('checkout  URL ' . $borrowLink, Logger::LOG_ERROR);
 
 			$headers = $this->getPalaceProjectHeaders($patron);
 			$this->initCurlWrapper();

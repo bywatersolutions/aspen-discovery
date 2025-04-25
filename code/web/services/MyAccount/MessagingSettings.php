@@ -10,8 +10,6 @@ class MyAccount_MessagingSettings extends MyAccount {
 		if (isset($_REQUEST['submit'])) {
 			$result = $catalog->processMessagingSettingsForm($user);
 			$interface->assign('result', $result);
-			header('Location: ' . '/MyAccount/MessagingSettings');
-			die();
 		}
 		$this->display($catalog->getMessagingSettingsTemplate($user), 'Notification Settings');
 	}

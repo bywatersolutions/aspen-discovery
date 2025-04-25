@@ -18,7 +18,7 @@
 
 	{if !empty($result)}
 		{if ($result.success)}
-			<div class="alert alert-info">{$result.message}</div>
+			<div class="alert alert-success">{$result.message}</div>
 		{else}
 			<div class="alert alert-danger">{$result.message}</div>
 		{/if}

@@ -3361,7 +3361,14 @@ class Koha extends AbstractIlsDriver {
 		];
 
 		if (empty($ils_password)) {
-			$result['message'] = "Update Failed: The patron's password does not exist in Aspen, either because you are masquerading or performed a SSO.";
+			if ($user->isLoggedInViaSSO) {
+				// This is a limitation of using Koha pages to perform logins rather than API requests.
+				// In the future, with an API request, user verification could be performed without a password when a user has logged in to Aspen via SSO.
+				$result['message'] = "Update Failed: Your password does not exist in Aspen because you performed a SSO without ever having performed a local login to Aspen."; // (i.e., local login = ILS-based login)
+			}
+			else {
+				$result['message'] = "Update Failed: The patron's password does not exist in Aspen because the patron has not logged in to Aspen for the first time yet.";
+			}
 		}
 
 		$kohaVersion = $this->getKohaVersion();

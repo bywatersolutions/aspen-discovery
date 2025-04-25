@@ -25,6 +25,7 @@ class Sierra extends Millennium {
 			$authInfo = base64_encode($this->accountProfile->oAuthClientId . ":" . $this->accountProfile->oAuthClientSecret);
 			$headers = [
 				'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+				'User-Agent: Aspen Discovery',
 				'Authorization: Basic ' . $authInfo,
 			];
 			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);

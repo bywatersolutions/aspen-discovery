@@ -4746,7 +4746,7 @@ class MyAccount_AJAX extends JSON_Action {
 					if (isset($_REQUEST['amountToPay'][$fineId])) {
 						$fineAmount = $_REQUEST['amountToPay'][$fineId];
 						$maxFineAmount = $useOutstanding ? $fine['amountOutstandingVal'] : $fine['amountVal'];
-						if (!is_numeric($fineAmount) || $fineAmount <= 0 || $fineAmount > $maxFineAmount) {
+						if (!is_numeric($fineAmount) || $fineAmount <= 0 || round($fineAmount, 2) > round($maxFineAmount, 2)) {
 							return [
 								'success' => false,
 								'message' => translate([

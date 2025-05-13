@@ -358,9 +358,10 @@ public class RecordGroupingProcessor {
 			} else {
 				//Need to insert a new grouped record
 				String title = groupedWork.getTitle();
-				if (title.length() > 750){
-					title = title.substring(0, 750);
-					logEntry.addNote("Title for " + primaryIdentifierString + " was truncated");
+				int titleCharacterLimit = 500;
+				if (title.length() > titleCharacterLimit){
+					title = title.substring(0, titleCharacterLimit);
+					logEntry.addNote("Title for " + primaryIdentifierString + " was truncated because it exceeded " + titleCharacterLimit + " characters.");
 				}
 				insertGroupedWorkStmt.setString(1, title);
 				insertGroupedWorkStmt.setString(2, groupedWork.getAuthor());

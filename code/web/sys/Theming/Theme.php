@@ -548,7 +548,7 @@ class Theme extends DataObject {
 
 	/** @noinspection PhpUnused */
 	public static int $defaultPlacardImageMaxHeight = 0;
-	public int $placardImageMaxHeight;
+	public $placardImageMaxHeight;
 
 
 	private $_libraries;

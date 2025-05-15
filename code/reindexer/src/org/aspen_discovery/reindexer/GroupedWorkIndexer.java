@@ -1451,6 +1451,9 @@ public class GroupedWorkIndexer {
 				seriesMemberRS.close();
 				for (String seriesNameWithVolume : groupedWork.seriesWithVolume.keySet()) {
 					String[] series = seriesNameWithVolume.split("\\|");
+					if (series.length == 0) {
+						continue;
+					}
 					String normalizedSeriesName = Normalizer.normalize(series[0], Normalizer.Form.NFKD).replaceAll("\\p{M}", "");
 					if (!seriesInDb.containsKey(normalizedSeriesName)) { // Skip if this work is already in the series
 						// Check if series exists

@@ -67,7 +67,7 @@ class Series_Home extends Action {
 			$template = 'seriesMembers.tpl';
 
 		} else {
-			$template = 'invalidReserve.tpl';
+			$template = 'invalidSeries.tpl';
 		}
 
 		$this->display($template, isset($series->displayName) ? $series->displayName : translate([

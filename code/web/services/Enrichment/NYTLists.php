@@ -18,29 +18,21 @@ class Enrichment_NYTLists extends Admin_Admin {
 
 			// instantiate class with api key
 			require_once ROOT_DIR . '/sys/NYTApi.php';
-			$nyt_api = new NYTApi($api_key);
+			$nyt_api = NYTApi::getNYTApi($api_key);
 
-			//Get the raw response from the API with a list of all the names
-			$availableListsRaw = $nyt_api->get_list('names');
+			//Get the list information from the API. Now includes titles as well as books in one response.
+			$availableLists = $nyt_api->getListsOverview();
 
 			//Convert into an object that can be processed
-			$availableLists = json_decode($availableListsRaw);
 			$availableListsCompareFunction = function ($subjectArray0, $subjectArray1) {
 				return strcasecmp($subjectArray0->display_name, $subjectArray1->display_name);
 			};
 
 			$prevYear = date("Y-m-d", strtotime("-1 year"));
-			$availableLists = $availableLists->results;
 			usort($availableLists, $availableListsCompareFunction);
 
-			// only fetch list of lists that have been updated by NYT in the last year (used for create/update dropdown)
-			$activeAvailableLists = [];
-			foreach ($availableLists as $availableList) {
-				if ($availableList->newest_published_date > $prevYear) {
-					$activeAvailableLists[] = $availableList;
-				}
-			}
-			$interface->assign('availableLists', $activeAvailableLists);
+			// The New York Times no longer returns inactive lists
+			$interface->assign('availableLists', $availableLists);
 
 			$isListSelected = !empty($_REQUEST['selectedList']);
 			$selectedList = null;
@@ -53,7 +45,7 @@ class Enrichment_NYTLists extends Admin_Admin {
 					require_once ROOT_DIR . '/services/API/ListAPI.php';
 					$listApi = new ListAPI();
 					try {
-						$results = $listApi->createUserListFromNYT($selectedList, null);
+						$results = $listApi->createUserListFromNYT($selectedList, null, true);
 						if ($results['success'] == false) {
 							$interface->assign('error', $results['message']);
 						} else {

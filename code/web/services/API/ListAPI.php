@@ -1616,12 +1616,14 @@ class ListAPI extends AbstractAPI {
 	/**
 	 * Creates or updates a user defined list from information obtained from the New York Times API
 	 *
-	 * @param string $selectedList machine readable name of the new york times list
-	 * @param NYTUpdateLogEntry $nytUpdateLog
+	 * @param ?string $selectedList the encoded name of the New York times list
+	 * @param ?NYTUpdateLogEntry $nytUpdateLog
+	 * @param bool $forceUpdate Set to true to force the list to be updated regardless of the last modified date
+	 *
 	 * @return array
 	 * @throws Exception
 	 */
-	public function createUserListFromNYT($selectedList = null, $nytUpdateLog = null): array {
+	public function createUserListFromNYT(?string $selectedList = null, ?NYTUpdateLogEntry $nytUpdateLog = null, bool $forceUpdate = false): array {
 		if ($selectedList == null) {
 			$selectedList = $_REQUEST['listToUpdate'];
 		}
@@ -1655,20 +1657,19 @@ class ListAPI extends AbstractAPI {
 
 		//Get the raw response from the API with a list of all the names
 		require_once ROOT_DIR . '/sys/NYTApi.php';
-		$nyt_api = new NYTApi($api_key);
-		$availableListsRaw = $nyt_api->get_list('names');
-		//Convert into an object that can be processed
-		$availableLists = json_decode($availableListsRaw);
+		$nyt_api = NYTApi::getNYTApi($api_key);
+		$availableLists = $nyt_api->getListsOverview();
 
-		//Get the human readable title for our selected list
+		//Get the title for our selected list
 		$selectedListTitle = null;
 		$selectedListTitleShort = null;
-		$allLists = $availableLists->results;
+		$selectedListInfo = null;
 		//Get the title and description for the selected list
-		foreach ($allLists as $listInformation) {
+		foreach ($availableLists as $listInformation) {
 			if ($listInformation->list_name_encoded == $selectedList) {
 				$selectedListTitle = 'NYT - ' . $listInformation->display_name;
 				$selectedListTitleShort = $listInformation->display_name;
+				$selectedListInfo = $listInformation;
 				break;
 			}
 		}
@@ -1683,61 +1684,29 @@ class ListAPI extends AbstractAPI {
 		}
 
 		//Get a list of titles from NYT API
-		$retry = true;
-		$numTries = 0;
-		$listTitles = null;
-		while ($retry == true) {
-			$retry = false;
-			$numTries++;
-			$listTitles = null;
-			$listTitlesRaw = $nyt_api->get_list($selectedList);
-			$listTitles = json_decode($listTitlesRaw);
-			if (empty($listTitles->status) || $listTitles->status != "OK") {
-				if (!empty($listTitles->fault)) {
-					if (strpos($listTitles->fault->faultstring, 'quota violation')) {
-						$retry = ($numTries <= 3);
-						if ($retry) {
-							sleep(rand(60, 300));
-						} else {
-							if ($nytUpdateLog != null) {
-								$nytUpdateLog->addError("Did not get a good response from the API. {$listTitles->fault->faultstring}");
-							}
-						}
-					} else {
-						if ($nytUpdateLog != null) {
-							$nytUpdateLog->addError("Did not get a good response from the API. {$listTitles->fault->faultstring}");
-						}
-					}
-				} else {
-					if ($nytUpdateLog != null) {
-						$nytUpdateLog->addError("Did not get a good response from the API");
-					}
-				}
-			}
-		}
 
-		if ($listTitles == null) {
-			return [
-				'success' => false,
-				'message' => "Could not get a response from the API",
-			];
-		}
+		$listTitles = $selectedListInfo->books;
 
-		$lastModified = date_timestamp_get(new DateTime($listTitles->last_modified));
-		$lastModifiedDay = date("M j, Y", $lastModified);
+		$lastModifiedFromAPI = $nyt_api->getLastUpdateDate();
+		if ($lastModifiedFromAPI == null) {
+			$lastModifiedDay = '';
+		}else{
+			$lastModified = date_timestamp_get(new DateTime($lastModifiedFromAPI));
+			$lastModifiedDay = date("M j, Y", $lastModified);
+		}
 
 		// Look for selected List
 		require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 		$nytList = new UserList();
 		$nytList->user_id = $nytListUser->id;
 		$nytList->title = $selectedListTitle;
-		$listExistsInAspen = $nytList->find(1);
+		$listExistsInAspen = $nytList->find(true);
 
 		//We didn't find the list in Aspen Discovery, create one
 		if (!$listExistsInAspen) {
 			$nytList = new UserList();
 			$nytList->title = $selectedListTitle;
-			$nytList->description = "New York Times - $selectedListTitleShort<br/>{$listTitles->copyright}";
+			$nytList->description = "New York Times - $selectedListTitleShort<br/>{$nyt_api->getCopyright()}";
 			$nytList->public = 1;
 			$nytList->searchable = 1;
 			$nytList->defaultSort = 'custom';
@@ -1773,7 +1742,7 @@ class ListAPI extends AbstractAPI {
 
 		} else {
 			$listID = $nytList->id;
-			if ($nytList->nytListModified == $lastModifiedDay) {
+			if ($nytList->nytListModified == $lastModifiedDay && !$forceUpdate) {
 				if ($nytUpdateLog != null) {
 					$nytUpdateLog->numSkipped++;
 				}
@@ -1790,7 +1759,7 @@ class ListAPI extends AbstractAPI {
 			if ($nytUpdateLog != null) {
 				$nytUpdateLog->numUpdated++;
 			}
-			$nytList->description = "New York Times - $selectedListTitleShort<br/>{$listTitles->copyright}";
+			$nytList->description = "New York Times - $selectedListTitleShort<br/>{$nyt_api->getCopyright()}";
 			$nytList->nytListModified = $lastModifiedDay;
 			if ($nytList->deleted == 1) {
 				$nytList->deleted = 0;
@@ -1813,7 +1782,7 @@ class ListAPI extends AbstractAPI {
 		require_once ROOT_DIR . '/sys/UserLists/UserListEntry.php';
 
 		$numTitlesAdded = 0;
-		foreach ($listTitles->results as $titleResult) {
+		foreach ($listTitles as $titleResult) {
 			$aspenID = null;
 			// go through each list item
 			if (!empty($titleResult->isbns)) {
@@ -1829,26 +1798,25 @@ class ListAPI extends AbstractAPI {
 				}
 			} else {
 				//No ISBNs provided this may happen if the title only has an ISBN 13
-				if (!empty($titleResult->book_details)) {
-					$firstBookDetail = reset($titleResult->book_details);
-					$isbn = null;
-					if (!empty($firstBookDetail->primary_isbn13)) {
-						$isbn = $firstBookDetail->primary_isbn13;
-					}else if (!empty($firstBookDetail->primary_isbn10)){
-						$isbn = $firstBookDetail->primary_isbn10;
-					}
-					if ($isbn) {
-						$aspenID = $this->_getGroupedWorkIdForISBN($isbn);
-					}
+				$isbn = null;
+				if (!empty($titleResult->primary_isbn13)) {
+					$isbn = $titleResult->primary_isbn13;
+				}else if (!empty($titleResult->primary_isbn10)){
+					$isbn = $titleResult->primary_isbn10;
+				}
+				if ($isbn) {
+					$aspenID = $this->_getGroupedWorkIdForISBN($isbn);
 				}
 			}
 			if ($aspenID != null) {
-				$note = "#{$titleResult->rank} on the {$titleResult->display_name} list for {$titleResult->published_date}.";
-				if ($titleResult->rank_last_week != 0) {
-					$note .= '  Last week it was ranked ' . $titleResult->rank_last_week . '.';
-				}
-				if ($titleResult->weeks_on_list != 0) {
-					$note .= "  It has been on the list for {$titleResult->weeks_on_list} week(s).";
+				$note = "#{$titleResult->rank} on the {$selectedListTitleShort} list.";
+				if ($selectedListInfo->updated == 'WEEKLY') {
+					if ($titleResult->rank_last_week != 0) {
+						$note .= '  Last week it was ranked ' . $titleResult->rank_last_week . '.';
+					}
+					if ($titleResult->weeks_on_list != 0) {
+						$note .= "  It has been on the list for {$titleResult->weeks_on_list} week(s).";
+					}
 				}
 
 				$userListEntry = new UserListEntry();

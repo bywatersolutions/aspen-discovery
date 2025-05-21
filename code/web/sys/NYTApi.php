@@ -10,35 +10,40 @@ require_once ROOT_DIR . '/sys/BaseLogEntry.php';
  ***************************************
  */
 class NYTApi {
+	private static ?NYTApi $apiSingleton = null;
+	const BASE_URI = 'http://api.nytimes.com/svc/books/v3/lists/';
+	protected ?string $api_key = null;
 
-	const BASE_URI = 'http://api.nytimes.com/svc/books/v2/lists/';
-	protected $api_key;
-
-	static $allListsInfo = null;
+	private ?object $rawJSON = null;
+	private ?array $allListsInfo = null;
+	private ?string $lastUpdateDate = null;
+	private string $copyright = '';
 
 	/**
 	 * NYTApi constructor.
 	 * @param string $key
 	 */
-	public function __construct($key) {
+	public function __construct(string $key) {
 		$this->api_key = $key;
 	}
 
-	protected function build_url($list_name) {
-		$url = self::BASE_URI . $list_name;
-		$url .= '?api-key=' . $this->api_key;
-		return $url;
+	public static function getNYTApi(string $key) : NYTApi{
+		if (NYTApi::$apiSingleton == null) {
+			NYTApi::$apiSingleton = new NYTApi($key);
+		}
+		return NYTApi::$apiSingleton;
 	}
 
-	public function get_list($list_name) {
-		if ($list_name == 'names' && isset(NYTApi::$allListsInfo)) {
-			return NYTApi::$allListsInfo;
+	/**
+	 * Returns an array of information about all lists from v3 of the New York Times API
+	 * @return array
+	 */
+	public function getListsOverview() : array {
+		if (isset($this->allListsInfo)) {
+			return $this->allListsInfo;
 		}
-		$url = $this->build_url($list_name);
-		/*
-		// super fast and easy way, but not as many options
-		$response = file_get_contents($url);
-		*/
+
+		$url = self::BASE_URI . 'overview.json?api-key=' . $this->api_key;
 
 		// array of request options
 		$curl_opts = [
@@ -49,7 +54,7 @@ class NYTApi {
 			// do not include header in result
 			CURLOPT_HEADER => 0,
 			// set user agent
-			CURLOPT_USERAGENT => 'Aspen Discovery app cURL Request',
+			CURLOPT_USERAGENT => 'Aspen Discovery',
 		];
 		// Get cURL resource
 		$curl = curl_init();
@@ -59,15 +64,26 @@ class NYTApi {
 		$response = curl_exec($curl);
 		// Close request to clear up some resources
 		curl_close($curl);
-		//NYT recommends sleeping for 6 seconds between API calls to avoid rate limits.
-		sleep(7);
 
-		if ($list_name == 'names' && !isset(NYTApi::$allListsInfo)) {
-			NYTApi::$allListsInfo = $response;
+		$jsonResponse = json_decode($response);
+		if ($jsonResponse) {
+			$this->rawJSON = $jsonResponse;
+			$this->allListsInfo = $jsonResponse->results->lists;
+			$this->lastUpdateDate = $jsonResponse->results->published_date;
+			$this->copyright = $jsonResponse->copyright;
+		}else{
+			$this->allListsInfo = [];
 		}
 
 		// return response
-		return $response;
+		return $this->allListsInfo;
 	}
 
+	public function getLastUpdateDate() : ?string {
+		return $this->lastUpdateDate;
+	}
+
+	public function getCopyright() : string {
+		return $this->copyright;
+	}
 }

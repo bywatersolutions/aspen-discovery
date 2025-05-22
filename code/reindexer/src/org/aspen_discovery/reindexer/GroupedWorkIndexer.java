@@ -1124,18 +1124,7 @@ public class GroupedWorkIndexer {
 				} else if (type.equals("axis360")) {
 					newId = getRecordGroupingProcessor().groupAxis360Record(identifier);
 				} else if (type.equals("cloud_library")) {
-					org.marc4j.marc.Record cloudLibraryRecord = loadMarcRecordFromDatabase("cloud_library", identifier, logEntry);
-					if (cloudLibraryRecord == null) {
-						RemoveRecordFromWorkResult result = getRecordGroupingProcessor().removeRecordFromGroupedWork(type, identifier);
-						if (result.reindexWork) {
-							regroupedIdsToProcess.add(result.permanentId);
-						} else if (result.deleteWork) {
-							//Delete the work from solr and the database
-							deleteRecord(result.permanentId, result.groupedWorkId);
-						}
-					} else {
-						newId = getRecordGroupingProcessor().groupCloudLibraryRecord(identifier, cloudLibraryRecord);
-					}
+					newId = getRecordGroupingProcessor().groupCloudLibraryRecord(identifier);
 				} else if (type.equals("hoopla")) {
 					newId = getRecordGroupingProcessor().groupHooplaRecord(identifier);
 				} else if (type.equals("palace_project")) {

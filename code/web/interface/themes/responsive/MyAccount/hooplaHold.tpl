@@ -79,7 +79,7 @@
                     </div>
                     {if $section == 'available'}
                         <div class="row">
-                            <div class="result-label col-tn-4">{translate text='Expiration Date' isPublicFacing=true}</div>
+                            <div class="result-label col-tn-4">{translate text='Expires' isPublicFacing=true}</div>
                             <div class="col-tn-8 result-value">
                                 {$record->expirationDate|date_format:"%b %d, %Y at %l:%M %p"}
                             </div>

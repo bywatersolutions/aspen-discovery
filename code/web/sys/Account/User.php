@@ -863,7 +863,7 @@ class User extends DataObject {
 					return array_key_exists('Hoopla', $enabledModules) && $userHomeLibrary->hooplaLibraryID > 0;
 				} elseif ($source == 'hoopla_flex') {
 					$libraryHooplaScope = $userHomeLibrary->getHooplaScope();
-					$isFlexAvilable = $libraryHooplaScope->includeFlex;
+					$isFlexAvilable = $libraryHooplaScope ? $libraryHooplaScope->includeFlex : false;
 					return array_key_exists('Hoopla', $enabledModules) && $userHomeLibrary->hooplaLibraryID > 0 && $isFlexAvilable;
 				} elseif ($source == 'cloud_library') {
 					return array_key_exists('Cloud Library', $enabledModules) && ($userHomeLibrary->cloudLibraryScope > 0);

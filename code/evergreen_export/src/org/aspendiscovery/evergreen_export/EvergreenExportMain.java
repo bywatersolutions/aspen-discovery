@@ -1633,7 +1633,16 @@ public class EvergreenExportMain {
 																		}
 																		break;
 																	case "copy_notes" :
-																		String copyNotes = curCopySubElement.getAttribute("title") + ":" + curCopySubElement.getTextContent();
+																		String copyNotes = "";
+																		for(int index = 0; index < curCopySubElement.getChildNodes().getLength();index++)
+																		{
+																			if(!copyNotes.isEmpty())
+																			{//put some separation between multiple notes if any
+																				copyNotes += " ";
+																			}
+																			Element note = (Element) curCopySubElement.getChildNodes().item(index);
+																			copyNotes += note.getAttribute("title") + ":" + note.getTextContent();
+																		}
 																		if (!copyNotes.isEmpty()) {
 																			curItemField.addSubfield(marcFactory.newSubfield(indexingProfile.getNoteSubfield(), copyNotes));
 																		}

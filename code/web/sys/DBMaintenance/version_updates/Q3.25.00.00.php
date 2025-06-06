@@ -40,34 +40,34 @@ function getUpdatesQ3_25_00_00(): array {
 			'continueOnError' => false,
 			'sql' => [
 				"CREATE TABLE IF NOT EXISTS `permission_groups` (
-				    `id` int(11) NOT NULL AUTO_INCREMENT,
-				    `groupKey` varchar(100) NOT NULL,
-				    `sectionName` varchar(75) NOT NULL,
-				    `label` varchar(100) NOT NULL,
-				    `description` varchar(250) DEFAULT '',
-				    PRIMARY KEY (`id`),
-				    UNIQUE KEY `groupKey` (`groupKey`)
+					`id` int(11) NOT NULL AUTO_INCREMENT,
+					`groupKey` varchar(100) NOT NULL,
+					`sectionName` varchar(75) NOT NULL,
+					`label` varchar(100) NOT NULL,
+					`description` varchar(250) DEFAULT '',
+					PRIMARY KEY (`id`),
+					UNIQUE KEY `groupKey` (`groupKey`)
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 				"CREATE TABLE IF NOT EXISTS `permission_group_permissions` (
-				    `id` int(11) NOT NULL AUTO_INCREMENT,
-				    `groupId` int(11) NOT NULL,
-				    `permissionId` int(11) NOT NULL,
-				    PRIMARY KEY (`id`),
-				    KEY `groupId` (`groupId`),
-				    KEY `permissionId` (`permissionId`),
-				    CONSTRAINT `fk_permission_group` FOREIGN KEY (`groupId`) REFERENCES `permission_groups` (`id`) ON DELETE CASCADE,
-				    CONSTRAINT `fk_permission_group_permission` FOREIGN KEY (`permissionId`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+					`id` int(11) NOT NULL AUTO_INCREMENT,
+					`groupId` int(11) NOT NULL,
+					`permissionId` int(11) NOT NULL,
+					PRIMARY KEY (`id`),
+					KEY `groupId` (`groupId`),
+					KEY `permissionId` (`permissionId`),
+					CONSTRAINT `fk_permission_group` FOREIGN KEY (`groupId`) REFERENCES `permission_groups` (`id`) ON DELETE CASCADE,
+					CONSTRAINT `fk_permission_group_permission` FOREIGN KEY (`permissionId`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
 				"INSERT IGNORE INTO `permission_groups` (`groupKey`,`sectionName`,`label`,`description`) VALUES
-				    ('adminBrowseCategories','Local Enrichment','Administer Browse Categories','Choose the browse category scope for this role.'),
-				    ('admincollectionSpotlights','Local Enrichment','Administer Collection Spotlights','Choose the collection spotlight scope for this role.'),
-				    ('adminPlacards','Local Enrichment','Administer Placards','Choose the placards scope for this role.'),
-				    ('adminJavaScriptSnippets','Local Enrichment','Administer JavaScript Snippets','Choose JavaScript Snippets administration scope for this role.'),
+					('adminBrowseCategories','Local Enrichment','Administer Browse Categories','Choose the browse category scope for this role.'),
+					('admincollectionSpotlights','Local Enrichment','Administer Collection Spotlights','Choose the collection spotlight scope for this role.'),
+					('adminPlacards','Local Enrichment','Administer Placards','Choose the placards scope for this role.'),
+					('adminJavaScriptSnippets','Local Enrichment','Administer JavaScript Snippets','Choose JavaScript Snippets administration scope for this role.'),
 					('adminSystemMessages','Local Enrichment','Administer System Messages','Choose system messages administration scope for this role.'),
-				    ('adminThemes','Theme & Layout','Administer Themes','Choose the theme administration scope for this role.'),
-				    ('adminLayoutSettings','Theme & Layout','Administer Layout Settings','Choose the layout settings scope for this role.'),
-				    ('adminLibraries','Primary Configuration','Administer Libraries','Choose the library administration scope for this role.'),
-				    ('adminLocations','Primary Configuration','Administer Locations','Choose the location administration scope for this role.'),
+					('adminThemes','Theme & Layout','Administer Themes','Choose the theme administration scope for this role.'),
+					('adminLayoutSettings','Theme & Layout','Administer Layout Settings','Choose the layout settings scope for this role.'),
+					('adminLibraries','Primary Configuration','Administer Libraries','Choose the library administration scope for this role.'),
+					('adminLocations','Primary Configuration','Administer Locations','Choose the location administration scope for this role.'),
 					('adminHoldsReports','Circulation Reports','View Holds Reports','Choose the holds report view scope for this role.'),
 					('adminStudentReports','Circulation Reports','View Student Reports','Choose the student report view scope for this role.'),
 					('adminCollectionReports','Circulation Reports','View Collection Reports','Choose collection report view scope for this role.'),
@@ -519,6 +519,7 @@ function getUpdatesQ3_25_00_00(): array {
 				"UPDATE permissions SET name = 'Administer All Side Loads' WHERE name = 'Administer Side Loads'",
 			],
 		], // update_administer_side_loads_name
+
 		// Laura Escamilla - ByWater Solutions
 
 		//alexander - Open Fifth

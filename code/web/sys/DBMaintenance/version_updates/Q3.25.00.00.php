@@ -132,7 +132,7 @@ function getUpdatesQ3_25_00_00(): array {
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Custom Web Resource Pages','Administer Library Custom Web Resource Pages') WHERE pg.groupKey = 'adminCustomWebResourcePages'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer Side Loads','Administer Side Loads for Home Library', 'Administer Side Load Scopes for Home Library') WHERE pg.groupKey = 'adminSideLoads'",
 			],
-		], //permission_groups_and_mappings
+		], // permission_groups_and_mappings
 		'cleanup_mutually_exclusive_permissions' => [
 			'title' => 'Cleanup Mutually Exclusive Permissions',
 			'description' => 'Remove duplicate permissions from roles where multiple permissions from the same permission group are assigned, keeping only the broadest permission.',
@@ -510,8 +510,15 @@ function getUpdatesQ3_25_00_00(): array {
 				 WHERE p1.name = 'Administer Side Load Scopes for Home Library'
 				 AND p2.name = 'Administer Side Loads for Home Library'",
 			],
-		], //cleanup_mutually_exclusive_permissions
-
+		], // cleanup_mutually_exclusive_permissions
+		'update_administer_side_loads_name' => [
+			'title' => 'Update "Administer Side Loads" Permission Name to "Administer All Side Loads:',
+			'description' => 'Update the "Administer Side Loads" permission mname to "Administer All Side Loads" to clarify its broad scope.',
+			'continueOnError' => false,
+			'sql' => [
+				"UPDATE permissions SET name = 'Administer All Side Loads' WHERE name = 'Administer Side Loads'",
+			],
+		], // update_administer_side_loads_name
 		// Laura Escamilla - ByWater Solutions
 
 		//alexander - Open Fifth

@@ -69,29 +69,26 @@ class FileUpload extends DataObject {
 	}
 
 	/** @noinspection PhpUnused */
-	function makeThumbnail() {
+	function makeThumbnail(): void {
 		if ($this->type == 'web_builder_pdf' && !empty($this->fullPath)) {
 			$destFullPath = $this->fullPath;
-			$thumbFullPath = '';
 			if (extension_loaded('imagick')) {
 				try {
 					$thumb = new Imagick($destFullPath);
-					if ($thumb) {
-						$thumb->setResolution(150, 150);
-						$thumb->setImageBackgroundColor('white');
-						$thumb->setImageAlphaChannel(11);
-						$thumb->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
-						$thumb->readImage($destFullPath . '[0]');
-						$wroteOk = $thumb->writeImage($destFullPath . '.jpg');
-						$thumb->destroy();
-						if ($wroteOk) {
-							$thumbFullPath = $destFullPath . '.jpg';
-							$this->thumbFullPath = $thumbFullPath;
-						}
+					$thumb->setResolution(150, 150);
+					$thumb->setImageBackgroundColor('white');
+					$thumb->setImageAlphaChannel(11);
+					$thumb->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+					$thumb->readImage($destFullPath . '[0]');
+					$wroteOk = $thumb->writeImage($destFullPath . '.jpg');
+					$thumb->clear();
+					if ($wroteOk) {
+						$thumbFullPath = $destFullPath . '.jpg';
+						$this->thumbFullPath = $thumbFullPath;
 					}
 				} catch (Exception $e) {
 					global $logger;
-					$logger->log("Imagick not installed", $e);
+					$logger->log("Imagick PDF thumbnail generation failed: " . $e, Logger::LOG_ERROR);
 				}
 			}
 		}

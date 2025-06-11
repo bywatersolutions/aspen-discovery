@@ -1883,7 +1883,8 @@ class Polaris extends AbstractIlsDriver {
 			$jsonResponse = json_decode($response);
 			$finesRows = $jsonResponse->PatronAccountGetRows;
 			foreach ($finesRows as $fineRow) {
-				if ($fineRow->TransactionTypeDescription != "Credit") {
+				// TODO: It might be most accurate to use the TransactionTypeID for each, but I cannot find what the ID is for "Credit."
+				if ($fineRow->TransactionTypeDescription != "Credit" && $fineRow->TransactionTypeDescription != "Deposit") {
 					$curFine = [
 						'fineId' => $fineRow->TransactionID,
 						'date' => $this->parsePolarisDate($fineRow->TransactionDate),
@@ -1933,7 +1934,7 @@ class Polaris extends AbstractIlsDriver {
 			if ($response && $this->lastResponseCode == 200) {
 				$jsonResponse = json_decode($response);
 				if ($jsonResponse->PAPIErrorCode != 0) {
-					$result['message'] .= $jsonResponse->ErrorMessage . '. ';
+					$result['message'] .= !empty($jsonResponse->ErrorMessage) ? $jsonResponse->ErrorMessage . '.' : 'An unknown error (PAPIErrorCode: ' . $jsonResponse->PAPIErrorCode . ') occurred when completing a fine payment to Polaris.';
 					$allPaymentsSucceed = false;
 				}
 			} else {

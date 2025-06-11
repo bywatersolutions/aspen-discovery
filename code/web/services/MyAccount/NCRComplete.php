@@ -12,7 +12,7 @@ class MyAccount_NCRComplete extends MyAccount {
 		} else {
 			$paymentId = $_REQUEST['transid'];
 			require_once ROOT_DIR . '/sys/Account/UserPayment.php';
-			$result = UserPayment::completeNCRPayment($_REQUEST);
+			$result = UserPayment::completeNCRPayment();
 			if ($result['success']) {
 				$message = $result['message'];
 				$cancelled = 0;

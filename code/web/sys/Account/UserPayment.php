@@ -201,7 +201,7 @@ class UserPayment extends DataObject {
 		return $this->_data[$name] ?? null;
 	}
 
-	public static function completeNCRPayment($queryParams) {
+	public static function completeNCRPayment(): array {
 		$paymentId = $_REQUEST['transid'];
 		$success = false;
 		$error = '';
@@ -211,7 +211,7 @@ class UserPayment extends DataObject {
 		$userPayment = new UserPayment();
 		$userPayment->orderId = $paymentId;
 		if ($userPayment->find(true)) {
-			if ($userPayment->completed == true) {
+			if ($userPayment->completed) {
 				$success = true;
 				$message = translate([
 					'text' => 'Your payment has been completed. ',
@@ -225,7 +225,7 @@ class UserPayment extends DataObject {
 
 					require_once ROOT_DIR . '/sys/ECommerce/NCRPaymentsSetting.php';
 					$NCRPaymentsSetting = new NCRPaymentsSetting();
-					$NCRPaymentsSetting->id = $userLibrary->NCRSettingId;
+					$NCRPaymentsSetting->id = $userLibrary->ncrSettingId;
 
 					if ($NCRPaymentsSetting->find(true)) {
 
@@ -290,7 +290,7 @@ class UserPayment extends DataObject {
 										]);
 									}
 								} else {
-									if ($jsonResponse == null || !$jsonResponse->approvalStatus) {
+									if ($jsonResponse == null || !isset($jsonResponse->approvalStatus)) {
 										$userPayment->error = true;
 										$userPayment->message = 'Could not receive transaction response from NCR.  Please visit the library with your receipt to have the fine removed from your account.';
 									} else {
@@ -301,7 +301,6 @@ class UserPayment extends DataObject {
 											if ($user->find(true)) {
 												$finePaymentCompleted = $user->completeFinePayment($userPayment);
 												if ($finePaymentCompleted['success']) {
-													$success = true;
 													$message = translate([
 														'text' => 'Your payment has been completed. ',
 														'isPublicFacing' => true,
@@ -353,12 +352,11 @@ class UserPayment extends DataObject {
 		} else {
 			$error = 'Incorrect Payment ID provided';
 		}
-		$result = [
+
+		return [
 			'success' => $success,
 			'message' => $success ? $message : $error,
 		];
-
-		return $result;
 	}
 
 	public static function completeComprisePayment($queryParams) {

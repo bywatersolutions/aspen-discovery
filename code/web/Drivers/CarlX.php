@@ -2568,6 +2568,11 @@ EOT;
 		$request = $this->getSearchbyPatronIdRequest($patron);
 		$result = $this->doSoapRequest('getPatronInformation', $request, $this->patronWsdl);
 
+		if(!property_exists($result, "Patron"))
+		{
+			return false;
+		}
+
 		$selfServeActivityDate = strtotime($result->Patron->SelfServeActivityDate);
 		$lastActionDate = strtotime($result->Patron->LastActionDate);
 		$lastReadingHistoryUpdate = $patron->lastReadingHistoryUpdate;

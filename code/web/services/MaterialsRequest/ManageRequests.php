@@ -312,6 +312,10 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 			}
 
 			$materialsRequestsPerPage = isset($_REQUEST['pageSize']) && (is_numeric($_REQUEST['pageSize'])) ? $_REQUEST['pageSize'] : 30;
+			if($_REQUEST['pageSize'] == 'all')
+			{
+				$materialsRequestsPerPage = $materialsRequests->count();
+			}
 			$interface->assign('materialsRequestsPerPage', $materialsRequestsPerPage);
 			$page = $_REQUEST['page'] ?? 1;
 			if (!isset($_REQUEST['exportAll'])) {

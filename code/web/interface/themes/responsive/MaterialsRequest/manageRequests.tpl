@@ -113,6 +113,7 @@
 						<option value="100"{if $materialsRequestsPerPage == 100} selected="selected"{/if}>100</option>
 						<option value="250"{if $materialsRequestsPerPage == 250} selected="selected"{/if}>250</option>
 						<option value="500"{if $materialsRequestsPerPage == 500} selected="selected"{/if}>500</option>
+                                                <option value="all"{if empty($pageLinks.all)} selected="selected"{/if}>All</option>
 					</select>
 				</div>
 				<table id="requestedMaterials" class="table tablesorter table-striped table-hover table-sticky">

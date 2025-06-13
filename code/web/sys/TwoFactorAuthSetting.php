@@ -14,6 +14,7 @@ class TwoFactorAuthSetting extends DataObject {
 	static function getObjectStructure($context = ''): array {
 		require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
 		$accountProfile = new AccountProfile();
+		$accountProfile->whereAdd("name != 'admin_sso'");
 		$accountProfile->orderBy('name');
 		$accountProfileOptions = $accountProfile->fetchAll('id', 'name');
 
@@ -31,14 +32,15 @@ class TwoFactorAuthSetting extends DataObject {
 				'property' => 'id',
 				'type' => 'label',
 				'label' => 'Id',
-				'description' => 'The unique id',
+				'description' => 'The unique Id for this setting.',
 			],
 			'accountProfileId' => [
 				'property' => 'accountProfileId',
 				'type' => 'enum',
 				'values' => $accountProfileOptions,
-				'label' => 'Account Profile Id',
-				'description' => 'Account Profile to apply to this interface',
+				'label' => 'Account Profile Name',
+				'description' => 'Select the Account Profile for this setting.',
+				'note' => 'If the "admin" Account Profile is selected, this setting cannot be scoped to Libraries and Patron Types.',
 				'permissions' => ['Administer Account Profiles'],
 				'readOnly' => $context != 'addNew'
 			],
@@ -46,7 +48,7 @@ class TwoFactorAuthSetting extends DataObject {
 				'property' => 'name',
 				'type' => 'text',
 				'label' => 'Name',
-				'description' => 'A name for the settings',
+				'description' => 'A name for the setting.',
 				'maxLength' => 50,
 				'required' => true
 			],
@@ -59,8 +61,8 @@ class TwoFactorAuthSetting extends DataObject {
 			'deniedMessage' => [
 				'property' => 'deniedMessage',
 				'type' => 'textarea',
-				'label' => 'Denied access message',
-				'note' => 'Instructions for accessing their account if the user is unable to authenticate',
+				'label' => 'Denied Access Message',
+				'description' => 'Instructions on account access when a user cannot authenticate.',
 				'hideInLists' => true,
 			]
 		];
@@ -70,7 +72,7 @@ class TwoFactorAuthSetting extends DataObject {
 				'type' => 'multiSelect',
 				'listStyle' => 'checkboxSimple',
 				'label' => 'Libraries',
-				'description' => 'Define libraries that use these settings',
+				'description' => 'Define libraries that use this setting.',
 				'values' => $libraryList,
 			];
 			$structure['ptypes'] = [
@@ -79,17 +81,23 @@ class TwoFactorAuthSetting extends DataObject {
 				'listStyle' => 'checkboxSimple',
 				'label' => 'Patron Types',
 				'values' => $ptypeList,
-				'description' => 'Define patron types that use these settings',
+				'description' => 'Define patron types that use this setting.',
 			];
 		}
 
-		if (!UserAccount::userHasPermission('Administer Two-Factor Authentication')) {
-			unset($structure['libraries']);
-		}
 		return $structure;
 	}
 
 	public function updateStructureForEditingObject($structure) : array {
+		require_once ROOT_DIR . '/sys/Account/AccountProfile.php';
+		$adminProfile = new AccountProfile();
+		$adminProfile->name = 'admin';
+		if ($adminProfile->find(true) && $this->accountProfileId === $adminProfile->id) {
+			unset($structure['libraries']);
+			unset($structure['ptypes']);
+			return $structure;
+		}
+
 		if (isset($structure['libraries'])) {
 			$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'), $this->accountProfileId);
 			$structure['libraries']['values'] = $libraryList;

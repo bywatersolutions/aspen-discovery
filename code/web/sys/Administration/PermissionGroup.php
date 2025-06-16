@@ -2,6 +2,15 @@
 
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
+/**
+ * Represents a group of mutually exclusive permissions.
+ *
+ * @property int $id The primary key.
+ * @property string $groupKey Unique identifier for the permission group.
+ * @property string $sectionName The section under which this group appears.
+ * @property string $label The display label for the dropdown.
+ * @property string $description Helper text shown under the dropdown label.
+ */
 class PermissionGroup extends DataObject {
 	public $__table = 'permission_groups';
 	public $__primaryKey = 'id';

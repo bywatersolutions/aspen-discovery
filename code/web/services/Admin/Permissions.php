@@ -31,7 +31,6 @@ class Admin_Permissions extends Admin_Admin {
 		$permissionGroups = self::loadPermissionGroups();
 		$interface->assign('permissionGroups', $permissionGroups);
 		if (isset($_REQUEST['submit']) && $selectedRole != null) {
-			// Handle dropdown-based permission group selections.
 			if (isset($_REQUEST['permissionGroup'])) {
 				foreach ($_REQUEST['permissionGroup'] as $groupKey => $selectedPermId) {
 					if (isset($permissionGroups[$groupKey])) {
@@ -87,12 +86,14 @@ class Admin_Permissions extends Admin_Admin {
 
 	/**
 	 * Loads mutually exclusive permission groups from the database.
-	 * @return array<string,array>
+	 * Each group contains sectionName, label, description, and a list of permission names.
+	 *
+	 * @return array<string,array{sectionName:string,label:string,description:string,permissions:string[]}>
 	 */
 	private static function loadPermissionGroups(): array {
 		$groups = [];
 		$groupLookup = [];
-		// Load all permission groups
+
 		$groupObj = new PermissionGroup();
 		$groupObj->find();
 		while ($groupObj->fetch()) {
@@ -104,7 +105,7 @@ class Admin_Permissions extends Admin_Admin {
 			];
 			$groupLookup[$groupObj->id] = $groupObj->groupKey;
 		}
-		// Load group-permission mappings
+
 		$mapping = new PermissionGroupPermission();
 		$mapping->find();
 		while ($mapping->fetch()) {

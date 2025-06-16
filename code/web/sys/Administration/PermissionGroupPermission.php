@@ -2,6 +2,16 @@
 
 require_once ROOT_DIR . '/sys/DB/DataObject.php';
 
+/**
+ * Maps a PermissionGroup to an individual Permission.
+ * Defines the many-to-many relationship between
+ * permission_groups and permissions, determining which
+ * permissions belong in each mutually exclusive group.
+ *
+ * @property int $id The primary key.
+ * @property int $groupId Foreign key to permission_groups.id.
+ * @property int $permissionId Foreign key to permissions.id.
+ */
 class PermissionGroupPermission extends DataObject {
 	public $__table = 'permission_group_permissions';
 	public $__primaryKey = 'id';

@@ -681,6 +681,42 @@ class Campaign extends DataObject {
 	
 			$this->saveOneToManyOptions($filtered, 'campaignId');
 			unset($this->_availableMilestones);
+
+			$campaignMilestones = CampaignMilestone::getMilestoneByCampaign($this->id);
+
+			$userCampaign = new UserCampaign();
+			$userCampaign->campaignId = $this->id;
+			$userCampaign->find();
+
+			while ($userCampaign->fetch()) {
+				$userId = $userCampaign->userId;
+
+				foreach ($campaignMilestones as $campaignMilestone) {
+					$progress = new CampaignMilestoneUsersProgress();
+					$progress->ce_milestone_id = $campaignMilestone->milestoneId;
+					$progress->ce_campaign_id = $this->id;
+					$progress->userId = $userId;
+
+					if (!$progress->find(true)) {
+						$progress->progress = 0;
+						$progress->insert();
+					}
+				}
+			}
+
+			require_once ROOT_DIR . '/services/MyAccount/AJAX.php';
+
+			$ajax = new MyAccount_AJAX();
+
+			$userCampaign = new UserCampaign();
+			$userCampaign->campaignId = $this->id;
+			$userCampaign->find();
+
+			while ($userCampaign->fetch()) {
+				$userId = $userCampaign->userId;
+				$ajax->applyCampaignProgress($userId, $this->id);
+				$userCampaign->checkAndHandleCampaignCompletion($userId, $this->id);
+			}
 		}
 	}
 	

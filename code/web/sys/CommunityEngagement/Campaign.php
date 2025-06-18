@@ -1137,7 +1137,8 @@ class Campaign extends DataObject {
                             'progressData' => $progressData,
                             // 'progressData' => $milestoneProgress['data'],
                             'progressBeyondOneHundredPercent' => $milestone->progressBeyondOneHundredPercent,
-                            'allowPatronProgressInput' => $milestone->allowPatronProgressInput
+                            'allowPatronProgressInput' => $milestone->allowPatronProgressInput,
+							'milestoneComplete' => ($completedGoals >= $totalGoals),
                         ];
                     }
 					usort($milestoneRewards, function($a, $b) {

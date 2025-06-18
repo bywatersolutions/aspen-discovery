@@ -167,7 +167,7 @@
                                                 </td>
                                                  {if $milestone->allowPatronProgressInput}
                                                     <td>
-                                                        <button class="btn btn-primary btn-sm" onclick="AspenDiscovery.CommunityEngagement.manuallyProgressMilestone({$milestone->id}, {$userId}, {$campaign->id});">{translate text="Add Progress" isPublicFacing=true}</button>     
+                                                 <button class="btn btn-primary btn-sm" onclick="AspenDiscovery.CommunityEngagement.manuallyProgressMilestone({$milestone->id}, {$userId}, {$campaign->id});" {if $milestone->milestoneComplete && !$milestone->progressBeyondOneHundredPercent}disabled{/if}>{translate text="Add Progress" isPublicFacing=true}</button>     
                                                     </td>
                                                 {/if}
                                             </tr>                                 
@@ -299,7 +299,7 @@
                                                     </td>
                                                     {if $milestone.allowPatronProgressInput && $campaign.isEnrolled}
                                                         <td>
-                                                            <button class="btn btn-primary btn-sm" onclick="AspenDiscovery.CommunityEngagement.manuallyProgressMilestone({$milestone.id}, {$linkedUser.linkedUserId}, {$campaign.campaignId});">{translate text="Add Progress" isPublicFacing=true}</button>
+                                                    <button class="btn btn-primary btn-sm" onclick="AspenDiscovery.CommunityEngagement.manuallyProgressMilestone({$milestone.id}, {$linkedUser.linkedUserId}, {$campaign.campaignId});" {if $milestone.milestoneComplete && !$milestone.progressBeyondOneHundredPercent}disabled{/if}>{translate text="Add Progress" isPublicFacing=true}</button>
                                                         </td>
                                                     {/if}
                                                 </tr>
@@ -337,7 +337,7 @@
                 {capture name="activeUnenrollLabel"}{translate text="Unenroll from {$campaign->name}" isPublicFacing=true inAttribute=true}{/capture}
                 {capture name="activeEnrollLabel"}{translate text="Enroll in {$campaign->name}" isPublicFacing=true inAttribute=true}{/capture}
 
-                    {if $campaign->isActive  && !$campaign->enrolled}
+                    {if $campaign->isActive && !$campaign->enrolled}
                         <tr>
                             <td>
                                 {$campaign->name}

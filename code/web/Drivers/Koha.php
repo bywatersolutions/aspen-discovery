@@ -4933,6 +4933,21 @@ class Koha extends AbstractIlsDriver {
 			]);
 		} else {
 			$apiUrl = $this->getWebServiceURL() . "/api/v1/patrons";
+
+			if ($this->getKohaVersion() > 21.05) {
+				$formattedExtendedAttributes = [];
+				foreach ($this->setExtendedAttributes() as $extendedAttribute) {
+					if (!isset($_REQUEST["borrower_attribute_" . $extendedAttribute['code']])) {
+						continue;
+					}
+					$formattedExtendedAttributes[] = [
+						'type' =>  $extendedAttribute['code'],
+						'value' => $_REQUEST["borrower_attribute_" . $extendedAttribute['code']]
+					];
+				}
+				$postVariables['extended_attributes'] = $formattedExtendedAttributes;
+			}
+
 			$postParams = json_encode($postVariables);
 
 			$this->apiCurlWrapper->addCustomHeaders([
@@ -4990,17 +5005,6 @@ class Koha extends AbstractIlsDriver {
 						}
 					} else {
 						$result['message'] = translate(['text'=>"Your account was registered, but a barcode was not provided, please contact your library for barcode and password to use when logging in.",'isPublicFacing'=>true]);
-					}
-				}
-
-				// check for patron attributes
-				if ($this->getKohaVersion() > 21.05) {
-					$jsonResponse = json_decode($response);
-					$patronId = $jsonResponse->patron_id;
-					$extendedAttributes = $this->setExtendedAttributes();
-
-					if (!empty($extendedAttributes)) {
-						$this->updateExtendedAttributesInKoha($patronId, $extendedAttributes, $oauthToken);
 					}
 				}
 			}

@@ -2615,7 +2615,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return true;
 	}
 
-	private function loadUploadedFileInfo() {
+	private function loadUploadedFileInfo(): void {
 		global $timer;
 		$this->_uploadedPDFs = [];
 		$this->_uploadedSupplementalFiles = [];
@@ -2629,10 +2629,13 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 				$fileUpload = new FileUpload();
 				$fileUpload->id = $recordFile->fileId;
 				if ($fileUpload->find(true)) {
-					if ($fileUpload->type == 'RecordPDF') {
-						$this->_uploadedPDFs[] = $fileUpload;
-					} elseif ($fileUpload->type == 'RecordSupplementalFile') {
-						$this->_uploadedSupplementalFiles[] = $fileUpload;
+					if (file_exists($fileUpload->fullPath)) {
+						if ($fileUpload->type == 'RecordPDF') {
+							$this->_uploadedPDFs[] = $fileUpload;
+						} elseif ($fileUpload->type == 'RecordSupplementalFile') {
+
+							$this->_uploadedSupplementalFiles[] = $fileUpload;
+						}
 					}
 				}
 			}

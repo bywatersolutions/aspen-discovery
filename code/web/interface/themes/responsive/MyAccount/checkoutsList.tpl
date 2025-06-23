@@ -1,4 +1,5 @@
 {strip}
+<a id="topOfList"></a>
 {if !empty($transList)}
 	<form id="renewForm_{$source}" action="/MyAccount/CheckedOut">
 		<div id="pager" class="row">
@@ -35,17 +36,17 @@
 		<div class="striped">
 			{foreach from=$transList item=checkedOutTitle name=checkedOutTitleLoop key=checkedOutKey}
 				{if $checkedOutTitle->type == 'ils'}
-					{include file="MyAccount/ilsCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration}
+					{include file="MyAccount/ilsCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration+$startIndex}
 				{elseif $checkedOutTitle->type == 'overdrive'}
-					{include file="MyAccount/overdriveCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration}
+					{include file="MyAccount/overdriveCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration+$startIndex}
 				{elseif $checkedOutTitle->type == 'hoopla'}
-					{include file="MyAccount/hooplaCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration}
+					{include file="MyAccount/hooplaCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration+$startIndex}
 				{elseif $checkedOutTitle->type == 'cloud_library'}
-					{include file="MyAccount/cloudLibraryCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration}
+					{include file="MyAccount/cloudLibraryCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration+$startIndex}
 				{elseif $checkedOutTitle->type == 'axis360'}
-					{include file="MyAccount/axis360CheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration}
+					{include file="MyAccount/axis360CheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration+$startIndex}
 				{elseif $checkedOutTitle->type == 'palace_project'}
-					{include file="MyAccount/palaceProjectCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration}
+					{include file="MyAccount/palaceProjectCheckedOutTitle.tpl" record=$checkedOutTitle resultIndex=$smarty.foreach.checkedOutTitleLoop.iteration+$startIndex}
 				{else}
 					<div class="row">
 						{translate text="Unknown record source %1%" 1=$checkedOutTitle->type isPublicFacing=true}
@@ -69,6 +70,9 @@
 			{/if}
 		</div>
 	</form>
+	{if !empty($pageLinks.all)}
+		<div class="text-center">{$pageLinks.all}</div>
+	{/if}
 {else}
 	{translate text='You do not have any items checked out' isPublicFacing=true}.
 {/if}

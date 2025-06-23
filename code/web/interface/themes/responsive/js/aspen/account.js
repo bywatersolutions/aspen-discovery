@@ -221,10 +221,9 @@ AspenDiscovery.Account = (function () {
 			return false;
 		},
 
-		loadCheckouts: function (source, sort, showCovers, selectedUser) {
-
+		loadCheckouts(source, sort, showCovers, selectedUser, page) {
 			AspenDiscovery.Account.currentCheckoutsSource = source;
-			var url = Globals.path + "/MyAccount/AJAX?method=getCheckouts&source=" + source;
+			let url = Globals.path + "/MyAccount/AJAX?method=getCheckouts&source=" + source;
 			if (selectedUser || selectedUser == "") {
 				url += "&selectedUserCheckouts=" + selectedUser;
 			}
@@ -235,16 +234,23 @@ AspenDiscovery.Account = (function () {
 			if (showCovers !== undefined) {
 				url += "&showCovers=" + showCovers;
 			}
-			var stateObj = {
+			if (page !== undefined) {
+				url += "&page=" + page;
+			}
+			const stateObj = {
 				page: 'Checkouts',
 				source: source,
 				sort: sort,
 				showCovers: showCovers,
-				selectedUserCheckouts: selectedUser
+				selectedUserCheckouts: selectedUser,
+				pageNumber: page
 			};
-			var newUrl = AspenDiscovery.buildUrl(document.location.origin + document.location.pathname, 'source', source);
+			let newUrl = AspenDiscovery.buildUrl(document.location.origin + document.location.pathname, 'source', source);
+			if (page !== undefined) {
+				newUrl = AspenDiscovery.buildUrl(newUrl, 'page', page);
+			}
 			if (document.location.href) {
-				var label = 'Checkouts';
+				let label = 'Checkouts';
 				if (source === 'ils') {
 					label = 'Physical Checkouts';
 				} else if (source === 'overdrive') {
@@ -275,6 +281,7 @@ AspenDiscovery.Account = (function () {
 						$("#costSavingsPlaceholder").html(data.costSavingsMessage);
 					}
 					AspenDiscovery.Account.loadMenuData();
+					AspenDiscovery.goToAnchor("topOfList");
 				} else {
 					$("#" + source + "CheckoutsPlaceholder").html(data.message);
 				}
@@ -407,6 +414,7 @@ AspenDiscovery.Account = (function () {
 						// noinspection JSUnresolvedReference
 						$("#costSavingsPlaceholder").html(data.costSavingsMessage);
 					}
+					AspenDiscovery.goToAnchor("topOfList");
 				} else {
 					$("#readingHistoryListPlaceholder").html(data.message);
 				}

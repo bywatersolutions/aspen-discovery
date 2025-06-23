@@ -266,7 +266,7 @@ class sip2 {
 	}
 
 	/* Fee paid function should go here */
-	function msgFeePaid($feeType = '01', $pmtType = '02', $pmtAmount, $curType = 'USD', $feeId = '', $transId = '', $patronId = '') {
+	function msgFeePaid($pmtAmount, $feeType = '01', $pmtType = '02', $curType = 'USD', $feeId = '', $transId = '', $patronId = '') {
 		/* Fee payment function (37) - untested */ /* Fee Types: */ /* 01 other/unknown */ /* 02 administrative */ /* 03 damage */ /* 04 overdue */ /* 05 processing */ /* 06 rental*/ /* 07 replacement */ /* 08 computer access charge */ /* 09 hold fee */
 
 		/* Value Payment Type */ /* 00   cash */ /* 01   VISA */

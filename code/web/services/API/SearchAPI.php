@@ -1804,9 +1804,9 @@ class SearchAPI extends AbstractAPI {
 
 		/** @var BrowseCategoryGroupEntry[] $browseCategories */
 		if ($activeLocation == null) {
-			$browseCategories = $library->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA(null, $appUser, false);
+			$browseCategories = $library->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA($appUser, null, false);
 		} else {
-			$browseCategories = $activeLocation->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA(null, $appUser, false);
+			$browseCategories = $activeLocation->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA($appUser, null, false);
 		}
 		$formattedCategories = [];
 		require_once ROOT_DIR . '/sys/Browse/BrowseCategory.php';
@@ -1983,14 +1983,14 @@ class SearchAPI extends AbstractAPI {
 		if ($activeLocation == null) {
 			//We don't have an active location, look at the library
 			if ($isLiDARequest) {
-				$browseCategories = $library->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA($maxCategories, $appUser);
+				$browseCategories = $library->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA($appUser, $maxCategories);
 			} else {
 				$browseCategories = $library->getBrowseCategoryGroup()->getBrowseCategories();
 			}
 		} else {
 			//We have a location get data for that
 			if ($isLiDARequest) {
-				$browseCategories = $activeLocation->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA($maxCategories, $appUser);
+				$browseCategories = $activeLocation->getBrowseCategoryGroup()->getBrowseCategoriesForLiDA($appUser, $maxCategories);
 			} else {
 				$browseCategories = $activeLocation->getBrowseCategoryGroup()->getBrowseCategories();
 			}

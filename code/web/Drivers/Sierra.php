@@ -697,7 +697,7 @@ class Sierra extends Millennium {
 				$sortKey = "{$curCheckout->source}_{$curCheckout->sourceId}_$index";
 				$checkedOutTitles[$sortKey] = $curCheckout;
 			}
-			$numProcessed += $checkouts->total;
+			$numProcessed += count($checkouts->entries);
 		}
 
 		return $checkedOutTitles;

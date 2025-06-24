@@ -9901,7 +9901,7 @@ a.browse-thumbnail.active {
   padding-right: 0;
 }
 .titleScrollerViewMore {
-  padding-right: 5px;
+  padding-right: 10px;
   float: right;
 }
 #listSelection {
@@ -9916,26 +9916,27 @@ a.browse-thumbnail.active {
 }
 .leftScrollerButton,
 .rightScrollerButton {
-  display: inline-block;
-  height: 135px;
-  line-height: 115px;
-  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   width: 25px;
-  float: left;
   cursor: pointer;
-  margin-left: 5px;
-  margin-top: 5px;
-  zoom: 1;
-  *display: inline;
+  margin: 0 10px;
 }
 .leftScrollerButton {
-  float: left;
-  margin-left: 5px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
 }
 .rightScrollerButton {
-  float: right;
-  margin-right: 5px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0;
   z-index: 100;
+  /* Needed for "Single Title with a Next Button" style */
 }
 .scrollerButtonUp,
 .scrollerButtonDown {
@@ -9959,12 +9960,14 @@ a.browse-thumbnail.active {
   text-align: center;
   font-weight: bold;
   color: #00125E;
+  padding-left: 20px;
 }
 .titleScrollerSelectedAuthor {
   width: 100%;
   text-align: center;
   font-weight: bold;
   color: #A9A9A9;
+  padding-left: 20px;
 }
 .scrollerBodyContainer {
   position: relative;
@@ -10088,6 +10091,7 @@ a.browse-thumbnail.active {
   margin: 2px;
   vertical-align: middle;
   padding: 3px;
+  text-align: center;
   max-width: 129px;
   zoom: 1;
   *display: inline;
@@ -10198,7 +10202,7 @@ a.browse-thumbnail.active {
   height: 215px;
 }
 .mediumScroller.scrollerWithRatings .scrollerBody {
-  height: 230px;
+  height: 245px;
 }
 .mediumScroller .leftScrollerButton,
 .mediumScroller .rightScrollerButton {
@@ -10207,6 +10211,10 @@ a.browse-thumbnail.active {
 .mediumScroller .scrollerButtonUp,
 .mediumScroller .scrollerButtonDown {
   width: 223px;
+}
+/* Ensure the "View More" link appears above the bottom border when using tabs. */
+.collectionSpotlight.horizontal .tab-content {
+  padding-bottom: 30px;
 }
 /**
  * Additional Styling specific to the display of full records.

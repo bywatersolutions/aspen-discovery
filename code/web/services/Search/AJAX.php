@@ -260,10 +260,20 @@ class AJAX extends Action {
 		return $listData;
 	}
 
-	/** @noinspection PhpUnused */
-	function getSpotlightTitles() {
+	/**
+	 * Gets spotlight titles using a CollectionSpotlightList ID.
+	 *
+	 * Determines the list type (UserList, CourseReserve, or search-based) and
+	 * returns title data for display in a carousel/spotlight format.
+	 *
+	 * @return array
+	 *
+	 * @see CollectionSpotlightList
+	 * @noinspection PhpUnused
+	 */
+	function getSpotlightTitles(): array {
 		global $interface;
-		$listName = strip_tags(isset($_GET['scrollerName']) ? $_GET['scrollerName'] : 'List' . $_GET['id']);
+		$listName = strip_tags($_GET['scrollerName'] ?? 'List' . $_GET['id']);
 		$interface->assign('listName', $listName);
 
 		require_once ROOT_DIR . '/sys/LocalEnrichment/CollectionSpotlightList.php';
@@ -320,7 +330,7 @@ class AJAX extends Action {
 		} else {
 			return [
 				'success' => false,
-				'message' => 'Information for the carousel list could not be found',
+				'message' => 'Information for the carousel list could not be found.',
 			];
 		}
 	}

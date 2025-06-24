@@ -311,8 +311,8 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				$interface->assign('idsToShow', $idsToShow);
 			}
 
-			$materialsRequestsPerPage = isset($_REQUEST['pageSize']) && (is_numeric($_REQUEST['pageSize'])) ? $_REQUEST['pageSize'] : 30;
-			if($_REQUEST['pageSize'] == 'all')
+			$materialsRequestsPerPage = isset($_REQUEST['pageSize']) && (is_numeric($_REQUEST['pageSize']) || $_REQUEST['pageSize'] == 'all') ? $_REQUEST['pageSize'] : 30;
+			if($materialsRequestsPerPage == 'all')
 			{
 				$materialsRequestsPerPage = $materialsRequests->count();
 			}

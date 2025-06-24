@@ -8,8 +8,7 @@
  * @param style - The style of the scroller: vertical, horizontal, single, or text-list.
  * @return
  */
-function TitleScroller(scrollerId, scrollerShortName, container,
-					   autoScroll, style) {
+function TitleScroller(scrollerId, scrollerShortName, container, autoScroll, style) {
 	this.scrollerTitles = [];
 	this.currentScrollerIndex = 0;
 	this.numScrollerTitles = 0;

@@ -615,6 +615,7 @@ class WebBuilder_AJAX extends JSON_Action {
 						$result['message'] = 'The cell was deleted successfully';
 						global $interface;
 						$interface->assign('portalRow', $portalRow);
+						$interface->assign('inPageEditor', false);
 						$result['rowId'] = $portalCell->portalRowId;
 						$result['newRow'] = $interface->fetch('DataObjectUtil/portalRow.tpl');
 					} else {

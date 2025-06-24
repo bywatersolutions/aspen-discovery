@@ -1481,7 +1481,7 @@ class Sierra extends Millennium {
 				if ($totalCheckouts == -1) {
 					$totalCheckouts = $checkouts->total;
 				}
-				foreach ($checkouts->entries as $i => $entry) {
+				foreach ($checkouts->entries as $entry) {
 					$checkoutDueDate = strtotime($entry->dueDate);
 					$dueDate = strtotime('midnight', $checkoutDueDate);
 					$today = strtotime('midnight');
@@ -1491,7 +1491,7 @@ class Sierra extends Millennium {
 						$numOverdue++;
 					}
 				}
-				$numCheckoutsProcessed += $checkouts->total;
+				$numCheckoutsProcessed += count($checkouts->entries);
 			}
 			$summary->numCheckedOut = $totalCheckouts;
 			$summary->numOverdue = $numOverdue;

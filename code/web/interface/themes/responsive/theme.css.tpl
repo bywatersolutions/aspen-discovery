@@ -193,6 +193,10 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
     background: {$primaryBackgroundColor}07;
 {rdelim}
 
+.exploreMoreBar .jcarousel-control-prev, .exploreMoreBar .jcarousel-control-next{ldelim}
+	color: {$bodyTextColor}
+{rdelim}
+
 {if !empty($primaryForegroundColor)}
 #home-page-search-label,#home-page-advanced-search-link,#keepFiltersSwitchLabel,.menu-bar, #horizontal-menu-bar-container {ldelim}
     color: {$primaryForegroundColor}

@@ -4343,7 +4343,12 @@ class User extends DataObject {
 			'Administer Library Browse Categories',
 			'Administer Selected Browse Category Groups'
 		]);
-		$sections['local_enrichment']->addAction(new AdminAction('Collection Spotlights', 'Define spotlights that can be embedded within Aspen custom pages or other websites.', '/Admin/CollectionSpotlights'), [
+		$collectionSpotlightsAction = new AdminAction('Collection Spotlights', 'Define spotlights that can be embedded within Aspen custom pages or other websites.', '/Admin/CollectionSpotlights');
+		$sections['local_enrichment']->addAction($collectionSpotlightsAction, [
+			'Administer All Collection Spotlights',
+			'Administer Library Collection Spotlights',
+		]);
+		$collectionSpotlightsAction->addSubAction(new AdminAction('Collection Spotlight Lists', 'Define lists within each spotlight.', '/Admin/CollectionSpotlightLists'), [
 			'Administer All Collection Spotlights',
 			'Administer Library Collection Spotlights',
 		]);

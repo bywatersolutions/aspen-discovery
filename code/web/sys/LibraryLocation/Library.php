@@ -4971,7 +4971,7 @@ class Library extends DataObject {
 		if ($allThemes !== false && !empty($allThemes)) {
 			return reset($allThemes);
 		}else{
-			return null;
+			return $this->getOrSetDefaultLibraryTheme();
 		}
 	}
 
@@ -4993,6 +4993,22 @@ class Library extends DataObject {
 			}
 		}
 		return $this->_themes;
+	}
+	
+	/**
+	 * Find or create a default theme for use in cases where a library or location has no LibraryTheme or LocationTheme
+	 */
+	public function getOrSetDefaultLibraryTheme(): LibraryTheme {
+		require_once ROOT_DIR . '/sys/Theming/Theme.php';
+		$defaultTheme = new Theme;
+		$defaultLibraryTheme = new LibraryTheme;
+
+		$defaultLibraryTheme->themeId = $defaultTheme->getOrSetDefaultTheme()->id;
+		$defaultLibraryTheme->libraryId = $this->libraryId;
+		if(!$defaultLibraryTheme->find()) {
+			$defaultLibraryTheme->insert();
+		}
+		return $defaultLibraryTheme;
 	}
 
 	/**

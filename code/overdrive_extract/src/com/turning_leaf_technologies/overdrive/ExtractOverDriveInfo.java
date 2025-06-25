@@ -470,8 +470,8 @@ class ExtractOverDriveInfo {
 		isProductAvailableInOtherSettingsStmt = dbConn.prepareStatement("SELECT count(*) as availabilityCount from overdrive_api_product_availability where productId = ? and settingId <> ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		updateProductMetadataStmt = dbConn.prepareStatement("UPDATE overdrive_api_products SET lastMetadataCheck = ?, lastMetadataChange = ? where id = ?");
 		getExistingMetadataIdStmt = dbConn.prepareStatement("SELECT id, UNCOMPRESSED_LENGTH(rawData) as rawDataLength from overdrive_api_product_metadata where productId = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		addMetadataStmt = dbConn.prepareStatement("INSERT INTO overdrive_api_product_metadata (productId, checksum, sortTitle, publisher, publishDate, isPublicDomain, isPublicPerformanceAllowed, shortDescription, fullDescription, starRating, popularity, thumbnail, cover, isOwnedByCollections, rawData) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,COMPRESS(?))");
-		updateMetaDataStmt = dbConn.prepareStatement("UPDATE overdrive_api_product_metadata SET checksum = ?, sortTitle = ?, publisher = ?, publishDate = ?, isPublicDomain = ?, isPublicPerformanceAllowed = ?, shortDescription = ?, fullDescription = ?, starRating = ?, popularity = ?, thumbnail=?, cover=?, isOwnedByCollections=?, rawData=COMPRESS(?) WHERE id = ?");
+		addMetadataStmt = dbConn.prepareStatement("INSERT INTO overdrive_api_product_metadata (productId, checksum, sortTitle, publisher, publishDate, isPublicDomain, isPublicPerformanceAllowed, shortDescription, fullDescription, popularity, thumbnail, cover, isOwnedByCollections, rawData) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,COMPRESS(?))");
+		updateMetaDataStmt = dbConn.prepareStatement("UPDATE overdrive_api_product_metadata SET checksum = ?, sortTitle = ?, publisher = ?, publishDate = ?, isPublicDomain = ?, isPublicPerformanceAllowed = ?, shortDescription = ?, fullDescription = ?, popularity = ?, thumbnail=?, cover=?, isOwnedByCollections=?, rawData=COMPRESS(?) WHERE id = ?");
 		clearFormatsStmt = dbConn.prepareStatement("DELETE FROM overdrive_api_product_formats where productId = ?");
 		addFormatStmt = dbConn.prepareStatement("INSERT INTO overdrive_api_product_formats set id = NULL, productId = ?, textId = ?, numericId = ?, name = ?, fileName = ?, fileSize = ?, partCount = ?, sampleSource_1 = ?, sampleUrl_1 = ?, sampleSource_2 = ?, sampleUrl_2 = ? ON DUPLICATE KEY update id = id", PreparedStatement.RETURN_GENERATED_KEYS);
 		clearIdentifiersStmt = dbConn.prepareStatement("DELETE FROM overdrive_api_product_identifiers where productId = ?");
@@ -1166,7 +1166,6 @@ class ExtractOverDriveInfo {
 				updateMetaDataStmt.setBoolean(++curCol, metaData.has("isPublicPerformanceAllowed") && metaData.getBoolean("isPublicPerformanceAllowed"));
 				updateMetaDataStmt.setString(++curCol, metaData.has("shortDescription") ? metaData.getString("shortDescription") : "");
 				updateMetaDataStmt.setString(++curCol, metaData.has("fullDescription") ? metaData.getString("fullDescription") : "");
-				updateMetaDataStmt.setDouble(++curCol, metaData.has("starRating") ? metaData.getDouble("starRating") : 0);
 				updateMetaDataStmt.setInt(++curCol, metaData.has("popularity") ? metaData.getInt("popularity") : 0);
 				String thumbnail = "";
 				String cover = "";
@@ -1208,7 +1207,6 @@ class ExtractOverDriveInfo {
 				addMetadataStmt.setBoolean(++curCol, metaData.has("isPublicPerformanceAllowed") && metaData.getBoolean("isPublicPerformanceAllowed"));
 				addMetadataStmt.setString(++curCol, metaData.has("shortDescription") ? metaData.getString("shortDescription") : "");
 				addMetadataStmt.setString(++curCol, metaData.has("fullDescription") ? metaData.getString("fullDescription") : "");
-				addMetadataStmt.setDouble(++curCol, metaData.has("starRating") ? metaData.getDouble("starRating") : 0);
 				addMetadataStmt.setInt(++curCol, metaData.has("popularity") ? metaData.getInt("popularity") : 0);
 				String thumbnail = "";
 				String cover = "";

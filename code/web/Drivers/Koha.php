@@ -3664,7 +3664,7 @@ class Koha extends AbstractIlsDriver {
 			'userid' => $user->ils_barcode,
 		];
 
-		if (empty($user->ils_barcode)) {
+		if (empty($user->ils_password)) {
 			if ($user->isLoggedInViaSSO) {
 				// This is a limitation of using Koha pages to perform logins rather than API requests.
 				// In the future, with an API request, user verification could be performed without a password when a user has logged in to Aspen via SSO.

@@ -380,6 +380,9 @@ class CommunityEngagement_AJAX extends JSON_Action {
             $campaignMilestoneUsersProgress->insert();
         }
 
+		$userCampaign = new UserCampaign();
+		$userCampaign->checkAndHandleCampaignCompletion($userId, $campaignId);
+		
         echo json_encode([
             'title' => translate([
                     'text' => 'Progress Added',

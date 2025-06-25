@@ -366,10 +366,7 @@ class UInterface extends Smarty {
 					$allActiveThemes[$id] = $themeNames[$id];
 				}
 			} else {
-				$libraryPrimaryTheme = $library->getPrimaryTheme();
-				if (!empty($libraryPrimaryTheme)) {
-					$theme->id = $libraryPrimaryTheme->themeId;
-				}
+				$theme->id = $library->getPrimaryTheme()->themeId;
 				$allIds = [];
 				foreach ($library->getThemes() as $tmpTheme) {
 					$allIds[$tmpTheme->themeId] = $tmpTheme->themeId;

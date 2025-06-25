@@ -3630,4 +3630,27 @@ class Theme extends DataObject {
 		}
 		return $structure;
 	}
+
+	protected $_defaultTheme = null;
+
+	/**
+	 * Find or create a default theme for use in cases where a library or location has no LibraryTheme or LocationTheme
+	 */
+	public function getOrSetDefaultTheme(): Theme {
+		if ($this->_defaultTheme != null) {
+			return $this->_defaultTheme;
+		}
+
+		$defaultTheme = new Theme;
+		$defaultTheme->themeName = 'default';
+
+		if (!$defaultTheme->find(true)) {
+			$defaultTheme->displayName = 'default';
+			$defaultTheme->insert();
+		}
+
+		$this->_defaultTheme = clone $defaultTheme;
+
+		return $this->_defaultTheme;
+	}
 }

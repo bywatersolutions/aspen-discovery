@@ -74,12 +74,12 @@ class FileUpload extends DataObject {
 			$destFullPath = $this->fullPath;
 			if (extension_loaded('imagick')) {
 				try {
-					$thumb = new Imagick($destFullPath);
+					$thumb = new Imagick($destFullPath . '[0]');
 					$thumb->setResolution(150, 150);
 					$thumb->setImageBackgroundColor('white');
 					$thumb->setImageAlphaChannel(11);
 					$thumb->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
-					$thumb->readImage($destFullPath . '[0]');
+					//$thumb->readImage($destFullPath . '[0]');
 					$wroteOk = $thumb->writeImage($destFullPath . '.jpg');
 					$thumb->clear();
 					if ($wroteOk) {

@@ -4901,6 +4901,7 @@ class UserAPI extends AbstractAPI {
 			if (empty($_REQUEST['language']) && $user !== false) {
 				global $activeLanguage;
 				global $translator;
+				require_once ROOT_DIR . '/sys/Translation/Language.php';
 				$userLanguage = new Language();
 				$userLanguage->code = $user->interfaceLanguage;
 				if ($userLanguage->find(true)) {

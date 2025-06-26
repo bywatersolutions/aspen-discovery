@@ -238,6 +238,9 @@ class AspenEvent {
 					return allowableValues[Integer.parseInt(value)].trim();
 				}catch (ArrayIndexOutOfBoundsException e) {
 					//MDN 2/6/25 do additional handling and logging if we don't get a good value.
+					if (type == 2) { // Checkbox/boolean field.
+						return "0"; // Default to false/unchecked.
+					}
 					return "Unknown";
 				}
 			} else {

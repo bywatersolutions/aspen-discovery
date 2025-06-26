@@ -228,10 +228,12 @@ public class AspenEventsIndexer {
 				ArrayList<AspenEvent.EventField> extraFields = eventInfo.getFields();
 				for (AspenEvent.EventField field : extraFields) {
 					solrDocument.addField(field.getSolrFieldName(), field.getValue()); // Add as a dynamic field
-					if (field.getType() == 2) { // Handle checkbox/boolean facets
-						solrDocument.addField(field.getFacetName(), field.getValue().equals("1") ? "Yes" : "No");
-					} else if (!field.getFacetName().isEmpty()) {
-						solrDocument.addField(field.getFacetName(), field.getValue());
+					if (!field.getFacetName().isEmpty()) {
+						if (field.getType() == 2) { // Handle checkbox/boolean facets
+							solrDocument.addField(field.getFacetName(), field.getValue().equals("1") ? "Yes" : "No");
+						} else {
+							solrDocument.addField(field.getFacetName(), field.getValue());
+						}
 					}
 				}
 				if (eventInfo.getCover() != null && !eventInfo.getCover().isBlank() ) {

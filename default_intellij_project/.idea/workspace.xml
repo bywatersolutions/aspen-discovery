@@ -276,7 +276,7 @@
     </configuration>
     <configuration name="Series Indexer" type="Application" factoryName="Application">
       <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
-      <option name="MAIN_CLASS_NAME" value="com.turning_leaf_technologies.reindexer.SeriesIndexerMain" />
+      <option name="MAIN_CLASS_NAME" value="com.turning_leaf_technologies.series.SeriesMain" />
       <module name="series_indexer" />
       <option name="PROGRAM_PARAMETERS" value="model.localhost fullReindex" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../code/series_indexer" />

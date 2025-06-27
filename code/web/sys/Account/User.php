@@ -1347,6 +1347,7 @@ class User extends DataObject {
 			$structure['password']['maxLength'] = 50;
 			$structure['password']['note'] = translate(['text'=>'A strong password from 12 to 50 characters including at least one uppercase, lowercase, number, and special character (-_~!@#$%^&*.+).', 'isAdminFacing' => true]);
 			$structure['password']['serverValidation'] = 'validateStrongPassword';
+			$structure['password']['requireStrongPassword'] = true;
 
 			unset($structure['homeLibraryName']);
 			unset($structure['homeLocation']);

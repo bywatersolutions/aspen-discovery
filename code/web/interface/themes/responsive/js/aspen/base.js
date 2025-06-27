@@ -865,7 +865,7 @@ $.validator.addMethod('repeat', function(value, element){
 		var valueOriginal = aspenJQ('#' + idOriginal).val();
 		return value === valueOriginal;
 	}
-}, "Repeat fields do not match");
+}, "Repeat fields must match.");
 
 jQuery.validator.addMethod("pinConfirmation", function (value, element) {
 	if (this.optional(element)) {
@@ -883,3 +883,38 @@ if (!String.prototype.startsWith) {
 		}
 	});
 }
+
+jQuery.validator.addMethod("strongPassword", function(value, element) {
+	// Return true early if field is empty and not required.
+	if (value.length === 0 && !$(element).hasClass('required')) {
+		return true;
+	}
+
+	const uppercaseValid = /[A-Z]/.test(value);
+	const lowercaseValid = /[a-z]/.test(value);
+	const numberValid = /[0-9]/.test(value);
+	const specialValid = /[-_~!@#$%^&*.+]/.test(value);
+
+	$(element).data('pwdUpperValid', uppercaseValid);
+	$(element).data('pwdLowerValid', lowercaseValid);
+	$(element).data('pwdNumberValid', numberValid);
+	$(element).data('pwdSpecialValid', specialValid);
+
+	return uppercaseValid && lowercaseValid && numberValid && specialValid;
+}, function(params, element) {
+	const errors = [];
+	if (!$(element).data('pwdUpperValid')) {
+		errors.push('At least one uppercase letter is required.');
+	}
+	if (!$(element).data('pwdLowerValid')) {
+		errors.push('At least one lowercase letter is required.');
+	}
+	if (!$(element).data('pwdNumberValid')) {
+		errors.push('At least one number is required.');
+	}
+	if (!$(element).data('pwdSpecialValid')) {
+		errors.push('At least one special character (-_~!@#$%^&*.+) is required.');
+	}
+
+	return '<ul class="password-error-list" style="margin-top:5px; margin-bottom:0; padding-left:1.25em; list-style-type:disc"><li>' + errors.join('</li><li>') + '</li></ul>';
+});

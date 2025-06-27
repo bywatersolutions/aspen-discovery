@@ -989,9 +989,8 @@ class OverDriveDriver extends AbstractEContentDriver {
 		if (empty($reactivationDate)) {
 			$params['suspensionType'] = 'indefinite';
 		} else {
-			//OverDrive always seems to place the suspension for 2 days less than it should be
 			try {
-				$numberOfDaysToSuspend = (new DateTime())->diff(new DateTime($reactivationDate))->days + 2;
+				$numberOfDaysToSuspend = (new DateTime())->diff(new DateTime($reactivationDate))->days + 1;
 				$params['suspensionType'] = 'limited';
 				$params['numberOfDays'] = $numberOfDaysToSuspend;
 			} /** @noinspection PhpUnusedLocalVariableInspection */ catch (Exception $e) {

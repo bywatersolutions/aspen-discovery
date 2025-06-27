@@ -5003,7 +5003,7 @@ class Library extends DataObject {
 		$defaultTheme = new Theme;
 		$defaultLibraryTheme = new LibraryTheme;
 
-		$defaultLibraryTheme->themeId = $defaultTheme->getOrSetDefaultTheme()->id;
+		$defaultLibraryTheme->themeId = $defaultTheme->getDefaultTheme()->id;
 		$defaultLibraryTheme->libraryId = $this->libraryId;
 		if(!$defaultLibraryTheme->find()) {
 			$defaultLibraryTheme->insert();

@@ -3634,10 +3634,10 @@ class Theme extends DataObject {
 	protected $_defaultTheme = null;
 
 	/**
-	 * Find or create a default theme for use in cases where a library or location has no LibraryTheme or LocationTheme
+	 * Get the default theme or, failing that, get the first theme stored in the database
 	 */
-	public function getOrSetDefaultTheme(): Theme {
-		if ($this->_defaultTheme != null) {
+	public function getDefaultTheme( bool $resetTheme = false ): Theme {
+		if ($this->_defaultTheme != null && !$resetTheme) {
 			return $this->_defaultTheme;
 		}
 
@@ -3645,8 +3645,8 @@ class Theme extends DataObject {
 		$defaultTheme->themeName = 'default';
 
 		if (!$defaultTheme->find(true)) {
-			$defaultTheme->displayName = 'default';
-			$defaultTheme->insert();
+			unset($defaultTheme->themeName);
+			$defaultTheme->find(true);
 		}
 
 		$this->_defaultTheme = clone $defaultTheme;

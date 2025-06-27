@@ -2854,6 +2854,27 @@ class Location extends DataObject {
 		return Location::$locationListAsObjects;
 	}
 
+	/**
+	 * Get location list with Web Builder indexing status indicators from parent library.
+	 * @param boolean $restrictByHomeLibrary Whether locations for the patron's home library should be returned.
+	 * @param bool $valueIsCode Whether to use location code as the key instead of locationId.
+	 * @return array An associative array with locationId/code => "Location Name [status]".
+	 */
+	static function getLocationListWithWebBuilderStatus(bool $restrictByHomeLibrary, bool $valueIsCode = false): array {
+		$locationObjects = Location::getLocationListAsObjects($restrictByHomeLibrary);
+		$locationList = [];
+		foreach ($locationObjects as $locationId => $location) {
+			$displayName = $location->displayName;
+			$parentLibrary = $location->getParentLibrary();
+			if ($parentLibrary && $parentLibrary->enableWebBuilder == 0) {
+				$displayName .= ' (Library Indexing Disabled)';
+			}
+			$key = $valueIsCode ? $location->code : $locationId;
+			$locationList[$key] = $displayName;
+		}
+		return $locationList;
+	}
+
 	protected $_browseCategoryGroup = null;
 
 	/**

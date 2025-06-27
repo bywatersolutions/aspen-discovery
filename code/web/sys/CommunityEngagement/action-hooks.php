@@ -8,6 +8,59 @@ require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
 
 
 /**
+ * Check if a date falls within the campaign period
+ *
+ * @param int $date The date to check (unix timestamp)
+ * @param Campaign $campaign The campaign object
+ * @return bool True if date is within campaign period, false otherwise
+ */
+function _isDateWithinCampaignPeriod($date, $campaign) {
+	$campaignStartDate = strtotime($campaign->startDate);
+	$campaignEndDate = strtotime($campaign->endDate);
+
+	return $date >= $campaignStartDate && $date <= $campaignEndDate;
+}
+
+/**
+ * Process campaign milestone for a given object and date
+ *
+ * @param mixed $value The object being processed
+ * @param string $objectType The type of object ('user_checkout', 'user_hold', 'user_work_review')
+ * @param int $userId The user ID
+ * @param int $date The date to check (unix timestamp)
+ * @param mixed $groupedId The grouped work/record ID (optional)
+ */
+function _processCampaignMilestoneProgress($value, $objectType, $userId, $date, $groupedId = null) {
+	$campaignMilestone = CampaignMilestone::getCampaignMilestonesToUpdate($value, $objectType, $userId);
+	if (!$campaignMilestone) {
+		return;
+	}
+
+	while ($campaignMilestone->fetch()) {
+		$campaign = new Campaign();
+		$campaign->id = $campaignMilestone->campaignId;
+		if (!$campaign->find(true)) {
+			continue;
+		}
+
+		if (!_isDateWithinCampaignPeriod($date, $campaign)) {
+			continue;
+		}
+
+		if (_campaignMilestoneProgressEntryObjectAlreadyExists($value, $campaignMilestone)) {
+			continue;
+		}
+
+		$campaignMilestone->addCampaignMilestoneProgressEntry($value, $userId, $groupedId);
+
+		$userCampaign = new UserCampaign();
+		$userCampaign->userId = $userId;
+		$userCampaign->campaignId = $campaignMilestone->campaignId;
+		$userCampaign->checkAndHandleCampaignCompletion($userId, $campaignMilestone->campaignId);
+	}
+}
+
+/**
  * after_checkout_insert
  *
  * React to a new user_checkout being added to the database.
@@ -17,37 +70,7 @@ require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
  */
 
 add_action('after_object_insert', 'after_checkout_insert', function ($value) {
-	$campaignMilestone = CampaignMilestone::getCampaignMilestonesToUpdate($value, 'user_checkout', $value->userId);
-	if (!$campaignMilestone)
-		return;
-
-	while ($campaignMilestone->fetch()) {
-		$campaign = new Campaign();
-		$campaign->id = $campaignMilestone->campaignId;
-		if (!$campaign->find(true)) {
-			continue;
-		}
-		$checkoutDate = $value->checkoutDate;
-		$campaignEndDate = strtotime($campaign->endDate);
-
-		$campaignStartDate = strtotime($campaign->startDate);
-
-
-		if ($checkoutDate < $campaignStartDate || $checkoutDate > $campaignEndDate) {
-			continue;
-		}
-
-		if (_campaignMilestoneProgressEntryObjectAlreadyExists($value, $campaignMilestone))
-			return;
-
-		$campaignMilestone->addCampaignMilestoneProgressEntry($value, $value->userId, $value->groupedWorkId);
-
-        $userCampaign = new UserCampaign();
-		$userCampaign->userId = $value->userId;
-		$userCampaign->campaignId = $campaignMilestone->campaignId;
-        $userCampaign->checkAndHandleCampaignCompletion($value->userId, $campaignMilestone->campaignId);
-	}
-	return;
+	_processCampaignMilestoneProgress($value, 'user_checkout', $value->userId, $value->checkoutDate, $value->groupedWorkId);
 });
 
 /**;
@@ -60,35 +83,7 @@ add_action('after_object_insert', 'after_checkout_insert', function ($value) {
  */
 
 add_action('after_object_insert', 'after_hold_insert', function ($value) {
-	$campaignMilestone = CampaignMilestone::getCampaignMilestonesToUpdate($value, 'user_hold', $value->userId);
-	if (!$campaignMilestone)
-		return;
-
-	while ($campaignMilestone->fetch()) {
-		$campaign = new Campaign();
-		$campaign->id = $campaignMilestone->campaignId;
-		if (!$campaign->find(true)) {
-			continue;
-		}
-		$holdDate = $value->createDate;
-		$campaignStartDate = strtotime($campaign->startDate);
-		$campaignEndDate = strtotime($campaign->endDate);
-
-		if ($holdDate < $campaignStartDate || $holdDate > $campaignEndDate) {
-			continue;
-		}
-
-		if (_campaignMilestoneProgressEntryObjectAlreadyExists($value, $campaignMilestone))
-			return;
-
-		$campaignMilestone->addCampaignMilestoneProgressEntry($value, $value->userId, $value->groupedWorkId);
-
-		$userCampaign = new UserCampaign();
-		$userCampaign->userId = $value->userId;
-		$userCampaign->campaignId = $campaignMilestone->campaignId;
-        $userCampaign->checkAndHandleCampaignCompletion($value->userId, $campaignMilestone->campaignId);
-	}
-	return;
+	_processCampaignMilestoneProgress($value, 'user_hold', $value->userId, $value->createDate, $value->groupedWorkId);
 });
 
 /**
@@ -121,32 +116,7 @@ add_action('after_object_insert', 'after_hold_insert', function ($value) {
  */
 
 add_action('after_object_insert', 'after_work_review_insert', function ($value) {
-	$campaignMilestone = CampaignMilestone::getCampaignMilestonesToUpdate($value, 'user_work_review', $value->userId);
-	if (!$campaignMilestone)
-		return;
-
-	while ($campaignMilestone->fetch()) {
-		$campaign = new Campaign();
-		$campaign->id = $campaignMilestone->campaignId;
-		if (!$campaign->find(true)) {
-			continue;
-		}
-		$ratingDate = $value->dateRated;
-
-		$campaignStartDate = strtotime($campaign->startDate);
-		$campaignEndDate = strtotime($campaign->endDate);
-
-		if ($ratingDate < $campaignStartDate || $ratingDate > $campaignEndDate) {
-			continue;
-		}
-		$campaignMilestone->addCampaignMilestoneProgressEntry($value, $value->userId, $value->groupedRecordPermanentId);
-
-		$userCampaign = new UserCampaign();
-		$userCampaign->userId = $value->userId;
-		$userCampaign->campaignId = $campaignMilestone->campaignId;
-        $userCampaign->checkAndHandleCampaignCompletion($value->userId, $campaignMilestone->campaignId);
-	}
-	return;
+	_processCampaignMilestoneProgress($value, 'user_work_review', $value->userId, $value->dateRated, $value->groupedRecordPermanentId);
 });
 
 /**

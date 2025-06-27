@@ -132,7 +132,13 @@ class SMTPSetting extends DataObject {
 		}
 
 		$mail->Subject = $subject;
-		$mail->Body    = $htmlBody ?: $body;
+		if (!empty($htmlBody)) {
+			$mail->isHTML(true);
+			$mail->Body = $htmlBody;
+		} else {
+			$mail->isHTML(false);
+			$mail->Body = $body;
+		}
 
 		if(!$mail->send()) {
 			global $logger;

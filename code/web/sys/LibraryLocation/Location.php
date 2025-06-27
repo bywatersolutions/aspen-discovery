@@ -736,8 +736,8 @@ class Location extends DataObject {
 					'allowUpdatingHoursFromILS' => [
 						'property' => 'allowUpdatingHoursFromILS',
 						'type' => 'checkbox',
-						'label' => 'Automatically update hours from the ILS',
-						'description' => 'Whether closures should be automatically updated (Koha Only).',
+						'label' => 'Automatically Update with Closures from the ILS',
+						'description' => 'Whether closures should be automatically updated from the ILS.',
 						'hideInLists' => true,
 						'default' => 1,
 						'permissions' => ['Location ILS Connection'],
@@ -3201,6 +3201,7 @@ class Location extends DataObject {
 	 * Dynamically adjust object structure when editing an existing Location.
 	 * - Remove curbsidePickupInstructionsSetting if the ILS is not Koha.
 	 * - Disable and change the note of curbsidePickupInstructionsSetting if allowCheckIn is enabled.
+	 * - Remove allowUpdatingHoursFromILS if the ILS is not Koha.
 	 *
 	 * @param array $structure
 	 * @return array
@@ -3210,9 +3211,10 @@ class Location extends DataObject {
 		if ($parentLibrary) {
 			$accountProfile = $parentLibrary->getAccountProfile();
 			$ils = $accountProfile ? $accountProfile->ils : '';
-			// Currently, only Koha curbside pickups are implemented in Aspen.
 			if ($ils !== 'koha') {
+				// Currently, only Koha curbside pickups are implemented in Aspen.
 				unset($structure['ilsSection']['properties']['curbsidePickupInstructionsSetting']);
+				unset($structure['hoursSection']['properties']['allowUpdatingHoursFromILS']);
 			} else {
 				// Check if "Mark Arrived" is enabled in the CurbsidePickupSetting.
 				require_once ROOT_DIR . '/sys/CurbsidePickups/CurbsidePickupSetting.php';

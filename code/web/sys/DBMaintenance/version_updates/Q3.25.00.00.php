@@ -25,6 +25,13 @@ function getUpdatesQ3_25_00_00(): array {
 		// Myranda - Grove
 
 		//Yanjun Li - ByWater
+		'remove_starRating_from_overdrive_api_product_metadata' => [
+			'title' => 'Remove Star Rating from overdrive_api_product_metadata',
+			'description' => 'Remove starRating from overdrive_api_product_metadata table.',
+			'sql' => [
+				"ALTER TABLE overdrive_api_product_metadata DROP COLUMN starRating",
+			]
+		], //remove_starRating_from_overdrive_api_product_metadata
 
 		// Leo Stoyanov - BWS
 

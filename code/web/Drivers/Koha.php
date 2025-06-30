@@ -8457,7 +8457,7 @@ class Koha extends AbstractIlsDriver {
 
 	public function bypassReadingHistoryUpdate($patron, $isNightlyUpdate) : bool {
 		// Last seen only updates once a day so only do this check if we're running the nightly update.
-		if (!$isNightlyUpdate) {
+		if ($isNightlyUpdate) {
 			$this->initDatabaseConnection();
 			/** @noinspection SqlResolve */
 			$sql = "SELECT lastseen, dateexpiry FROM borrowers where borrowernumber = '" . mysqli_escape_string($this->dbConnection, $patron->unique_ils_id) . "'";

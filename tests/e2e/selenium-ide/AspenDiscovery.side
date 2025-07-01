@@ -2,7 +2,7 @@
   "id": "d60d9aae-607d-40a2-8429-66e9cd763fd9",
   "version": "2.0",
   "name": "Aspen Discovery",
-  "url": "https://galacto.library.nashville.org",
+  "url": "${url}",
   "tests": [{
     "id": "b7e7e197-4eeb-47f4-bafa-8ea141350a5e",
     "name": "020 Sign in",
@@ -53,7 +53,7 @@
         ["xpath=//div[@id='loginUsernameRow']/div/input", "xpath:idRelative"],
         ["xpath=//div[2]/div/input", "xpath:position"]
       ],
-      "value": "9999008"
+      "value": "${username}"
     }, {
       "id": "48b75850-276a-43c3-a7cd-caee3174b89c",
       "comment": "",
@@ -67,7 +67,7 @@
         ["xpath=//div[@id='loginPasswordRow']/div/input", "xpath:idRelative"],
         ["xpath=//div[3]/div/input", "xpath:position"]
       ],
-      "value": "zzzz"
+      "value": "${invalidPassword}"
     }, {
       "id": "7f5c44a6-4f2b-4983-82ce-41300bc0a158",
       "comment": "",
@@ -95,7 +95,7 @@
         ["xpath=//div[@id='loginPasswordRow']/div/input", "xpath:idRelative"],
         ["xpath=//div[3]/div/input", "xpath:position"]
       ],
-      "value": "7357"
+      "value": "${password}"
     }, {
       "id": "4a99242d-647d-4ce0-86e3-38e7c53db13d",
       "comment": "",
@@ -792,6 +792,11 @@
     "timeout": 300,
     "tests": ["b7e7e197-4eeb-47f4-bafa-8ea141350a5e"]
   }],
-  "urls": ["https://galacto.library.nashville.org/"],
-  "plugins": []
+  "urls": ["${url}/"],
+  "plugins": [
+    {
+      "id": "load-config",
+      "path": "../load-config.js"
+    }
+  ]
 }

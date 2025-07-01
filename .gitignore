@@ -41,6 +41,7 @@ code/web/node_modules
 tests/jmeter/results/*
 tests/selenium/*
 tests/conf/config.ini
+tests/e2e/site-test-config.json
 data-import
 config.pwd.ini
 author_authorities.properties.temp
@@ -234,3 +235,5 @@ phpstorm_project
 code/aspen_app/updaterInternal.sh
 code/aspen_app/%ProgramData%/Microsoft/Windows/UUS/State/_active.uusver
 data_dir_setup/.idea/workspace.xml
+sites/nashville.aspenlocal
+sites/nashville.production

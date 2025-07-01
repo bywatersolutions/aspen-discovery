@@ -1,0 +1,8 @@
+{
+  "url": "https://example.library.org",
+  "credentials": {
+    "username": "1234567",
+    "password": "example_password",
+    "invalidPassword": "wrong_password"
+  }
+}

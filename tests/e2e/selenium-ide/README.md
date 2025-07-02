@@ -7,7 +7,11 @@ This directory contains Selenium IDE tests for Aspen Discovery.
 - `selenium-ide/` - Contains the original test files with variables
   - `sites/` - Contains site-specific configuration files and processed test files
     - `example/` - Example site directory (included in git)
+      - `conf/` - Example configuration files for the example site (included in git)
+        - `example-test-config.json` - Example configuration file (included in git)
     - `[site-name]/` - Site-specific directories (not included in git)
+      - `conf/` - Site-specific configuration files (not included in git)
+        - `[site-name]-test-config.json` - Site-specific configuration file (not included in git)
 
 ## Setup
 
@@ -49,19 +53,19 @@ node prepare-selenium-tests.js
 ```
 
 Any of these methods will:
-1. Find all site configuration files in `selenium-ide/sites/[siteName]/[siteName]-test-config.json`
+1. Find all site configuration files in `selenium-ide/sites/[siteName]/conf/[siteName]-test-config.json`
 2. Create site-specific directories based on the site names if they don't exist
 3. Process the test file for each site by replacing variables with values from the configurations
-4. Save the processed files to `selenium-ide/sites/[siteName]/AspenDiscovery.processed.side`
+4. Save the processed files to `selenium-ide/sites/[siteName]/`
 
 ### Step 2: Open the Processed File in Selenium IDE
 
-1. Install the Selenium IDE extension for Firefox.
-2. Open Selenium IDE in Firefox.
+1. Install the Selenium IDE extension for Chrome.
+2. Open Selenium IDE in Chrome.
 3. Click "Open an existing project".
 4. Navigate to and select the processed file from your site directory: `selenium-ide/sites/[siteName]/AspenDiscovery.processed.side`.
 
-**Important:** Always open the processed file (`AspenDiscovery.processed.side`), not the original file (`AspenDiscovery.side`). The original file contains variables that need to be replaced before running the tests.
+**Important:** Always open the processed file in your site directory, not the original file in the `test-templates` directory. The original file contains variables that need to be replaced before running the tests.
 
 **Note:** Each site has its own directory under `selenium-ide/sites/` where processed test files are stored. This ensures that site-specific test files don't accidentally get committed to the shared repository. Only the `example` site directory is included in git.
 
@@ -79,12 +83,7 @@ It means you're trying to open the original file with variables instead of the p
 
 ## Updating the Tests
 
-If you make changes to the tests in Selenium IDE:
-
-1. Export the project from Selenium IDE.
-2. Save it as `selenium-ide/AspenDiscovery.side`.
-3. Make sure to use variables like `${url}`, `${username}`, `${password}`, and `${invalidPassword}` instead of hardcoded values.
-4. Run `node prepare-selenium-tests.js` again to create updated processed files for all sites.
+// TO DO: Add instructions for updating tests
 
 ## Adding a New Site
 
@@ -94,10 +93,13 @@ To add a new site:
    ```
    mkdir selenium-ide/sites/[site-name]
    ```
-2. Create a configuration file named `[site-name]-test-config.json` in the new directory:
+2. Create a configuration directory within your site directory:
    ```
-   cp selenium-ide/sites/example/example-test-config.json selenium-ide/sites/[site-name]/[site-name]-test-config.json
+   mkdir selenium-ide/sites/[site-name]/conf
+   ```
+3. Create a configuration file named `[site-name]-test-config.json` in the new `conf/` directory:
+   ```
+   cp selenium-ide/sites/example/conf/example-test-config.json selenium-ide/sites/[site-name]/conf/[site-name]-test-config.json
    ```
 3. Edit the configuration file to set your site-specific values.
-4. Run `node prepare-selenium-tests.js` to process the test file for your new site.
-5. The processed file will be available at `selenium-ide/sites/[site-name]/AspenDiscovery.processed.side`.
+4. Follow the steps in the "Running the Tests" section to prepare and run the tests for your new site.

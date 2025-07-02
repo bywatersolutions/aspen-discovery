@@ -42,8 +42,10 @@ class Admin_Permissions extends Admin_Admin {
 								unset($_REQUEST['permission'][$permObj->id]);
 							}
 						}
-						// Apply the selected permission.
-						$_REQUEST['permission'][$selectedPermId] = 1;
+						// Apply the selected permission if one was selected (i.e., not "None").
+						if (!empty($selectedPermId)) {
+							$_REQUEST['permission'][$selectedPermId] = 1;
+						}
 					}
 				}
 			}

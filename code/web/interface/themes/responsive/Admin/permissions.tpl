@@ -80,6 +80,7 @@
 											</th>
 											<td class="text-right">
 												<select name="permissionGroup[{$groupKey}]" class="form-control input-sm">
+													<option value="">{translate text="None" isAdminFacing=true}</option>
 													{foreach from=$groupDef.permissions item=permName}
 														{foreach from=$sectionPermissions key=permId item=permObj}
 															{if $permObj->name == $permName}

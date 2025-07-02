@@ -35,12 +35,14 @@ function getUpdatesQ3_25_00_00(): array {
 
 		// Leo Stoyanov - BWS
 		'rollback_administer_side_loads_name' => [
-			'title' => 'INSURANCE: Revert "Administer All Side Loads" Permission Name to "Administer Side Loads"',
-			'description' => 'Revert the permission name "Administer All Side Loads" back to "Administer Side Loads". 
-			This is primarily for those testing, especially as the SQL updates below use the old name before changing it.',
+			'title' => 'Clean Slate: Revert Permission Changes and Drop Permission Group Tables',
+			'description' => 'Provides a clean slate by reverting permission name changes and dropping permission group tables if they exist. 
+			This is primarily for those testing and allows complete rollback of permission group functionality.',
 			'continueOnError' => false,
 			'sql' => [
 				"UPDATE permissions SET name = 'Administer Side Loads' WHERE name = 'Administer All Side Loads'",
+				"DROP TABLE IF EXISTS permission_group_permissions",
+				"DROP TABLE IF EXISTS permission_groups",
 			],
 		], // rollback_administer_side_loads_name
 		'permission_groups_and_mappings' => [
@@ -103,7 +105,8 @@ function getUpdatesQ3_25_00_00(): array {
 					('adminQuickPolls','Web Builder','Administer Quick Polls','Specify whether the role can manage all quick polls or only those for its library.'),
 					('adminGrapesPages','Web Builder','Administer Grapes Pages','Specify whether the role can manage all Grapes pages or only those for its library.'),
 					('adminCustomWebResourcePages','Web Builder','Administer Custom Web Resource Pages','Specify whether the role can manage all custom web resource pages or only those for its library.'),
-					('adminSideLoads','Cataloging & eContent','Administer Side Loads','Specify whether the role can manage side loads globally, for its home library, or manage side load scopes for its home library.')",
+					('adminSideLoads','Cataloging & eContent','Administer Side Loads','Specify whether the role can manage side loads globally, for its home library, or manage side load scopes for its home library.'),
+					('adminWebContent','Web Builder','Administer Web Content','Specify whether the role can manage all web content (i.e., images and PDFs) or only those for its library.')",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Browse Categories','Administer Library Browse Categories','Administer Selected Browse Category Groups') WHERE pg.groupKey = 'adminBrowseCategories'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Collection Spotlights','Administer Library Collection Spotlights') WHERE pg.groupKey = 'admincollectionSpotlights'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Placards','Administer Library Placards', 'Edit Library Placards') WHERE pg.groupKey = 'adminPlacards'",
@@ -140,6 +143,7 @@ function getUpdatesQ3_25_00_00(): array {
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Grapes Pages','Administer Library Grapes Pages') WHERE pg.groupKey = 'adminGrapesPages'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Custom Web Resource Pages','Administer Library Custom Web Resource Pages') WHERE pg.groupKey = 'adminCustomWebResourcePages'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer Side Loads','Administer Side Loads for Home Library', 'Administer Side Load Scopes for Home Library') WHERE pg.groupKey = 'adminSideLoads'",
+				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Web Content','Administer Web Content for Home Library') WHERE pg.groupKey = 'adminWebContent'",
 			],
 		], // permission_groups_and_mappings
 		'cleanup_mutually_exclusive_permissions' => [
@@ -518,6 +522,17 @@ function getUpdatesQ3_25_00_00(): array {
 				 JOIN permissions p2 ON rp2.permissionId = p2.id
 				 WHERE p1.name = 'Administer Side Load Scopes for Home Library'
 				 AND p2.name = 'Administer Side Loads for Home Library'",
+
+				// adminWebContent - priority: All > Home Library
+				// "Administer Web Content for Home Library" is a new permission as of 25.07.00, so this
+				// DELETE operation should not be necessary, but best to make any corrections just in case.
+				"DELETE rp1
+				 FROM role_permissions rp1
+				 JOIN permissions p1 ON rp1.permissionId = p1.id
+				 JOIN role_permissions rp2 ON rp1.roleId = rp2.roleId
+				 JOIN permissions p2 ON rp2.permissionId = p2.id
+				 WHERE p1.name = 'Administer Web Content for Home Library'
+				 AND p2.name = 'Administer All Web Content'",
 			],
 		], // cleanup_mutually_exclusive_permissions
 		'update_administer_side_loads_name' => [

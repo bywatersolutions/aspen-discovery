@@ -6,8 +6,8 @@ var path = require('path');
 function processSite(siteName) {
   console.log('Processing site:', siteName);
 
-  // Path to the site-specific config file
-  var configPath = path.join(__dirname, 'selenium-ide', 'sites', siteName, siteName + '-test-config.json');
+  // Path to the site-specific config file in conf subdirectory
+  var configPath = path.join(__dirname, 'sites', siteName, 'conf', siteName + '-test-config.json');
 
   // Load the configuration file
   var config;
@@ -22,7 +22,7 @@ function processSite(siteName) {
   }
 
   // Create the site directory if it doesn't exist
-  var siteDir = path.join(__dirname, 'selenium-ide', 'sites', siteName);
+  var siteDir = path.join(__dirname, 'sites', siteName);
 
   try {
     if (!fs.existsSync(siteDir)) {
@@ -34,34 +34,57 @@ function processSite(siteName) {
     return null;
   }
 
-  // Path to the Selenium IDE test file
-  var sideFilePath = path.join(__dirname, 'selenium-ide', 'AspenDiscovery.side');
-  var processedFilePath = path.join(siteDir, 'AspenDiscovery.processed.side');
+  // Find all .side files in the current directory
+	var sideFilesPath = path.join(__dirname, 'test-templates');
+  var sideFiles = fs.readdirSync(sideFilesPath)
+    .filter(function(file) { return file.endsWith('.side'); });
 
-  try {
-    // Read the Selenium IDE test file
-    var sideFileContent = fs.readFileSync(sideFilePath, 'utf8');
-
-    // Replace variables with values from config
-    var processedContent = sideFileContent
-      .replace(/\${url}/g, config.url)
-      .replace(/\${username}/g, config.credentials.username)
-      .replace(/\${password}/g, config.credentials.password)
-      .replace(/\${invalidPassword}/g, config.credentials.invalidPassword);
-
-    // Write the processed content to the site-specific directory
-    fs.writeFileSync(processedFilePath, processedContent, 'utf8');
-    console.log('Processed Selenium IDE test file created successfully at:', processedFilePath);
-
-    return config;
-  } catch (error) {
-    console.error('Error processing Selenium IDE test file for site ' + siteName + ':', error.message);
+  if (sideFiles.length === 0) {
+    console.error('No .side files found in the directory.');
     return null;
   }
+
+  // For each .side file, process and output to the site directory
+  sideFiles.forEach(function(sideFile) {
+    var sideFilePath = path.join(sideFilesPath, sideFile);
+    var processedFilePath = path.join(siteDir, sideFile.replace('.side', '.' + siteName + '.side'));
+    try {
+      var sideFileContent = fs.readFileSync(sideFilePath, 'utf8');
+      // Generalized variable replacement: replace any ${varName} with config[varName], supporting nested properties like ${credentials.username}
+      function flattenConfig(obj, prefix = '', res = {}) {
+        for (const key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const value = obj[key];
+            const newKey = prefix ? `${prefix}.${key}` : key;
+            if (typeof value === 'object' && value !== null) {
+              flattenConfig(value, newKey, res);
+            } else {
+              res[newKey] = value;
+            }
+          }
+        }
+        return res;
+      }
+      var flatConfig = flattenConfig(config);
+      var processedContent = sideFileContent.replace(/\${([\w.]+)}/g, function(match, varName) {
+        if (flatConfig.hasOwnProperty(varName)) {
+          return flatConfig[varName];
+        } else {
+          // If variable not found, leave as-is or replace with empty string
+          return match;
+        }
+      });
+      fs.writeFileSync(processedFilePath, processedContent, 'utf8');
+      console.log('Processed Selenium IDE test file created successfully at:', processedFilePath);
+    } catch (error) {
+      console.error('Error processing', sideFile, 'for site', siteName + ':', error.message);
+    }
+  });
+  return config;
 }
 
 // Get all site directories
-var sitesDir = path.join(__dirname, 'selenium-ide', 'sites');
+var sitesDir = path.join(__dirname, 'sites');
 var processedSites = [];
 
 // Process all sites
@@ -87,20 +110,15 @@ if (processedSites.length === 0) {
 console.log('Successfully processed ' + processedSites.length + ' site(s):', processedSites.join(', '));
 console.log('Please open the processed file in Selenium IDE instead of the original file.');
 
-// Export the configuration variables for use in Selenium IDE
+// Export the entire defaultConfig object for generalized variable support
 var defaultSite = processedSites[0];
-var defaultConfigPath = path.join(__dirname, 'selenium-ide', 'sites', defaultSite, defaultSite + '-test-config.json');
+var defaultConfigPath = path.join(__dirname, 'sites', defaultSite, 'conf', defaultSite + '-test-config.json');
 
 try {
   var defaultConfigData = fs.readFileSync(defaultConfigPath, 'utf8');
   var defaultConfig = JSON.parse(defaultConfigData);
 
-  module.exports = {
-    url: defaultConfig.url,
-    username: defaultConfig.credentials.username,
-    password: defaultConfig.credentials.password,
-    invalidPassword: defaultConfig.credentials.invalidPassword
-  };
+  module.exports = defaultConfig;
 } catch (error) {
   console.error('Error loading default configuration for export:', error.message);
   process.exit(1);

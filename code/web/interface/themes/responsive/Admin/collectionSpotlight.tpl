@@ -53,7 +53,7 @@
 	<div id="selectedSpotlightLibrary" class="well well-sm">{$object->getLibraryName()}</div>
 	<h4>{translate text="Description" isAdminFacing=true}</h4>
 	<div id="selectedSpotlightDescription" class="well well-sm">{$object->description}</div>
-	<h4>{translate text="Number of Items to Display" isAdminFacing=true}/h4>
+	<h4>{translate text="Number of Items to Display" isAdminFacing=true}</h4>
 		<div id="maxTitlesToShow" class="well well-sm">{$object->numTitlesToShow}</div>
 		<h4>{translate text="Spotlight Style" isAdminFacing=true}</h4>
 		{assign var=selectedStyle value=$object->style}

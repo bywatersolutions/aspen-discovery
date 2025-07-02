@@ -1,0 +1,135 @@
+{
+  "id": "aspen-e2e-suite",
+  "version": "2.0",
+  "name": "Aspen Discovery E2E Suite",
+  "url": "${url}",
+  "tests": [
+    {
+      "id": "010-open",
+      "name": "010 Open",
+      "commands": [
+        {"id": "open-site", "comment": "Open the Aspen Discovery site", "command": "open", "target": "/", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "020-sign-in",
+      "name": "020 Sign in",
+      "commands": [
+        {"id": "run-open", "comment": "Open the site", "command": "run", "target": "010 Open", "targets": [], "value": ""},
+        {"id": "verify-login-btn", "command": "verifyElementPresent", "target": "id=login-button-label", "targets": [], "value": ""},
+        {"id": "click-login-btn", "command": "click", "target": "id=login-button-label", "targets": [], "value": ""},
+        {"id": "verify-username", "command": "verifyElementPresent", "target": "id=username", "targets": [], "value": ""},
+        {"id": "type-username", "command": "type", "target": "id=username", "targets": [], "value": "${patron.username}"},
+        {"id": "type-invalid-password", "command": "type", "target": "id=password", "targets": [], "value": "${patron.invalidPassword}"},
+        {"id": "click-login-submit-invalid", "command": "click", "target": "id=loginFormSubmit", "targets": [], "value": ""},
+        {"id": "type-password", "command": "type", "target": "id=password", "targets": [], "value": "${patron.password}"},
+        {"id": "click-login-submit", "command": "click", "target": "id=loginFormSubmit", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "030-place-holds",
+      "name": "030 Place holds",
+      "commands": [
+        {"id": "run-open", "comment": "Open the site", "command": "run", "target": "010 Open", "targets": [], "value": ""},
+        {"id": "run-sign-in", "comment": "Ensure user is signed in", "command": "run", "target": "020 Sign in", "targets": [], "value": ""},
+        {"id": "search-home", "command": "open", "target": "/", "targets": [], "value": ""},
+        {"id": "search-click", "command": "click", "target": "id=lookfor", "targets": [], "value": ""},
+        {"id": "search-type", "command": "type", "target": "id=lookfor", "targets": [], "value": "aspendiscovery"},
+        {"id": "search-submit", "command": "click", "target": "css=.col-xs-6 > .btn", "targets": [], "value": ""},
+        {"id": "click-place-hold", "command": "click", "target": "linkText=Place Hold", "targets": [], "value": ""},
+        {"id": "click-request-title", "command": "click", "target": "id=requestTitleButton", "targets": [], "value": ""},
+        {"id": "close-modal", "command": "click", "target": "css=.modal-footer > .btn", "targets": [], "value": ""},
+        {"id": "click-place-hold-2", "command": "click", "target": "xpath=(//a[contains(text(),'Place Hold')])[3]", "targets": [], "value": ""},
+        {"id": "wait-request-title", "command": "waitForElementPresent", "target": "id=requestTitleButton", "targets": [], "value": "1000"},
+        {"id": "click-request-title-2", "command": "click", "target": "id=requestTitleButton", "targets": [], "value": ""},
+        {"id": "close-modal-2", "command": "click", "target": "css=.modal-footer > .btn", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "038-cancel-hold",
+      "name": "038 Cancel hold",
+      "commands": [
+        {"id": "run-open", "comment": "Open the site", "command": "run", "target": "010 Open", "targets": [], "value": ""},
+        {"id": "open-holds", "command": "open", "target": "/MyAccount/Holds?source=all", "targets": [], "value": ""},
+        {"id": "click-cancel-hold", "command": "click", "target": "css=.btn-group-vertical > .btn-warning", "targets": [], "value": ""},
+        {"id": "assert-cancel-modal", "command": "assertText", "target": "css=.tool", "targets": [], "value": "Confirm Cancel Hold"},
+        {"id": "confirm-cancel", "command": "click", "target": "css=.tool", "targets": [], "value": ""},
+        {"id": "assert-success", "command": "assertElementPresent", "target": "css=.alert-success", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "035-freeze-hold",
+      "name": "035 Freeze hold",
+      "commands": [
+        {"id": "open-holds-freeze", "command": "open", "target": "/MyAccount/Holds?source=all", "targets": [], "value": ""},
+        {"id": "assert-freeze-btn", "command": "assertText", "target": "css=.result:nth-child(1) .btn:nth-child(2)", "targets": [], "value": "Freeze Hold"},
+        {"id": "click-freeze-btn", "command": "click", "target": "css=.result:nth-child(1) .btn:nth-child(2)", "targets": [], "value": ""},
+        {"id": "click-reactivation-date", "command": "click", "target": "id=reactivationDate", "targets": [], "value": ""},
+        {"id": "set-reactivation-date", "command": "executeScript", "target": "function addDays(date, days) {   var result = new Date(date);   result.setDate(result.getDate() + days);   return result; }  var d=new Date();   d=addDays(d,28);   var r = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); return r;", "targets": [], "value": "rDate"},
+        {"id": "type-reactivation-date", "command": "type", "target": "id=reactivationDate", "targets": [], "value": "${rDate}"},
+        {"id": "submit-freeze", "command": "click", "target": "id=doFreezeHoldWithReactivationDate", "targets": [], "value": ""},
+        {"id": "assert-freeze-success", "command": "assertElementPresent", "target": "css=.alert-success", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "037-change-pickup-location",
+      "name": "037 Change pickup location",
+      "commands": [
+        {"id": "open-holds-change-pickup", "command": "open", "target": "/MyAccount/Holds?source=all", "targets": [], "value": ""},
+        {"id": "click-change-pickup", "command": "click", "target": "css=.result:nth-child(1) .btn:nth-child(3)", "targets": [], "value": ""},
+        {"id": "select-new-pickup", "command": "click", "target": "id=newPickupLocation", "targets": [], "value": ""},
+        {"id": "choose-new-pickup", "command": "select", "target": "id=newPickupLocation", "targets": [], "value": "index=1"},
+        {"id": "submit-change-pickup", "command": "click", "target": "css=.tool", "targets": [], "value": ""},
+        {"id": "verify-change-pickup-success", "command": "verifyText", "target": "css=.modal-body", "targets": [], "value": "The hold has been updated"}
+      ]
+    },
+    {
+      "id": "036-thaw-hold",
+      "name": "036 Thaw hold",
+      "commands": [
+        {"id": "open-holds-thaw", "command": "open", "target": "/MyAccount/Holds?source=all", "targets": [], "value": ""},
+        {"id": "assert-thaw-btn", "command": "assertText", "target": "css=.result:nth-child(1) .btn:nth-child(2)", "targets": [], "value": "Thaw Hold"},
+        {"id": "click-thaw-btn", "command": "click", "target": "css=.result:nth-child(1) .btn:nth-child(2)", "targets": [], "value": ""},
+        {"id": "assert-thaw-success", "command": "assertElementPresent", "target": "css=.alert-success", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "039-cancel-all-holds",
+      "name": "039 Cancel all holds",
+      "commands": [
+        {"id": "open-holds-cancel-all", "command": "open", "target": "/MyAccount/Holds?source=all", "targets": [], "value": ""},
+        {"id": "click-cancel-all", "command": "click", "target": "linkText=Cancel All", "targets": [], "value": ""},
+        {"id": "confirm-cancel-all", "command": "chooseOkOnNextConfirmation", "target": "", "targets": [], "value": ""},
+        {"id": "assert-cancel-all-success", "command": "assertElementPresent", "target": "css=.alert-success", "targets": [], "value": ""}
+      ]
+    },
+    {
+      "id": "999-close-browser",
+      "name": "999 Close Browser",
+      "commands": [
+        {"id": "close-browser", "comment": "Close the browser window", "command": "close", "target": "", "targets": [], "value": ""}
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "id": "aspen-e2e-suite",
+      "name": "Aspen Discovery E2E Suite",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 600,
+      "tests": [
+        "010-open",
+        "020-sign-in",
+        "030-place-holds",
+        "038-cancel-hold",
+        "035-freeze-hold",
+        "037-change-pickup-location",
+        "036-thaw-hold",
+        "039-cancel-all-holds",
+        "999-close-browser"
+      ]
+    }
+  ],
+  "urls": ["${url}/"]
+}

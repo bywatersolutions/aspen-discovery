@@ -4885,6 +4885,8 @@ class User extends DataObject {
 					$validPermissions[] = $permissionName;
 				} elseif ($permissionName == 'Administer Home Library' && (in_array('Administer All Libraries', $guidingUserPermissions))) {
 					$validPermissions[] = $permissionName;
+				} elseif (($permissionName == 'Administer Side Loads for Home Library' || 'Administer Side Load Scopes for Home Library') && (in_array('Administer All Side Loads', $guidingUserPermissions))) {
+					$validPermissions[] = $permissionName;
 				}
 			}
 		}

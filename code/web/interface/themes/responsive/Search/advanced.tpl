@@ -184,7 +184,7 @@
 															<select name="filter[]" class="form-control" aria-label="{translate text=$facetInfo.facetLabel inAttribute=true isPublicFacing=true}">
 																{foreach from=$facetInfo.values item="value" key="display"}
 																	{if strlen($display) > 0}
-																		<option value="{$value.filter|escape}"{if !empty($value.selected)} selected="selected"{/if}>{$value.display|escape|truncate:80}</option>
+																		<option value="{$value.filter|escape}"{if !empty($value.selected)} selected="selected"{/if}>{$value.display|truncate:80}</option>
 																	{/if}
 																{/foreach}
 															</select>

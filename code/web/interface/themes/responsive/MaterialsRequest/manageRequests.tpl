@@ -104,6 +104,27 @@
 		</div>
 		{if count($allRequests) > 0}
 			<form id="updateRequests" method="post" action="/MaterialsRequest/ManageRequests" class="form form-horizontal">
+				{foreach from=$statusFilter item=status}
+					<input type="hidden" name="statusFilter[]" value="{$status}">
+				{/foreach}
+				{foreach from=$formatFilter item=format}
+					<input type="hidden" name="formatFilter[]" value="{$format}">
+				{/foreach}
+				{if !empty($showUnassigned)}
+					<input type="hidden" name="showUnassigned" value="on">
+				{/if}
+				{foreach from=$assigneesFilter item=assignee}
+					<input type="hidden" name="assigneesFilter[]" value="{$assignee}">
+				{/foreach}
+				{if !empty($startDate)}
+					<input type="hidden" name="startDate" value="{$startDate}">
+				{/if}
+				{if !empty($endDate)}
+					<input type="hidden" name="endDate" value="{$endDate}">
+				{/if}
+				{if !empty($idsToShow)}
+					<input type="hidden" name="idsToShow" value="{$idsToShow}">
+				{/if}
 				<div class="form-group col-xs-4">
 					<label for="pageSize" class="control-label">{translate text="Entries Per Page" isAdminFacing=true}&nbsp;</label>
 					<select id="pageSize" name="pageSize" class="pageSize form-control input-sm" onchange="AspenDiscovery.changePageSize()">

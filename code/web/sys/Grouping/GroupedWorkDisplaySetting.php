@@ -100,7 +100,7 @@ class GroupedWorkDisplaySetting extends DataObject {
 		'showLanguages' => 'Show Language',
 		'showArInfo' => 'Show Accelerated Reader Information',
 		'showLexileInfo' => 'Show Lexile Information',
-		'showFountasPinnell' => 'Show Fountas &amp; Pinnell Information  (This data must be present in MARC records)',
+		'showFountasPinnell' => 'Show Fountas & Pinnell Information  (This data must be present in MARC records.)',
 		'showAudience' => 'Audience',
 	];
 
@@ -116,7 +116,7 @@ class GroupedWorkDisplaySetting extends DataObject {
 		'showISBNs' => 'ISBNs / ISSNs',
 		'showArInfo' => 'Show Accelerated Reader Information',
 		'showLexileInfo' => 'Show Lexile Information',
-		'showFountasPinnell' => 'Show Fountas &amp; Pinnell Information  (This data must be present in MARC records)',
+		'showFountasPinnell' => 'Show Fountas & Pinnell Information  (This data must be present in MARC records.)',
 		'showAudience' => 'Audience',
 	];
 

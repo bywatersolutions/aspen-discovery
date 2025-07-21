@@ -1718,9 +1718,12 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 		for (String printFormat : printFormats) {
 			FormatMapValue formatMapValue = settings.getFormatMapValue(printFormat, BaseIndexingSettings.FORMAT_TYPE_BIB_LEVEL);
 			if (formatMapValue != null) {
+				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Translating bib level format '" + printFormat + "' to '" + formatMapValue.getFormat() + "' using the Format Map", 2);}
 				recordInfo.addFormat(formatMapValue.getFormat());
 				recordInfo.addFormatCategory(formatMapValue.getFormatCategory());
 				recordInfo.setFormatBoost(formatMapValue.getFormatBoost());
+			} else {
+				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("No format mapping found for bib level format '" + printFormat + "' (appliesToBibLevel may be unchecked).", 2);}
 			}
 		}
 	}

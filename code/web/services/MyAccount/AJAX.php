@@ -6784,10 +6784,10 @@ class MyAccount_AJAX extends JSON_Action {
 			$params = implode('&', $paramList);
 
 			$tokenResults = $payflowTokenRequest->curlSendPage($tokenRequestUrl, 'POST', $params);
+			ExternalRequestLogEntry::logRequest('fine_payment.getPayflowToken', 'POST', $tokenRequestUrl, $payflowTokenRequest->getHeaders(), $params, $payflowTokenRequest->getResponseCode(), $tokenResults, []);
 			$tokenResults = PayPalPayflowSetting::parsePayflowString($tokenResults);
 
 			if ($tokenResults['RESULT'] != 0) {
-				ExternalRequestLogEntry::logRequest('fine_payment.getPayflowToken', 'POST', $tokenRequestUrl, $payflowTokenRequest->getHeaders(), $params, $payflowTokenRequest->getResponseCode(), $tokenResults, []);
 				return [
 					'success' => false,
 					'message' => 'Unable to authenticate with Payflow, please try again in a few minutes.',

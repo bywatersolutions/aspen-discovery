@@ -6,7 +6,7 @@ require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
 
 class MaterialsRequest_IlsRequests extends MyAccount {
 
-	function launch() {
+	function launch(): void {
 		global $interface;
 
 		//Get a list of all materials requests for the user
@@ -21,12 +21,13 @@ class MaterialsRequest_IlsRequests extends MyAccount {
 				array_unshift($linkedUsers, $user);
 				$interface->assign('linkedUsers', $linkedUsers);
 			}
-			$interface->assign('selectedUser', $patronId); // needs to be set even when there is only one user so that the patronId hidden input gets a value in the reading history form.
+			$interface->assign('selectedUser', $patronId);
 
 			$catalogConnection = CatalogFactory::getCatalogConnectionInstance();
 
 			if (isset($_REQUEST['submit'])) {
-				$catalogConnection->deleteMaterialsRequests($patron);
+				$deleteResult = $catalogConnection->deleteMaterialsRequests($patron);
+				$interface->assign('deleteResult', $deleteResult);
 			}
 			$requestTemplate = $catalogConnection->getMaterialsRequestsPage($patron);
 

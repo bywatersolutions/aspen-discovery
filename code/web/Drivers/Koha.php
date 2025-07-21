@@ -5611,51 +5611,61 @@ class Koha extends AbstractIlsDriver {
 		return 'koha-requests.tpl';
 	}
 
-	function deleteMaterialsRequests(User $patron) {
-		if ($this->getKohaVersion() > 21.05) {
-			$result = [
+	function deleteMaterialsRequests(User $patron): array {
+		$suggestionIds = $_REQUEST['delete_field'] ?? [];
+		if (!is_array($suggestionIds)) {
+			$suggestionIds = [$suggestionIds];
+		}
+
+		if (empty($suggestionIds)) {
+			return [
 				'success' => false,
 				'message' => translate([
-					'text' => 'Unable to authenticate with the ILS.  Please try again later or contact the library.',
+					'text' => 'No requests were selected for deletion.',
 					'isPublicFacing' => true,
-				])
+				]),
 			];
-			
-			$suggestionId = $_REQUEST['delete_field'];
-			$response = $this->kohaApiUserAgent->delete("/api/v1/suggestions/$suggestionId",'koha.deleteMaterialsRequests');
-			if ($response) {
-				if ($response['code'] == 204) {
-					$patron->clearCachedAccountSummaryForSource($this->getIndexingProfile()->name);
-					$result = [
-						'success' => true,
-						'message' => 'Your requests have been deleted succesfully',
-					];
-				} else {
-					$result = [
-						'success' => false,
-						'message' => $response['error']
-					];
-				}
+		}
+
+		$errors = [];
+		$successCount = 0;
+		foreach ($suggestionIds as $suggestionId) {
+			$response = $this->kohaApiUserAgent->delete("/api/v1/suggestions/$suggestionId", 'koha.deleteMaterialsRequests');
+			if ($response && $response['code'] === 204) {
+				$successCount++;
+			} else {
+				$errors[] = $response['error'] ?? translate([
+					'text' => "There was an error deleting request with ID $suggestionId.",
+					'isPublicFacing' => true,
+				]);
 			}
-			return $result;
-		} else {
-			$this->loginToKohaOpac($patron);
+		}
 
-			$catalogUrl = $this->accountProfile->vendorOpacUrl;
-			$this->getKohaPage($catalogUrl . '/cgi-bin/koha/opac-suggestions.pl');
+		$patron->clearCachedAccountSummaryForSource($this->getIndexingProfile()->name);
 
-			$postFields = [
-				'op' => 'delete_confirm',
-				'delete_field' => $_REQUEST['delete_field'],
-			];
-			$this->postToKohaPage($catalogUrl . '/cgi-bin/koha/opac-suggestions.pl', $postFields);
-
-			$patron->clearCachedAccountSummaryForSource($this->getIndexingProfile()->name);
-
+		if (empty($errors)) {
+			$messageText = count($suggestionIds) > 1
+				? 'All selected requests have been deleted successfully.'
+				: 'Your request has been deleted successfully.';
 			return [
 				'success' => true,
-				'message' => 'deleted your requests',
+				'message' => translate([
+					'text' => $messageText,
+					'isPublicFacing' => true,
+				]),
 			];
+		} else {
+			if ($successCount > 0) {
+				return [
+					'success' => true,
+					'message' => "Successfully deleted {$successCount} request(s), but encountered errors with " . count($errors) . " request(s):<br/>" . implode('<br/>', $errors)
+				];
+			} else {
+				return [
+					'success' => false,
+					'message' => "Failed to delete requests:<br/>" . implode('<br/>', $errors)
+				];
+			}
 		}
 	}
 

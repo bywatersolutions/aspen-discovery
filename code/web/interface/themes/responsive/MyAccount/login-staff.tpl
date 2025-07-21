@@ -42,7 +42,7 @@
 					<div id="loginPasswordRow" class="form-group">
 						<label for="password" class="control-label col-xs-12 col-sm-4">{translate text="$passwordLabel" isPublicFacing=true} </label>
 						<div class="col-xs-12 col-sm-8">
-							<input type="password" name="password" id="password" size="28" onkeypress="return AspenDiscovery.submitOnEnter(event, '#loginForm');" class="form-control" maxlength="60">
+							<input type="password" name="password" id="password" size="28" onkeypress="return AspenDiscovery.submitOnEnter(event, '#loginForm');" class="form-control" maxlength="70">
 							{if !$canLoginSSO}
 							{* disable forgot password if sso only since its managed else where *}
 								{if $forgotPasswordType != 'null' && $forgotPasswordType != 'none'}

@@ -189,6 +189,9 @@ public class MarcRecordFormatClassifier {
 			}else if (curField.equalsIgnoreCase("DVD video")){
 				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Adding bib level format DVD based on 347b", 2);}
 				printFormats.add("DVD");
+			}else if (curField.equalsIgnoreCase("4K Ultra HD Blu-ray")){
+				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Adding bib level format 4KBlu-ray based on 347b", 2);}
+				printFormats.add("4KBlu-ray");
 			}
 		}
 	}

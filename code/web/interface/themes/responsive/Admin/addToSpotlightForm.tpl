@@ -4,9 +4,9 @@
 		<p class="alert alert-info">
 			{if count($existingCollectionSpotlights) > 0}
 				{if $source == 'list'}
-					{translate text="You may either add this list to an existing collection spotlight as a new tab, or you may create a new spotlight to display this list in." isAdminFacing=true}
+					{translate text="You may either add this list to an existing collection spotlight as a new tab, or you may create a new spotlight in which to display this list." isAdminFacing=true}
 				{elseif $source == 'search'}
-					{translate text="You may either add this search to an existing collection spotlight as a new tab, or you may create a new spotlight to display this search in." isAdminFacing=true}
+					{translate text="You may either add this search to an existing collection spotlight as a new tab, or you may create a new spotlight in which to display this search." isAdminFacing=true}
 				{/if}
 			{else}
 				{translate text="Please enter a name for the spotlight to be created." isAdminFacing=true}
@@ -18,10 +18,10 @@
 		<input type="hidden" name="id" value="{$id}">
 		{if count($existingCollectionSpotlights) > 0}
 			<div class="form-group">
-				<label for="collectionSpotlightId" class="col-sm-4">{translate text="Select a collection spotlight" isAdminFacing=true}</label>
+				<label for="collectionSpotlightId" class="col-sm-4">{translate text="Select a Collection Spotlight" isAdminFacing=true}</label>
 				<div class="col-sm-8">
 					<select id="collectionSpotlightId" name="collectionSpotlightId" class="form-control" onchange="return AspenDiscovery.CollectionSpotlights.updateSpotlightFields();">
-						<option value="-1">{translate text="Create a new spotlight" isAdminFacing=true}</option>
+						<option value="-1">{translate text="Create a New Spotlight" isAdminFacing=true}</option>
 						{foreach from=$existingCollectionSpotlights item=spotlightName key=spotlightId}
 							<option value="{$spotlightId}">{$spotlightName}</option>
 						{/foreach}

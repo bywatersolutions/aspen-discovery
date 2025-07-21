@@ -194,13 +194,17 @@ class Browse_AJAX extends Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function updateBrowseCategory() {
-		$textId = isset($_REQUEST['categoryName']) ? $_REQUEST['categoryName'] : '';
+	function updateBrowseCategory(): array {
+		$textId = $_REQUEST['categoryName'] ?? '';
 
 		require_once ROOT_DIR . '/sys/Browse/BrowseCategory.php';
 		$browseCategory = new BrowseCategory();
 		$browseCategory->textId = $textId;
 		if ($browseCategory->find(true)) {
+			$categoryLabel = $browseCategory->label;
+			$updateType = '';
+			$updateTarget = '';
+
 			if (isset($_REQUEST['searchId']) && strlen($_REQUEST['searchId']) > 0) {
 				$searchId = $_REQUEST['searchId'];
 
@@ -212,9 +216,12 @@ class Browse_AJAX extends Action {
 				if (!$browseCategory->updateFromSearch($searchObj)) {
 					return [
 						'success' => false,
-						'message' => "Sorry, this search is too complex to create a category from.",
+						'title' => "Failed to Update Browse Category",
+						'message' => "Sorry, this search is too complex to to create a browse category.",
 					];
 				}
+				$updateType = 'search';
+				$updateTarget = $searchObj->displayQuery();
 			} else {
 				if (isset($_REQUEST['listId'])) {
 					require_once ROOT_DIR . '/sys/UserLists/UserList.php';
@@ -225,35 +232,58 @@ class Browse_AJAX extends Action {
 					if ($userList->find(true)) {
 						$browseCategory->sourceListId = $listId;
 						$browseCategory->source = 'List';
+						$updateType = 'list';
+						$updateTarget = $userList->title;
 					}
 				} elseif (isset($_REQUEST['reserveId'])) {
 					require_once ROOT_DIR . '/sys/CourseReserves/CourseReserve.php';
 					$listId = $_REQUEST['reserveId'];
-					$userList = new CourseReserve();
-					$userList->id = $listId;
-					$userList->deleted = "0";
-					if ($userList->find(true)) {
+					$courseReserve = new CourseReserve();
+					$courseReserve->id = $listId;
+					$courseReserve->deleted = "0";
+					if ($courseReserve->find(true)) {
 						$browseCategory->sourceCourseReserveId = $listId;
 						$browseCategory->source = 'CourseReserve';
+						$updateType = 'course reserve';
+						$updateTarget = $courseReserve->courseTitle;
 					}
 				}
 
 			}
 
-			//update the category
-			if (!$browseCategory->update()) {
+			$updateResult = $browseCategory->update();
+			if (!$updateResult) {
+				// If no DB rows were updated, the user is attempting to update the browse category
+				// with the same configurations it currently has (e.g., same "Sort by" option).
+				if ($updateResult === 0) {
+					return [
+						'success' => false,
+						'title' => "Failed to Update Browse Category",
+						'message' => "You cannot update the same category with the same configurations.",
+					];
+				}
 				return [
 					'success' => false,
-					'message' => "There was an error updating the category.",
+					'title' => "Failed to Update Browse Category",
+					'message' => "There was an error updating the browse category.",
 				];
 			}
 
+			$message = "Browse category '{$categoryLabel}' was successfully updated";
+			if (!empty($updateType) && !empty($updateTarget)) {
+				$message .= " to use {$updateType}: '{$updateTarget}'";
+			}
+			$message .= ".";
+
 			return [
 				'success' => true,
+				'title' => "Successfully Updated Browse Category",
+				'message' => $message,
 			];
 		} else {
 			return [
 				'success' => false,
+				'title' => "Failed to Update Browse Category",
 				'message' => "Could not find the selected browse category.",
 			];
 		}

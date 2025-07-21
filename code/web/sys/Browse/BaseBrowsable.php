@@ -10,6 +10,25 @@ abstract class BaseBrowsable extends DataObject {
 	public $defaultSort;
 
 	public function getSolrSort(): string {
+		// Handle Lists search source with specific sort field names.
+		if ($this->source == 'Lists') {
+			if ($this->defaultSort == 'relevance') {
+				return 'relevance';
+			} elseif ($this->defaultSort == 'newest_to_oldest') {
+				return 'days_since_added asc, title_sort asc';
+			} elseif ($this->defaultSort == 'oldest_to_newest') {
+				return 'days_since_added desc, title_sort desc';
+			} elseif ($this->defaultSort == 'newest_updated_to_oldest') {
+				return 'days_since_updated asc, title_sort asc';
+			} elseif ($this->defaultSort == 'oldest_updated_to_newest') {
+				return 'days_since_updated desc, title_sort desc';
+			} elseif ($this->defaultSort == 'title') {
+				return 'title_sort';
+			} else {
+				return 'relevance';
+			}
+		}
+
 		if ($this->defaultSort == 'relevance') {
 			return 'relevance';
 		} elseif ($this->defaultSort == 'popularity') {
@@ -31,6 +50,14 @@ abstract class BaseBrowsable extends DataObject {
 			return 'year desc,title asc';
 		} elseif ($this->defaultSort == 'publication_year_asc') {
 			return 'year asc,title asc';
+		} elseif ($this->defaultSort == 'event_date') {
+			return 'start_date_sort asc';
+		} elseif ($this->defaultSort == 'oldest_to_newest') {
+			return 'days_since_added asc';
+		} elseif ($this->defaultSort == 'newest_updated_to_oldest') {
+			return 'days_since_updated asc'; // Default fallback for non-Lists sources
+		} elseif ($this->defaultSort == 'oldest_updated_to_newest') {
+			return 'days_since_updated desc'; // Default fallback for non-Lists sources
 		} else {
 			return 'relevance';
 		}
@@ -84,6 +111,16 @@ abstract class BaseBrowsable extends DataObject {
 			$this->defaultSort = 'newest_to_oldest';
 		} elseif ($solrSort == 'days_since_added desc') {
 			$this->defaultSort = 'oldest_to_newest';
+		} elseif ($solrSort == 'days_since_added asc, title_sort asc') {
+			$this->defaultSort = 'newest_to_oldest'; // Lists Date Added Desc
+		} elseif ($solrSort == 'days_since_added desc, title_sort desc') {
+			$this->defaultSort = 'oldest_to_newest'; // Lists Date Added Asc
+		} elseif ($solrSort == 'days_since_updated asc, title_sort asc') {
+			$this->defaultSort = 'newest_updated_to_oldest'; // Lists Date Updated Desc
+		} elseif ($solrSort == 'days_since_updated desc, title_sort desc') {
+			$this->defaultSort = 'oldest_updated_to_newest'; // Lists Date Updated Asc
+		} elseif ($solrSort == 'title_sort') {
+			$this->defaultSort = 'title'; // Lists-specific format
 		} elseif ($solrSort == 'author') {
 			$this->defaultSort = 'author';
 		} elseif ($solrSort == 'title') {
@@ -99,6 +136,8 @@ abstract class BaseBrowsable extends DataObject {
 			$this->defaultSort = 'publication_year_asc';
 		} elseif ($solrSort == 'total_holds desc') {
 			$this->defaultSort = 'holds';
+		} elseif ($solrSort == 'start_date_sort asc') {
+			$this->defaultSort = 'event_date';
 		} else {
 			$this->defaultSort = 'relevance';
 		}
@@ -112,6 +151,7 @@ abstract class BaseBrowsable extends DataObject {
 		global $enabledModules;
 		if (array_key_exists('User Lists', $enabledModules)) {
 			$spotlightSources['List'] = 'Public List';
+			$spotlightSources['Lists'] = 'Public Lists Search';
 		}
 		if (array_key_exists('Course Reserves', $enabledModules)) {
 			$spotlightSources['CourseReserve'] = 'Course Reserve';

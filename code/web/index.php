@@ -435,6 +435,17 @@ foreach ($_REQUEST as $parameter => $value) {
 	}
 }
 
+if (!empty($library->getLayoutSettings()->homeLinkText)) {
+	$interface->assign('homeLinkText', $library->getLayoutSettings()->homeLinkText);
+} else {
+	$interface->assign('homeLinkText', 'Home');
+}
+if (!empty($library->getLayoutSettings()->browseLinkText)) {
+	$interface->assign('browseLinkText', $library->getLayoutSettings()->browseLinkText);
+} else {
+	$interface->assign('browseLinkText', 'Browse');
+}
+
 $interface->assign('canLoginSSO', IPAddress::allowSSOAccessForClientIP());
 
 $isLoggedIn = UserAccount::isLoggedIn();
@@ -794,17 +805,6 @@ if ($action == "AJAX" || $action == "JSON" || $module == 'API') {
 		} else {
 			$interface->assign('homeBreadcrumbLink', '/');
 		}
-	}
-
-	if (!empty($library->getLayoutSettings()->homeLinkText)) {
-		$interface->assign('homeLinkText', $library->getLayoutSettings()->homeLinkText);
-	} else {
-		$interface->assign('homeLinkText', 'Home');
-	}
-	if (!empty($library->getLayoutSettings()->browseLinkText)) {
-		$interface->assign('browseLinkText', $library->getLayoutSettings()->browseLinkText);
-	} else {
-		$interface->assign('browseLinkText', 'Browse');
 	}
 }
 

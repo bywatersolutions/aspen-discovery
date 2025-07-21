@@ -9481,37 +9481,59 @@ AspenDiscovery.Admin = (function () {
 				$("#propertyRowthemes").show();
 			}
 		},
-		updateMaterialsRequestFields: function () {
-			var materialRequestType = $("#enableMaterialsRequestSelect option:selected").val();
-			$("#propertyRowallowDeletingILSRequests").hide();
-			if (materialRequestType === "0" || materialRequestType === "2") {
-				$("#propertyRowexternalMaterialsRequestUrl").hide();
-				$("#propertyRowmaxRequestsPerYear").hide();
-				$("#propertyRowmaxActiveRequests").hide();
-				$("#propertyRowmaterialsRequestDaysToPreserve").hide();
-				$("#propertyRowmaterialsRequestFieldsToDisplay").hide();
-				$("#propertyRowmaterialsRequestFormats").hide();
-				$("#propertyRowmaterialsRequestFormFields").hide();
-				if (materialRequestType === "2") {
-					$("#propertyRowallowDeletingILSRequests").show();
-				}
-			} else if (materialRequestType === "1") {
-				$("#propertyRowexternalMaterialsRequestUrl").hide();
-				$("#propertyRowmaxRequestsPerYear").show();
-				$("#propertyRowmaxActiveRequests").show();
-				$("#propertyRowmaterialsRequestDaysToPreserve").show();
-				$("#propertyRowmaterialsRequestFieldsToDisplay").show();
-				$("#propertyRowmaterialsRequestFormats").show();
-				$("#propertyRowmaterialsRequestFormFields").show()
-			} else if (materialRequestType === "3") {
-				$("#propertyRowexternalMaterialsRequestUrl").show();
-				$("#propertyRowmaxRequestsPerYear").hide();
-				$("#propertyRowmaxActiveRequests").hide();
-				$("#propertyRowmaterialsRequestDaysToPreserve").hide();
-				$("#propertyRowmaterialsRequestFieldsToDisplay").hide();
-				$("#propertyRowmaterialsRequestFormats").hide();
-				$("#propertyRowmaterialsRequestFormFields").hide()
+		updateMaterialsRequestFields() {
+			const materialRequestType = $("#enableMaterialsRequestSelect option:selected").val();
+			const rowsToHide = [
+				"#propertyRowdisplayMaterialsRequestToPublic",
+				"#propertyRowallowDeletingILSRequests",
+				"#propertyRowexternalMaterialsRequestUrl",
+				"#propertyRowmaxRequestsPerYear",
+				"#propertyRowmaxActiveRequests",
+				"#propertyRowrequestCalendarStartDate",
+				"#propertyRowmaterialsRequestDaysToPreserve",
+				"#propertyRowmaterialsRequestFieldsToDisplay",
+				"#propertyRowmaterialsRequestFormats",
+				"#propertyRowmaterialsRequestFormFields",
+				"#propertyRowmaterialsRequestSendStaffEmailOnNew",
+				"#propertyRowmaterialsRequestNewEmail",
+				"#propertyRowmaterialsRequestSendStaffEmailOnAssign",
+				"#propertyRownewMaterialsRequestSummary",
+				"#propertyRowyearlyRequestLimitType",
+				"#propertyRowcheckRequestsForExistingTitles"
+			];
+			rowsToHide.forEach(selector => $(selector).hide());
+
+			switch (materialRequestType) {
+				case "1": // Aspen Request System
+					[
+						"#propertyRowdisplayMaterialsRequestToPublic",
+						"#propertyRowmaxRequestsPerYear",
+						"#propertyRowyearlyRequestLimitType",
+						"#propertyRowmaxActiveRequests",
+						"#propertyRowrequestCalendarStartDate",
+						"#propertyRownewMaterialsRequestSummary",
+						"#propertyRowmaterialsRequestDaysToPreserve",
+						"#propertyRowmaterialsRequestFieldsToDisplay",
+						"#propertyRowmaterialsRequestFormats",
+						"#propertyRowmaterialsRequestFormFields",
+						"#propertyRowmaterialsRequestSendStaffEmailOnNew",
+						"#propertyRowmaterialsRequestNewEmail",
+						"#propertyRowmaterialsRequestSendStaffEmailOnAssign",
+						"#propertyRowcheckRequestsForExistingTitles"
+					].forEach(selector => $(selector).show());
+					break;
+				case "2": // ILS Request System
+					["#propertyRowallowDeletingILSRequests", "#propertyRowdisplayMaterialsRequestToPublic"]
+						.forEach(selector => $(selector).show());
+					break;
+				case "3": // External Request Link
+					["#propertyRowexternalMaterialsRequestUrl", "#propertyRowdisplayMaterialsRequestToPublic"]
+						.forEach(selector => $(selector).show());
+					break;
+				default: // None (0)
+					break;
 			}
+
 			return false;
 		},
 		updateDonationFields: function () {
@@ -9819,28 +9841,105 @@ AspenDiscovery.Admin = (function () {
 			window.location.href = url + "?release=" + selectedRelease;
 			return false;
 		},
-		updateBrowseSearchForSource: function () {
-			var selectedSource = $('#sourceSelect').val();
-			if (selectedSource === 'List') {
-				$("#propertyRowsearchTerm").hide();
-				$("#propertyRowdefaultFilter").hide();
-				$("#propertyRowdefaultSort").hide();
-				$("#propertyRowsourceListId").show();
-				$("#propertyRowsourceCourseReserveId").hide();
-			} else if (selectedSource === 'CourseReserve') {
-				$("#propertyRowsearchTerm").hide();
-				$("#propertyRowdefaultFilter").hide();
-				$("#propertyRowdefaultSort").hide();
-				$("#propertyRowsourceListId").hide();
-				$("#propertyRowsourceCourseReserveId").show();
+
+		updateBrowseSearchForSource() {
+			const selectedSource = $('#sourceSelect').val();
+
+			const rowsToHide = [
+				"#propertyRowsearchTerm",
+				"#propertyRowdefaultFilter",
+				"#propertyRowdefaultSort",
+				"#propertyRowsourceListId",
+				"#propertyRowsourceCourseReserveId"
+			];
+			rowsToHide.forEach(selector => $(selector).hide());
+
+			switch (selectedSource) {
+				case 'List':
+					$("#propertyRowsourceListId").show();
+					break;
+				case 'CourseReserve':
+					$("#propertyRowsourceCourseReserveId").show();
+					break;
+				default:
+					[
+						"#propertyRowsearchTerm",
+						"#propertyRowdefaultFilter",
+						"#propertyRowdefaultSort"
+					].forEach(selector => $(selector).show());
+					break;
+			}
+
+			this.updateSortOptionsForSource(selectedSource);
+			return false;
+		},
+
+		updateSortOptionsForSource(selectedSource) {
+			if (selectedSource === 'List' || selectedSource === 'CourseReserve') return;
+
+			const sortOptionsBySource = {
+				GroupedWork: {
+					relevance: 'Best Match',
+					popularity: 'Popularity',
+					newest_to_oldest: 'Date Added',
+					author: 'Author',
+					title: 'Title',
+					user_rating: 'Rating',
+					holds: 'Number of Holds',
+					publication_year_desc: 'Publication Year Desc',
+					publication_year_asc: 'Publication Year Asc'
+				},
+				Events: {
+					relevance: 'Best Match',
+					event_date: 'Event Date',
+					title: 'Title'
+				},
+				OpenArchives: {
+					relevance: 'Best Match',
+					title: 'Title'
+				},
+				Genealogy: {
+					relevance: 'Best Match',
+					title: 'Title'
+				},
+				EbscoEds: {
+					relevance: 'Best Match'
+				},
+				Websites: {
+					relevance: 'Best Match',
+					title: 'Title'
+				},
+				CourseReserves: {
+					relevance: 'Best Match',
+					title: 'Title'
+				},
+				Lists: {
+					relevance: 'Best Match',
+					title: 'Title',
+					newest_to_oldest: 'Date Added',
+					oldest_to_newest: 'Date Added (Oldest First)',
+					newest_updated_to_oldest: 'Date Updated',
+					oldest_updated_to_newest: 'Date Updated (Oldest First)'
+				}
+			};
+
+			const $sortSelect = $('#defaultSortSelect');
+			const currentValue = $sortSelect.val();
+			$sortSelect.empty();
+
+			const sortOptions = sortOptionsBySource[selectedSource] || sortOptionsBySource.GroupedWork;
+			Object.entries(/** @type {{ [key: string]: string }} */ sortOptions).forEach(([value, label]) => {
+				$sortSelect.append(new Option(label, value));
+			});
+
+
+			if (sortOptions.hasOwnProperty(currentValue)) {
+				$sortSelect.val(currentValue);
 			} else {
-				$("#propertyRowsearchTerm").show();
-				$("#propertyRowdefaultFilter").show();
-				$("#propertyRowdefaultSort").show();
-				$("#propertyRowsourceListId").hide();
-				$("#propertyRowsourceCourseReserveId").hide();
+				$sortSelect.prop('selectedIndex', 0);
 			}
 		},
+
 		updateCollectionSpotlightFields() {
 			const collSpotStyle = $("#styleSelect option:selected").val();
 			const rowsToHide = [
@@ -12012,16 +12111,16 @@ AspenDiscovery.Browse = (function(){
 		},
 
 		updateBrowseCategory: function(){
-			var url = Globals.path + "/Browse/AJAX";
-			var	params = {
-				method:'updateBrowseCategory'
-				,categoryName:$('#updateBrowseCategorySelect').val()
+			const url = Globals.path + "/Browse/AJAX";
+			const params = {
+				method: 'updateBrowseCategory'
+				, categoryName: $('#updateBrowseCategorySelect').val()
 			};
-			var searchId = $("#searchId");
+			const searchId = $("#searchId");
 			if (searchId){
 				params['searchId'] = searchId.val()
 			}
-			var listId = $("#listId");
+			const listId = $("#listId");
 			if (listId){
 				params['listId'] = listId.val()
 			}
@@ -12056,9 +12155,9 @@ AspenDiscovery.Browse = (function(){
 			}
 			$.getJSON(url, params, function (data) {
 				if (data.success === false) {
-					AspenDiscovery.showMessage("Unable to create category", data.message);
+					AspenDiscovery.showMessage("Unable to Create Browse Category", data.message);
 				} else {
-					AspenDiscovery.showMessage("Successfully added", data.message, true);
+					AspenDiscovery.showMessage("Successfully Added Browse Category", data.message, true);
 				}
 			}).fail(AspenDiscovery.ajaxFail);
 			return false;
@@ -17795,19 +17894,32 @@ AspenDiscovery.Websites = (function () {
 		}
 	};
 }(AspenDiscovery.Websites || {}));
-AspenDiscovery.Wikipedia = (function(){
-	return{
-		getWikipediaArticle: function(articleName){
-			var url = Globals.path + "/Author/AJAX?method=getWikipediaData&articleName=" + articleName;
-			$.getJSON(url, function(data){
-				if (data.success) {
-					// noinspection JSUnresolvedVariable
-					$("#wikipedia_placeholder").html(data.formatted_article).fadeIn();
+AspenDiscovery.Wikipedia = (() => {
+	return {
+		getWikipediaArticle(articleName) {
+			const url = `${Globals.path}/Author/AJAX?method=getWikipediaData&articleName=${encodeURIComponent(articleName)}`;
+			$.getJSON(url)
+			.done((data) => {
+				const { success, formatted_article, debugMessage } = data || {};
+				const $placeholder = $("#wikipedia_placeholder");
+				if (success && formatted_article) {
+					$placeholder.html(formatted_article).fadeIn();
+				} else if (debugMessage) {
+					$placeholder.append(
+						'<div ' + 'class="smallText text-muted" style="font-style:italic">' +
+						debugMessage +
+						'</div>'
+					).fadeIn();
 				}
+			})
+			.fail((jqXHR, textStatus) => {
+				$("#wikipedia_placeholder")
+					.html(`<div class="alert alert-danger">Failed to load article: ${textStatus}</div>`)
+					.fadeIn();
 			});
 		}
 	};
-}(AspenDiscovery.Wikipedia));
+})();
 /*
  *   This content is licensed according to the W3C Software License at
  *   https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document

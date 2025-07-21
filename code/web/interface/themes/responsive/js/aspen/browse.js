@@ -630,16 +630,16 @@ AspenDiscovery.Browse = (function(){
 		},
 
 		updateBrowseCategory: function(){
-			var url = Globals.path + "/Browse/AJAX";
-			var	params = {
-				method:'updateBrowseCategory'
-				,categoryName:$('#updateBrowseCategorySelect').val()
+			const url = Globals.path + "/Browse/AJAX";
+			const params = {
+				method: 'updateBrowseCategory'
+				, categoryName: $('#updateBrowseCategorySelect').val()
 			};
-			var searchId = $("#searchId");
+			const searchId = $("#searchId");
 			if (searchId){
 				params['searchId'] = searchId.val()
 			}
-			var listId = $("#listId");
+			const listId = $("#listId");
 			if (listId){
 				params['listId'] = listId.val()
 			}
@@ -674,9 +674,9 @@ AspenDiscovery.Browse = (function(){
 			}
 			$.getJSON(url, params, function (data) {
 				if (data.success === false) {
-					AspenDiscovery.showMessage("Unable to create category", data.message);
+					AspenDiscovery.showMessage("Unable to Create Browse Category", data.message);
 				} else {
-					AspenDiscovery.showMessage("Successfully added", data.message, true);
+					AspenDiscovery.showMessage("Successfully Added Browse Category", data.message, true);
 				}
 			}).fail(AspenDiscovery.ajaxFail);
 			return false;

@@ -58,8 +58,8 @@ class UserList extends DataObject {
 		'title' => 'title ASC',
 		'dateAdded' => 'dateAdded ASC',
 		'recentlyAdded' => 'dateAdded DESC',
-		'custom' => 'weight ASC',
-		// this puts items with no set weight towards the end of the list
+		'custom' => 'weight ASC', // Puts items with no set weight towards the end of the list.
+		'author' => '',
 	];
 
 	/** @noinspection PhpUnusedParameterInspection */
@@ -371,24 +371,66 @@ class UserList extends DataObject {
 	}
 
 	/**
-	 * @param int $start position of first list item to fetch (0 based)
-	 * @param int $numItems Number of items to fetch for this result
-	 * @param boolean $allowEdit whether or not the list should be editable
-	 * @param string $format The format of the records, valid values are html, summary, recordDrivers, citation
-	 * @param string $citationFormat How citations should be formatted
-	 * @param string $sortName How records should be sorted, if no sort is provided, will use the default for the list
-	 * @param boolean $forLiDA Whether or not the records are being requested by Aspen LiDA
-	 * @param float $appVersion If LiDA, include the version to ensure proper filtering when needed
-	 * @return array     Array of HTML to display to the user
+	 * @param int $start Position of first list item to fetch (0 based)
+	 * @param int $numItems Number of items to fetch for this result.
+	 * @param boolean $allowEdit Whether or not the list should be editable.
+	 * @param string $format The format of the records; valid values are html, summary, recordDrivers, and citation.
+	 * @param string|null $citationFormat How citations should be formatted.
+	 * @param string|null $sortName How records should be sorted, if no sort is provided, will use the default for the list.
+	 * @param boolean $forLiDA Whether or not the records are being requested by Aspen LiDA.
+	 * @param float|int $appVersion If LiDA, include the version to ensure proper filtering when needed.
+	 * @return array Array of HTML to display to the user.
 	 */
-	public function getListRecords($start, $numItems, $allowEdit, $format, $citationFormat = null, $sortName = null, $forLiDA = false, $appVersion = 0): array {
-		//Get all entries for the list
+	public function getListRecords(
+		int $start, int $numItems, bool $allowEdit, string $format, string $citationFormat = null,
+		string $sortName = null, bool $forLiDA = false, float|int $appVersion = 0
+	): array {
 		if ($sortName == null) {
 			$sortName = $this->defaultSort;
 		}
+
+		// Because the DB does not persist an "author" column on the list itself,
+		// pull it from the underlying record when the sort of list is rendered.
+		if ($sortName === 'author') {
+			$allEntriesInfo = $this->getListEntries(null, $forLiDA, $appVersion, 0, 0);
+			$allEntries = $allEntriesInfo['listEntries'];
+			$idsBySource = $allEntriesInfo['idsBySource'];
+			$authorMap = [];
+			foreach ($idsBySource as $sourceType => $sourceIds) {
+				$searchObject = SearchObjectFactory::initSearchObject($sourceType);
+				if ($searchObject !== false) {
+					$records = $searchObject->getRecords($sourceIds);
+					foreach ($records as $recordDriver) {
+						$authorMap[$sourceType][$recordDriver->getId()] = trim($recordDriver->getPrimaryAuthor() ?? '');
+					}
+				}
+			}
+
+			$emptyFirst = [];
+			$authorList = [];
+			foreach ($allEntries as $idx => $entry) {
+				$src = $entry['source'];
+				$id = $entry['sourceId'];
+				$auth = $authorMap[$src][$id] ?? '';
+				$authorList[$idx] = $auth;
+				$emptyFirst[$idx] = ($auth === '') ? 1 : 0;
+			}
+
+			array_multisort(
+				$emptyFirst, SORT_ASC, SORT_NUMERIC,
+				$authorList, SORT_ASC, SORT_NATURAL | SORT_FLAG_CASE,
+				$allEntries
+			);
+
+			if ($numItems > 0) {
+				$filteredListEntries = array_slice($allEntries, $start, $numItems);
+			} else {
+				$filteredListEntries = $allEntries;
+			}
+		} else {
 			$listEntryInfo = $this->getListEntries($sortName, $forLiDA, $appVersion, $start, $numItems);
-			// No need to check $numItems as getListEntries() already checks for this before limiting the query.
 			$filteredListEntries = $listEntryInfo['listEntries'];
+		}
 
 		$filteredIdsBySource = [];
 		foreach ($filteredListEntries as $listItemEntry) {
@@ -598,7 +640,6 @@ class UserList extends DataObject {
 	 * @return array     Array of HTML to display to the user
 	 */
 	public function getBrowseRecords($start, $numItems): array {
-		// Get from $start to $numItems entries for the list.
 		$listEntryInfo = $this->getListEntries($this->defaultSort, false, 0, $start, $numItems);
 		$filteredListEntries = $listEntryInfo['listEntries'];
 

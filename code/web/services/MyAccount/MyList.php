@@ -224,6 +224,11 @@ class MyAccount_MyList extends MyAccount {
 				'selected' => $sortName == 'title',
 				'sortUrl' => "/MyAccount/MyList/{$list->id}?" . http_build_query(array_merge($queryParams, ['sort' => 'title'])),
 			],
+			'author' => [
+				'desc' => 'Author',
+				'selected' => $sortName == 'author',
+				'sortUrl' => "/MyAccount/MyList/{$list->id}?" . http_build_query(array_merge($queryParams, ['sort' => 'author'])),
+			],
 			'dateAdded' => [
 				'desc' => 'Date Added',
 				'selected' => $sortName == 'dateAdded',

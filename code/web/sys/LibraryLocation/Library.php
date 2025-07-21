@@ -3708,6 +3708,7 @@ class Library extends DataObject {
 								'label' => 'SHAREit Password',
 								'description' => 'The Password for SHAREit authentication.',
 								'hideInLists' => true,
+								'autocomplete' => 'new-password',
 							],
 						],
 					],

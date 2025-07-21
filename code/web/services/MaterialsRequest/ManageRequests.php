@@ -175,6 +175,8 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 						$materialRequest->update();
 
 						$materialRequest->sendStatusChangeEmail();
+						require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestUsage.php';
+						MaterialsRequestUsage::incrementStat($materialRequest->status, $materialRequest->libraryId);
 					}
 				}
 			}

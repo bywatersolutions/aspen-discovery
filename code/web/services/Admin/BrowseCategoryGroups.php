@@ -18,11 +18,11 @@ class Admin_BrowseCategoryGroups extends ObjectEditor {
 		return 'Browse Category Groups';
 	}
 
-	function canDelete() {
+	function canDelete(): bool {
 		return UserAccount::userHasPermission('Administer All Browse Categories');
 	}
 
-	function canAddNew() {
+	function canAddNew(): bool {
 		return UserAccount::userHasPermission('Administer All Browse Categories');
 	}
 
@@ -43,12 +43,24 @@ class Admin_BrowseCategoryGroups extends ObjectEditor {
 				}
 				$object->whereAddIn('id', $allowedGroups, false);
 			} else {
-				$libraries = Library::getLibraryListAsObjects(true);
+				// Administer Library Browse Categories: Include the group for the home library and any location groups.
 				$browseCategoryGroups = [];
-				foreach ($libraries as $tmpLibrary){
-					$browseCategoryGroups[] = $tmpLibrary->browseCategoryGroupId;
+				$library = Library::getPatronHomeLibrary(UserAccount::getActiveUserObj());
+				if ($library && $library->browseCategoryGroupId > 0) {
+					$browseCategoryGroups[] = $library->browseCategoryGroupId;
 				}
-				$object->whereAddIn('id', $browseCategoryGroups, false);
+				require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
+				$locations = Location::getLocationListAsObjects(true);
+				foreach ($locations as $tmpLocation) {
+					if ($tmpLocation->browseCategoryGroupId > 0) {
+						$browseCategoryGroups[] = $tmpLocation->browseCategoryGroupId;
+					}
+				}
+				if (!empty($browseCategoryGroups)) {
+					$object->whereAddIn('id', array_unique($browseCategoryGroups), false);
+				} else {
+					return [];
+				}
 			}
 		}
 		$object->find();
@@ -133,16 +145,28 @@ class Admin_BrowseCategoryGroups extends ObjectEditor {
 					$object->whereAddIn('id', $allowedGroups, false);
 					$this->_numObjects = $object->count();
 				} else {
-					//Administer Library Browse Categories
-					/** @var DataObject $object */
+					// Administer Library Browse Categories: Include home library and location groups.
+					$browseCategoryGroups = [];
 					$library = Library::getPatronHomeLibrary(UserAccount::getActiveUserObj());
-					$libraryId = $library == null ? -1 : $library->libraryId;
-					$objectType = $this->getObjectType();
-					$object = new $objectType();
-					$library = Library::getPatronHomeLibrary(UserAccount::getActiveUserObj());
-					$object->id = $library->browseCategoryGroupId;
-					$this->applyFilters($object);
-					$this->_numObjects = $object->count();
+					if ($library && $library->browseCategoryGroupId > 0) {
+						$browseCategoryGroups[] = $library->browseCategoryGroupId;
+					}
+					require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
+					$locations = Location::getLocationListAsObjects(true);
+					foreach ($locations as $tmpLocation) {
+						if ($tmpLocation->browseCategoryGroupId > 0) {
+							$browseCategoryGroups[] = $tmpLocation->browseCategoryGroupId;
+						}
+					}
+					if (empty($browseCategoryGroups)) {
+						$this->_numObjects = 0;
+					} else {
+						$objectType = $this->getObjectType();
+						$object = new $objectType();
+						$this->applyFilters($object);
+						$object->whereAddIn('id', array_unique($browseCategoryGroups), false);
+						$this->_numObjects = $object->count();
+					}
 				}
 			} elseif (UserAccount::userHasPermission('Administer All Browse Categories')) {
 				/** @var DataObject $object */

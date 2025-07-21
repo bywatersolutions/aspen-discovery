@@ -33,6 +33,15 @@ function getUpdatesQ3_25_00_00(): array {
 			]
 		], //remove_starRating_from_overdrive_api_product_metadata
 
+		'add_comprise_donation_settings' => [
+			'title' => 'Add Comprise Donation Settings',
+			'description' => 'Add customer name and id for donation in Comprise Settings',
+			'sql' => [
+				"ALTER TABLE comprise_settings ADD COLUMN customerNameForDonation VARCHAR(50) DEFAULT NULL",
+				"ALTER TABLE comprise_settings ADD COLUMN customerIdForDonation INT(11) DEFAULT NULL",
+			]
+		], //add_comprise_donation_settings
+
 		// Leo Stoyanov - BWS
 		'rollback_administer_side_loads_name' => [
 			'title' => 'Clean Slate: Revert Permission Changes and Drop Permission Group Tables',

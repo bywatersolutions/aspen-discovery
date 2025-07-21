@@ -9,6 +9,9 @@ class CompriseSetting extends DataObject {
 	public $username;
 	public $password;
 
+	public $customerNameForDonation;
+	public $customerIdForDonation;
+
 	private $_libraries;
 
 	static function getObjectStructure($context = ''): array {
@@ -46,7 +49,29 @@ class CompriseSetting extends DataObject {
 				'description' => 'The Password assigned by Comprise',
 				'hideInLists' => true,
 			],
-
+			'donationSettings' => [
+				'property' => 'donationSettings',
+				'type' => 'section',
+				'label' => 'Donation Settings (Optional)',
+				'description' => 'Configure Customer Name and Id for donation transactions. These fields are optional.',
+				'hideInLists' => true,
+				'properties' => [
+					'customerNameForDonation' => [
+						'property' => 'customerNameForDonation',
+						'type' => 'text',
+						'label' => 'Customer Name for Donation (Optional)',
+						'description' => 'The Customer Name for the donation form (Optional)',
+						'note' => 'This is optional. Only use it if you want to separate the donation transactions from the fine transactions in Comprise.',
+					],
+					'customerIdForDonation' => [
+						'property' => 'customerIdForDonation',
+						'type' => 'integer',
+						'label' => 'Customer Id for Donation (Optional)',
+						'description' => 'The Customer Id for the donation form (Optional)',
+						'note' => 'This is optional. Only use it if you want to separate the donation transactions from the fine transactions in Comprise.',
+					],
+				]
+			],
 			'libraries' => [
 				'property' => 'libraries',
 				'type' => 'multiSelect',
@@ -55,7 +80,6 @@ class CompriseSetting extends DataObject {
 				'description' => 'Define libraries that use these settings',
 				'values' => $libraryList,
 				'hideInLists' => true,
-				'forcesReindex' => true,
 			],
 		];
 

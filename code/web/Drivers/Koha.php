@@ -3961,6 +3961,17 @@ class Koha extends AbstractIlsDriver {
 			];
 		} else {
 			$allowHomeLibraryUpdates = $type == 'selfReg' || $library->allowHomeLibraryUpdates;
+
+			// Try to set default based on physical location (IP address).
+			$defaultBranchCode = null;
+			if ($type == 'selfReg') {
+				global $locationSingleton;
+				$physicalLocation = $locationSingleton->getIPLocation();
+				if ($physicalLocation != null && isset($pickupLocations[$physicalLocation->code])) {
+					$defaultBranchCode = $physicalLocation->code;
+				}
+			}
+
 			$fields['librarySection'] = [
 				'property' => 'librarySection',
 				'type' => 'section',
@@ -3974,6 +3985,7 @@ class Koha extends AbstractIlsDriver {
 						'label' => 'Home Library',
 						'description' => 'Please choose the Library location you would prefer to use',
 						'values' => $pickupLocations,
+						'default' => $defaultBranchCode,
 						'required' => true,
 						'readOnly' => !$allowHomeLibraryUpdates,
 					],

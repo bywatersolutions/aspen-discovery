@@ -4,7 +4,7 @@ require_once ROOT_DIR . '/Action.php';
 require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
 require_once ROOT_DIR . '/sys/TwoFactorAuthSetting.php';
 
-class TwoFactorAuth extends ObjectEditor {
+class Admin_TwoFactorAuth extends ObjectEditor {
 	function launch() : void {
 		global $interface;
 		global $library;

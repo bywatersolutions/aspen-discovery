@@ -96,7 +96,7 @@ class SelfReg extends Action {
 								$interface->assign('selfRegResult', $result);
 							} else {
 								$ageMessage = translate([
-									'text' => 'Age should be at least' . $library->minSelfRegAge . ' years. Please enter a valid Date of Birth.',
+									'text' => 'You must be at least ' . $library->minSelfRegAge . ' years old. Please enter a valid date of birth.',
 									'isPublicFacing' => true
 								]);
 								$interface->assign('ageMessage', $ageMessage);

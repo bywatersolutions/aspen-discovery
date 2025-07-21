@@ -423,8 +423,8 @@ class Koha extends AbstractIlsDriver {
 						$error = $messageInformation[1];
 						$result['messages'][] = trim($error);
 					}
-				}else{
-					$result['messages'][] = 'There was an error logging in to the backend system. Unable to update your contact information.';
+				} else {
+					$result['messages'][] = $loginResult['message'] ?? 'There was an error logging in to the backend system. Unable to update your contact information.';
 				}
 			}
 		}
@@ -5416,7 +5416,7 @@ class Koha extends AbstractIlsDriver {
 			if (!$loginResult['success']) {
 				return [
 					'success' => false,
-					'message' => 'Unable to login to Koha',
+					'message' => $loginResult['message'] ?? 'Unable to log in to Koha.',
 				];
 			} else {
 				$postFields = [

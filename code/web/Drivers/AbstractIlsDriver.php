@@ -193,10 +193,16 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 		return 'not supported';
 	}
 
-	function deleteMaterialsRequests(User $patron) {
+	/**
+	 * Delete ILS materials requests (purchase suggestions) for the specified patron.
+	 *
+	 * @param User $patron The patron whose ILS requests to delete.
+	 * @return array An array containing success status and a message.
+	 */
+	function deleteMaterialsRequests(User $patron): array {
 		return [
 			'success' => false,
-			'message' => 'Not Implemented',
+			'message' => 'Material requests have not been implemented for this ILS.',
 		];
 	}
 

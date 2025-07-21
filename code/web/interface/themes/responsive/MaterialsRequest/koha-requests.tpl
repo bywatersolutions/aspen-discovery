@@ -13,8 +13,13 @@
 
 	<h1>{translate text='My Materials Requests' isPublicFacing=true}</h1>
 
-	{* MDN 7/26/2019 Do not allow access for linked users *}
-	{*	{include file="MyAccount/switch-linked-user-form.tpl" label="Viewing Requests for" actionPath="/MyAccount/ReadingHistory"}*}
+	{if isset($deleteResult)}
+		{if $deleteResult.success}
+			<div class="alert alert-success">{$deleteResult.message nofilter}</div>
+		{else}
+			<div class="alert alert-danger">{$deleteResult.message nofilter}</div>
+		{/if}
+	{/if}
 
 	{if !empty($error)}
 		<div class="alert alert-danger">{$error}</div>
@@ -39,7 +44,9 @@
 							<tr>
 								{if !empty($allowDeletingILSRequests)}
 									<td>
-										<input type="checkbox" name="delete_field" value="{$request.id}" title="{translate text="Select Request" inAttribute=true isPublicFacing=true}" aria-label="{translate text="Select Request" inAttribute=true isPublicFacing=true}"/>
+										<input type="checkbox" name="delete_field[]" value="{$request.id}" title="{translate text="Select Request" inAttribute=true isPublicFacing=true}" aria-label="{translate text="Select Request" inAttribute=true isPublicFacing=true}"
+											   onchange="document.getElementById('deleteSelectedBtn').disabled = document.querySelectorAll('input[name=\'delete_field[]\']:checked').length === 0;"
+										/>
 									</td>
 								{/if}
 								<td>{$request.summary}</td>
@@ -51,7 +58,7 @@
 						</tbody>
 					</table>
 					{if !empty($allowDeletingILSRequests)}
-						<button type="submit" class="btn btn-sm btn-danger" name="submit">{translate text="Delete Selected" isPublicFacing=true}</button>
+						<button type="submit" class="btn btn-sm btn-danger" id="deleteSelectedBtn" name="submit" disabled>{translate text="Delete Selected" isPublicFacing=true}</button>
 					{/if}
 				</form>
 				<br/>

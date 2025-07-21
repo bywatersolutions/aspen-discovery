@@ -2266,14 +2266,14 @@ class GroupedWorkDriver extends IndexRecordDriver {
 					}
 				}
 				$this->seriesData = $seriesInfo;
-			}else{
+			} else {
 				//Get a list of isbns from the record and existing display info if any
 				$relatedIsbns = $this->getISBNs();
 
 				if (SystemVariables::getSystemVariables()->enableNovelistSeriesIntegration) {
 					$novelist = NovelistFactory::getNovelist();
 					$novelistData = $novelist->loadBasicEnrichment($this->getPermanentId(), $relatedIsbns, $allowReload);
-				}else{
+				} else {
 					$novelistData = null;
 				}
 				$existingDisplayInfo = new GroupedWorkDisplayInfo();
@@ -2304,7 +2304,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 							'fromSeriesIndex' => false
 						];
 					}
-				} else if ($novelistData != null && !empty($novelistData->seriesTitle)) {
+				} else if ($novelistData != null && !empty($novelistData->seriesTitle) && !$this->isSeriesHidden($novelistData->seriesTitle)) {
 					$this->seriesData = [
 						'seriesTitle' => $novelistData->seriesTitle,
 						'volume' => $novelistData->volume,
@@ -2317,7 +2317,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 						$firstSeries = $seriesFromIndex[0];
 						$this->seriesData = [
 							'seriesTitle' => $firstSeries['seriesTitle'],
-							'volume' => isset($firstSeries['volume']) ? $firstSeries['volume'] : '',
+							'volume' => $firstSeries['volume'] ?? '',
 							'fromNovelist' => false,
 							'fromSeriesIndex' => false
 						];
@@ -2328,6 +2328,27 @@ class GroupedWorkDriver extends IndexRecordDriver {
 			}
 		}
 		return $this->seriesData;
+	}
+
+	/**
+	 * Check if a series title should be hidden based on the Hidden Series list.
+	 * @param string $seriesTitle The series title to check.
+	 * @return bool True if the series should be hidden, false otherwise.
+	 */
+	private function isSeriesHidden(string $seriesTitle): bool {
+		// TODO: Should this logic also apply to Grouped Work Display Info and Indexed Series above?
+		// 		It already applies to the Series module during indexing.
+		if (empty($seriesTitle)) {
+			return false;
+		}
+		
+		require_once ROOT_DIR . '/sys/Grouping/HideSeries.php';
+		$hideSeries = new HideSeries();
+		$normalizedSeriesTitle = $hideSeries->normalizeSeries($seriesTitle);
+		
+		$hideSeries = new HideSeries();
+		$hideSeries->seriesNormalized = $normalizedSeriesTitle;
+		return $hideSeries->find(true);
 	}
 
 	public function getShortTitle($useHighlighting = false) {

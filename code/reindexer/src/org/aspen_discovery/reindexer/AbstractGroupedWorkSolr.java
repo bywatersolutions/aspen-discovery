@@ -870,9 +870,6 @@ public abstract class AbstractGroupedWorkSolr {
 	private String getNormalizedSeries(String series) {
 		series = AspenStringUtils.trimTrailingPunctuation(series);
 		series = series.replaceAll("[#|]\\s*\\d+$", "");
-
-		//Remove anything in parentheses since it's normally just the format
-		// series = series.replaceAll("\\s+\\(+.*?\\)+", "");
 		series = series.replaceAll(" & ", " and ");
 		series = series.replaceAll("--", " ");
 		series = series.replaceAll(",\\s+(the|an)$", "");

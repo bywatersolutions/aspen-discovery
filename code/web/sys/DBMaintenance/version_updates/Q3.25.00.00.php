@@ -102,8 +102,7 @@ function getUpdatesQ3_25_00_00(): array {
 					('adminYearInReview','Year in Review','Administer Year in Review','Choose Year in Review administration scope for this role.'),
 					('adminQuickPolls','Web Builder','Administer Quick Polls','Choose quick polls administration scope for this role.'),
 					('adminGrapesPages','Web Builder','Administer Grapes Pages','Choose grapes pages administration scope for this role.'),
-					('adminCustomWebResourcePages','Web Builder','Administer Custom Web Resource Pages','Choose custom web resource pages administration scope for this role.'),
-					('adminSideLoads','Cataloging & eContent','Administer Side Loads','Choose side loads scope for this role.')",
+					('adminCustomWebResourcePages','Web Builder','Administer Custom Web Resource Pages','Choose custom web resource pages administration scope for this role.')",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Browse Categories','Administer Library Browse Categories','Administer Selected Browse Category Groups') WHERE pg.groupKey = 'adminBrowseCategories'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Collection Spotlights','Administer Library Collection Spotlights') WHERE pg.groupKey = 'admincollectionSpotlights'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Placards','Administer Library Placards', 'Edit Library Placards') WHERE pg.groupKey = 'adminPlacards'",
@@ -139,7 +138,6 @@ function getUpdatesQ3_25_00_00(): array {
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Quick Polls','Administer Library Quick Polls') WHERE pg.groupKey = 'adminQuickPolls'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Grapes Pages','Administer Library Grapes Pages') WHERE pg.groupKey = 'adminGrapesPages'",
 				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer All Custom Web Resource Pages','Administer Library Custom Web Resource Pages') WHERE pg.groupKey = 'adminCustomWebResourcePages'",
-				"INSERT IGNORE INTO `permission_group_permissions` (`groupId`,`permissionId`) SELECT pg.id, p.id FROM `permission_groups` pg JOIN `permissions` p ON p.name IN ('Administer Side Loads','Administer Side Loads for Home Library', 'Administer Side Load Scopes for Home Library') WHERE pg.groupKey = 'adminSideLoads'",
 			],
 		], // permission_groups_and_mappings
 		'cleanup_mutually_exclusive_permissions' => [
@@ -501,23 +499,6 @@ function getUpdatesQ3_25_00_00(): array {
 				 JOIN permissions p2 ON rp2.permissionId = p2.id
 				 WHERE p1.name = 'Administer Library Custom Web Resource Pages'
 				 AND p2.name = 'Administer All Custom Web Resource Pages'",
-
-				// adminSideLoads - priority: All > Library > Library Scopes
-				"DELETE rp1
-				 FROM role_permissions rp1
-				 JOIN permissions p1 ON rp1.permissionId = p1.id
-				 JOIN role_permissions rp2 ON rp1.roleId = rp2.roleId
-				 JOIN permissions p2 ON rp2.permissionId = p2.id
-				 WHERE p1.name IN ('Administer Side Loads for Home Library', 'Administer Side Load Scopes for Home Library')
-				 AND p2.name = 'Administer Side Loads'",
-
-				"DELETE rp1
-				 FROM role_permissions rp1
-				 JOIN permissions p1 ON rp1.permissionId = p1.id
-				 JOIN role_permissions rp2 ON rp1.roleId = rp2.roleId
-				 JOIN permissions p2 ON rp2.permissionId = p2.id
-				 WHERE p1.name = 'Administer Side Load Scopes for Home Library'
-				 AND p2.name = 'Administer Side Loads for Home Library'",
 			],
 		], // cleanup_mutually_exclusive_permissions
 		'update_administer_side_loads_name' => [

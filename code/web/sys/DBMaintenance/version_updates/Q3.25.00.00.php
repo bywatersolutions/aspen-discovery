@@ -86,6 +86,13 @@ function getUpdatesQ3_25_00_00(): array {
 				"ALTER TABLE collection_spotlight_lists MODIFY COLUMN defaultSort ENUM('relevance','popularity','newest_to_oldest','author','title','user_rating','holds','publication_year_desc','publication_year_asc','event_date','oldest_to_newest','newest_updated_to_oldest','oldest_updated_to_newest') DEFAULT 'relevance'"
 			]
 		],
+		'clear_wikipedia_article_cache' => [
+			'title' => 'Clear Cached Wikipedia Article Info for Wikipedia Integration Update',
+			'description' => 'Clear the cached Wikipedia article information due to the Wikipedia parser rewrite.',
+			'sql' => [
+				"DELETE FROM cached_values WHERE cache_key='wikipedia_article_%'"
+			]
+		],
 
 		// Laura Escamilla - ByWater Solutions
 

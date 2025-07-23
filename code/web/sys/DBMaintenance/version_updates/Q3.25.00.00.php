@@ -90,7 +90,7 @@ function getUpdatesQ3_25_00_00(): array {
 			'title' => 'Clear Cached Wikipedia Article Info for Wikipedia Integration Update',
 			'description' => 'Clear the cached Wikipedia article information due to the Wikipedia parser rewrite.',
 			'sql' => [
-				"DELETE FROM cached_values WHERE cache_key='wikipedia_article_%'"
+				"DELETE FROM cached_values WHERE cacheKey = 'wikipedia_article_%'"
 			]
 		],
 

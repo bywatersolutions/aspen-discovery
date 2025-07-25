@@ -1,4 +1,5 @@
 <?php
+global $timer;
 requireSystemLibrariesAspen();
 
 $timer->logTime("Finished load library and location");
@@ -175,16 +176,16 @@ function aspen_autoloader($class) {
 			return;
 		} elseif (strpos($class, 'PHPUnit') === 0) {
 			return;
-		} elseif (file_exists('sys/' . $class . '.php')) {
+		} elseif (file_exists(ROOT_DIR . '/sys/' . $class . '.php')) {
 			$className = ROOT_DIR . '/sys/' . $class . '.php';
 			require_once $className;
-		} elseif (file_exists('sys/Account/' . $class . '.php')) {
+		} elseif (file_exists(ROOT_DIR . '/sys/Account/' . $class . '.php')) {
 			$className = ROOT_DIR . '/sys/Account/' . $class . '.php';
 			require_once $className;
-		} elseif (file_exists('Drivers/' . $class . '.php')) {
+		} elseif (file_exists(ROOT_DIR . '/Drivers/' . $class . '.php')) {
 			$className = ROOT_DIR . '/Drivers/' . $class . '.php';
 			require_once $className;
-		} elseif (file_exists('services/MyAccount/lib/' . $class . '.php')) {
+		} elseif (file_exists(ROOT_DIR . '/services/MyAccount/lib/' . $class . '.php')) {
 			$className = ROOT_DIR . '/services/MyAccount/lib/' . $class . '.php';
 			require_once $className;
 		} else {

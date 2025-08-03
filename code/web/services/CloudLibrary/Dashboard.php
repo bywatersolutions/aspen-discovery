@@ -65,7 +65,7 @@ class CloudLibrary_Dashboard extends Admin_Dashboard {
 		$interface->assign('loansAllTime', $loansAllTime);
 		$interface->assign('holdsAllTime', $holdsAllTime);
 
-		$this->display('dashboard.tpl', 'cloudLibrary Dashboard');
+		$this->display('dashboard.tpl', 'CloudLibrary Dashboard');
 	}
 
 	/**

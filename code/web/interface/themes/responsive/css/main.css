@@ -7462,6 +7462,36 @@ body > .container {
 .btn-tools:visited {
   color: #ffffff;
 }
+.btn[data-needs-refresh="true"],
+.btn.shimmer-fade-out {
+  position: relative;
+  overflow: hidden;
+}
+.btn[data-needs-refresh="true"]::before,
+.btn.shimmer-fade-out::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: btn-shimmer 2s infinite;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+.btn.shimmer-fade-out::before {
+  opacity: 0;
+}
+@keyframes btn-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
 .tab-content {
   border-left: 1px solid #ddd;
   border-right: 1px solid #ddd;

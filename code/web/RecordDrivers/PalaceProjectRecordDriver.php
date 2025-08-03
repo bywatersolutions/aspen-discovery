@@ -224,7 +224,7 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 		return [];
 	}
 
-	protected $_actions = null;
+	protected ?array $_actions = null;
 
 	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		if ($this->_actions === null) {
@@ -234,17 +234,23 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 			$loadDefaultActions = true;
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getActiveUserObj();
-				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActions('palace_project', $this->id));
+				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActionsWithLazyLoading('palace_project', $this->id));
 				$loadDefaultActions = count($this->_actions) == 0;
 			}
 			//Check if catalog is offline and login for eResources should be allowed for offline
 			global $offlineMode;
 			global $loginAllowedWhileOffline;
 			if ($loadDefaultActions && (!$offlineMode || $loginAllowedWhileOffline)) {
+				$needsLazyLoading = false;
+				if (UserAccount::isLoggedIn()) {
+					$user = UserAccount::getActiveUserObj();
+					$needsLazyLoading = !$user->isCirculationCacheFresh();
+				}
+				
 				$titleAvailability = $this->getTitleAvailability();
 				if ($titleAvailability != null) {
 					if (!$titleAvailability->needsHold) {
-						$this->_actions[] = [
+						$checkoutAction = [
 							'title' => translate([
 								'text' => 'Check Out Palace Project',
 								'isPublicFacing' => true,
@@ -252,9 +258,16 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 							'onclick' => "return AspenDiscovery.PalaceProject.checkOutTitle('{$this->id}');",
 							'requireLogin' => false,
 							'type' => 'palace_project_checkout',
+							'cssClasses' => 'btn-checkout',
 						];
+						if ($needsLazyLoading) {
+							$checkoutAction['data-needs-refresh'] = 'true';
+							$checkoutAction['data-record-id'] = $this->id;
+							$checkoutAction['data-record-source'] = 'palace_project';
+						}
+						$this->_actions[] = $checkoutAction;
 					}else{
-						$this->_actions[] = [
+						$holdAction = [
 							'title' => translate([
 								'text' => 'Place Hold Palace Project',
 								'isPublicFacing' => true,
@@ -263,6 +276,12 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 							'requireLogin' => false,
 							'type' => 'palace_project_hold',
 						];
+						if ($needsLazyLoading) {
+							$holdAction['data-needs-refresh'] = 'true';
+							$holdAction['data-record-id'] = $this->id;
+							$holdAction['data-record-source'] = 'palace_project';
+						}
+						$this->_actions[] = $holdAction;
 					}
 				}
 			}

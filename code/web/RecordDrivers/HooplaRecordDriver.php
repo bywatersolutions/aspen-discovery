@@ -241,7 +241,7 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 		return [];
 	}
 
-	protected $_actions = null;
+	protected ?array $_actions = null;
 
 	function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		if ($this->_actions === null) {
@@ -250,7 +250,7 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 			$loadDefaultActions = true;
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getActiveUserObj();
-				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActions('hoopla', $this->id));
+				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActionsWithLazyLoading('hoopla', $this->id));
 				$loadDefaultActions = count($this->_actions) == 0;
 			}
 
@@ -258,6 +258,12 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 			global $offlineMode;
 			global $loginAllowedWhileOffline;
 			if ($loadDefaultActions && (!$offlineMode || $loginAllowedWhileOffline)) {
+				$needsLazyLoading = false;
+				if (UserAccount::isLoggedIn()) {
+					$user = UserAccount::getActiveUserObj();
+					$needsLazyLoading = !$user->isCirculationCacheFresh();
+				}
+				
 				/** @var Library $searchLibrary */
 				$searchLibrary = Library::getSearchLibrary();
 				if ($searchLibrary->hooplaLibraryID > 0) { // Library is enabled for Hoopla patron action integration
@@ -268,21 +274,34 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 							'text' => 'Place Hold Hoopla',
 							'isPublicFacing' => true,
 						]);
-						$this->_actions[] = [
+						$holdAction = [
 							'onclick' => "return AspenDiscovery.Hoopla.placeHold('$id')",
 							'title' => $title,
 							'type' => 'hoopla_hold',
 						];
+						if ($needsLazyLoading) {
+							$holdAction['data-needs-refresh'] = 'true';
+							$holdAction['data-record-id'] = $this->id;
+							$holdAction['data-record-source'] = 'hoopla';
+						}
+						$this->_actions[] = $holdAction;
 					} else {
 						$title = translate([
 							'text' => 'Check Out Hoopla',
 							'isPublicFacing' => true,
 						]);
-						$this->_actions[] = [
+						$checkoutAction = [
 							'onclick' => "return AspenDiscovery.Hoopla.getCheckOutPrompts('$id', '$hooplaType')",
 							'title' => $title,
 							'type' => 'hoopla_checkout',
+							'cssClasses' => 'btn-checkout',
 						];
+						if ($needsLazyLoading) {
+							$checkoutAction['data-needs-refresh'] = 'true';
+							$checkoutAction['data-record-id'] = $this->id;
+							$checkoutAction['data-record-source'] = 'hoopla';
+						}
+						$this->_actions[] = $checkoutAction;
 					}
 				} else {
 					$this->_actions[] = $this->getAccessLink();
@@ -497,6 +516,7 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 			$actions[] = [
 				'onclick' => "return AspenDiscovery.Hoopla.getCheckOutPrompts('{$this->id}')",
 				'title' => $title,
+				'cssClasses' => 'btn-checkout',
 			];
 
 		} else {

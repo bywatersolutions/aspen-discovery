@@ -129,6 +129,8 @@ class User extends DataObject {
 	private $_numHoldsOverDrive = 0;
 	private $_numHoldsAvailableOverDrive = 0;
 	private $_numCheckedOutHoopla = 0;
+	private $_circulationStatusCache = [];
+	private $_circulationCacheTimestamp = 0;
 	public $_notices;
 	public $_billingNotices = "-";
 	public $_noticePreferenceLabel;
@@ -152,6 +154,8 @@ class User extends DataObject {
 	public $holdSortAvailable;
 	public $holdSortUnavailable;
 	public $checkoutSort;
+
+	private static int $CIRCULATION_CACHE_TIMEOUT = 300; // 5 minutes
 
 	public static $lidaToAspenCheckoutSortMapping = [
 		'sortTitle' => 'title',
@@ -1755,10 +1759,9 @@ class User extends DataObject {
 	 */
 	public function getCheckouts(bool $includeLinkedUsers = true, string $source = 'all'): array {
 		require_once ROOT_DIR . '/sys/User/Checkout.php';
-		//Check to see if we should return cached information, we will reload it if we last fetched data more than
-		//15 minutes ago or if the refresh option is selected
+		// Reload cached information if it was last fetched more than the cache timeout or if the refresh option is selected.
 		$reloadCheckoutInformation = false;
-		if (($this->checkoutInfoLastLoaded < (time() - 5 * 60)) || isset($_REQUEST['refreshCheckouts'])) {
+		if (($this->checkoutInfoLastLoaded < (time() - self::$CIRCULATION_CACHE_TIMEOUT)) || isset($_REQUEST['refreshCheckouts'])) {
 			$reloadCheckoutInformation = true;
 		}
 
@@ -1766,7 +1769,6 @@ class User extends DataObject {
 		if ($reloadCheckoutInformation) {
 			global $timer;
 			$allCheckedOut = [];
-			//Get checked out titles from the ILS
 			global $offlineMode;
 			if ($this->hasIlsConnection() && !$offlineMode) {
 				$ilsCheckouts = $this->getCatalogDriver()->getCheckouts($this);
@@ -1777,8 +1779,7 @@ class User extends DataObject {
 				}
 			}
 
-			//Get checked out titles from OverDrive
-			//Do not load OverDrive titles if the parent barcode (if any) is the same as the current barcode
+			// Do not load OverDrive titles if the parent barcode (if any) is the same as the current barcode.
 			if ($this->isValidForEContentSource('overdrive')) {
 				require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
 				$driver = new OverDriveDriver();
@@ -1790,8 +1791,7 @@ class User extends DataObject {
 				}
 			}
 
-			//Get checked out titles from Hoopla
-			//Do not load Hoopla titles if the parent barcode (if any) is the same as the current barcode
+			// Do not load Hoopla titles if the parent barcode (if any) is the same as the current barcode.
 			if ($this->isValidForEContentSource('hoopla')) {
 				require_once ROOT_DIR . '/Drivers/HooplaDriver.php';
 				$hooplaDriver = new HooplaDriver();
@@ -1836,10 +1836,11 @@ class User extends DataObject {
 				}
 			}
 
-			//Delete all existing checkouts
 			$checkout = new Checkout();
 			$checkout->userId = $this->id;
 			$checkout->delete(true);
+
+			$this->invalidateCirculationCache();
 
 			foreach ($allCheckedOut as $checkout) {
 				if (is_null($checkout->sourceId)) {
@@ -1859,7 +1860,6 @@ class User extends DataObject {
 			$this->__set('checkoutInfoLastLoaded', time());
 			$this->update();
 		} else {
-			//fetch cached checkouts
 			$checkout = new Checkout();
 			$checkout->userId = $this->id;
 			if ($source != 'all') {
@@ -1873,7 +1873,6 @@ class User extends DataObject {
 
 		if ($includeLinkedUsers) {
 			if ($this->getLinkedUsers() != null) {
-				/** @var User $user */
 				foreach ($this->getLinkedUsers() as $linkedUser) {
 					$checkoutsToReturn = array_merge($checkoutsToReturn, $linkedUser->getCheckouts(false, $source));
 				}
@@ -1884,20 +1883,6 @@ class User extends DataObject {
 			$this->calculateCostSavingsForCurrentCheckouts($checkoutsToReturn);
 		}
 		return $checkoutsToReturn;
-	}
-
-	public function isRecordCheckedOut($source, $recordId) {
-		$this->getCheckouts(false, 'all');
-		require_once ROOT_DIR . "/sys/User/Checkout.php";
-		$checkout = new Checkout();
-		$checkout->userId = $this->id;
-		$checkout->source = $source;
-		$checkout->recordId = $recordId;
-		if ($checkout->find(true)) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	public function isBlockedFromIllRequests() {
@@ -1913,10 +1898,9 @@ class User extends DataObject {
 
 	public function getHolds($includeLinkedUsers = true, $unavailableSort = 'sortTitle', $availableSort = 'expire', $source = 'all'): array {
 		require_once ROOT_DIR . '/sys/User/Hold.php';
-		//Check to see if we should return cached information, we will reload it if we last fetched it more than
-		//5 minutes ago or if the refresh option is selected
+		// Reload cached information if it was last fetched more than the cache timeout or if the refresh option is selected.
 		$reloadHoldInformation = false;
-		if (($this->holdInfoLastLoaded < time() - 5 * 60) || isset($_REQUEST['refreshHolds'])) {
+		if (($this->holdInfoLastLoaded < time() - self::$CIRCULATION_CACHE_TIMEOUT) || isset($_REQUEST['refreshHolds'])) {
 			$reloadHoldInformation = true;
 		}
 
@@ -1925,8 +1909,6 @@ class User extends DataObject {
 			'unavailable' => [],
 		];
 		if ($reloadHoldInformation) {
-			//When we reload holds, we will fetch from all sources so they can be cached.
-
 			$allHolds = [
 				'available' => [],
 				'unavailable' => [],
@@ -1940,7 +1922,6 @@ class User extends DataObject {
 				}
 			}
 
-			//Get holds from OverDrive
 			if ($source == 'all' || $source == 'overdrive') {
 				if ($this->isValidForEContentSource('overdrive')) {
 					require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
@@ -1951,7 +1932,6 @@ class User extends DataObject {
 				}
 			}
 
-			//Get holds from cloudLibrary
 			if ($source == 'all' || $source == 'cloud_library') {
 				if ($this->isValidForEContentSource('cloud_library')) {
 					require_once ROOT_DIR . '/Drivers/CloudLibraryDriver.php';
@@ -1962,7 +1942,6 @@ class User extends DataObject {
 				}
 			}
 
-			//Get holds from Boundless
 			if ($source == 'all' || $source == 'axis360') {
 				if ($this->isValidForEContentSource('axis360')) {
 					require_once ROOT_DIR . '/Drivers/Axis360Driver.php';
@@ -1973,7 +1952,6 @@ class User extends DataObject {
 				}
 			}
 
-			//Get holds from Palace Project
 			if ($source == 'all' || $source == 'palace_project') {
 				if ($this->isValidForEContentSource('palace_project')) {
 					require_once ROOT_DIR . '/Drivers/PalaceProjectDriver.php';
@@ -1986,7 +1964,7 @@ class User extends DataObject {
 
 			if ($source == 'all' || $source == 'interlibrary_loan') {
 				if ($this->hasInterlibraryLoan()) {
-					//For now, this is just VDX
+					// For now, this is just VDX.
 					require_once ROOT_DIR . '/Drivers/VdxDriver.php';
 					$driver = new VdxDriver();
 					$vdxRequests = $driver->getRequests($this);
@@ -1995,7 +1973,6 @@ class User extends DataObject {
 				}
 			}
 
-			//Get holds from Hoopla
 			if ($source == 'all' || $source == 'hoopla') {
 				if ($this->isValidForEContentSource('hoopla_flex')) {
 					require_once ROOT_DIR . '/Drivers/HooplaDriver.php';
@@ -2006,10 +1983,11 @@ class User extends DataObject {
 				}
 			}
 
-			//Delete all existing holds
 			$hold = new Hold();
 			$hold->userId = $this->id;
 			$hold->delete(true);
+
+			$this->invalidateCirculationCache();
 
 			foreach ($allHolds['available'] as $holdToSave) {
 				if (is_null($holdToSave->sourceId)) {
@@ -2038,13 +2016,11 @@ class User extends DataObject {
 			$this->__set('holdInfoLastLoaded', time());
 			$this->update();
 		} else {
-			//fetch cached holds
 			$hold = new Hold();
 			$hold->userId = $this->id;
 			if ($source != 'all') {
 				$hold->type = $source;
 			}
-			/** @var Hold $allHolds */
 			$allHolds = $hold->fetchAll();
 			foreach ($allHolds as $hold) {
 				$key = $hold->source;
@@ -2085,7 +2061,7 @@ class User extends DataObject {
 				$b = isset($b->$indexToSortBy) ? $b->$indexToSortBy : null;
 			}
 
-			// Put empty values (except for specified values of zero) at the bottom of the sort
+			// Put empty values (except for specified values of zero) at the bottom of the sort.
 			if (modifiedEmpty($a) && modifiedEmpty($b)) {
 				if ($indexToSortBy != 'sortTitle') {
 					return strnatcasecmp($titleA, $titleB);
@@ -2116,25 +2092,13 @@ class User extends DataObject {
 		};
 
 		if (!empty($holdsToReturn['available'])) {
-			switch ($availableSort) {
-				case 'author' :
-				case 'format' :
-					//This is used in the sort function
-					$indexToSortBy = $availableSort;
-					break;
-				case 'title' :
-					$indexToSortBy = 'sortTitle';
-					break;
-				case 'libraryAccount' :
-					$indexToSortBy = 'user';
-					break;
-				case 'location' :
-					$indexToSortBy = 'pickupLocationName';
-					break;
-				case 'expire' :
-				default :
-					$indexToSortBy = 'expirationDate';
-			}
+			$indexToSortBy = match ($availableSort) {
+				'author', 'format' => $availableSort,
+				'title' => 'sortTitle',
+				'libraryAccount' => 'user',
+				'location' => 'pickupLocationName',
+				default => 'expirationDate',
+			};
 			uasort($holdsToReturn['available'], $holdSort);
 		}
 		if (!empty($holdsToReturn['unavailable'])) {
@@ -2154,6 +2118,166 @@ class User extends DataObject {
 		}
 
 		return $holdsToReturn;
+	}
+
+	/**
+	 * Ensure all circulation data is loaded and cached in memory.
+	 * Respects existing cache system and only loads data that exists in database.
+	 */
+	private function ensureCirculationDataLoaded(): void {
+		// Load data only if in-memory cache is empty AND database shows we don't have recent data.
+		if (empty($this->_circulationStatusCache)) {
+			$cacheTimestamp = max($this->checkoutInfoLastLoaded, $this->holdInfoLastLoaded);
+
+			$this->loadAllCirculationData();
+			if ($cacheTimestamp == 0) {
+				$currentTime = time();
+				$this->__set('checkoutInfoLastLoaded', $currentTime);
+				$this->__set('holdInfoLastLoaded', $currentTime);
+				$this->update();
+			}
+		}
+	}
+
+	/**
+	 * Load all circulation data (i.e., checkouts and holds) in batch queries.
+	 */
+	private function loadAllCirculationData(): void {
+		$this->_circulationStatusCache = [
+			'checkouts' => [],
+			'holds' => []
+		];
+
+		require_once ROOT_DIR . "/sys/User/Checkout.php";
+		$checkout = new Checkout();
+		$checkout->userId = $this->id;
+		$checkout->find();
+
+		while ($checkout->fetch()) {
+			$cacheKey = "{$checkout->source}:{$checkout->recordId}";
+			$this->_circulationStatusCache['checkouts'][$cacheKey] = true;
+		}
+
+		require_once ROOT_DIR . "/sys/User/Hold.php";
+		$hold = new Hold();
+		$hold->userId = $this->id;
+		$hold->find();
+
+		while ($hold->fetch()) {
+			$cacheKey = "{$hold->source}:{$hold->recordId}";
+			$this->_circulationStatusCache['holds'][$cacheKey] = true;
+		}
+
+	}
+
+	/**
+	 * Invalidate circulation cache when circulation data changes.
+	 */
+	private function invalidateCirculationCache(): void {
+		$this->_circulationStatusCache = [];
+		$this->_circulationCacheTimestamp = 0;
+	}
+
+	public function isRecordCheckedOut($source, $recordId): bool {
+		$this->ensureCirculationDataLoaded();
+
+		$cacheKey = "{$source}:{$recordId}";
+		return isset($this->_circulationStatusCache['checkouts'][$cacheKey]);
+	}
+
+	public function isRecordOnHold($source, $recordId): bool {
+		$this->ensureCirculationDataLoaded();
+
+		$cacheKey = "{$source}:{$recordId}";
+		return isset($this->_circulationStatusCache['holds'][$cacheKey]);
+	}
+
+	/**
+	 * Check if circulation cache is fresh (i.e., within cache timeout period).
+	 *
+	 * @return bool True if cache is fresh; false if stale or non-existent.
+	 */
+	public function isCirculationCacheFresh(): bool {
+		$cacheTimestamp = min($this->checkoutInfoLastLoaded, $this->holdInfoLastLoaded);
+		if ($cacheTimestamp == 0) {
+			return false;
+		}
+		$cacheExpiry = time() - self::$CIRCULATION_CACHE_TIMEOUT;
+		return $cacheTimestamp >= $cacheExpiry;
+	}
+
+	public function areCirculationActionsDisabled(): bool {
+		return !$this->hasIlsConnection() || $this->disableCirculationActions;
+	}
+
+	public function getCirculatedRecordActions($source, $recordId, $loadingLinkedUser = false): array {
+		$actions = [];
+		if ($this->areCirculationActionsDisabled()) {
+			return $actions;
+		}
+		$showUserName = $loadingLinkedUser;
+		if ($this->isRecordCheckedOut($source, $recordId)) {
+			$actions[] = [
+				'title' => translate([
+					'text' => 'Checked Out to %1%',
+					1 => $showUserName ? $this->displayName : translate([
+						'text' => 'You',
+						'isPublicFacing' => true,
+					]),
+					'isPublicFacing' => true,
+				]),
+				'url' => "/MyAccount/CheckedOut",
+				'requireLogin' => false,
+				'btnType' => 'btn-info',
+			];
+		} elseif ($this->isRecordOnHold($source, $recordId)) {
+			$actions[] = [
+				'title' => translate([
+					'text' => 'On Hold for %1%',
+					1 => $showUserName ? $this->displayName : translate([
+						'text' => 'You',
+						'isPublicFacing' => true,
+					]),
+					'isPublicFacing' => true,
+				]),
+				'url' => "/MyAccount/Holds",
+				'requireLogin' => false,
+				'btnType' => 'btn-info',
+				'id' => 'onHoldAction' . $recordId
+			];
+		}
+		if (!$loadingLinkedUser) {
+			$linkedUsers = $this->getLinkedUsers();
+			foreach ($linkedUsers as $linkedUser) {
+				$actions = array_merge($actions, $linkedUser->getCirculatedRecordActions($source, $recordId, true));
+			}
+		}
+		return $actions;
+	}
+
+
+	/**
+	 * Get circulation actions with lazy loading support based on cache state.
+	 *
+	 * @param string $source The record source (overdrive, ils, etc.).
+	 * @param string $recordId The record ID.
+	 * @param bool $loadingLinkedUser Whether this is for a linked user.
+	 * @return array Actions array with lazy loading attributes when appropriate.
+	 */
+	public function getCirculatedRecordActionsWithLazyLoading(string $source, string $recordId, bool $loadingLinkedUser = false): array {
+		// Get circulation actions using enhanced caching
+		$actions = $this->getCirculatedRecordActions($source, $recordId, $loadingLinkedUser);
+
+		// Add lazy loading attributes when cache needs refresh (not fresh)
+		if (!$this->isCirculationCacheFresh()) {
+			foreach ($actions as &$action) {
+				$action['data-needs-refresh'] = 'true';
+				$action['data-record-id'] = $recordId;
+				$action['data-record-source'] = $source;
+			}
+		}
+
+		return $actions;
 	}
 
 	public function inUserEvents($id) {
@@ -2231,85 +2355,6 @@ class User extends DataObject {
 		}
 
 		return false;
-	}
-
-	public function isRecordOnHold($source, $recordId) {
-		$this->getHolds(false, 'all');
-		require_once ROOT_DIR . "/sys/User/Hold.php";
-		$hold = new Hold();
-		$hold->userId = $this->id;
-		$hold->source = $source;
-		$hold->recordId = $recordId;
-		if ($hold->find(true)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public function areCirculationActionsDisabled() {
-		if (!$this->hasIlsConnection()) {
-			return true;
-		} else {
-			if ($this->disableCirculationActions) {
-				return true;
-			} else {
-				//TODO: Should we automatically disable the circulation actions if there are a large number of things checked out and/or on hold?
-				//$accountSummary = $this->getAccountSummary();
-				return false;
-			}
-		}
-	}
-
-	public function getCirculatedRecordActions($source, $recordId, $loadingLinkedUser = false) {
-		$actions = [];
-		if ($this->areCirculationActionsDisabled() == true) {
-			return $actions;
-		}
-		$showUserName = $loadingLinkedUser;
-//		if (!$loadingLinkedUser){
-//			$linkedUsers = $this->getLinkedUsers();
-//			if (count($linkedUsers) > 0){
-//				$showUserName = true;
-//			}
-//		}
-		if ($this->isRecordCheckedOut($source, $recordId)) {
-			$actions[] = [
-				'title' => translate([
-					'text' => 'Checked Out to %1%',
-					1 => $showUserName ? $this->displayName : translate([
-						'text' => 'You',
-						'isPublicFacing' => true,
-					]),
-					'isPublicFacing' => true,
-				]),
-				'url' => "/MyAccount/CheckedOut",
-				'requireLogin' => false,
-				'btnType' => 'btn-info',
-			];
-		} elseif ($this->isRecordOnHold($source, $recordId)) {
-			$actions[] = [
-				'title' => translate([
-					'text' => 'On Hold for %1%',
-					1 => $showUserName ? $this->displayName : translate([
-						'text' => 'You',
-						'isPublicFacing' => true,
-					]),
-					'isPublicFacing' => true,
-				]),
-				'url' => "/MyAccount/Holds",
-				'requireLogin' => false,
-				'btnType' => 'btn-info',
-				'id' => 'onHoldAction' . $recordId
-			];
-		}
-		if (!$loadingLinkedUser) {
-			$linkedUsers = $this->getLinkedUsers();
-			foreach ($linkedUsers as $linkedUser) {
-				$actions = array_merge($actions, $linkedUser->getCirculatedRecordActions($source, $recordId, true));
-			}
-		}
-		return $actions;
 	}
 
 	private $ilsFinesForUser;
@@ -4984,23 +5029,25 @@ class User extends DataObject {
 		$summary->delete(true);
 	}
 
-	public function forceReloadOfCheckouts() {
+	public function forceReloadOfCheckouts(): void {
 		require_once ROOT_DIR . '/sys/User/Checkout.php';
 		$checkout = new Checkout();
 		$checkout->userId = $this->id;
 		$checkout->delete(true);
 
 		$this->__set('checkoutInfoLastLoaded', 0);
+		$this->invalidateCirculationCache();
 		$this->update();
 	}
 
-	public function forceReloadOfHolds() {
+	public function forceReloadOfHolds(): void {
 		require_once ROOT_DIR . '/sys/User/Hold.php';
 		$hold = new Hold();
 		$hold->userId = $this->id;
 		$hold->delete(true);
 
 		$this->__set('holdInfoLastLoaded', 0);
+		$this->invalidateCirculationCache();
 		$this->update();
 	}
 

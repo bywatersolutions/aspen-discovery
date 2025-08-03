@@ -16,6 +16,13 @@ class MyAccount_AJAX extends JSON_Action {
 				break;
 			case 'getUserHolds':
 				$method = 'getUserHolds';
+				break;
+			case 'refreshUserCirculationCache':
+				$method = 'refreshUserCirculationCache';
+				break;
+			case 'getUpdatedCirculationButtons':
+				$method = 'getUpdatedCirculationButtons';
+				break;
 		}
 		if (method_exists($this, $method)) {
 			parent::launch($method);
@@ -10373,6 +10380,91 @@ class MyAccount_AJAX extends JSON_Action {
 
 		return [
 			'success' => true,
+		];
+	}
+
+	/**
+	 * Refresh user circulation cache by forcing reload of checkouts and holds data
+	 * Used for lazy loading optimization
+	 */
+	public function refreshUserCirculationCache(): array {
+		if (!UserAccount::isLoggedIn()) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You must be logged in to refresh circulation data.',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+		$user = UserAccount::getActiveUserObj();
+		
+		// Force refresh by setting cache timestamps to 0
+		$user->checkoutInfoLastLoaded = 0;
+		$user->holdInfoLastLoaded = 0;
+		$user->update();
+
+		// Trigger fresh data load
+		$user->getCheckouts(true, 'all');
+		$user->getHolds(true, 'all');
+
+		return [
+			'success' => true,
+		];
+	}
+
+	/**
+	 * Get updated circulation button HTML for multiple records after cache refresh
+	 * Used for lazy loading optimization
+	 */
+	public function getUpdatedCirculationButtons(): array {
+		if (!UserAccount::isLoggedIn()) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You must be logged in to get circulation buttons.',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+		$recordData = $_REQUEST['recordData'] ?? [];
+		if (empty($recordData)) {
+			return [
+				'success' => false,
+				'message' => 'No record data provided',
+			];
+		}
+
+		$user = UserAccount::getActiveUserObj();
+		$updatedButtons = [];
+
+		foreach ($recordData as $record) {
+			$source = $record['source'] ?? '';
+			$recordId = $record['recordId'] ?? '';
+			
+			if (!empty($source) && !empty($recordId)) {
+				$actions = $user->getCirculatedRecordActions($source, $recordId);
+				$updatedButtons[] = [
+					'source' => $source,
+					'recordId' => $recordId,
+					'actions' => $actions,
+				];
+			}
+		}
+
+		return [
+			'success' => true,
+			'buttons' => $updatedButtons,
 		];
 	}
 

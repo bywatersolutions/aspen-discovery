@@ -1292,7 +1292,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getActiveUserObj();
-				$this->_actions[$variationId] = array_merge($this->_actions[$variationId], $user->getCirculatedRecordActions($this->getIndexingProfile()->name, $this->id));
+				$this->_actions[$variationId] = array_merge($this->_actions[$variationId], $user->getCirculatedRecordActionsWithLazyLoading($this->getIndexingProfile()->name, $this->id));
 			}
 
 			$treatVolumeHoldsAsItemHolds = $this->getCatalogDriver()->treatVolumeHoldsAsItemHolds();

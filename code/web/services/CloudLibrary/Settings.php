@@ -18,7 +18,7 @@ class CloudLibrary_Settings extends ObjectEditor {
 	}
 
 	function getPageTitle(): string {
-		return 'cloudLibrary Settings';
+		return 'CloudLibrary Settings';
 	}
 
 	function getAllObjects($page, $recordsPerPage): array {

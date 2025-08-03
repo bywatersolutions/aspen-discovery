@@ -23,18 +23,27 @@ AspenDiscovery.CloudLibrary = (function () {
 			});
 		},
 
-		checkOutTitle: function (patronId, id) {
+		checkOutTitle(patronId, id) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.CloudLibrary.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.CloudLibrary.doCheckOut(promptInfo.patronId, id);
+				const $checkoutButton = $('.btn-checkout[onclick*="' + id + '"]');
+				if ($checkoutButton.length > 0) {
+					AspenDiscovery.toggleButtonSpinner($checkoutButton, true);
 				}
+
+				AspenDiscovery.CloudLibrary.getCheckOutPrompts(id, function(promptInfo) {
+					if ($checkoutButton.length > 0) {
+						AspenDiscovery.toggleButtonSpinner($checkoutButton, false);
+					}
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.CloudLibrary.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
 					AspenDiscovery.CloudLibrary.checkOutTitle(patronId, id);
-				});
+				}, false);
 			}
 			return false;
 		},
@@ -100,28 +109,27 @@ AspenDiscovery.CloudLibrary = (function () {
 			});
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/CloudLibrary/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = true;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/CloudLibrary/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
 		getHoldPrompts: function (id) {

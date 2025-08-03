@@ -80,40 +80,47 @@ AspenDiscovery.OverDrive = (function(){
 			}).error(AspenDiscovery.ajaxFail);
 		},
 
-		getCheckOutPrompts: function(overDriveId){
-			var url = Globals.path + "/OverDrive/" + overDriveId + "/AJAX?method=getCheckOutPrompts";
-			var result = true;
-			//This runs synchronously so we can return the data
+		getCheckOutPrompts(overDriveId, callback) {
+			const url = Globals.path + "/OverDrive/" + overDriveId + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function(data){
-					result = data;
 					// noinspection JSUnresolvedReference
 					if (data.promptNeeded){
 						// noinspection JSUnresolvedReference
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function(){
 					AspenDiscovery.showMessage('An Error occurred', "An error occurred processing your request in OverDrive.  Please try again in a few minutes.");
+					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			// noinspection JSUnresolvedReference
-			return result;
 		},
 
-		checkOutTitle: function(overDriveId){
-			if (Globals.loggedIn){
-				//Get any prompts needed for checking the title out.
-				var promptInfo = AspenDiscovery.OverDrive.getCheckOutPrompts(overDriveId);
-				// noinspection JSUnresolvedReference
-				if (!promptInfo.promptNeeded){
-					AspenDiscovery.OverDrive.doOverDriveCheckout(promptInfo.patronId, overDriveId);
+		checkOutTitle(overDriveId){
+			if (Globals.loggedIn) {
+				const $checkoutButton = $('.btn-checkout[onclick*="' + overDriveId + '"]');
+				if ($checkoutButton.length > 0) {
+					AspenDiscovery.toggleButtonSpinner($checkoutButton, true);
 				}
-			}else{
+
+				AspenDiscovery.OverDrive.getCheckOutPrompts(overDriveId, function(promptInfo) {
+					if ($checkoutButton.length > 0) {
+						AspenDiscovery.toggleButtonSpinner($checkoutButton, false);
+					}
+
+					// noinspection JSUnresolvedReference
+					if (promptInfo && !promptInfo.promptNeeded){
+						AspenDiscovery.OverDrive.doOverDriveCheckout(promptInfo.patronId, overDriveId);
+					}
+				});
+			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function(){
 					AspenDiscovery.OverDrive.checkOutTitle(overDriveId);
 				}, true);

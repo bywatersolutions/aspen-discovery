@@ -18,7 +18,7 @@ class CloudLibrary_Scopes extends ObjectEditor {
 	}
 
 	function getPageTitle(): string {
-		return 'cloudLibrary Scopes';
+		return 'CloudLibrary Scopes';
 	}
 
 	function getAllObjects($page, $recordsPerPage): array {

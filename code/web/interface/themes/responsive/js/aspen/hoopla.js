@@ -23,7 +23,9 @@ AspenDiscovery.Hoopla = (function(){
 					if (data.success) {
 						AspenDiscovery.Account.loadMenuData();
 					}
-				}).fail(AspenDiscovery.ajaxFail)
+				}).fail(function() {
+					AspenDiscovery.ajaxFail();
+				})
 			}else{
 				AspenDiscovery.Account.ajaxLogin(null, function(){
 					AspenDiscovery.Hoopla.checkOutHooplaTitle(hooplaId, patronId, hooplaType);
@@ -32,20 +34,35 @@ AspenDiscovery.Hoopla = (function(){
 			return false;
 		},
 
-		getCheckOutPrompts: function (hooplaId, hooplaType) {
+		getCheckOutPrompts(hooplaId, hooplaType) {
 			if (Globals.loggedIn) {
-				var url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX?method=getCheckOutPrompts";
-				var params = {
-					'method' : 'getCheckOutPrompts',
-					hooplaType : hooplaType
+				const $checkoutButton = $('.btn-checkout[onclick*="' + hooplaId + '"]');
+				if ($checkoutButton.length > 0) {
+					AspenDiscovery.toggleButtonSpinner($checkoutButton, true);
+				}
+
+				const url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX?method=getCheckOutPrompts";
+				const params = {
+					'method': 'getCheckOutPrompts',
+					hooplaType: hooplaType
 				};
 				$.getJSON(url, params, function (data) {
+					if ($checkoutButton.length > 0) {
+						AspenDiscovery.toggleButtonSpinner($checkoutButton, false);
+					}
+
+					// noinspection JSUnresolvedReference
 					if (data.flexDirectCheckout) {
 						AspenDiscovery.Hoopla.checkOutHooplaTitle(hooplaId, data.patronId, data.hooplaType);
 					} else {
 						AspenDiscovery.showMessageWithButtons(data.title, data.body, data.buttons);
 					}
-				}).fail(AspenDiscovery.ajaxFail);
+				}).fail(function() {
+					if ($checkoutButton.length > 0) {
+						AspenDiscovery.toggleButtonSpinner($checkoutButton, false);
+					}
+					AspenDiscovery.ajaxFail();
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
 					AspenDiscovery.Hoopla.getCheckOutPrompts(hooplaId, hooplaType);

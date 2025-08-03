@@ -23,18 +23,27 @@ AspenDiscovery.Axis360 = (function () {
 			});
 		},
 
-		checkOutTitle: function (id) {
+		checkOutTitle(id) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.Axis360.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.Axis360.doCheckOut(promptInfo.patronId, id);
+				const $checkoutButton = $('.btn-checkout[onclick*="' + id + '"]');
+				if ($checkoutButton.length > 0) {
+					AspenDiscovery.toggleButtonSpinner($checkoutButton, true);
 				}
+
+				AspenDiscovery.Axis360.getCheckOutPrompts(id, function(promptInfo) {
+					if ($checkoutButton.length > 0) {
+						AspenDiscovery.toggleButtonSpinner($checkoutButton, false);
+					}
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.Axis360.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
 					AspenDiscovery.Axis360.checkOutTitle(id);
-				});
+				}, false);
 			}
 			return false;
 		},
@@ -104,28 +113,27 @@ AspenDiscovery.Axis360 = (function () {
 			return true;
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/Axis360/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = false;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/Axis360/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
 		getHoldPrompts: function (id) {

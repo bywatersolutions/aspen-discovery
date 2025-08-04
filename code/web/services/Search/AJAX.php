@@ -120,6 +120,7 @@ class AJAX extends Action {
 		if (!empty($searchObject) && !($searchObject instanceof AspenError)) {
 			//Load results from INN-Reach
 			$innReach = new InnReach();
+			$innReachResults = null;
 
 			// Only show INN-Reach results within search results if enabled
 			if ($library && $library->enableInnReachIntegration && $library->showInnReachResultsAtEndOfSearch) {
@@ -132,7 +133,7 @@ class AJAX extends Action {
 			$timer->logTime('load INN-Reach titles');
 			//echo $interface->fetch('Search/ajax-innreach.tpl');
 			return [
-				'numTitles' => count($innReachResults),
+				'numTitles' => is_array($innReachResults) ? count($innReachResults) : 0,
 				'formattedData' => $interface->fetch('Search/ajax-innreach.tpl'),
 			];
 		} else {
@@ -167,7 +168,7 @@ class AJAX extends Action {
 			$interface->assign('shareItLink', $shareItResults['searchLink']);
 			$timer->logTime('load SHAREitTitles');
 			return [
-				'numTitles' => count($shareItResults),
+				'numTitles' => isset($shareItResults['records']) && is_array($shareItResults['records']) ? count($shareItResults['records']) : 0,
 				'formattedData' => $interface->fetch('Search/ajax-shareit.tpl'),
 			];
 		} else {

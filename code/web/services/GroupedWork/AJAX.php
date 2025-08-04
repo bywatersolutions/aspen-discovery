@@ -1075,7 +1075,7 @@ class GroupedWork_AJAX extends JSON_Action {
 		$interface->assign('shareItResults', $shareItResults['records']);
 
 		return [
-			'numTitles' => count($shareItResults),
+			'numTitles' => isset($shareItResults['records']) && is_array($shareItResults['records']) ? count($shareItResults['records']) : 0,
 			'formattedData' => $interface->fetch('GroupedWork/ajax-shareit.tpl'),
 		];
 	}

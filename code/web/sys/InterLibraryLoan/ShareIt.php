@@ -58,7 +58,7 @@ class ShareIt {
 
 			if (!empty($searchResponse)) {
 				$searchResponse = json_decode($searchResponse);
-				$numResults = count($searchResponse->results);
+				$numResults = isset($searchResponse->results) && is_array($searchResponse->results) ? count($searchResponse->results) : 0;
 				$shareItTitles = [];
 				for ($i = 0; $i < min($numResults, $maxResults); $i++) {
 					$curResult = $searchResponse->results[$i];

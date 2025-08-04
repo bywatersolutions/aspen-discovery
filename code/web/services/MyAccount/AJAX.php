@@ -10410,8 +10410,8 @@ class MyAccount_AJAX extends JSON_Action {
 		$user->update();
 
 		// Trigger fresh data load
-		$user->getCheckouts(true, 'all');
-		$user->getHolds(true, 'all');
+		$user->getCheckouts();
+		$user->getHolds();
 
 		return [
 			'success' => true,
@@ -10451,13 +10451,31 @@ class MyAccount_AJAX extends JSON_Action {
 		foreach ($recordData as $record) {
 			$source = $record['source'] ?? '';
 			$recordId = $record['recordId'] ?? '';
+			$clearAllButtons = false;
 			
 			if (!empty($source) && !empty($recordId)) {
 				$actions = $user->getCirculatedRecordActions($source, $recordId);
+				// If actions are empty, there are no circulation actions,
+				// so load the default actions from the respective record driver.
+				if (empty($actions)) {
+					try {
+						require_once ROOT_DIR . '/RecordDrivers/RecordDriverFactory.php';
+						$recordDriver = RecordDriverFactory::initRecordDriverById($source . ':' . $recordId);
+						if ($recordDriver && !($recordDriver instanceof AspenError)) {
+							$actions = $recordDriver->getRecordActionsFromIndex();
+							$clearAllButtons = true;
+						}
+					} catch (Exception $e) {
+						global $logger;
+						$logger->log("Failed to load actions from record driver for $source:$recordId: " . $e->getMessage(), Logger::LOG_ERROR);
+					}
+				}
+				
 				$updatedButtons[] = [
 					'source' => $source,
 					'recordId' => $recordId,
 					'actions' => $actions,
+					'clearAllButtons' => $clearAllButtons,
 				];
 			}
 		}

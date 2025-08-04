@@ -1021,14 +1021,10 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 				}else{
 					$activeUser = null;
 				}
-				global $logger;
 				if ($loadDefaultActions) {
 					$needsLazyLoading = false;
 					if ($activeUser) {
-						$needsLazyLoading = !$activeUser->isCirculationCacheFresh();
-						$logger->log("DEBUG OverDrive: User logged in, needsLazyLoading = " . ($needsLazyLoading ? 'true' : 'false'), Logger::LOG_ERROR);
-					} else {
-						$logger->log("DEBUG OverDrive: No active user", Logger::LOG_ERROR);
+						if (!$activeUser->areCirculationActionsDisabled()) $needsLazyLoading = !$activeUser->isCirculationCacheFresh();
 					}
 					
 					require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';

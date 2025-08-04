@@ -99,6 +99,7 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 						$checkout->userId = $patron->id;
 						$checkout->sourceId = $publication->metadata->identifier;
 						$checkout->recordId = $publication->metadata->identifier;
+						$checkout->canRenew = false;
 						$palaceProjectTitle = new PalaceProjectTitle();
 						$palaceProjectTitle->palaceProjectId = $publication->metadata->identifier;
 						if ($palaceProjectTitle->find(true)) {
@@ -542,7 +543,7 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 			}
 			if (!$cancelWorked) {
 				$result['message'] = translate([
-					'text' => "Could not cancel Palace Project hold, " . (string)$status->statusMessage,
+					'text' => 'Could not cancel Palace Project hold.',
 					'isPublicFacing' => true,
 				]);
 
@@ -552,7 +553,7 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 					'isPublicFacing' => true,
 				]);
 				$result['api']['message'] = translate([
-					'text' => 'Could not cancel Palace Project hold, ' . (string)$status->statusMessage,
+					'text' => 'Could not cancel Palace Project hold.',
 					'isPublicFacing' => true,
 				]);
 

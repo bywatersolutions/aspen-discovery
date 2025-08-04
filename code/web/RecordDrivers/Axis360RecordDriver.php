@@ -228,7 +228,7 @@ class Axis360RecordDriver extends GroupedWorkSubDriver {
 				$needsLazyLoading = false;
 				if (UserAccount::isLoggedIn()) {
 					$user = UserAccount::getActiveUserObj();
-					$needsLazyLoading = !$user->isCirculationCacheFresh();
+					if (!$user->areCirculationActionsDisabled()) $needsLazyLoading = !$user->isCirculationCacheFresh();
 				}
 				
 				if ($isAvailable) {

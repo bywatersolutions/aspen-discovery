@@ -189,7 +189,7 @@ class CloudLibraryRecordDriver extends MarcRecordDriver {
 				$needsLazyLoading = false;
 				if (UserAccount::isLoggedIn()) {
 					$user = UserAccount::getActiveUserObj();
-					$needsLazyLoading = !$user->isCirculationCacheFresh();
+					if (!$user->areCirculationActionsDisabled()) $needsLazyLoading = !$user->isCirculationCacheFresh();
 				}
 				
 				if ($isAvailable) {

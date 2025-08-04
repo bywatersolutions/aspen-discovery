@@ -85,13 +85,13 @@ AspenDiscovery.LazyCirculation = {
 	updateButtonsInDOM(buttonData, buttonMap) {
 		buttonData = buttonData || [];
 		buttonData.forEach(record => {
-			const { source = '', recordId = '', actions = [] } = record || {};
+			const { source = '', recordId = '', actions = [], clearAllButtons = false } = record || {};
 			const key = `${source}:${recordId}`;
 			const buttons = buttonMap.get(key);
 
 			if (buttons && buttons.length > 0) {
 				buttons.forEach(button => {
-					this.updateSingleButton(button, actions);
+					this.updateSingleButton(button, actions, clearAllButtons);
 				});
 			}
 		});
@@ -102,8 +102,9 @@ AspenDiscovery.LazyCirculation = {
 	 *
 	 * @param {Element} button The button element to update.
 	 * @param {Array} actions New action data.
+	 * @param {boolean} clearAllButtons Whether to clear all buttons.
 	 */
-	updateSingleButton(button, actions) {
+	updateSingleButton(button, actions, clearAllButtons) {
 		const $button = $(button);
 
 		$button.addClass('shimmer-fade-out');
@@ -122,16 +123,29 @@ AspenDiscovery.LazyCirculation = {
 		if (actions && actions.length > 0) {
 			const $buttonContainer = $button.closest('.btn-group, .btn-toolbar, .manifestation-actions');
 			if ($buttonContainer.length > 0) {
-				actions.forEach(action => {
-					const $newButton = this.createButtonElement(action);
-					if ($newButton) {
-						$button.before($newButton);
-					}
-				});
-
-				// Remove the original button, as it's been replaced by circulation actions.
-				$button.remove();
+				// Clear all existing buttons in the container to avoid duplicates.
+				if (clearAllButtons) {
+					$buttonContainer.empty();
+					actions.forEach(action => {
+						const $newButton = this.createButtonElement(action);
+						if ($newButton) {
+							$buttonContainer.append($newButton);
+						}
+					});
+				} else {
+					// Insert new actions at the position of the old button.
+					actions.forEach(action => {
+						const $newButton = this.createButtonElement(action);
+						if ($newButton) {
+							$button.before($newButton);
+						}
+					});
+					$button.remove();
+				}
 			}
+		} else {
+			// If no actions, just remove the stale button.
+			$button.remove();
 		}
 	},
 
@@ -145,10 +159,10 @@ AspenDiscovery.LazyCirculation = {
 		action = action || {};
 		const {
 			title = '', url = '#', btnType = 'btn-action', id = null,
-			onclick = null, target = null, requireLogin = false
+			onclick = null, target = null, requireLogin = false, cssClasses = ''
 		} = action;
 		if (!title) return null;
-		const $button = $('<a>').attr('href', url).addClass(`btn btn-sm ${btnType} btn-wrap`).text(title);
+		const $button = $('<a>').attr('href', url).addClass(`btn btn-sm ${btnType} btn-wrap ${cssClasses}`.trim()).text(title);
 
 		if (id) {
 			$button.attr('id', id);

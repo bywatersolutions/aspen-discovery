@@ -825,7 +825,7 @@ class User extends DataObject {
 		return $this->linkedUserObjects;
 	}
 
-	public function setParentUser($user) {
+	public function setParentUser($user): void {
 		$this->parentUser = $user;
 	}
 
@@ -1767,6 +1767,7 @@ class User extends DataObject {
 
 		$checkoutsToReturn = [];
 		if ($reloadCheckoutInformation) {
+			$this->clearSessionCirculationCache();
 			global $timer;
 			$allCheckedOut = [];
 			global $offlineMode;
@@ -1909,6 +1910,7 @@ class User extends DataObject {
 			'unavailable' => [],
 		];
 		if ($reloadHoldInformation) {
+			$this->clearSessionCirculationCache();
 			$allHolds = [
 				'available' => [],
 				'unavailable' => [],
@@ -2125,16 +2127,19 @@ class User extends DataObject {
 	 * Respects existing cache system and only loads data that exists in database.
 	 */
 	private function ensureCirculationDataLoaded(): void {
-		// Load data only if in-memory cache is empty AND database shows we don't have recent data.
 		if (empty($this->_circulationStatusCache)) {
-			$cacheTimestamp = max($this->checkoutInfoLastLoaded, $this->holdInfoLastLoaded);
+			// Try to restore from session cache if available.
+			if (!$this->restoreCirculationCacheFromSession()) {
+				// If no session cache, load from database.
+				$cacheTimestamp = max($this->checkoutInfoLastLoaded, $this->holdInfoLastLoaded);
 
-			$this->loadAllCirculationData();
-			if ($cacheTimestamp == 0) {
-				$currentTime = time();
-				$this->__set('checkoutInfoLastLoaded', $currentTime);
-				$this->__set('holdInfoLastLoaded', $currentTime);
-				$this->update();
+				$this->loadAllCirculationData();
+				if ($cacheTimestamp == 0) {
+					$currentTime = time();
+					$this->__set('checkoutInfoLastLoaded', $currentTime);
+					$this->__set('holdInfoLastLoaded', $currentTime);
+					$this->update();
+				}
 			}
 		}
 	}
@@ -2152,9 +2157,8 @@ class User extends DataObject {
 		$checkout = new Checkout();
 		$checkout->userId = $this->id;
 		$checkout->find();
-
 		while ($checkout->fetch()) {
-			$cacheKey = "{$checkout->source}:{$checkout->recordId}";
+			$cacheKey = "$checkout->source:$checkout->recordId";
 			$this->_circulationStatusCache['checkouts'][$cacheKey] = true;
 		}
 
@@ -2162,12 +2166,10 @@ class User extends DataObject {
 		$hold = new Hold();
 		$hold->userId = $this->id;
 		$hold->find();
-
 		while ($hold->fetch()) {
-			$cacheKey = "{$hold->source}:{$hold->recordId}";
+			$cacheKey = "$hold->source:$hold->recordId";
 			$this->_circulationStatusCache['holds'][$cacheKey] = true;
 		}
-
 	}
 
 	/**
@@ -2176,6 +2178,51 @@ class User extends DataObject {
 	private function invalidateCirculationCache(): void {
 		$this->_circulationStatusCache = [];
 		$this->_circulationCacheTimestamp = 0;
+	}
+
+	/**
+	 * Save current circulation cache to session storage.
+	 * This allows the UI to continue displaying accurate circulation status immediately
+	 * after checkout/hold actions, while still enabling the lazy-loading system to refresh
+	 * buttons with updated data in the background.
+	 */
+	private function saveCirculationCacheToSession(): void {
+		if (!empty($this->_circulationStatusCache)) {
+			$_SESSION["circulation_cache_{$this->id}"] = [
+				'cache' => $this->_circulationStatusCache,
+				'timestamp' => time(),
+				'checkoutInfoLastLoaded' => $this->checkoutInfoLastLoaded,
+				'holdInfoLastLoaded' => $this->holdInfoLastLoaded,
+			];
+		}
+	}
+
+	/**
+	 * Restore circulation cache from session storage if available.
+	 * This restores previously saved circulation data from the session when the in-memory
+	 * cache is empty. This prevents circulation displays from going blank immediately after
+	 * checkout/hold actions.
+	 * 
+	 * @return bool True if cache was restored from session; false if no session cache found.
+	 */
+	private function restoreCirculationCacheFromSession(): bool {
+		$sessionKey = "circulation_cache_{$this->id}";
+		if (isset($_SESSION[$sessionKey]) && !empty($_SESSION[$sessionKey]['cache'])) {
+			$sessionData = $_SESSION[$sessionKey];
+			$this->_circulationStatusCache = $sessionData['cache'];
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Clear the session-stored circulation cache.
+	 * This removes the temporary session cache when fresh
+	 * circulation data is loaded from the database/API.
+	 */
+	private function clearSessionCirculationCache(): void {
+		$sessionKey = "circulation_cache_{$this->id}";
+		unset($_SESSION[$sessionKey]);
 	}
 
 	public function isRecordCheckedOut($source, $recordId): bool {
@@ -2265,10 +2312,13 @@ class User extends DataObject {
 	 * @return array Actions array with lazy loading attributes when appropriate.
 	 */
 	public function getCirculatedRecordActionsWithLazyLoading(string $source, string $recordId, bool $loadingLinkedUser = false): array {
-		// Get circulation actions using enhanced caching
-		$actions = $this->getCirculatedRecordActions($source, $recordId, $loadingLinkedUser);
+		$actions = [];
+		if ($this->areCirculationActionsDisabled()) {
+			return $actions;
+		}
 
-		// Add lazy loading attributes when cache needs refresh (not fresh)
+		$actions = $this->getCirculatedRecordActions($source, $recordId, $loadingLinkedUser);
+		// Add lazy loading attributes when cache needs refresh (i.e., not fresh).
 		if (!$this->isCirculationCacheFresh()) {
 			foreach ($actions as &$action) {
 				$action['data-needs-refresh'] = 'true';
@@ -5030,6 +5080,9 @@ class User extends DataObject {
 	}
 
 	public function forceReloadOfCheckouts(): void {
+		$this->ensureCirculationDataLoaded();
+		$this->saveCirculationCacheToSession();
+		
 		require_once ROOT_DIR . '/sys/User/Checkout.php';
 		$checkout = new Checkout();
 		$checkout->userId = $this->id;
@@ -5041,6 +5094,9 @@ class User extends DataObject {
 	}
 
 	public function forceReloadOfHolds(): void {
+		$this->ensureCirculationDataLoaded();
+		$this->saveCirculationCacheToSession();
+		
 		require_once ROOT_DIR . '/sys/User/Hold.php';
 		$hold = new Hold();
 		$hold->userId = $this->id;

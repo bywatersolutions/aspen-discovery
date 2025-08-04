@@ -5,6 +5,11 @@
 			{*<div class="col-xs-4">*}
 			<div class="col-xs-3 col-sm-4 col-md-3 checkedOut-covers-column">
 				<div class="row">
+					<div class="selectTitle hidden-xs col-sm-1">
+						{if !isset($record->canRenew) || $record->canRenew == true}
+							<input type="checkbox" name="selected[{$record->userId}|{$record->recordId}]" class="titleSelect" id="selected{$record->recordId}">
+						{/if}
+					</div>
 					<div class="{*coverColumn *}text-center col-xs-12 col-sm-10">
 						{if $disableCoverArt != 1}{*TODO: should become part of $showCovers *}
 							{if $record->getCoverUrl()}

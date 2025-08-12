@@ -165,13 +165,17 @@
 
 				{if !empty($showAudience)}
 					{if $alwaysShowSearchResultsMainDetails || $summAudience}
-						<div class="result-label col-sm-4 col-xs-12">{translate text='Audience' isPublicFacing=true} </div>
-						<div class="result-value col-sm-8 col-xs-12">
-						{if !empty($summAudience)}
-							{$summAudience}
-						{elseif $alwaysShowSearchResultsMainDetails}
-							{translate text="Not Supplied" isPublicFacing=true}
-						{/if}
+						{assign var=formats value=$recordDriver->getFormats()}
+						{assign var=formats value=array_map('strstr', $formats, array_fill(0, count($formats), "#"))}
+						<div class="result-audience result-{join(" result-", array_unique($formats))|replace:"#":""|replace:" ":"-"|lower}">
+							<div class="result-label col-sm-4 col-xs-12">{translate text='Audience' isPublicFacing=true} </div>
+							<div class="result-value col-sm-8 col-xs-12">
+								{if !empty($summAudience)}
+									{$summAudience}
+								{elseif $alwaysShowSearchResultsMainDetails}
+									{translate text="Not Supplied" isPublicFacing=true}
+								{/if}
+							</div>
 						</div>
 					{/if}
 				{/if}

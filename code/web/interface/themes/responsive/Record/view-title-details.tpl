@@ -165,7 +165,7 @@
 	{/if}
 
 	{if !empty($showAudience) && $recordDriver->getAudience()}
-		<div class="row">
+		<div class="row result-audience result-{str_replace(" ", "-", join(" ", $recordDriver->getFormats()))|lower}">
 			<div class="result-label col-sm-4 col-xs-12">{translate text='Audience' isPublicFacing=true} </div>
 			<div class="result-value col-sm-8 col-xs-12">
 				{$recordDriver->getAudience()}

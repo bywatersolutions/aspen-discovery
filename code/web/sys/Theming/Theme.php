@@ -3684,18 +3684,11 @@ class Theme extends DataObject {
 		while ($theme->fetch()) {
 			$allThemesByName[$theme->themeName] = clone $theme;
 		}
-		//We need to make sure that all parent themes are updated before the child.
-		// Will also need to look for recursion
-		while (count($themeIdsUpdated) != count($allThemesByName)) {
-			foreach ($allThemesByName as $theme) {
-				$parentThemes = $theme->getThemeHierarchy($allThemesByName, []);
-				/** @var Theme $parentTheme */
-				foreach ($parentThemes as $parentTheme) {
-					if (!array_key_exists($parentTheme->id, $themeIdsUpdated)) {
-						$parentTheme->generateCss(true);
-						$themeIdsUpdated[$parentTheme->id] = $parentTheme->id;
-					}
-				}
+		// Simply update each theme once, like individual saves do.
+		foreach ($allThemesByName as $theme) {
+			if (!array_key_exists($theme->id, $themeIdsUpdated)) {
+				$theme->update();
+				$themeIdsUpdated[$theme->id] = $theme->id;
 			}
 		}
 	}

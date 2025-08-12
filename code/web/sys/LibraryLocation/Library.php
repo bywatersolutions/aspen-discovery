@@ -543,6 +543,7 @@ class Library extends DataObject {
 	}
 
 	static function getObjectStructure($context = ''): array {
+		global $enabledModules;
 		// get the structure for the library system's holidays
 		$holidaysStructure = Holiday::getObjectStructure($context);
 
@@ -3133,9 +3134,11 @@ class Library extends DataObject {
 			'useSeriesSearchIndex' => [
 				'property' => 'useSeriesSearchIndex',
 				'type' => 'enum',
-				'values' => [
+				'values' => array_key_exists('Series', $enabledModules) ? [
 					'0' => 'Grouped Work Based Series Search',
 					'1' => 'Aspen Series Search',
+				] : [
+					'0' => 'Grouped Work Based Series Search',
 				],
 				'label' => 'Series Search Mode',
 				'hideInLists' => false,
@@ -4552,11 +4555,22 @@ class Library extends DataObject {
 		if (!array_key_exists('Single sign-on', $enabledModules)) {
 			unset($structure['ssoSection']);
 		}
-		if (!$catalog || !$catalog->hasIlsConsentSupport()) {
-			unset($structure['dataProtectionRegulations']['properties']['ilsConsentEnabled']);
-		}
 		if (!array_key_exists('Talpa Search', $enabledModules)) {
 			unset($structure['talpaSearchSection']);
+		}
+		if (!array_key_exists('Community Engagement', $enabledModules)) {
+			unset($structure['communityEngagement']);
+			unset($structure['displaySection']['properties']['highlightCommunityEngagement']);
+			unset($structure['displaySection']['properties']['highlightCommunityEngagementOpenToEnroll']);
+		}
+		if (!array_key_exists('Axis 360', $enabledModules)) {
+			unset($structure['axis360Section']);
+		}
+		if (!array_key_exists('Palace Project', $enabledModules)) {
+			unset($structure['palaceProjectSection']);
+		}
+		if (!$catalog || !$catalog->hasIlsConsentSupport()) {
+			unset($structure['dataProtectionRegulations']['properties']['ilsConsentEnabled']);
 		}
 
 		return $structure;
@@ -5539,7 +5553,6 @@ class Library extends DataObject {
 		}else{
 			return Library::$_fullList[$accountProfileId] = $libraryList;
 		}
-		return $libraryList;
 	}
 
 	static $libraryListAsObjects = null;

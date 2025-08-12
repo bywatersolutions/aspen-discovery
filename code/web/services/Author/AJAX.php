@@ -47,7 +47,7 @@ class Author_AJAX extends JSON_Action {
 			}
 			$authorName = trim($authorName);
 
-			//Check to see if we have an override
+			// Check to see if there is an Author Enrichment entry override.
 			require_once ROOT_DIR . '/sys/LocalEnrichment/AuthorEnrichment.php';
 			$authorEnrichment = new AuthorEnrichment();
 			$authorEnrichment->authorName = $authorName;
@@ -82,6 +82,13 @@ class Author_AJAX extends JSON_Action {
 					$returnVal['success'] = true;
 					$interface->assign('info', $authorInfo);
 					$returnVal['formatted_article'] = $interface->fetch('Author/wikipedia_article.tpl');
+
+					if (isset($authorInfo['description']) &&
+						(str_contains($authorInfo['description'], 'may refer to') ||
+							str_contains($authorInfo['description'], 'refers to') ||
+							str_contains($authorInfo['description'], 'disambiguation'))) {
+						$errorType = 'disambiguation';
+					}
 				} else {
 					$returnVal['success'] = false;
 					$errorType = 'not_found';
@@ -91,9 +98,14 @@ class Author_AJAX extends JSON_Action {
 				$returnVal['success'] = false;
 			}
 
-			if (!$returnVal['success'] && IPAddress::showDebuggingInformation() && !empty($errorType)) {
-				$returnVal['debugMessage'] = 'Wikipedia search for "' . $authorName . '" returned no result (' . $errorType . '). ' .
-					'Consider using Wikipedia Integration (Author Enrichment) to correct the Wikipedia search or to prevent Wikipedia searching for this author.';
+			if (IPAddress::showDebuggingInformation() && !empty($errorType)) {
+				if ($errorType === 'disambiguation') {
+					$returnVal['debugMessage'] = 'Wikipedia search for "' . $authorName . '" returned a disambiguation page. ' .
+						'Consider using Wikipedia Integration (Author Enrichment) to specify the exact Wikipedia URL for this author.';
+				} elseif (!$returnVal['success']) {
+					$returnVal['debugMessage'] = 'Wikipedia search for "' . $authorName . '", with parenthetical content removed, returned no result (' . $errorType . '). ' .
+						'Consider using Wikipedia Integration (Author Enrichment) to correct the Wikipedia search or to prevent Wikipedia searching for this author.';
+				}
 			}
 
 		} else {

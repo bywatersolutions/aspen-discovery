@@ -196,15 +196,19 @@ class Author_Home extends ResultsAction {
 		// Pull External Author Content
 		$interface->assign('showWikipedia', false);
 		if ($searchObject->getPage() == 1) {
-			// Only load Wikipedia info if turned on in config file:
 			if ($library->showWikipediaContent == 1) {
 				$interface->assign('showWikipedia', true);
 
-				//Strip anything in parenthesis
-				if (strpos($wikipediaAuthorName, '(') > 0) {
+				require_once ROOT_DIR . '/sys/LocalEnrichment/AuthorEnrichment.php';
+				$authorEnrichment = new AuthorEnrichment();
+				$authorEnrichment->authorName = $wikipediaAuthorName;
+				$hasEnrichmentEntry = $authorEnrichment->find(true);
+
+				// Only strip parentheses if there's no enrichment entry for the full name (including parenthetical information).
+				if (!$hasEnrichmentEntry && strpos($wikipediaAuthorName, '(') > 0) {
 					$wikipediaAuthorName = substr($wikipediaAuthorName, 0, strpos($wikipediaAuthorName, '('));
+					$wikipediaAuthorName = trim($wikipediaAuthorName);
 				}
-				$wikipediaAuthorName = trim($wikipediaAuthorName);
 				$interface->assign('wikipediaAuthorName', $wikipediaAuthorName);
 			}
 		}

@@ -8,10 +8,20 @@ require_once ROOT_DIR . '/sys/Indexing/SideLoad.php';
 class SideLoads_SideLoads extends ObjectEditor {
 	function launch() : void {
 		global $interface;
-		$objectAction = isset($_REQUEST['objectAction']) ? $_REQUEST['objectAction'] : null;
+		$objectAction = $_REQUEST['objectAction'] ?? null;
 		if ($objectAction == 'viewMarcFiles') {
 			$id = $_REQUEST['id'];
 			$interface->assign('id', $id);
+
+			$user = UserAccount::getActiveUserObj();
+			if (!empty($user->updateMessage)) {
+				$interface->assign('updateMessage', $user->updateMessage);
+				$interface->assign('updateMessageIsError', $user->updateMessageIsError);
+				$user->updateMessage = '';
+				$user->updateMessageIsError = 0;
+				$user->update();
+			}
+			
 			$files = [];
 			$sideLoadConfiguration = new SideLoad();
 			$sideLoadConfiguration->id = $id;
@@ -108,7 +118,7 @@ class SideLoads_SideLoads extends ObjectEditor {
 			}
 			if ($existingObject->id != '' && !$existingObject->isReadOnly()) {
 				$actions[] = [
-					'text' => 'Upload MARC file',
+					'text' => 'Upload MARC File',
 					'url' => '/SideLoads/UploadMarc?id=' . $existingObject->id,
 				];
 			}

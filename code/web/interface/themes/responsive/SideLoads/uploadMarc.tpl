@@ -1,29 +1,44 @@
 {strip}
 	<div id="main-content" class="col-md-12">
-		<div class="btn-group">
-			<a class="btn btn-sm btn-default" href="/SideLoads/SideLoads?objectAction=edit&amp;id={$id}">{translate text="Edit Profile" isAdminFacing=true}</a>
-			{if !empty($additionalObjectActions)}
-				{foreach from=$additionalObjectActions item=action}
-					{if $smarty.server.REQUEST_URI != $action.url}
-						<a class="btn btn-default btn-sm" href='{$action.url}'>{$action.text}</a>
-					{/if}
-				{/foreach}
-			{/if}
-			<a class="btn btn-sm btn-default" href='/SideLoads/SideLoads?objectAction=list'>{translate text="Return to List" isAdminFacing=true}</a>
-		</div>
-
-		<h1>{translate text="Upload MARC Record" isAdminFacing=true}</h1>
-
-		{if !empty($error)}
-			<div class="alert alert-warning">
-				{$error}
+		<h1>{translate text="Upload MARC Records" isAdminFacing=true}</h1>
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="btn-group">
+					<a class="btn btn-default" href='/SideLoads/SideLoads?objectAction=list'><i class="fas fa-arrow-alt-circle-left" role="presentation"></i> {translate text="Return to List" isAdminFacing=true}</a>
+				</div>
+				<div class="btn-group">
+					<a class="btn btn-default" href="/SideLoads/SideLoads?objectAction=edit&amp;id={$id}"><i class="fas fa-edit" role="presentation"></i> {translate text="Edit Side Load" isAdminFacing=true}</a>
+				</div>
+				<div class="btn-group">
+					<a class="btn btn-default" href="/SideLoads/SideLoads?objectAction=viewMarcFiles&amp;id={$id}"><i class="fas fa-file-alt" role="presentation"></i> {translate text="View MARC Files" isAdminFacing=true}</a>
+				</div>
 			</div>
-		{elseif !empty($message)}
-			<div class="alert alert-info">
-				{$message}
+		</div>
+		{if !empty($additionalObjectActions)}
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="btn-group-sm">
+						{foreach from=$additionalObjectActions item=action}
+							{if $smarty.server.REQUEST_URI != $action.url}
+								<a class="btn btn-default" href='{$action.url}'>{translate text=$action.text isAdminFacing=true}</a>
+							{/if}
+						{/foreach}
+					</div>
+				</div>
 			</div>
 		{/if}
-		<form enctype="multipart/form-data" name="uploadMarc" method="post">
+
+		<div style="margin-top: 20px;">
+			{if !empty($error)}
+				<div class="alert alert-warning">
+					{$error}
+				</div>
+			{elseif !empty($message)}
+				<div class="alert alert-info">
+					{$message}
+				</div>
+			{/if}
+			<form enctype="multipart/form-data" name="uploadMarc" method="post">
 			<input type="hidden" name="id" value="{$id}"/>
 			<div class="form-group">
 				<div class="input-group">
@@ -42,7 +57,8 @@
 			<div class="form-group">
 				<button type="submit" class="btn btn-primary">{translate text="Upload File" isAdminFacing=true}</button>
 			</div>
-		</form>
+			</form>
+		</div>
 	</div>
 	<script type="application/javascript">
 		{literal}

@@ -3,7 +3,7 @@ require_once ROOT_DIR . '/services/Admin/Admin.php';
 require_once ROOT_DIR . '/sys/Indexing/SideLoad.php';
 
 class SideLoads_UploadMarc extends Admin_Admin {
-	function launch() {
+	function launch(): void {
 		global $interface;
 
 		//Figure out the maximum upload size
@@ -38,8 +38,8 @@ class SideLoads_UploadMarc extends Admin_Admin {
 					}
 					$destFileName = $uploadedFile["name"];
 					$destFullPath = $uploadPath . '/' . $destFileName;
-					if ($fileType == 'application/x-zip-compressed') {
-						$zip = new ZipArchive;
+					if ($fileType == 'application/x-zip-compressed' || $fileType == 'application/zip' || strtolower(pathinfo($destFileName, PATHINFO_EXTENSION)) == 'zip') {
+						$zip = new ZipArchive();
 						$res = $zip->open($uploadedFile["tmp_name"]);
 						if ($res === TRUE) {
 							// extract it to the path we determined above
@@ -53,7 +53,16 @@ class SideLoads_UploadMarc extends Admin_Admin {
 									chmod($fullFileName, 0664);
 								}
 							}
-							$interface->assign('message', "File uploaded and unzipped");
+							$sideload->runFullUpdate = true;
+							$sideload->update();
+							
+							$user = UserAccount::getActiveUserObj();
+							$user->updateMessage = "File uploaded and unzipped. Indexing has been scheduled to run automatically.";
+							$user->updateMessageIsError = 0;
+							$user->update();
+							
+							header('Location: /SideLoads/SideLoads?objectAction=viewMarcFiles&id=' . $id);
+							exit();
 						} else {
 							$interface->assign('error', "Could not unzip the file");
 						}
@@ -79,13 +88,31 @@ class SideLoads_UploadMarc extends Admin_Admin {
 								chmod($fullFileName, 0664);
 							}
 						}
-						$interface->assign('message', "The file was uploaded and unzipped successfully");
+						$sideload->runFullUpdate = true;
+						$sideload->update();
+						
+						$user = UserAccount::getActiveUserObj();
+						$user->updateMessage = "The file was uploaded and unzipped successfully. Indexing has been scheduled to run automatically.";
+						$user->updateMessageIsError = 0;
+						$user->update();
+						
+						header('Location: /SideLoads/SideLoads?objectAction=viewMarcFiles&id=' . $id);
+						exit();
 					} else {
 						$copyResult = copy($uploadedFile["tmp_name"], $destFullPath);
 						if ($copyResult) {
 							chgrp($destFullPath, 'aspen_apache');
 							chmod($destFullPath, 0774);
-							$interface->assign('message', "The file was uploaded successfully");
+							$sideload->runFullUpdate = true;
+							$sideload->update();
+							
+							$user = UserAccount::getActiveUserObj();
+							$user->updateMessage = "The file was uploaded successfully. Indexing has been scheduled to run automatically.";
+							$user->updateMessageIsError = 0;
+							$user->update();
+							
+							header('Location: /SideLoads/SideLoads?objectAction=viewMarcFiles&id=' . $id);
+							exit();
 						} else {
 							$interface->assign('error', "Could not copy the file to $uploadPath");
 						}

@@ -221,6 +221,14 @@ function getUpdates25_08_00(): array {
 				"ALTER TABLE system_variables ADD COLUMN logFrequentCrons TINYINT(1) DEFAULT 0"
 			]
 		], //log_frequent_crons_system_variable
+		'enable_original_cover_urls_setting' => [
+			'title' => 'Enable the "Use Original Cover URLs" URL Setting',
+			'description' => 'Enable the "Use Original Cover URLs" setting for all test servers.',
+			'continueOnError' => false,
+			'sql' => [
+				"UPDATE system_variables SET useOriginalCoverUrls = 1"
+			]
+		], //log_frequent_crons_system_variable
 
 		// Laura Escamilla - ByWater Solutions
 

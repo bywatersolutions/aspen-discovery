@@ -4525,8 +4525,17 @@ class Library extends DataObject {
 			unset($structure['casSection']);
 		}
 		global $enabledModules;
-		if (!array_key_exists('EBSCO EDS', $enabledModules)) {
-			unset($structure['edsSection']);
+		if (!array_key_exists('EBSCO EDS', $enabledModules) && !array_key_exists('EBSCOhost', $enabledModules)) {
+			unset($structure['ebscoSection']);
+		} else {
+			if (!array_key_exists('EBSCO EDS', $enabledModules)) {
+				unset($structure['ebscoSection']['properties']['edsSettingsId']);
+				unset($structure['exploreMoreBarSection']['properties']['displayExploreMoreBarInEbscoEds']);
+			}
+			if (!array_key_exists('EBSCOhost', $enabledModules)) {
+				unset($structure['ebscoSection']['properties']['ebscohostSearchSettingId']);
+				unset($structure['exploreMoreBarSection']['properties']['displayExploreMoreBarInEbscoHost']);
+			}
 		}
 		if (!array_key_exists('Summon', $enabledModules)) {
 			unset($structure['summonSection']);

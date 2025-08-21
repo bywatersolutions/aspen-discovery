@@ -406,9 +406,19 @@ function getSubdomainsToTestFromServerName($fullServerName, array $subdomainsToT
 	$serverComponents = explode('.', $fullServerName);
 	$tempSubdomain = '';
 	if (count($serverComponents) >= 3) {
-		//URL is probably of the form subdomain.librarysite.org or subdomain.opac.librarysite.org
-		$subdomainsToTest[] = $serverComponents[0];
-		$tempSubdomain = $serverComponents[0];
+		// Handle multi-level subdomains by extracting all subdomain combinations.
+		// For discover.kids.library.org, test: discover.kids, kids, discover.
+		$subdomainParts = array_slice($serverComponents, 0, -2);
+
+		// Add all possible subdomain combinations, starting from the most specific.
+		for ($i = 0; $i < count($subdomainParts); $i++) {
+			$subdomainToTest = implode('.', array_slice($subdomainParts, $i));
+			$subdomainsToTest[] = $subdomainToTest;
+			if ($i == 0) {
+				// Use the full subdomain for test indicator processing.
+				$tempSubdomain = $subdomainToTest;
+			}
+		}
 	} elseif (count($serverComponents) == 2) {
 		//URL could be either subdomain.localhost or librarysite.org. Only use the subdomain
 		//If the second component is localhost.

@@ -907,67 +907,77 @@ class Evergreen extends AbstractIlsDriver {
 				ExternalRequestLogEntry::logRequest('evergreen.getReadingHistory', 'POST', $evergreenUrl, $this->apiCurlWrapper->getHeaders(), $params, $this->apiCurlWrapper->getResponseCode(), $apiResponse, []);
 				if ($this->apiCurlWrapper->getResponseCode() == 200) {
 					$circHistoryDecoded = json_decode($apiResponse);
+					if ($circHistoryDecoded === null) {
+						$hasMoreHistory = false;
+						global $logger;
+						$logger->log("Could not decode Evergreen reading history response for $patron->ils_barcode.", Logger::LOG_ERROR);
+						break;
+					}
 					if (empty($circHistoryDecoded->payload)) {
 						$hasMoreHistory = false;
-					}
-					foreach ($circHistoryDecoded->payload as $circEntry) {
-						$circEntryMapped = $this->mapEvergreenFields($circEntry->__p, $this->fetchIdl('auch'));
-
-						require_once ROOT_DIR . '/sys/User/Checkout.php';
-						if (empty($circEntryMapped['source_circ'])) {
-							$modsForCopy = $this->getModsForCopy($circEntryMapped['target_copy']);
-							if ($modsForCopy != null) {
-								if (is_integer($modsForCopy['doc_id'])) {
-									$modsForCopy['doc_id'] = strval($modsForCopy['doc_id']);
-								}
-								$curTitle = [];
-								$curTitle['id'] = $modsForCopy['doc_id'];
-								$curTitle['shortId'] = $modsForCopy['doc_id'];
-								$curTitle['recordId'] = $modsForCopy['doc_id'];
-								$curTitle['title'] = $modsForCopy['title'];
-								$curTitle['author'] = $modsForCopy['author'];
-								require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
-								$marcRecordDriver = new MarcRecordDriver($modsForCopy['doc_id']);
-								if ($marcRecordDriver->isValid()) {
-									$curTitle['format'] = $marcRecordDriver->getPrimaryFormat();
+					} else {
+						foreach ($circHistoryDecoded->payload as $circEntry) {
+							$circEntryMapped = $this->mapEvergreenFields($circEntry->__p, $this->fetchIdl('auch'));
+							$curTitle = [];
+							require_once ROOT_DIR . '/sys/User/Checkout.php';
+							if (empty($circEntryMapped['source_circ'])) {
+								$modsForCopy = $this->getModsForCopy($circEntryMapped['target_copy']);
+								if ($modsForCopy != null) {
+									if (is_integer($modsForCopy['doc_id'])) {
+										$modsForCopy['doc_id'] = strval($modsForCopy['doc_id']);
+									}
+									$curTitle['id'] = $modsForCopy['doc_id'];
+									$curTitle['shortId'] = $modsForCopy['doc_id'];
+									$curTitle['recordId'] = $modsForCopy['doc_id'];
+									$curTitle['title'] = $modsForCopy['title'];
+									$curTitle['author'] = $modsForCopy['author'];
+									require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
+									$marcRecordDriver = new MarcRecordDriver($modsForCopy['doc_id']);
+									if ($marcRecordDriver->isValid()) {
+										$curTitle['format'] = $marcRecordDriver->getPrimaryFormat();
+									} else {
+										$curTitle['format'] = 'Unknown';
+									}
+									if (!empty($circEntryMapped['xact_start'])) {
+										$curTitle['checkout'] = strtotime($circEntryMapped['xact_start']);;
+									}
+									if (!empty($circEntryMapped['checkin_time'])) {
+										$curTitle['checkin'] = strtotime($circEntryMapped['checkin_time']);
+									} else {
+										$curTitle['checkin'] = null;
+									}
 								} else {
-									$curTitle['format'] = 'Unknown';
-								}
-								if (!empty($circEntryMapped['xact_start'])) {
-									$curTitle['checkout'] = strtotime($circEntryMapped['xact_start']);;
-								}
-								if (!empty($circEntryMapped['checkin_time'])) {
-									$curTitle['checkin'] = strtotime($circEntryMapped['checkin_time']);
-								} else {
-									$curTitle['checkin'] = null;
+									continue;
 								}
 							} else {
-								continue;
-							}
-						} else {
-							$checkout = $this->loadCheckoutData($patron, $circEntryMapped['source_circ'], $authToken);
-							if ($checkout != null) {
-								$curTitle = [];
-								$curTitle['id'] = $checkout->recordId;
-								$curTitle['shortId'] = $checkout->recordId;
-								$curTitle['recordId'] = $checkout->recordId;
-								$curTitle['title'] = $checkout->title;
-								$curTitle['author'] = $checkout->author;
-								$curTitle['format'] = $checkout->format;
-								$curTitle['checkout'] = $checkout->checkoutDate;
-								if (!empty($circEntryMapped['checkin_time'])) {
-									$curTitle['checkin'] = strtotime($circEntryMapped['checkin_time']);
-								} else {
-									$curTitle['checkin'] = null;
+								$checkout = $this->loadCheckoutData($patron, $circEntryMapped['source_circ'], $authToken);
+								if ($checkout != null) {
+									$curTitle['id'] = $checkout->recordId;
+									$curTitle['shortId'] = $checkout->recordId;
+									$curTitle['recordId'] = $checkout->recordId;
+									$curTitle['title'] = $checkout->title;
+									$curTitle['author'] = $checkout->author;
+									$curTitle['format'] = $checkout->format;
+									$curTitle['checkout'] = $checkout->checkoutDate;
+									if (!empty($circEntryMapped['checkin_time'])) {
+										$curTitle['checkin'] = strtotime($circEntryMapped['checkin_time']);
+									} else {
+										$curTitle['checkin'] = null;
+									}
 								}
 							}
+							$readingHistoryTitles[] = $curTitle;
+							$numTitles++;
 						}
-						$readingHistoryTitles[] = $curTitle;
-						$numTitles++;
 					}
+					$offset += 100;
+				} else {
+					global $logger;
+					$logger->log("API call failed for getting the Evergreen reading history for $patron->ils_barcode.", Logger::LOG_ERROR);
+					$hasMoreHistory = false;
+					break;
 				}
 			}
-			$offset += 100;
 		}
 
 		$systemVariables = SystemVariables::getSystemVariables();

@@ -763,7 +763,57 @@ class DataObjectUtil {
 				return $propertyName;
 			}
 
-			$objectStructure = $object->getObjectStructure();
+			// Cache the structure and a flat label map per class for this request.
+			static $structureCache = []; // className => objectStructure
+			static $labelMapCache  = []; // className => [ 'prop' => 'Label', 'parent.child' => 'Child Label', ... ]
+
+			$class = get_class($object);
+
+			if (!isset($structureCache[$class])) {
+				$structureCache[$class] = $object->getObjectStructure();
+			}
+			$objectStructure = $structureCache[$class];
+
+			if (!isset($labelMapCache[$class])) {
+				$labelMap = [];
+				$stack = [$objectStructure];
+
+				while (!empty($stack)) {
+					$section = array_pop($stack);
+					if (!is_array($section)) continue;
+
+					foreach ($section as $field) {
+						if (!is_array($field)) continue;
+
+						$type = $field['type'] ?? null;
+
+						// Record label for simple properties.
+						if (isset($field['property'])) {
+							$prop = $field['property'];
+							if (!empty($field['label'])) {
+								$labelMap[$prop] = $field['label'];
+							}
+
+							// For oneToMany, also record labels for child properties as "parent.child".
+							if ($type == 'oneToMany' && isset($field['structure']) && is_array($field['structure'])) {
+								foreach ($field['structure'] as $sub) {
+									if (is_array($sub) && isset($sub['property']) && !empty($sub['label'])) {
+										$labelMap[$prop . '.' . $sub['property']] = $sub['label'];
+									}
+								}
+							}
+						}
+
+						if ($type == 'section' && isset($field['properties']) && is_array($field['properties'])) {
+							$stack[] = $field['properties'];
+						}
+					}
+				}
+
+				$labelMapCache[$class] = $labelMap;
+			}
+
+			$labelMap = $labelMapCache[$class];
 
 			// Handle one-to-many relationships.
 			$parts = explode('.', $propertyName);
@@ -771,24 +821,9 @@ class DataObjectUtil {
 				$parentProperty = $parts[0];
 				$childProperty = $parts[1];
 
-				$parentLabel = '';
-				$childLabel = '';
-
-				// Get parent property label.
-				if (isset($objectStructure[$parentProperty]['label'])) {
-					$parentLabel = $objectStructure[$parentProperty]['label'];
-				}
-
-				// Get child property label from subObjectType structure.
-				if (isset($objectStructure[$parentProperty]['subObjectType'])) {
-					$subObjectType = $objectStructure[$parentProperty]['subObjectType'];
-					if (class_exists($subObjectType) && method_exists($subObjectType, 'getObjectStructure')) {
-						$subStructure = $subObjectType::getObjectStructure();
-						if (isset($subStructure[$childProperty]['label'])) {
-							$childLabel = $subStructure[$childProperty]['label'];
-						}
-					}
-				}
+				$parentLabel = $labelMap[$parentProperty] ?? '';
+				// Prefer exact "parent.child"; fall back to standalone child label if present.
+				$childLabel = $labelMap[$propertyName] ?? ($labelMap[$childProperty] ?? '');
 
 				if ($parentLabel && $childLabel) {
 					return "$propertyName ($parentLabel - $childLabel)";
@@ -798,25 +833,9 @@ class DataObjectUtil {
 					return "$propertyName ($parentLabel)";
 				}
 			} else {
-				// Simple property: check all sections of the structure for nested properties' labels.
-				foreach ($objectStructure as $section) {
-					if (is_array($section)) {
-						// Check if this section contains the property.
-						if (isset($section[$propertyName]['label'])) {
-							$label = $section[$propertyName]['label'];
-							return "$propertyName ($label)";
-						}
-						// Also check if section itself has properties.
-						if (isset($section['properties'][$propertyName]['label'])) {
-							$label = $section['properties'][$propertyName]['label'];
-							return "$propertyName ($label)";
-						}
-					}
-				}
-
-				// Direct property check (fallback).
-				if (isset($objectStructure[$propertyName]['label'])) {
-					$label = $objectStructure[$propertyName]['label'];
+				// Simple property: fast lookup from the label map.
+				if (isset($labelMap[$propertyName])) {
+					$label = $labelMap[$propertyName];
 					return "$propertyName ($label)";
 				}
 			}

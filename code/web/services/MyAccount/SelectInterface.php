@@ -25,12 +25,16 @@ class MyAccount_SelectInterface extends Action {
 		$location->orderBy('displayName');
 		$location->find();
 		while ($location->fetch()) {
-			$libraries['location' . $location->locationId] = [
-				'id' => $location->locationId,
-				'displayName' => $location->displayName,
-				'location' => clone $location,
-				'isLibrary' => false,
-			];
+			// Only include locations that have a valid parent library.
+			$parentLibrary = $location->getParentLibrary();
+			if (!empty($parentLibrary)) {
+				$libraries['location' . $location->locationId] = [
+					'id' => $location->locationId,
+					'displayName' => $location->displayName,
+					'location' => clone $location,
+					'isLibrary' => false,
+				];
+			}
 		}
 		$sortLibraries = function ($library1, $library2) {
 			return strcasecmp($library1['displayName'], $library2['displayName']);
@@ -51,7 +55,7 @@ class MyAccount_SelectInterface extends Action {
 		}
 
 		$redirectLibrary = null;
-		if (!array_key_exists('noRememberThis', $_REQUEST) || ($_REQUEST['noRememberThis'] === false)) {
+		if (!array_key_exists('noRememberThis', $_REQUEST)) {
 			$user = UserAccount::getLoggedInUser();
 			if (isset($_REQUEST['library'])) {
 				$redirectLibrary = $_REQUEST['library'];
@@ -67,7 +71,7 @@ class MyAccount_SelectInterface extends Action {
 			$interface->assign('noRememberThis', true);
 		}
 
-		if ($redirectLibrary != null) {
+		if ($redirectLibrary != null && array_key_exists($redirectLibrary, $libraries)) {
 			$logger->log("Selected library $redirectLibrary", Logger::LOG_DEBUG);
 
 			if ($libraries[$redirectLibrary]['isLibrary']) {

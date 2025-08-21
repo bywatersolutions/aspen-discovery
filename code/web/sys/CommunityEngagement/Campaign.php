@@ -1141,7 +1141,9 @@ class Campaign extends DataObject {
 					$milestoneProgress = CampaignMilestone::getMilestoneProgress($campaignId, $userId, $milestone->id);
 					$progressData = CampaignMilestoneProgressEntry::getUserProgressDataByMilestoneId($userId, $milestoneId, $campaignId);
 					usort($progressData, function ($a, $b) {
-						return $a['checkoutDate'] <=> $b['checkoutDate'];
+						$aDate = $a['checkoutDate'] ?? '';
+						$bDate = $b['checkoutDate'] ?? '';
+						return $aDate <=> $bDate;
 					});
 					$milestone->progress = $milestoneProgress['progress'];
 					$milestone->extraProgress = $milestoneProgress['extraProgress'];
@@ -1272,7 +1274,9 @@ class Campaign extends DataObject {
 						$totalGoals = CampaignMilestone::getMilestoneGoalCountByCampaign($campaign->id, $milestone->id);
 						$progressData = CampaignMilestoneProgressEntry::getUserProgressDataByMilestoneId($linkedUser->id, $milestone->id, $campaign->id);
 						usort($progressData, function ($a, $b) {
-							return $a['checkoutDate'] <=> $b['checkoutDate'];
+							$aDate = $a['checkoutDate'] ?? '';
+							$bDate = $b['checkoutDate'] ?? '';
+							return $aDate <=> $bDate;
 						});
 
 						$milestoneRewardGiven = CampaignMilestoneUsersProgress::getRewardGivenForMilestone($milestone->id, $linkedUser->id, $campaign->id);

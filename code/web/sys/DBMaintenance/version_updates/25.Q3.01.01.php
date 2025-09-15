@@ -16,7 +16,6 @@ function getUpdates25_Q3_01_01(): array {
 			'continueOnError' => true,
 			'sql' => [
 				'TRUNCATE TABLE request_tracker_connection',
-				'DROP TABLE IF EXISTS request_tracker_connection',
 				'DELETE FROM role_permissions WHERE permissionId IN (SELECT id FROM permissions WHERE name = "Submit Ticket")',
 				'DELETE FROM role_permissions WHERE permissionId IN (SELECT id FROM permissions WHERE name = "View Active Tickets")',
 				'DELETE FROM role_permissions WHERE permissionId IN (SELECT id FROM permissions WHERE name = "Administer Request Tracker Connection")',

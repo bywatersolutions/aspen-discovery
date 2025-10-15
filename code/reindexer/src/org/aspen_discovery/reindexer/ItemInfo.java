@@ -30,6 +30,7 @@ public class ItemInfo{
 	private String trimmedIType;
 	private String ITypeCode;
 	private String eContentSource;
+	private String eContentSubSource;
 	private String trimmedEContentSource;
 	private String eContentFilename;
 	private String eContentUrl;
@@ -291,6 +292,10 @@ public class ItemInfo{
 		return eContentSource;
 	}
 
+	String geteContentSubSource() {
+		return eContentSubSource;
+	}
+
 	String getTrimmedEContentSource(){
 		return trimmedEContentSource;
 	}
@@ -298,6 +303,10 @@ public class ItemInfo{
 	void seteContentSource(String eContentSource) {
 		this.eContentSource = eContentSource;
 		this.trimmedEContentSource = AspenStringUtils.trimTrailingPunctuation(eContentSource);
+	}
+
+	void seteContentSubSource(String eContentSubSource) {
+		this.eContentSubSource = eContentSubSource;
 	}
 
 	String getCallNumber() {

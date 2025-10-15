@@ -1441,60 +1441,61 @@ public abstract class AbstractGroupedWorkSolr implements DebugLogger {
 						//Loop through all the scopes to see if we should remove the hoopla record from that scope.
 						for (ItemInfo curItem1 : record1.getRelatedItems()){
 							HashSet<String> scopesToRemove = new HashSet<>();
-							for (ScopingInfo item1Scope : curItem1.getScopingInfo().values()) {
-								String item1ScopeName = item1Scope.getScope().getScopeName();
-								//Get information about the scope to determine how this scope should be processed.
-								switch (item1Scope.getScope().getHooplaScope().getExcludeTitlesWithCopiesFromOtherVendors()) {
-									case 0:
-										//Don't remove items that have the same record someplace else
-										break;
-									case 1:
-										//Remove if there is an available copy for the scope
-										for (ItemInfo curItem2 : record2.getRelatedItems()){
-											if (curItem2.isAvailable()){
+							if (!curItem1.geteContentSubSource().equals("Flex")) {
+								for (ScopingInfo item1Scope : curItem1.getScopingInfo().values()) {
+									String item1ScopeName = item1Scope.getScope().getScopeName();
+									//Get information about the scope to determine how this scope should be processed.
+									switch (item1Scope.getScope().getHooplaScope().getExcludeTitlesWithCopiesFromOtherVendors()) {
+										case 0:
+											//Don't remove items that have the same record someplace else
+											break;
+										case 1:
+											//Remove if there is an available copy for the scope
+											for (ItemInfo curItem2 : record2.getRelatedItems()){
+												if (curItem2.isAvailable()){
+													if (curItem2.getScopingInfo().containsKey(item1ScopeName)){
+														scopesToRemove.add(item1ScopeName);
+														break;
+													}
+												}
+											}
+											break;
+										case 2:
+											//Remove if there is another copy in the scope (does not have to be available)
+											for (ItemInfo curItem2 : record2.getRelatedItems()){
 												if (curItem2.getScopingInfo().containsKey(item1ScopeName)){
 													scopesToRemove.add(item1ScopeName);
 													break;
 												}
 											}
-										}
-										break;
-									case 2:
-										//Remove if there is another copy in the scope (does not have to be available)
-										for (ItemInfo curItem2 : record2.getRelatedItems()){
-											if (curItem2.getScopingInfo().containsKey(item1ScopeName)){
-												scopesToRemove.add(item1ScopeName);
-												break;
+											break;
+									}
+								}
+								for (String scopeToRemove : scopesToRemove){
+									curItem1.getScopingInfo().remove(scopeToRemove);
+									//Remove from related scopes as well
+									ArrayList<ScopingInfo> scopingInfo = relatedScopes.get(scopeToRemove);
+									if (scopingInfo != null) {
+										ArrayList<ScopingInfo> scopingInfoClone;
+										//noinspection unchecked
+										scopingInfoClone = (ArrayList<ScopingInfo>) scopingInfo.clone();
+										for (ScopingInfo relatedScopeInfo : scopingInfoClone) {
+											if (relatedScopeInfo.getItem().equals(curItem1)) {
+												scopingInfo.remove(relatedScopeInfo);
 											}
 										}
-										break;
-								}
-							}
-							for (String scopeToRemove : scopesToRemove){
-								curItem1.getScopingInfo().remove(scopeToRemove);
-								//Remove from related scopes as well
-								ArrayList<ScopingInfo> scopingInfo = relatedScopes.get(scopeToRemove);
-								if (scopingInfo != null) {
-									ArrayList<ScopingInfo> scopingInfoClone;
-									//noinspection unchecked
-									scopingInfoClone = (ArrayList<ScopingInfo>) scopingInfo.clone();
-									for (ScopingInfo relatedScopeInfo : scopingInfoClone) {
-										if (relatedScopeInfo.getItem().equals(curItem1)) {
-											scopingInfo.remove(relatedScopeInfo);
+										if (scopingInfo.isEmpty()) {
+											relatedScopes.remove(scopeToRemove);
 										}
 									}
-									if (scopingInfo.isEmpty()) {
-										relatedScopes.remove(scopeToRemove);
-									}
+								}
+
+								//Remove the item entirely if it is no longer valid for any scope
+								if (curItem1.getScopingInfo().isEmpty()){
+									record1.getRelatedItems().remove(curItem1);
+									break;
 								}
 							}
-
-							//Remove the item entirely if it is no longer valid for any scope
-							if (curItem1.getScopingInfo().isEmpty()){
-								record1.getRelatedItems().remove(curItem1);
-								break;
-							}
-
 
 						}
 					}

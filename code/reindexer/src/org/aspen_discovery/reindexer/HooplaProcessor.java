@@ -416,6 +416,7 @@ class HooplaProcessor {
 				itemInfo.setFormatCategory(formatCategory);
 
 				if (hooplaType.equalsIgnoreCase("Flex")){
+					itemInfo.seteContentSubSource("Flex");
 					getFlexAvailabilityStmt.setString(1, identifier);
 					ResultSet flexAvailabilityRS = getFlexAvailabilityStmt.executeQuery();
 					if (flexAvailabilityRS.next()){
@@ -438,6 +439,7 @@ class HooplaProcessor {
 					flexAvailabilityRS.close();
 				}else{
 					//Hoopla instant is always 1 copy unlimited use
+					itemInfo.seteContentSubSource("Instant");
 					itemInfo.setNumCopies(1);
 					itemInfo.setAvailable(true);
 					itemInfo.setDetailedStatus("Available Online");

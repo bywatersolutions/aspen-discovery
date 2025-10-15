@@ -670,6 +670,15 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 			];
 		}
 
+		$accessibilityStatements = $this->getAccessibilityStatements();
+		if (!empty($accessibilityStatements)) {
+			$interface->assign('overdriveAccessibilityStatements', $accessibilityStatements);
+			$moreDetailsOptions['accessibilityStatements'] = [
+				'label' => 'Accessibility Statements',
+				'body' => $interface->fetch('OverDrive/view-accessibility.tpl'),
+			];
+		}
+
 		return $this->filterAndSortMoreDetailsOptions($moreDetailsOptions);
 	}
 
@@ -1176,4 +1185,98 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 		}
 	}
 
+	public function getAccessibilityStatements(): array {
+		$accessibilityStatements = [];
+		$rawData = $this->getOverDriveMetaData()->getDecodedRawData();
+		if (isset($rawData->accessibilityStatements) && is_array($rawData->accessibilityStatements)) {
+			foreach ($rawData->accessibilityStatements as $statement) {
+				$accessibilityStatements[] = $this->formatAccessibilityStatement($statement);
+			}
+		}
+		return $accessibilityStatements;
+	}
+
+	private function getAccessibilityMappings(): array {
+		static $accessibilityMappings = null;
+		if ($accessibilityMappings !== null) {
+			return $accessibilityMappings;
+		}
+
+		$accessibilityMappings = $this->loadAccessibilityMappingsFromFiles();
+		return $accessibilityMappings;
+	}
+
+	private function loadAccessibilityMappingsFromFiles(): array {
+		$mappingFile = ROOT_DIR . '/sys/OverDrive/accessibilityMappings.json';
+		if (file_exists($mappingFile)) {
+			$contents = file_get_contents($mappingFile);
+			if ($contents !== false) {
+				$decodedMappings = json_decode($contents, true);
+				if (is_array($decodedMappings)) {
+					return $decodedMappings;
+				}
+			}
+		}
+
+		return [];
+	}
+
+	private function formatAccessibilityStatement($statement): array {
+		$formattedStatements = [
+			'summaryStatement' => $statement->summaryStatement ?? '',
+			'conformance' => $this->formatConformance($statement),
+		];
+		$accessibilitySections = [
+			'waysOfReading',
+			'navigation',
+			'richContent',
+			'hazards',
+			'legalConsiderations',
+			'additionalInformation',
+		];
+		foreach ($accessibilitySections as $sectionName) {
+			$sectionItems = isset($statement->$sectionName) ? $statement->$sectionName : [];
+			$formattedStatements[$sectionName] = $this->formatAccessibilitySection($sectionItems, $sectionName);
+		}
+
+		return $formattedStatements;
+	}
+
+	private function formatAccessibilitySection($items, $section): array {
+		if (!is_array($items) || empty($items)) {
+			return [];
+		}
+		$sectionMappings = $this->getAccessibilityMappings()[$section] ?? [];
+		$formattedDescriptions = [];
+		foreach ($items as $item) {
+			if (isset($sectionMappings[$item])) {
+				$formattedDescriptions[] = $sectionMappings[$item];
+			}
+		}
+		return $formattedDescriptions;
+	}
+
+	private function formatConformance($statement): array {
+		$conformance = [];
+		$mappings = $this->getAccessibilityMappings()['conformance'] ?? [];
+
+		if (isset($statement->conformance)) {
+			$conformance = $this->formatAccessibilitySection($statement->conformance, 'conformance');
+			if (isset($statement->wcagLevel)) {
+				foreach ($conformance as &$wcagLevel) {
+					$wcagLevel = str_replace('{wcagLevel}', $statement->wcagLevel, $wcagLevel);
+				}
+				unset($wcagLevel);
+			}
+		}
+
+		if (isset($statement->certifiedBy) && isset($mappings['CertifiedBy'])) {
+			$conformance[] = str_replace('{certifiedBy}', $statement->certifiedBy, $mappings['CertifiedBy']);
+		}
+
+		if (isset($statement->certifierCredential) && isset($mappings['CertifierCredential'])) {
+			$conformance[] = str_replace('{certifierCredential}', $statement->certifierCredential, $mappings['CertifierCredential']);
+		}
+		return $conformance;
+	}
 }

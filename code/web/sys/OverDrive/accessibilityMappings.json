@@ -1,0 +1,78 @@
+{
+  "waysOfReading": {
+    "ModifiableDisplay": "Appearance of the text and page layout can be modified according to the capabilities of the reading system (font family and font size, spaces between paragraphs, sentences, words, and letters, as well as color of background and text)",
+    "NoModifiableDisplay": "Text and page layout cannot be modified as the reading experience is close to a print version, but reading systems can still provide zooming options",
+    "NoInfoForModifiableDisplay": "No information about appearance modifiability is available",
+    "FullNonVisualReadingSupport": "All content can be read as read aloud speech or dynamic braille",
+    "SomeNonVisualReadingSupport": "Not all of the content will be readable as read aloud speech or dynamic braille",
+    "NoNonVisualReadingSupport": "The content is not readable as read aloud speech or dynamic braille",
+    "NoInfoForNonVisualReadingSupport": "No information about nonvisual reading is available",
+    "AlternativeText": "Has alternative text descriptions for images",
+    "OnlyPrerecordedAudio": "Audiobook with no text alternative",
+    "TextSynchronizedPrerecordedAudio": "All the content is available as prerecorded audio synchronized with text",
+    "PrerecordedAudioClips": "Prerecorded audio clips are embedded in the content"
+  },
+  "navigation": {
+    "TableOfContents": "Table of contents to all chapters of the text via links",
+    "IndexProvided": "Index with links to referenced entries",
+    "StructuredNavigation": "Elements such as headings, tables, etc for structured navigation",
+    "PageNavigation": "Page list to go to pages from the print source version"
+  },
+  "richContent": {
+    "MathAsMathMl": "Math formulas in accessible format (MathML)",
+    "MathAsLatex": "Math formulas in accessible format (LaTeX)",
+    "MathDescriptions": "Text descriptions of math are provided",
+    "ChemicalAsMathMl": "Chemical formulas in accessible format (MathML)",
+    "ChemicalAsLatex": "Chemical formulas in accessible format (LaTeX)",
+    "ExtendedImageDescriptions": "Information-rich images are described by extended descriptions",
+    "ClosedCaptions": "Videos included in publications have closed captions",
+    "OpenCaptions": "Videos included in publications have open captions",
+    "Transcripts": "Transcript(s) provided"
+  },
+  "conformance": {  
+    "MinimumStandards": "The publication contains a conformance statement that it meets the EPUB Accessibility and WCAG 2 Level {wcagLevel} standard",
+    "MeetsStandards": "The publication contains a conformance statement that it meets the EPUB Accessibility and WCAG 2 Level {wcagLevel} standard",
+    "ExceedsStandards": "The publication contains a conformance statement that it meets the EPUB Accessibility and WCAG 2 Level {wcagLevel} standard",
+    "IndeterminateStandards": "Conformance to accepted standards for accessibility of this publication cannot be determined",
+    "NoInfoForStandards": "No information is available",
+    "CertifiedBy": "The publication was certified by {certifiedBy}.",
+    "CertifierCredential": "The certifier's credential is {certifierCredential}.",
+    "CertifierReport": "For more information refer to the {CertifierReport}"
+  },
+  "hazards": {
+    "NoHazards": "The publication contains no hazards",
+    "HazardsUnknown": "The presence of hazards is unknown",
+    "FlashingContent": "The publication contains flashing content which can cause photosensitive seizures",
+    "NoFlashingContent": "The publication does not contain flashing content that can cause photosensitive seizures",
+    "UnknownFlashingContent": "The presence of flashing content that can cause photosensitive seizures could not be determined",
+    "MotionSimulation": "The publication contains motion simulations that can cause motion sickness",
+    "NoMotionSimulation": "The publication does not contain motion simulations that can cause motion sickness",
+    "UnknownMotionSimulation": "The presence of motion simulations that can cause motion sickness could not be determined",
+    "Sounds": "The publication contains sounds that can cause sensitivity issues",
+    "NoSounds": "The publication does not contain sounds that can cause sensitivity issues",
+    "UnknownSounds": "The presence of sounds that can cause sensitivity issues could not be determined"
+  },
+  "legalConsiderations": {
+    "ClaimsExemption": "This publication claims an accessibility exemption in some jurisdictions"
+  },
+  "additionalInformation": {
+    "PageBreaks": "Page breaks included",
+    "AriaRoles": "ARIA roles included",
+    "AudioDescriptions": "Audio descriptions",
+    "Braille": "Braille",
+    "FullRubyAnnotations": "Full ruby annotations",
+    "SomeRubyAnnotations": "Some ruby annotations",
+    "HighContrastAudio": "High contrast between foreground and background audio",
+    "HighContrastText": "High contrast between text and background",
+    "LargePrint": "Large print",
+    "SignLanguage": "Sign language",
+    "TactileGraphics": "Tactile graphics included",
+    "Tactile3dObjects": "Tactile 3D objects",
+    "TextToSpeechHinting": "Text-to-speech hinting provided",
+    "NonColorMeansOfConveyingInformation": "Color is not the sole means of conveying information",
+    "DyslexiaReadability": "Dyslexia readability",
+    "UltraHighContrastText": "Ultra high contrast between text and background",
+    "VisiblePageNumbering": "Visible page numbering",
+    "NoBackgroundSounds": "Without background sounds"
+  }
+}

@@ -17,8 +17,6 @@ class GreenhouseSettings extends DataObject {
 	/** @noinspection PhpUnused */
 	public $apiKey5;
 	public $notificationAccessToken;
-	public $requestTrackerBaseUrl;
-	public $requestTrackerAuthToken;
 	public $expoEASBuildWebhookKey;
 	public $expoEASSubmitWebhookKey;
 	public $sendBuildTrackerAlert;
@@ -96,23 +94,6 @@ class GreenhouseSettings extends DataObject {
 				'type' => 'storedPassword',
 				'label' => 'Notification API Access Token',
 				'description' => 'API key for authenticating access to Notification APIs',
-				'canBatchUpdate' => false,
-				'hideInLists' => true,
-			],
-			'requestTrackerBaseUrl' => [
-				'property' => 'requestTrackerBaseUrl',
-				'type' => 'url',
-				'label' => 'Request Tracker Base Url',
-				'description' => 'The base url for a Request Tracker instance',
-				'canBatchUpdate' => false,
-				'hideInLists' => true,
-				'maxLength' => 100,
-			],
-			'requestTrackerAuthToken' => [
-				'property' => 'requestTrackerAuthToken',
-				'type' => 'storedPassword',
-				'label' => 'Request Tracker Auth Token',
-				'description' => 'Auth Token loading ticket information from Request Tracker',
 				'canBatchUpdate' => false,
 				'hideInLists' => true,
 			],

@@ -48,6 +48,52 @@ function getUpdates25_Q4_00(): array {
 				'ALTER TABLE hoopla_settings ADD COLUMN indexingTime INT DEFAULT 1',
 			]
 		], //add_hoopla_configurable_indexing_time
+		'remove_request_tracker_tables' => [
+			'title' => 'Remove Request Tracker Database Tables',
+			'description' => 'Drop all database tables related to the Request Tracker implementation.',
+			'continueOnError' => true,
+			'sql' => [
+				'DROP TABLE IF EXISTS component_ticket_link',
+				'DROP TABLE IF EXISTS development_task_ticket_link',
+				'DROP TABLE IF EXISTS request_tracker_connection',
+				'DROP TABLE IF EXISTS ticket',
+				'DROP TABLE IF EXISTS ticket_component_feed',
+				'DROP TABLE IF EXISTS ticket_queue_feed',
+				'DROP TABLE IF EXISTS ticket_severity_feed',
+				'DROP TABLE IF EXISTS ticket_status_feed',
+				'DROP TABLE IF EXISTS ticket_trend_bugs_by_severity',
+				'DROP TABLE IF EXISTS ticket_trend_by_component',
+				'DROP TABLE IF EXISTS ticket_trend_by_partner',
+				'DROP TABLE IF EXISTS ticket_trend_by_queue'
+			]
+		], // remove_request_tracker_tables
+		'remove_request_tracker_permissions' => [
+			'title' => 'Remove Request Tracker Permissions',
+			'description' => 'Remove permissions and role assignments related to the Request Tracker implementation.',
+			'continueOnError' => true,
+			'sql' => [
+				'DELETE FROM role_permissions WHERE permissionId IN (SELECT id FROM permissions WHERE name IN ("Submit Ticket", "Administer Request Tracker Connection", "View Active Tickets", "Set Development Priorities"))',
+				'DELETE FROM permissions WHERE name IN ("Submit Ticket", "Administer Request Tracker Connection", "View Active Tickets", "Set Development Priorities")',
+				'DROP TABLE IF EXISTS development_priorities'
+			]
+		], // remove_request_tracker_permissions
+		'remove_request_tracker_greenhouse_settings' => [
+			'title' => 'Remove Request Tracker Greenhouse Settings',
+			'description' => 'Remove Request Tracker fields from greenhouse_settings table.',
+			'continueOnError' => true,
+			'sql' => [
+				'ALTER TABLE greenhouse_settings DROP COLUMN IF EXISTS requestTrackerBaseUrl',
+				'ALTER TABLE greenhouse_settings DROP COLUMN IF EXISTS requestTrackerAuthToken'
+			]
+		], //remove_request_tracker_greenhouse_settings
+		'remove_ticket_email_system_variable' => [
+			'title' => 'Remove Ticket Email System Variable',
+			'description' => 'Remove ticketEmail column from system_variables table.',
+			'continueOnError' => true,
+			'sql' => [
+				'ALTER TABLE system_variables DROP COLUMN IF EXISTS ticketEmail'
+			]
+		], // remove_ticket_email_system_variable
 
 	];
 }

@@ -5,7 +5,6 @@ class SystemVariables extends DataObject {
 	public $__table = 'system_variables';
 	public $id;
 	public $errorEmail;
-	public $ticketEmail;
 	public $searchErrorEmail;
 	public $loadCoversFrom020z;
 	public $currencyCode;
@@ -94,13 +93,6 @@ class SystemVariables extends DataObject {
 				'type' => 'text',
 				'label' => 'Error Email Address',
 				'description' => 'Email Address to send errors to',
-				'maxLength' => 128,
-			],
-			'ticketEmail' => [
-				'property' => 'ticketEmail',
-				'type' => 'text',
-				'label' => 'Ticket Email Address',
-				'description' => 'Email Address to send tickets from administrators to',
 				'maxLength' => 128,
 			],
 			'searchErrorEmail' => [

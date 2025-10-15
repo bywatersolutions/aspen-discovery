@@ -241,13 +241,6 @@ try {
 	$systemVariables = false;
 }
 
-//Check to see if we should show the submit ticket option
-$interface->assign('showSubmitTicket', false);
-if (UserAccount::isLoggedIn() && UserAccount::userHasPermission('Submit Ticket')) {
-	if (!empty($systemVariables) && !empty($systemVariables->ticketEmail)) {
-		$interface->assign('showSubmitTicket', true);
-	}
-}
 //Check to see if we should show the cookieConsent banner
 $interface->assign('cookieStorageConsent', false);
 $interface->assign('cookieStorageConsentHTML', '');

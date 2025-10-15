@@ -59,6 +59,7 @@ class FileUpload extends DataObject {
 				'description' => 'The title of the page.',
 				'size' => '40',
 				'maxLength' => 255,
+				'required' => true,
 			],
 			'type' => [
 				'property' => 'type',

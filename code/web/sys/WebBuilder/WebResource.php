@@ -68,6 +68,7 @@ class WebResource extends DB_LibraryLinkedObject {
 				'description' => 'The name of the resource',
 				'size' => '40',
 				'maxLength' => 100,
+				'required' => true,
 			],
 			'url' => [
 				'property' => 'url',

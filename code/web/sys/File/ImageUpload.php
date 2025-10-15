@@ -74,6 +74,7 @@ class ImageUpload extends DataObject {
 				'description' => 'The title of the image.',
 				'size' => '40',
 				'maxLength' => 255,
+				'required' => true,
 			],
 			'type' => [
 				'property' => 'type',

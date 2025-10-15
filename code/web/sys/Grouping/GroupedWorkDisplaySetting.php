@@ -86,6 +86,7 @@ class GroupedWorkDisplaySetting extends DataObject {
 	//Item details
 	public $showItemDueDates;
 	public $showItemNotes;
+	public $showCopiesForPeriodicalsWithNoItems;
 
 	private $_moreDetailsOptions;
 
@@ -303,6 +304,14 @@ class GroupedWorkDisplaySetting extends DataObject {
 						'label' => 'Show Check-in Grid',
 						'description' => 'Whether or not the check-in grid is shown for periodicals.',
 						'default' => 1,
+						'hideInLists' => true,
+					],
+					'showCopiesForPeriodicalsWithNoItems' => [
+						'property' => 'showCopiesForPeriodicalsWithNoItems',
+						'type' => 'checkbox',
+						'label' => 'Show Copies for Periodicals with No Items',
+						'description' => 'Whether or not to show the Copies accordion for periodicals that have no physical items.',
+						'default' => 0,
 						'hideInLists' => true,
 					],
 					'showStaffView' => [
@@ -715,16 +724,16 @@ class GroupedWorkDisplaySetting extends DataObject {
 			],
 		];
 
-		$hasCheckInGrid = false;
+		$hasSierraOrMillenniumIls = false;
 		foreach (UserAccount::getAccountProfiles() as $accountProfileInfo) {
-			/** @var AccountProfile $accountProfile */
 			$accountProfile = $accountProfileInfo['accountProfile'];
 			if ($accountProfile->ils == 'millennium' || $accountProfile->ils == 'sierra') {
-				$hasCheckInGrid = true;
+				$hasSierraOrMillenniumIls = true;
 			}
 		}
-		if (!$hasCheckInGrid) {
+		if (!$hasSierraOrMillenniumIls) {
 			unset($structure['fullRecordSection']['properties']['showCheckInGrid']);
+			unset($structure['fullRecordSection']['properties']['showCopiesForPeriodicalsWithNoItems']);
 		}
 
 		if (!UserAccount::getActiveUserObj()->isAspenAdminUser()) {

@@ -17,8 +17,6 @@ class Search_Results extends ResultsAction {
 		$aspenUsage->groupedWorkSearches++;
 
 		$this->validateAndProcessSearchParameters();
-
-		/** @var string $searchSource */
 		$searchSource = !empty($_REQUEST['searchSource']) ? $_REQUEST['searchSource'] : 'local';
 
 		//Load Placards (do this first so we can test both the original and the replacement term)
@@ -474,23 +472,43 @@ class Search_Results extends ResultsAction {
 				}
 			}
 
-			//Spelling checks we will only do with no applied facets
+			// Spelling checks we will only do with no applied facets.
 			if (!$disallowReplacements && !$hasAppliedFacets) {
-				//We can try to find a suggestion, but only if we are not doing a phrase search.
+				// We can try to find a suggestion, but only if we are not doing a phrase search.
 				if (strpos($searchObject->displayQuery(), '"') === false) {
-					//If the search is not spelled properly, we can switch to the first spelling result
-					if ($spellingSuggestions['correctlySpelled'] == false && $library->allowAutomaticSearchReplacements && count($spellingSuggestions['suggestions']) > 0) {
-						$firstSuggestion = reset($spellingSuggestions['suggestions']);
-						//first check to see if we will get results
+					// Rerank the suggestions by distance and frequency from the original search.
+					// Pick the smallest distance and highest frequency.
+					$closestSuggestion = null;
+					$bestDistance = PHP_INT_MAX;
+					$bestFreq = 0;
+					$originalQuery = strtolower(trim($searchObject->displayQuery()));
+
+					foreach ($spellingSuggestions['suggestions'] as $suggestion) {
+						$editDistance = levenshtein($originalQuery, $suggestion['phrase']);
+						$shouldReplace = false;
+						if ($editDistance < $bestDistance){
+							$shouldReplace = true;
+						} elseif($editDistance == $bestDistance && $suggestion['freq'] > $bestFreq){
+							$shouldReplace = true;
+						}
+
+						if ($shouldReplace) {
+							$bestDistance = $editDistance;
+							$bestFreq = $suggestion['freq'];
+							$closestSuggestion = $suggestion;
+						}
+					}
+
+					if ($closestSuggestion) {
 						/** @var SearchObject_AbstractGroupedWorkSearcher $replacementSearchObject */
 						$replacementSearchObject = SearchObjectFactory::initSearchObject();
-						$replacementSearchObject->init($searchSource, $firstSuggestion['phrase']);
+						$replacementSearchObject->init($searchSource, $closestSuggestion['phrase']);
 						$replacementSearchObject->setPrimarySearch(false);
 						$replacementSearchObject->processSearch(true, false);
 						if ($replacementSearchObject->getResultTotal() > 0) {
 							//Get search results for the new search
 							// The above assignments probably do nothing when there is a redirect below
-							$thisUrl = $_SERVER['REQUEST_URI'] . "&replacementTerm=" . urlencode($firstSuggestion['phrase']);
+							$thisUrl = $_SERVER['REQUEST_URI'] . "&replacementTerm=" . urlencode($closestSuggestion['phrase']);
 							header("Location: " . $thisUrl);
 							exit();
 						}

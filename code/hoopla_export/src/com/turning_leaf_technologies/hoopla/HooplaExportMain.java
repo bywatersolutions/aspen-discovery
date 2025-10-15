@@ -438,6 +438,7 @@ public class HooplaExportMain {
 
 		String accessToken = settings.getAccessToken();
 		long tokenExpirationTime = settings.getTokenExpirationTime();
+		int indexingTime = settings.getIndexingTime();
 
 		if (accessToken == null || tokenExpirationTime < (System.currentTimeMillis() / 1000)) {
 			accessToken = getAccessToken(settings);
@@ -447,6 +448,9 @@ public class HooplaExportMain {
 			logEntry.incErrors("Could not load access token");
 			return true;
 		}
+
+		logEntry.addNote("Starting " + hooplaType + " content extraction using a batch size of " + settings.getRecordExtractionBatchSize() + " at " + indexingTime);
+		logEntry.saveResults();
 
 		try {
 			if (doFullReload){
@@ -464,9 +468,9 @@ public class HooplaExportMain {
 				ZonedDateTime thirtyTwoHoursAgoTime = nowLocalTime.minusHours(32);
 				long thirtyTwoHoursAgo = thirtyTwoHoursAgoTime.toInstant().getEpochSecond();
 
-				if (curHour == 1){
+				if (curHour == indexingTime){
 					if (lastUpdateOfChangedRecords >= startOfTodaySeconds) {
-						logger.warn("Already completed today's " + hooplaType + " extraction at 1 AM. Skipping until tomorrow.");
+						logger.warn("Already completed today's " + hooplaType + " extraction at " + indexingTime + ". Skipping until tomorrow.");
 						return updatedContent;
 					}
 					//Set last update time to 32 hours ago (go bigger to get more updates)
@@ -485,7 +489,7 @@ public class HooplaExportMain {
 					// If we don't have updates for 32 hours, we will try 3 times
 					// If we exceed 3 times and fail, we will wait until 1 AM
 					if (numRetries32HoursAfter >= 3){
-						logger.warn("Exceeded 3 retries for 32 hours catch up, waiting until 1 AM");
+						logger.warn("Exceeded 3 retries for 32 hours catch up, waiting until next indexing time at " + indexingTime);
 						return updatedContent;
 					}
 					numRetries32HoursAfter++;

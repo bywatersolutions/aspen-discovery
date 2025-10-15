@@ -31,5 +31,15 @@ function getUpdates25_Q4_00(): array {
 			],
 		], // add_indexes_for_more_user_list_sort_options
 
+		//Yanjun Li - ByWater
+		'add_hoopla_configurable_indexing_time' => [
+			'title' => 'Add Configurable Hoopla Indexing Time',
+			'description' => 'Add Hoopla Indexing Time',
+			'continueOnError' => false,
+			'sql' => [
+				'ALTER TABLE hoopla_settings ADD COLUMN indexingTime INT DEFAULT 1',
+			]
+		], //add_hoopla_configurable_indexing_time
+
 	];
 }

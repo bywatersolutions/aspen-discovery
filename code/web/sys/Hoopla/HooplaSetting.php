@@ -185,6 +185,10 @@ class HooplaSetting extends DataObject {
 	}
 
 	public function update(string $context = '') : int|bool {
+		if ($this->indexingTime < 0 || $this->indexingTime > 23) {
+			$this->indexingTime = 1;
+		}
+
 		$ret = parent::update();
 		if ($ret !== FALSE) {
 			$this->saveScopes();

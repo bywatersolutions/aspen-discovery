@@ -161,6 +161,36 @@
 									<a id="FavExportRis" class="btn btn-sm btn-default listViewButton" href="/MyAccount/AJAX?method=exportUserListRIS&listId={$userList->id}">{translate text='Export List to RIS' isPublicFacing=true}</a>
 									<button value="citeList" id="FavCite" class="btn btn-sm btn-default listViewButton" onclick='return AspenDiscovery.Lists.citeListAction("{$userList->id}")'>{translate text='Generate Citations' isPublicFacing=true}</button>
 
+									{if !empty($availableFilters)}
+									<div class="btn-group" role="group">
+										<button type="button" class="btn btn-sm btn-default dropdown-toggle listViewButton" data-toggle="dropdown" aria-expanded="false" id="filterDropdownButton">
+											{translate text='Filter by Format' isPublicFacing=true}
+											{if !empty($activeFilters) && !empty($activeFilters.format)}
+												&nbsp;({count($activeFilters.format)} selected)
+											{/if}
+											&nbsp;<span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" role="menu" id="user-list-format-filter-dropdown" >
+											{if !empty($availableFilters.format)}
+												{foreach from=$availableFilters.format key=formatName item=formatCount}
+													<li>
+														<label class="user-list-format-filter-option">
+															<input type="checkbox" class="user-list-format-filter-checkbox" value="{$formatName|escape}"
+																{if !empty($activeFilters) && !empty($activeFilters.format) && in_array($formatName, $activeFilters.format)}checked{/if}>
+															{$formatName|escape} ({$formatCount})
+														</label>
+													</li>
+												{/foreach}
+											{/if}
+											<div class="filter-actions-sticky">
+												<li class="divider"></li>
+												<li style="text-align: center;"><a href="#" id="user-list-clear-all-formats">{translate text="Clear All" isPublicFacing=true}</a></li>
+												<li style="text-align: center; margin: 5px 0;"><a href="#" id="user-list-apply-format-filters" class="btn btn-primary btn-sm">{translate text="Apply Filters" isPublicFacing=true}</a></li>
+											</div>
+										</ul>
+									</div>
+									{/if}
+
 									<div class="btn-group" role="group">
 										<button type="button" class="btn btn-sm btn-default btn-info dropdown-toggle listViewButton" data-toggle="dropdown" aria-expanded="false">{translate text='Sort by' isPublicFacing=true}&nbsp;<span class="caret"></span></button>
 										<ul class="dropdown-menu dropdown-menu-right" role="menu">
@@ -304,5 +334,56 @@
 		{else}
 			{translate text='You do not have any saved resources' isPublicFacing=true}
 		{/if}
+	{/if}
+
+	{if !empty($availableFilters)}
+	<script>
+	{literal}
+	$(() => {
+		const updateButtonText = () => {
+			const checkedCount = $('.user-list-format-filter-checkbox:checked').length;
+			const buttonText = '{/literal}{translate text="Filter by Format" isPublicFacing=true}{literal}';
+			
+			const finalText = checkedCount > 0 ? `${buttonText} (${checkedCount} selected)` : buttonText;
+			
+			$('#filterDropdownButton').html(`${finalText}&nbsp;<span class="caret"></span>`);
+		};
+
+		$('#user-list-format-filter-dropdown').on('click', (event) => {
+			event.stopPropagation();
+		});
+
+		$('#user-list-clear-all-formats').on('click', (event) => {
+			event.preventDefault();
+			$('.user-list-format-filter-checkbox').prop('checked', false);
+			updateButtonText();
+		});
+
+		$('#user-list-apply-format-filters').on('click', (event) => {
+			event.preventDefault();
+			
+			const selectedFormats = [];
+			$('.user-list-format-filter-checkbox:checked').each(function() {
+				selectedFormats.push($(this).val());
+			});
+
+			const currentUrl = window.location.href.split('?')[0];
+			const urlParams = new URLSearchParams(window.location.search);
+
+			urlParams.delete('filters');
+			urlParams.delete('page');
+			if (selectedFormats.length > 0) {
+				urlParams.set('filters', selectedFormats.join(','));
+			}
+
+			window.location.href = urlParams.toString()
+				? `${currentUrl}?${urlParams.toString()}`
+				: currentUrl;
+		});
+
+		$('.user-list-format-filter-checkbox').on('change', updateButtonText);
+	});
+	{/literal}
+	</script>
 	{/if}
 {/strip}

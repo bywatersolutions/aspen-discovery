@@ -234,7 +234,17 @@ class MyAccount_MyList extends MyAccount {
 			$list->update();
 		}
 
-		$this->buildListForDisplay($list, $userCanEdit, $activeSort, $defaultPageSize);
+		$availableFilters = $list->getAvailableFormatFilters();
+		$interface->assign('availableFilters', $availableFilters);
+		$activeFilters = [];
+		if (!empty($_REQUEST['filters'])) {
+			$filterString = $_REQUEST['filters'];
+			$formatFilters = explode(',', $filterString);
+			$activeFilters['format'] = array_filter($formatFilters); // Remove empty values
+		}
+		$interface->assign('activeFilters', $activeFilters);
+
+		$this->buildListForDisplay($list, $userCanEdit, $activeSort, $defaultPageSize, $activeFilters);
 
 		if (UserAccount::isLoggedIn()) {
 			$sidebar = 'Search/home-sidebar.tpl';
@@ -255,8 +265,9 @@ class MyAccount_MyList extends MyAccount {
 	 * @param bool $allowEdit
 	 * @param string $sortName
 	 * @param int $pageSize
+	 * @param array $activeFilters
 	 */
-	private function buildListForDisplay(UserList $list, bool $allowEdit, string $sortName, int $pageSize) : void {
+	private function buildListForDisplay(UserList $list, bool $allowEdit, string $sortName, int $pageSize, array $activeFilters = []) : void {
 		global $interface;
 
 		$printInterface = isset($_REQUEST['print']) && filter_var($_REQUEST['print'], FILTER_VALIDATE_BOOLEAN);
@@ -267,47 +278,38 @@ class MyAccount_MyList extends MyAccount {
 			$queryParamsTmp = explode("&", $queryParams);
 			$queryParams = [];
 			foreach ($queryParamsTmp as $param) {
-				[
-					$name,
-					$value,
-				] = explode("=", $param);
-				if ($name != 'sort') {
-					$queryParams[$name] = $value;
+				$parts = explode("=", $param, 2);
+				if (count($parts) === 2) {
+					[
+						$name,
+						$value,
+					] = $parts;
+					if ($name != 'sort') {
+						$queryParams[$name] = urldecode($value);
+					}
 				}
 			}
 		}
-		$sortOptions = [
-			'title' => [
-				'desc' => 'Title',
-				'selected' => $sortName == 'title',
-				'sortUrl' => "/MyAccount/MyList/$list->id?" . http_build_query(array_merge($queryParams, ['sort' => 'title'])),
-			],
-			'author' => [
-				'desc' => 'Author',
-				'selected' => $sortName == 'author',
-				'sortUrl' => "/MyAccount/MyList/$list->id?" . http_build_query(array_merge($queryParams, ['sort' => 'author'])),
-			],
-			'dateAdded' => [
-				'desc' => 'Date Added',
-				'selected' => $sortName == 'dateAdded',
-				'sortUrl' => "/MyAccount/MyList/$list->id?" . http_build_query(array_merge($queryParams, ['sort' => 'dateAdded'])),
-			],
-			'recentlyAdded' => [
-				'desc' => 'Recently Added',
-				'selected' => $sortName == 'recentlyAdded',
-				'sortUrl' => "/MyAccount/MyList/$list->id?" . http_build_query(array_merge($queryParams, ['sort' => 'recentlyAdded'])),
-			],
-			'custom' => [
-				'desc' => 'User Defined',
-				'selected' => $sortName == 'custom',
-				'sortUrl' => "/MyAccount/MyList/$list->id?" . http_build_query(array_merge($queryParams, ['sort' => 'custom'])),
-			],
-		];
+		$availableSortOptions = UserList::getSortOptions();
+		$sortOptions = [];
+		foreach ($availableSortOptions as $sortKey => $sortLabel) {
+			$sortOptions[$sortKey] = [
+				'desc' => $sortLabel,
+				'selected' => $sortName == $sortKey,
+				'sortUrl' => "/MyAccount/MyList/$list->id?" . http_build_query(array_merge($queryParams, ['sort' => $sortKey])),
+			];
+		}
 
 		$interface->assign('sortList', $sortOptions);
 		$interface->assign('userSort', ($sortName == 'custom')); // switch for when users can sort their list
 
-		$totalRecords = $list->numValidListItems();
+		// Calculate total records considering active filters.
+		if (!empty($activeFilters)) {
+			$allFilteredEntries = $list->getListEntries($sortName, false, 0, 0, 0, $activeFilters);
+			$totalRecords = count($allFilteredEntries['listEntries']);
+		} else {
+			$totalRecords = $list->numValidListItems();
+		}
 		$page = $_REQUEST['page'] ?? 1;
 		$startRecord = ($page - 1) * $pageSize;
 		if ($startRecord < 0) {
@@ -329,7 +331,7 @@ class MyAccount_MyList extends MyAccount {
 			'endRecord' => $endRecord,
 			'perPage' => $pageSize,
 		];
-		$resourceList = $list->getListRecords($startRecord, $pageSize, $allowEdit, 'html', null, $sortName);
+		$resourceList = $list->getListRecords($startRecord, $pageSize, $allowEdit, 'html', null, $sortName, false, 0, $activeFilters);
 		$interface->assign('resourceList', $resourceList);
 
 		// Set up paging of list contents:

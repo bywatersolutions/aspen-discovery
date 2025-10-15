@@ -151,7 +151,7 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
     color: {$menuDropdownForegroundColor} !important;
 {rdelim}
 
-.dropdownMenu a, .dropdownMenu a:visited, .dropdown-menu li a, .dropdown-menu li a:visited{ldelim}
+.dropdownMenu a, .dropdownMenu a:visited, .dropdown-menu li a, .dropdown-menu li a:visited, .dropdown-menu li label{ldelim}
     color: {$menuDropdownForegroundColor} !important;
     background-color: {$menuDropdownBackgroundColor} !important;
 {rdelim}

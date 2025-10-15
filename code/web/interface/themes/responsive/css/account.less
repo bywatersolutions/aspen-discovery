@@ -183,3 +183,37 @@
     border-style: solid;
   }
 }
+
+#user-list-format-filter-dropdown {
+  max-height: 400px;
+  overflow-y: auto;
+
+  .filter-actions-sticky {
+    position: sticky;
+    bottom: -10px;
+    z-index: 1000;
+    margin: 0 0 -10px;
+    padding: 0 0 10px 0;
+    background-color: inherit;
+  }
+}
+
+.user-list-format-filter-option {
+  display: block !important;
+  padding: 4px 20px;
+  margin: 0;
+  font-weight: normal;
+  color: #333;
+  cursor: pointer;
+  line-height: 1.4;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  input[type="checkbox"] {
+    margin-right: 6px;
+    margin-top: 2px;
+    vertical-align: top;
+  }
+}

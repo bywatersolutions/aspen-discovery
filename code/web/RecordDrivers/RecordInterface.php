@@ -11,6 +11,7 @@ abstract class RecordInterface {
 	private $listNotes;
 	private $listEntryId;
 	private $listEntryWeight;
+	private array $activeFilters = [];
 
 	/**
 	 * Constructor.  We build the object using all the data retrieved
@@ -439,6 +440,15 @@ abstract class RecordInterface {
 
 	function setListEntryWeight($listEntryWeight) {
 		$this->listEntryWeight = $listEntryWeight;
+	}
+
+
+	function setActiveFilters($activeFilters): void {
+		$this->activeFilters = $activeFilters;
+	}
+
+	function getActiveFilters(): array {
+		return $this->activeFilters;
 	}
 
 	function getListEntryWeight() {

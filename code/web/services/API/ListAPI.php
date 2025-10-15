@@ -424,7 +424,11 @@ class ListAPI extends AbstractAPI {
 
 		$sort = null;
 		if(isset($_REQUEST['sort_by'])) {
-			$sort = $_REQUEST['sort_by'];
+			$requestedSort = $_REQUEST['sort_by'];
+			$availableSorts = UserList::getSortOptions();
+			if (array_key_exists($requestedSort, $availableSorts)) {
+				$sort = $requestedSort;
+			}
 		}
 
 		if (!is_numeric($numTitlesToShow)) {

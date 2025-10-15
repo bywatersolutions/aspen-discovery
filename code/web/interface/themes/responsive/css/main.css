@@ -9944,6 +9944,18 @@ a.browse-thumbnail.active {
   border-width: 0 1px 1px 1px;
   border-style: solid;
 }
+#user-list-format-filter-dropdown {
+  max-height: 400px;
+  overflow-y: auto;
+}
+#user-list-format-filter-dropdown .filter-actions-sticky {
+  position: sticky;
+  bottom: -10px;
+  z-index: 1000;
+  margin: 0 0 -10px;
+  padding: 0 0 10px 0;
+  background-color: inherit;
+}
 .user-list-format-filter-option {
   display: block !important;
   padding: 4px 20px;

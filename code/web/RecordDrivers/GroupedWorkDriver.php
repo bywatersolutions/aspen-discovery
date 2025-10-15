@@ -1879,6 +1879,13 @@ class GroupedWorkDriver extends IndexRecordDriver {
 			$memoryWatcher->logMemory("Finished loading related manifestations");
 		}
 
+		$activeFilters = $this->getActiveFilters();
+		if (!empty($activeFilters) && !empty($activeFilters['format'])) {
+			return array_filter($this->_relatedManifestations, function ($format) use ($activeFilters) {
+				return in_array($format, $activeFilters['format']);
+			}, ARRAY_FILTER_USE_KEY);
+		}
+
 		return $this->_relatedManifestations;
 	}
 

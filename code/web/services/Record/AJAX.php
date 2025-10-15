@@ -1956,6 +1956,7 @@ class Record_AJAX extends Action {
 		}
 
 		$locationKeys = array_keys($locations);
+		$interface->assign('preferredPickupLocationIsValid', $preferredPickupLocationIsValid);
 		if (!$preferredPickupLocationIsValid && count($locations) == 2 && !empty($locations[$locationKeys[1]])) {
 			$onlyValidPickupLocation = $locations[$locationKeys[1]]->code;
 			$interface->assign('pickupLocationInvalidMessage', translate([

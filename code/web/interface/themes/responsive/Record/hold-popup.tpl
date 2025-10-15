@@ -79,7 +79,7 @@
 											{if is_string($location)}
 												<option value="undefined">{$location}</option>
 											{else}
-												<option value="{$location->code}" data-users="[{implode subject=$location->getPickupUsers() glue=','}]" {if $location->code == $user->getPickupLocationCode() || $location->code == $onlyValidPickupLocation}selected{/if}>{$location->displayName|escape}</option>
+												<option value="{$location->code}" data-users="[{implode subject=$location->getPickupUsers() glue=','}]" {if $location->code == $user->getPickupLocationCode() || ($location->code == $onlyValidPickupLocation && $preferredPickupLocationIsValid)}selected{/if}>{$location->displayName|escape}</option>
 											{/if}
 										{/foreach}
 									{else}

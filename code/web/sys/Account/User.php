@@ -136,11 +136,12 @@ class User extends DataObject {
 	public $_dateOfBirth;
 
 
-	// CarlX Option
+	// CarlX Options
 	public $_emailReceiptFlag;
 	public $_availableHoldNotice;
 	public $_comingDueNotice;
 	public $_phoneType;
+	public $_thirdPartySMSOptIn;
 
 	//Staff Settings
 	public $materialsRequestEmailSignature;

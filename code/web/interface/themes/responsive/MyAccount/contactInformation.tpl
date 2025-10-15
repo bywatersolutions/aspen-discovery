@@ -17,9 +17,6 @@
 			{if !empty($offline)}
 				<div class="alert alert-warning"><strong>{translate text=$offlineMessage isPublicFacing=true}</strong></div>
 			{else}
-{* MDN 7/26/2019 Do not allow access to contact information for linked users *}
-{*				{include file="MyAccount/switch-linked-user-form.tpl" label="View Contact Information for" actionPath="/MyAccount/ContactInformation"}*}
-
 				{if !empty($profileUpdateErrors)}
 					<div class="alert alert-danger">{$profileUpdateErrors}</div>
 				{/if}
@@ -209,6 +206,19 @@
 									</div>
 								</div>
 
+								{if $enableThirdPartySMS}
+								<div class="form-group">
+									<div class="col-xs-4"><label for="thirdPartySMSOptIn">{translate text='Opt-In for Third-Party SMS Notifications' isPublicFacing=true}</label></div>
+									<div class="col-xs-8">
+										{if $edit == true}
+											<input type="checkbox" name="thirdPartySMSOptIn" id="thirdPartySMSOptIn" {if $profile->_thirdPartySMSOptIn==1}checked='checked'{/if} data-switch="">
+										{else}
+											{if $profile->_thirdPartySMSOptIn==0}{translate text="No" isPublicFacing=true}{else}{translate text="Yes" isPublicFacing=true}{/if}
+										{/if}
+									</div>
+								</div>
+								{/if}
+
 								<div class="form-group">
 									<div class="col-xs-4"><label for="phoneType" class="">{translate text='Phone Carrier for SMS notices' isPublicFacing=true}</label></div>
 									<div class="col-xs-8">
@@ -229,8 +239,9 @@
 									</div>
 								</div>
 
+								{if !$enableThirdPartySMS}
 								<div class="form-group">
-									<div class="col-xs-4"><label for="availableHoldNotice" class="control-label">{translate text='SMS notices for available holds' isPublicFacing=true}</label></div>
+									<div class="col-xs-4"><label for="availableHoldNotice">{translate text='SMS notices for available holds' isPublicFacing=true}</label></div>
 									<div class="col-xs-8">
 										{if $edit == true}
 											<input type="checkbox" name="availableHoldNotice" id="availableHoldNotice" {if $profile->_availableHoldNotice==1}checked='checked'{/if} data-switch="">
@@ -241,7 +252,7 @@
 								</div>
 
 								<div class="form-group">
-									<div class="col-xs-4"><label for="comingDueNotice" class="control-label">{translate text='SMS notices for due date reminders' isPublicFacing=true}</label></div>
+									<div class="col-xs-4"><label for="comingDueNotice">{translate text='SMS notices for due date reminders' isPublicFacing=true}</label></div>
 									<div class="col-xs-8">
 										{if $edit == true}
 											<input type="checkbox" name="comingDueNotice" id="comingDueNotice" {if $profile->_comingDueNotice==1}checked='checked'{/if} data-switch="">
@@ -250,6 +261,7 @@
 										{/if}
 									</div>
 								</div>
+								{/if}
 
 							{/if}
 

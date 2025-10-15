@@ -162,11 +162,15 @@ class MyAccount_ContactInformation extends MyAccount {
 				$user->updateMessageIsError = 0;
 				$user->update();
 			}
+			$ils = $user->getILSName();
+			$enableThirdPartySMS = ($ils == 'carlx' && $patronHomeLibrary && $patronHomeLibrary->enableThirdPartySMSNotifications);
+			$interface->assign('enableThirdPartySMS', $enableThirdPartySMS);
 
 			$interface->assign('profile', $user);
 		} else {
 			$canUpdateContactInfo = false;
 			$canUpdateAddress = false;
+			$interface->assign('enableThirdPartySMS', false);
 		}
 
 		// switch for hack for Millennium driver profile updating when updating is allowed but address updating is not allowed.

@@ -343,6 +343,7 @@ class Library extends DataObject {
 	public $selfRegistrationUserProfile;
 	public $selfRegistrationFormId;
 	public $addSMSIndicatorToPhone;
+	public $enableThirdPartySMSNotifications;
 
 	public $allowLinkedAccounts;
 	public $allowFilteringOfLinkedAccountsInHolds;
@@ -1952,6 +1953,15 @@ class Library extends DataObject {
 								'type' => 'checkbox',
 								'label' => 'Add SMS Indicator to Primary Phone',
 								'description' => 'Whether or not to add ### TEXT ONLY to the user\'s primary phone number when they opt in to SMS notices.',
+								'hideInLists' => true,
+								'default' => 0,
+								'permissions' => ['Library ILS Connection'],
+							],
+							'enableThirdPartySMSNotifications' => [
+								'property' => 'enableThirdPartySMSNotifications',
+								'type' => 'checkbox',
+								'label' => 'Enable Third-Party SMS Notifications',
+								'description' => 'Enable third-party SMS notifications using CarlX User Defined Fields. This replaces &quot;SMS notices for available holds&quot; and &quot;SMS notices for due date reminders&quot; fields.',
 								'hideInLists' => true,
 								'default' => 0,
 								'permissions' => ['Library ILS Connection'],
@@ -4493,6 +4503,7 @@ class Library extends DataObject {
 		$hasCourseReserves = false;
 		$hasScoping = false;
 		$isKoha = false;
+		$isCarlX = false;
 		foreach (UserAccount::getAccountProfiles() as $accountProfileInfo) {
 			/** @var AccountProfile $accountProfile */
 			$accountProfile = $accountProfileInfo['accountProfile'];
@@ -4501,6 +4512,8 @@ class Library extends DataObject {
 				$hasScoping = true;
 			} elseif ($accountProfile->ils == 'koha') {
 				$isKoha = true;
+			} elseif ($accountProfile->ils == 'carlx') {
+				$isCarlX = true;
 			}
 		}
 		if (!$hasScoping) {
@@ -4520,6 +4533,9 @@ class Library extends DataObject {
 		} else {
 			unset($structure['ilsSection']['properties']['selfRegistrationSection']['properties']['bypassReviewQueueWhenUpdatingProfile']);
 			unset($structure['holidaysSection']['properties']['allowUpdatingHolidaysFromILS']);
+		}
+		if (!$isCarlX) {
+			unset($structure['ilsSection']['properties']['userProfileSection']['properties']['enableThirdPartySMSNotifications']);
 		}
 		//TODO: This will eventually need to be enabled/disabled by the library, it is currently off for everyone
 		if (true) {

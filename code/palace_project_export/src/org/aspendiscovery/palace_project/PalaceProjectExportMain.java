@@ -572,17 +572,15 @@ public class PalaceProjectExportMain {
 
 		for (String deletedCollectionName : allAspenCollections) {
 			PalaceProjectCollection deletedColl = palaceProjectCollections.get(deletedCollectionName);
-			if (!deletedColl.includeInAspen) {
-				logEntry.addNote("Deleting titles from deleted collection " + deletedCollectionName +
-					", and removing the collection because it is no longer in the Palace Project.");
-				HashMap<Long, PalaceProjectTitleAvailability> titlesForCollection =
-					getTitlesForCollection(getTitlesForCollectionStmt, deletedColl);
-				for (PalaceProjectTitleAvailability titleAvailability : titlesForCollection.values()) {
-					removePalaceProjectTitleFromCollection(titleAvailability.id, titleAvailability.titleId);
-				}
-				deleteCollectionStmt.setLong(1, deletedColl.id);
-				deleteCollectionStmt.executeUpdate();
+			logEntry.addNote("Deleting titles from deleted collection " + deletedCollectionName +
+				", and removing the collection because it is no longer in the Palace Project.");
+			HashMap<Long, PalaceProjectTitleAvailability> titlesForCollection =
+				getTitlesForCollection(getTitlesForCollectionStmt, deletedColl);
+			for (PalaceProjectTitleAvailability titleAvailability : titlesForCollection.values()) {
+				removePalaceProjectTitleFromCollection(titleAvailability.id, titleAvailability.titleId);
 			}
+			deleteCollectionStmt.setLong(1, deletedColl.id);
+			deleteCollectionStmt.executeUpdate();
 		}
 	}
 

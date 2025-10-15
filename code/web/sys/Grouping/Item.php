@@ -85,7 +85,7 @@ class Grouping_Item {
 					'url' => $itemDetails['localUrl'],
 				];
 			}
-			$this->groupedStatus = $itemDetails['groupedStatus'];
+			$this->groupedStatus = $itemDetails['groupedStatus'] ?? 'Currently Unavailable';
 			$this->status = $itemDetails['status'];
 			$this->locallyOwned = strpos($itemDetails['locationOwnedScopes'], "~{$itemDetails['scopeId']}~") !== false;
 			$this->libraryOwned = $this->locallyOwned || strpos($itemDetails['libraryOwnedScopes'], "~{$itemDetails['scopeId']}~") !== false;
@@ -150,7 +150,7 @@ class Grouping_Item {
 			}
 
 			//Get Scoping information for this record
-			$this->groupedStatus = $scopingDetails[2];
+			$this->groupedStatus = $scopingDetails[2] ?? 'Currently Unavailable';
 			$this->status = $itemDetails[13];
 			$this->locallyOwned = $scopingDetails[4] == 'true';
 			$this->available = $scopingDetails[5] == 'true';

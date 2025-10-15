@@ -449,9 +449,6 @@ public class HooplaExportMain {
 			return true;
 		}
 
-		logEntry.addNote("Starting " + hooplaType + " content extraction using a batch size of " + settings.getRecordExtractionBatchSize() + " at " + indexingTime);
-		logEntry.saveResults();
-
 		try {
 			if (doFullReload){
 				//Unset that a full update needs to be done

@@ -557,6 +557,9 @@ class DefaultCoverImageBuilder {
 		if (preg_match('/\p{Ethiopic}/u', $text)) { // Amharic
 			return 'ethiopic';
 		}
+		if (preg_match('/\p{Bengali}/u', $text)) {
+			return 'bengali';
+		}
 		if (preg_match('/\p{Cyrillic}/u', $text) || preg_match('/\p{Greek}/u', $text)) {
 			return 'cyrillic';
 		}
@@ -584,6 +587,7 @@ class DefaultCoverImageBuilder {
 			'thai'      =>  ['/fonts/NotoSansThai-Bold.ttf', '/fonts/NotoSansThai-Regular.ttf'],
 			'georgian'  =>  ['/fonts/NotoSansGeorgian-Bold.ttf', '/fonts/NotoSansGeorgian-Regular.ttf'],
 			'ethiopic'  =>  ['/fonts/NotoSansEthiopic-Bold.ttf', '/fonts/NotoSansEthiopic-Regular.ttf'],
+			'bengali'	=> 	['/fonts/NotoSansBengali-Bold.ttf', '/fonts/NotoSansBengali-Regular.ttf'],
 			'latin'     =>  ['/fonts/NotoSans-Bold.ttf', '/fonts/NotoSans-Regular.ttf'],
 		];
 

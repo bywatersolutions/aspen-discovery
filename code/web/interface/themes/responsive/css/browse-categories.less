@@ -271,9 +271,14 @@
   img{
     width:100%;
     min-height: 100px;
+    &.use-original-covers {
+      max-width: 180px;
+      max-height: 225px;
+      width: auto;
+      height: auto;
+    }
     &.floating {
       box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 15px 22px rgba(0, 0, 0, 0.072), 0 20px 33px 0 rgba(0, 0, 0, 0.086);
-      //min-height: 200px;
       background: transparent;
       border-width: 0;
       padding: 0;
@@ -303,6 +308,12 @@
     margin: 0 4px 10px 0;
     width: 80px;
     border-radius: @border-radius-small;
+    &.use-original-covers {
+      max-width: 80px;
+      max-height: 120px;
+      width: auto;
+      height: auto;
+    }
   }
 
   a{

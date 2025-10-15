@@ -8,7 +8,7 @@
 							{if $disableCoverArt != 1}
 								{if !empty($result.object)}
 									<a href="{$result.link}">
-										<img src="{$result.object}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
+										<img src="{$result.object}" class="listResultImage img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
 									</a>
 								{/if}
 							{/if}

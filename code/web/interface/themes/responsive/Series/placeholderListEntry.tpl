@@ -10,7 +10,7 @@
 				<div class="col-xs-3 col-sm-3 col-md-3 col-lg-2 text-center">
 					{if $disableCoverArt != 1 && !empty($bookCoverUrl)}
 						<div>
-							<img src="{$bookCoverUrl}" class="listResultImage img-thumbnail {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
+							<img src="{$bookCoverUrl}" class="listResultImage img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
 						</div>
 					{/if}
 				</div>

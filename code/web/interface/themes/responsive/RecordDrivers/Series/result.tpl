@@ -6,7 +6,7 @@
 				<a href="/Series/{$summShortId}" class="alignleft listResultImage" tabindex="-1">
 					<div class="listResultImage border">
 						{if !empty($isNew)}<span class="list-cover-badge">{translate text="New!" isPublicFacing=true}</span> {/if}
-						<img src="{$bookCoverUrl}" class="img-thumbnail {$coverStyle}" alt="{$summTitle|removeTrailingPunctuation|highlight|escapeCSS|truncate:180:"..."}">
+						<img src="{$bookCoverUrl}" class="img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{$summTitle|removeTrailingPunctuation|highlight|escapeCSS|truncate:180:"..."}">
 					</div>
 				</a>
 			{/if}

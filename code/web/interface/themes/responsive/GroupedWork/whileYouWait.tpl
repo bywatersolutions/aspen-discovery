@@ -6,7 +6,7 @@
 		{foreach from=$whileYouWaitTitles item=whileYouWaitTitle}
 			<div class="col-tn-12 col-sm-4 text-center">
 				<a href="{$whileYouWaitTitle.url}">
-					<img src="{$whileYouWaitTitle.coverUrl}" class="listResultImage img-thumbnail {$coverStyle}" alt="{$whileYouWaitTitle.title|escape}">
+					<img src="{$whileYouWaitTitle.coverUrl}" class="listResultImage img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{$whileYouWaitTitle.title|escape}">
 				</a>
 				{if !empty($showRatings)}
 					<div class="browse-rating rater" data-average_rating="{$whileYouWaitTitle.ratingData.average}" data-id="{$whileYouWaitTitle.id}">

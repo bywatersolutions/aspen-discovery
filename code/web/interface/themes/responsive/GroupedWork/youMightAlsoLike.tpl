@@ -8,7 +8,7 @@
 				<div class="row">
 					<div class="col-tn-12">
 						<a href="{$title->getLinkUrl()}">
-							<img src="{$title->getBookcoverUrl('medium')}" class="listResultImage img-thumbnail {$coverStyle}" alt="{$title->getTitle()|escape}">
+							<img src="{$title->getBookcoverUrl('medium')}" class="listResultImage img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{$title->getTitle()|escape}">
 						</a>
 					</div>
 				</div>

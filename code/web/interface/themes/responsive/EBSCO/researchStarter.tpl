@@ -12,7 +12,7 @@
 			<div class="col-tn-12 col-xs-4 col-md-3 text-center">
 				{if !empty($image)}
 					<a href="{$link}" target="_blank" class="researchStarter-link"  aria-label="{$title} ({translate text='opens in new window' isPublicFacing=true})">
-					<img src="{$image}" class="researchStarter-image img-thumbnail {$coverStyle}" alt="{$title}">
+					<img src="{$image}" class="researchStarter-image img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{$title}">
 					</a>
 				{/if}
 			</div>

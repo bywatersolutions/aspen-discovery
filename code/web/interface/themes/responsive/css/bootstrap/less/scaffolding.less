@@ -94,6 +94,60 @@ img {
     padding: 0;
     margin: 0 0 1.5em;
   }
+
+  &.use-original-covers {
+    max-width: 180px;
+    max-height: 225px;
+    width: auto;
+    height: auto;
+  }
+}
+
+.listEntry .use-original-covers,
+.result .use-original-covers {
+  max-width: 120px;
+  max-height: 180px;
+}
+// Show Editions view
+.relatedRecord .use-original-covers {
+  max-width: 90px;
+  max-height: 135px;
+}
+
+@media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
+  .listEntry .use-original-covers,
+  .result .use-original-covers {
+    max-width: 100px;
+    max-height: 150px;
+  }
+  .relatedRecord .use-original-covers {
+    max-width: 80px;
+    max-height: 120px;
+  }
+}
+
+@media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
+  .listEntry .use-original-covers,
+  .result .use-original-covers {
+    max-width: 105px;
+    max-height: 165px;
+  }
+  .relatedRecord .use-original-covers {
+    max-width: 85px;
+    max-height: 128px;
+  }
+}
+
+@media (max-width: @screen-xs-max) {
+  .listEntry .use-original-covers,
+  .result .use-original-covers {
+    max-width: 80px;
+    max-height: 120px;
+  }
+  .relatedRecord .use-original-covers {
+    max-width: 70px;
+    max-height: 105px;
+  }
 }
 
 // Perfect circle

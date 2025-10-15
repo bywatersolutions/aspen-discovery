@@ -860,10 +860,12 @@ class UInterface extends Smarty {
 			try {
 				require_once ROOT_DIR . '/sys/SystemVariables.php';
 				$systemVariables = SystemVariables::getSystemVariables();
-				if ($systemVariables != false) {
+				if ($systemVariables) {
 					$this->assign('useHtmlEditorRatherThanMarkdown', $systemVariables->useHtmlEditorRatherThanMarkdown);
+					$this->assign('useOriginalCoverUrls', $systemVariables->useOriginalCoverUrls);
 				} else {
 					$this->assign('useHtmlEditorRatherThanMarkdown', 0);
+					$this->assign('useOriginalCoverUrls', 0);
 				}
 			} catch (Exception $e) {
 				//This happens prior to the table being created

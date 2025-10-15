@@ -9,7 +9,7 @@
 		{if (!empty($showCovers) && $printInterface === false) || ($printInterface === true && $printEntryCovers === true)}
 			<div class="col-xs-3 col-sm-3 col-md-3 col-lg-2 text-center">
 				<a href="{$summUrl}" aria-hidden="true">
-					<img src="{$bookCoverUrlMedium}" class="listResultImage img-thumbnail{* img-responsive*} {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
+					<img src="{$bookCoverUrlMedium}" class="listResultImage img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if}{* img-responsive*} {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
 				</a>
 				{if (!empty($showRatings) && $printInterface === false) || ($printInterface === true && $printEntryRating === true)}
 					{include file="GroupedWork/title-rating.tpl" id=$summId ratingData=$summRating showNotInterested=false}

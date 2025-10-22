@@ -79,6 +79,10 @@ class ShareIt {
 							break;
 						}
 					}
+					$pubYear = '';
+					if (is_array($curResult->pubYear)) {
+						$pubYear = implode(', ', $curResult->pubYear);
+					}
 
 					$curTitleInfo = [
 						'id' => $agControlId,
@@ -86,7 +90,7 @@ class ShareIt {
 						'title' => $curResult->title,
 						'author' => $curResult->author,
 						'format' => $format,
-						'pubDate' => implode(', ', $curResult->pubYear)
+						'pubDate' => $pubYear
 					];
 					$shareItTitles[] = $curTitleInfo;
 

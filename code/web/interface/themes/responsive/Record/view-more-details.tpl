@@ -119,7 +119,9 @@
 	{/if}
 
 	{if !empty($notes)}
-		<h4>{translate text='Notes' isPublicFacing=true}</h4>
+		<div role="heading" aria-level="2" style="margin: 20px 0 10px;">
+			<span style="display: inline-block; font-size: 18px;">{translate text='Notes' isPublicFacing=true}</span>
+		</div>
 		{foreach from=$notes item=note name=loop}
 			<div class="row">
 				<div class="result-label col-sm-3">{translate text=$note.label isPublicFacing=true isMetadata=true}</div>

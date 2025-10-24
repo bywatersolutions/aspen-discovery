@@ -30,7 +30,7 @@
 {*					 Title Row*}
 
 					<div class="col-xs-12">
-						<h3 style="margin-top:0"><span class="result-index">{$resultIndex})</span>&nbsp;
+						<h2 style="margin:0;font-size:inherit;"><span class="result-index">{$resultIndex})</span>&nbsp;
 							{if !$talpaResult}
 								<a href="{$summUrl}" class="result-title notranslate" aria-label="{$summTitle|removeTrailingPunctuation|escapeCSS} {if !empty($summSubTitle)}{if $summSubTitle|removeTrailingPunctuation} {$summSubTitle|removeTrailingPunctuation|highlight|escapeCSS|truncate:180:'...'}{/if}{/if}">
 									{if !$summTitle|removeTrailingPunctuation} {translate text='Title not available' isPublicFacing=true}{else}{$summTitle|removeTrailingPunctuation|highlight|truncate:180:"..."}{/if}
@@ -49,7 +49,7 @@
 
 
 
-						</h3>
+						</h2>
 					</div>
 
 

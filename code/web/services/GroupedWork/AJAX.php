@@ -2397,26 +2397,79 @@ class GroupedWork_AJAX extends JSON_Action {
 
 	/** @noinspection PhpUnused */
 	function setRelatedCover() : array {
+		$groupedWorkId = $_REQUEST['id'] ?? '';
+		$recordId = $_REQUEST['recordId'] ?? '';
+		$recordType = $_REQUEST['recordType'] ?? '';
+		$currentSourceLabel = $recordType !== '' ? ucwords(str_replace('_', ' ', strtolower($recordType))) : '';
+		$currentReferenceLabel = $currentSourceLabel !== '' && $recordId !== '' ? $currentSourceLabel . ' (ID: ' . $recordId . ')' : $recordId;
+
+		if (empty($groupedWorkId)) {
+			return [
+				'success' => false,
+				'message' => translate([
+					'text' => 'No grouped work ID was provided.',
+					'isAdminFacing' => true,
+				]),
+				'title' => translate([
+					'text' => 'Cover Update Failed',
+					'isAdminFacing' => true,
+				]),
+			];
+		}
+
 		if (UserAccount::isLoggedIn() && (UserAccount::userHasPermission('Upload Covers'))) {
 			require_once ROOT_DIR . '/sys/Grouping/GroupedWork.php';
 			$groupedWork = new GroupedWork();
-			$groupedWorkId = $_REQUEST['id'];
-			$recordId = $_REQUEST['recordId'];
-			$recordType = $_REQUEST['recordType'];
 			$groupedWork->permanent_id = $groupedWorkId;
 
 			if ($groupedWork->find(true)) {
+				$previousReferenceCover = $groupedWork->referenceCover;
+				if ($previousReferenceCover) {
+					if (str_contains($previousReferenceCover, ':')) {
+						[
+							$prevType,
+							$prevId,
+						] = explode(':', $previousReferenceCover, 2);
+					} else {
+						$prevType = 'grouped_work';
+						$prevId = $previousReferenceCover;
+					}
+					$prevSourceLabel = $prevType !== '' ? ucwords(str_replace('_', ' ', strtolower($prevType))) : '';
+					$previousReferenceLabel = $prevSourceLabel !== '' && $prevId !== '' ? $prevSourceLabel . ' (ID: ' . $prevId . ')' : $prevId;
+				} else {
+					$previousReferenceLabel = translate([
+						'text' => 'No related cover was previously selected.',
+						'isAdminFacing' => true,
+					]);
+				}
+				$originalRecordType = $_REQUEST['recordType'] ?? null;
+				$originalRecordId = $_REQUEST['recordId'] ?? null;
+				// Temporarily reset request context so clearUploadedCover clears the grouped work's cached cover.
+				$_REQUEST['recordType'] = 'grouped_work';
+				$_REQUEST['recordId'] = $groupedWorkId;
 				$this->clearUploadedCover();
+				if ($originalRecordType !== null) {
+					$_REQUEST['recordType'] = $originalRecordType;
+				} else {
+					unset($_REQUEST['recordType']);
+				}
+				if ($originalRecordId !== null) {
+					$_REQUEST['recordId'] = $originalRecordId;
+				} else {
+					unset($_REQUEST['recordId']);
+				}
 				$groupedWork->referenceCover = $recordType . ':' . $recordId;
 				$groupedWork->update();
 				return [
 					'success' => true,
 					'message' => translate([
-						'text' => 'Your cover has been set successfully',
+						'text' => 'The grouped work now uses the cover from %1%. Previously used: %2%.',
+						1 => $currentReferenceLabel,
+						2 => $previousReferenceLabel,
 						'isAdminFacing' => true,
 					]),
 					'title' => translate([
-						'text' => 'Previewing cover from related work',
+						'text' => 'Cover Updated',
 						'isAdminFacing' => true,
 					]),
 				];
@@ -2424,24 +2477,29 @@ class GroupedWork_AJAX extends JSON_Action {
 				return [
 					'success' => false,
 					'message' => translate([
-						'text' => 'Could not find the grouped work to update.',
+						'text' => 'Aspen could not locate the grouped work while applying the cover from %1%.',
+						1 => $currentReferenceLabel,
 						'isAdminFacing' => true,
 					]),
 					'title' => translate([
-						'text' => 'Previewing cover from related work',
+						'text' => 'Cover Update Failed',
 						'isAdminFacing' => true,
 					]),
 				];
 			}
-		}  else {
+		} else {
 			return [
 				'success' => false,
 				'message' => translate([
-					'text' => 'Error updating cover.',
+					'text' => 'Log in with the Upload Covers permission to apply the cover from %1%.',
+					1 => $currentReferenceLabel !== '' ? $currentReferenceLabel : translate([
+						'text' => 'the selected record',
+						'isAdminFacing' => true,
+					]),
 					'isAdminFacing' => true,
 				]),
 				'title' => translate([
-					'text' => 'Sorry, your are not logged in or do not have permissions to set this cover.',
+					'text' => 'Cover Update Failed',
 					'isAdminFacing' => true,
 				]),
 			];
@@ -2591,7 +2649,12 @@ class GroupedWork_AJAX extends JSON_Action {
 				unlink($largeUploadedImage);
 			}
 
-			$bookcoverInfo->__set('imageSource', '');
+			$bookcoverInfo->setImageSource('');
+			require_once ROOT_DIR . '/sys/SystemVariables.php';
+			if (SystemVariables::getSystemVariables()->useOriginalCoverUrls) {
+				$bookcoverInfo->setOriginalUrl(null);
+				$bookcoverInfo->setLastUrlValidation(null);
+			}
 			$bookcoverInfo->update();
 			return [
 				'success' => true,

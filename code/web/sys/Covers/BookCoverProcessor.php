@@ -2075,11 +2075,41 @@ class BookCoverProcessor {
 			$recordDriver = RecordDriverFactory::initRecordDriverById($referenceId);
 			if ($recordDriver && $recordDriver->isValid()) {
 				$referencedCover = str_replace(':', '_', $referenceId);
-
 				$referencedCoverURL_lg = $this->bookCoverPath . '/large/' . $referencedCover . '.png';
 				$referencedCoverURL_md = $this->bookCoverPath . '/medium/' . $referencedCover . '.png';
 
-				if (file_exists($referencedCoverURL_lg)) {
+				if (SystemVariables::getSystemVariables()->useOriginalCoverUrls) {
+					// When original cover URLs are used, rely on the referenced record's stored URL instead of files.
+					$referenceRecordType = null;
+					$referenceRecordId = $referenceId;
+					if (str_contains($referenceId, ':')) {
+						[
+							$referenceRecordType,
+							$referenceRecordId,
+						] = explode(':', $referenceId, 2);
+					}
+
+					if (!empty($referenceRecordType) && !empty($referenceRecordId)) {
+						$referencedCoverInfo = new BookCoverInfo();
+						$referencedCoverInfo->setRecordType($referenceRecordType);
+						$referencedCoverInfo->setRecordId($referenceRecordId);
+						if ($referencedCoverInfo->find(true)) {
+							$originalUrl = $referencedCoverInfo->getOriginalUrl();
+							if (!empty($originalUrl)) {
+								$url = $originalUrl;
+								$maybeHash = substr($originalUrl, 0, 32);
+								if (preg_match('/^[a-f0-9]{32}$/', $maybeHash)) {
+									$url = substr($originalUrl, 32);
+								}
+
+								if (!empty($url)) {
+									return $this->processImageURL('reference ' . $referenceId, $url);
+								}
+							}
+						}
+					}
+					return false;
+				} elseif (file_exists($referencedCoverURL_lg)) {
 					return $this->processImageURL('reference ' . $referenceId, $referencedCoverURL_lg);
 				} elseif (file_exists($referencedCoverURL_md)) {
 					return $this->processImageURL('reference ' . $referenceId, $referencedCoverURL_md);

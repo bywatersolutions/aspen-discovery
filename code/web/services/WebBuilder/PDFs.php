@@ -32,7 +32,7 @@ class WebBuilder_PDFs extends ObjectEditor {
 			$object->whereAdd("owningLibrary = -1", "OR");
 			$object->whereAdd("sharing = 2 OR sharing = 3", "OR");
 			if (Library::getLibraryList(true)){
-				$object->whereAdd("sharing = 1 AND sharedWithLibrary IN (" . implode(array_keys($libraryList)) . ")", "OR");
+				$object->whereAdd("sharing = 1 AND sharedWithLibrary IN (" . implode(",", array_keys($libraryList)) . ")", "OR");
 			}
 		}
 		$object->find();

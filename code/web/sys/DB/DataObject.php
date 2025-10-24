@@ -143,6 +143,11 @@ abstract class DataObject implements JsonSerializable {
 			$includeDeleted = property_exists($this, '_includeDeleted') ? $this->_includeDeleted : false;
 			$deletedPropIsSet = property_exists($this, 'deleted') && ($this->deleted !== null);
 			if (!$includeDeleted && !$deletedPropIsSet) {
+				// If there are existing OR conditions, wrap them in parentheses to ensure
+				// the deleted filter applies to all results (SQL operator precedence issue).
+				if (!empty($this->__where) && stripos($this->__where, ' OR ') !== false) {
+					$this->__where = '(' . $this->__where . ')';
+				}
 				$this->whereAdd($this->__table . '.deleted = 0');
 			}
 		}
@@ -670,6 +675,11 @@ abstract class DataObject implements JsonSerializable {
 			$includeDeleted = property_exists($this, '_includeDeleted') ? $this->_includeDeleted : false;
 			$deletedPropIsSet = property_exists($this, 'deleted') && ($this->deleted !== null);
 			if (!$includeDeleted && !$deletedPropIsSet) {
+				// If there are existing OR conditions, wrap them in parentheses to ensure
+				// the deleted filter applies to all results (SQL operator precedence issue).
+				if (!empty($this->__where) && stripos($this->__where, ' OR ') !== false) {
+					$this->__where = '(' . $this->__where . ')';
+				}
 				$this->whereAdd($this->__table . '.deleted = 0');
 			}
 		}

@@ -1388,13 +1388,21 @@ class SirsiDynixROA extends HorizonAPI {
 	 * @access  public
 	 */
 	function placeSirsiHold(User $patron, string $recordId, ?string $itemId, ?string $volume = null, ?string $pickupBranch = null, string $type = 'request', ?string $cancelIfNotFilledByDate = null, bool $forceVolumeHold = false, bool $useBooksByMail = false) : array {
-		//Get the session token for the user
 		$staffSessionToken = $this->getStaffSessionToken();
 		$sessionToken = $this->getSessionToken($patron);
-		if (!$staffSessionToken) {
+
+		// If the patron's session token is unavailable, check if staff can place holds on their behalf.
+		// This handles the Materials Requests case where staff is NOT masquerading.
+		if (empty($sessionToken) && !empty($staffSessionToken)) {
+			if (!UserAccount::isUserMasquerading() && UserAccount::userHasPermission('Place Holds For Materials Requests')) {
+				$sessionToken = $staffSessionToken;
+			}
+		}
+
+		if (empty($sessionToken)) {
 			$result['success'] = false;
 			$result['message'] = translate([
-				'text' => "Sorry, it does not look like you are logged in currently.  Please login and try again",
+				'text' => "Sorry, it does not look like you are logged in currently. Please log in and try again.",
 				'isPublicFacing' => true,
 			]);
 
@@ -1403,7 +1411,7 @@ class SirsiDynixROA extends HorizonAPI {
 				'isPublicFacing' => true,
 			]);
 			$result['api']['message'] = translate([
-				'text' => 'Sorry, it does not look like you are logged in currently.  Please login and try again',
+				'text' => 'Sorry, it does not look like you are logged in currently. Please log in and try again.',
 				'isPublicFacing' => true,
 			]);
 			return $result;

@@ -125,10 +125,10 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 	/**
 	 * overriding getLinkUrl from RecordInterface to check
 	 * the conditions which cause us to load the invalidRecord.tpl
-	 * template when viewing a record. 
-	 * 
+	 * template when viewing a record.
+	 *
 	 * @param bool $absolutePath if true prepend site url from config to the result
-	 * @return string url for the record or an empty string 
+	 * @return string url for the record or an empty string
 	 */
 	public function getLinkUrl($absolutePath = false) {
 		if(!$this->isValid())
@@ -1292,7 +1292,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getActiveUserObj();
-				$this->_actions[$variationId] = array_merge($this->_actions[$variationId], $user->getCirculatedRecordActions($this->getIndexingProfile()->name, $this->id));
+				$this->_actions[$variationId] = array_merge($this->_actions[$variationId], $user->getCirculatedRecordActionsWithLazyLoading($this->getIndexingProfile()->name, $this->id));
 			}
 
 			$treatVolumeHoldsAsItemHolds = $this->getCatalogDriver()->treatVolumeHoldsAsItemHolds();
@@ -3150,7 +3150,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 								if (array_key_exists($tmpOwningLibraryCode, $libraryCodeToDisplayName)) {
 									$owningLibrary = $libraryCodeToDisplayName[$tmpOwningLibraryCode];
 									break;
-								//Handle sierra quirks where the actual location code is specified with a z at the end
+									//Handle sierra quirks where the actual location code is specified with a z at the end
 								} elseif (array_key_exists($tmpOwningLibraryCode . 'z', $libraryCodeToDisplayName)) {
 									$owningLibrary = $libraryCodeToDisplayName[$tmpOwningLibraryCode . 'z'];
 									break;
@@ -3410,5 +3410,3 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return $descriptionField->getSubfield('a')->getData();
 	}
 }
-
-

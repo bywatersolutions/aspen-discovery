@@ -57,15 +57,16 @@ class RecordDriverFactory {
 
 	/**
 	 * @param $id
-	 * @param GroupedWork $groupedWork ;
-	 * @return ExternalEContentDriver|MarcRecordDriver|null|OverDriveRecordDriver
+	 * @param null $groupedWork ;
+	 * @return PalaceProjectRecordDriver|CourseReservesRecordDriver|OpenArchivesRecordDriver|TalpaRecordDriver|HooplaRecordDriver|ExternalEContentDriver|OverDriveRecordDriver|MarcRecordDriver|CloudLibraryRecordDriver|Axis360RecordDriver|AspenError|SideLoadedRecord|null
 	 */
-	static function initRecordDriverById($id, $groupedWork = null) {
+	static function initRecordDriverById($id, $groupedWork = null): PalaceProjectRecordDriver|CourseReservesRecordDriver|OpenArchivesRecordDriver|TalpaRecordDriver|HooplaRecordDriver|ExternalEContentDriver|OverDriveRecordDriver|MarcRecordDriver|CloudLibraryRecordDriver|Axis360RecordDriver|AspenError|SideLoadedRecord|null
+	{
 		global $configArray;
 		if (isset(RecordDriverFactory::$recordDrivers[$id])) {
 			return RecordDriverFactory::$recordDrivers[$id];
 		}
-		if (strpos($id, ':') !== false) {
+		if (str_contains($id, ':')) {
 			$recordInfo = explode(':', $id, 2);
 			$recordType = $recordInfo[0];
 			$recordId = $recordInfo[1];
@@ -190,6 +191,4 @@ class RecordDriverFactory {
 		// If we got here, something went very wrong:
 		return new AspenError("Problem loading record driver: {$driver}");
 	}
-
-
 }

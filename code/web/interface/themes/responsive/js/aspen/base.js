@@ -1030,6 +1030,29 @@ var AspenDiscovery = (function(){
 
 			// Initialize focus and ARIA
 			focusSlide(currentIndex, false, false);
+		},
+
+		/**
+		 * Add spinning indicator to a button during actions.
+		 * @param {jQuery|string} button Button element or selector.
+		 * @param {boolean} spinning Whether to show or hide spinner.
+		 */
+		toggleButtonSpinner: function(button, spinning) {
+			const $button = $(button);
+
+			if (spinning) {
+				$button.prop('disabled', true);
+				$button.addClass('disabled');
+
+				if ($button.find('.fa-spinner').length === 0) {
+					const spinner = $('<i class="fas fa-spinner fa-spin" style="margin-right: 3px;"></i>');
+					$button.prepend(spinner);
+				}
+			} else {
+				$button.prop('disabled', false);
+				$button.removeClass('disabled');
+				$button.find('.fa-spinner').remove();
+			}
 		}
 	}
 

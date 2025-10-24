@@ -951,6 +951,39 @@ color: {$cookieConsentButtonHoverTextColor};
 .stripPopup .cookieContainer .contentWrap abbr {ldelim}
   color: {$cookieConsentTextColor};
 {rdelim}
+
+{if $showButtonShimmer}
+.btn.shimmer-fade-out {ldelim}
+  position: relative;
+  overflow: hidden;
+{rdelim}
+.btn[data-needs-refresh="true"]::before,
+.btn.shimmer-fade-out::before {ldelim}
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: btn-shimmer 2s infinite;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+{rdelim}
+.btn.shimmer-fade-out::before {ldelim}
+  opacity: 0;
+{rdelim}
+@keyframes btn-shimmer {ldelim}
+  0% {ldelim}
+    left: -100%;
+  {rdelim}
+  100% {ldelim}
+    left: 100%;
+  {rdelim}
+{rdelim}
+{/if}
+
 {$additionalCSS}
 </style>
 {/strip}

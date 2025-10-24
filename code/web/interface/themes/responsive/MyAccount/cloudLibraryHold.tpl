@@ -90,7 +90,7 @@
 				<div class="col-xs-9 col-sm-8 col-md-4 col-lg-3">
 					<div class="btn-group btn-group-vertical btn-block">
 						{if $section == 'available'}
-							<button onclick="return AspenDiscovery.CloudLibrary.checkOutTitle('{$record->userId}', '{$record->sourceId}');" class="btn btn-sm btn-action">{translate text="Checkout" isPublicFacing=true}</button>
+							<button onclick="return AspenDiscovery.CloudLibrary.checkOutTitle('{$record->userId}', '{$record->sourceId}', this);" class="btn btn-sm btn-action">{translate text="Checkout" isPublicFacing=true}</button>
 						{/if}
 						<button onclick="return AspenDiscovery.CloudLibrary.cancelHold('{$record->userId}', '{$record->sourceId}');" class="btn btn-sm btn-warning">{translate text="Cancel Hold" isPublicFacing=true}</button>
 					</div>

@@ -5,7 +5,7 @@ require_once ROOT_DIR . '/JSON_Action.php';
 class MyAccount_AJAX extends JSON_Action {
 	const SORT_LAST_ALPHA = 'zzzzz';
 
-	function launch($method = null) : void {
+	function launch($method = null) {
 		$method = (isset($_GET['method']) && !is_array($_GET['method'])) ? $_GET['method'] : '';
 		switch ($method) {
 			case 'renewItem':
@@ -452,9 +452,9 @@ class MyAccount_AJAX extends JSON_Action {
 			]),
 			'message' => $selfRegTerms->terms,
 			'modalButtons' => "<button type='button' class='tool btn btn-primary' id = 'AcceptTOS' onclick='AspenDiscovery.Account.selfRegistrationAgreeToTOS();'>" . translate([
-				'text' => "Agree",
-				'isPublicFacing' => true,
-			]) . "</button>",
+					'text' => "Agree",
+					'isPublicFacing' => true,
+				]) . "</button>",
 		];
 	}
 
@@ -2613,7 +2613,7 @@ class MyAccount_AJAX extends JSON_Action {
 							$ilsSummary->numUnavailableHolds = $filterLinkedUserSummary->numUnavailableHolds;
 						}
 					} else {
-					/** @var User $user */
+						/** @var User $user */
 						foreach ($user->getLinkedUsers() as $linkedUser) {
 							$linkedUserSummary = $linkedUser->getCatalogDriver()->getAccountSummary($linkedUser);
 							$ilsSummary->numAvailableHolds += $linkedUserSummary->numAvailableHolds;
@@ -3132,7 +3132,7 @@ class MyAccount_AJAX extends JSON_Action {
 		if (session_status() == PHP_SESSION_NONE) {
 			session_start();
 		}
-		
+
 		$source = $_REQUEST['source'];
 		$user = UserAccount::getActiveUserObj();
 		$allCheckedOut = $user->getCheckouts(true, $source);
@@ -3853,7 +3853,7 @@ class MyAccount_AJAX extends JSON_Action {
 			'available' => [],
 			'unavailable' => [],
 		];
-	
+
 		foreach ($allHolds['available'] as $key => $hold) {
 			$hold->recordId = $this->normalizeRecordId($hold->recordId);
 			$matchFound = false;
@@ -3881,7 +3881,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$filteredHolds['unavailable'][$key] = $hold;
 			}
 		}
-	
+
 		return $filteredHolds;
 	}
 
@@ -3904,7 +3904,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 		}
 		$filteredCheckouts = [];
-	
+
 		foreach ($allCheckedOut as $key => $checkout) {
 			$checkout->recordId = $this->normalizeRecordId($checkout->recordId);
 
@@ -3924,7 +3924,7 @@ class MyAccount_AJAX extends JSON_Action {
 		}
 		return $filteredCheckouts;
 	}
-	
+
 
 	public function filterHolds(array $allHolds, string $selectedUser): array {
 
@@ -3941,7 +3941,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$filteredHolds['available'][$key] = $hold;
 			}
 		}
-	
+
 		foreach ($allHolds['unavailable'] as $key => $hold) {
 			if ($allUsersSelected || intval($hold->userId) === intval($selectedUser)) {
 				$filteredHolds['unavailable'][$key] = $hold;
@@ -3953,19 +3953,19 @@ class MyAccount_AJAX extends JSON_Action {
 
 	public function filterCheckoutsByUser(array $allCheckedOut, string $selectedUser): array {
 		$filteredCheckouts = [];
-	
+
 		$allUsersSelected = (empty($selectedUser) || $selectedUser === "" || $selectedUser === '[""]');
-	
+
 		foreach ($allCheckedOut as $key => $checkout) {
 			if ($allUsersSelected || intval($checkout->userId) === intval($selectedUser)) {
 				$filteredCheckouts[$key] = $checkout;
 			}
 		}
-	
+
 		return $filteredCheckouts;
 	}
 
-	public function setFilterLinkedUser() : string {		
+	public function setFilterLinkedUser() : string {
 		$selectedUser = '';
 		if (isset($_REQUEST['selectedUser'])) {
 			$selectedUser = $_REQUEST['selectedUser'];
@@ -3981,7 +3981,7 @@ class MyAccount_AJAX extends JSON_Action {
 		return (string)$selectedUser;
 	}
 
-	public function setFilterLinkedUserCheckouts() : string {	
+	public function setFilterLinkedUserCheckouts() : string {
 
 		$selectedUser = '';
 		if (isset($_REQUEST['selectedUserCheckouts'])) {
@@ -3991,7 +3991,7 @@ class MyAccount_AJAX extends JSON_Action {
 			} else {
 				$_SESSION['selectedUserCheckouts'] = $selectedUser;
 			}
-	
+
 		} elseif (isset($_SESSION['selectedUserCheckouts'])) {
 
 			$selectedUser = $_SESSION['selectedUserCheckouts'];
@@ -5351,7 +5351,7 @@ class MyAccount_AJAX extends JSON_Action {
 			$decodedAccessTokenResults = json_decode($accessTokenResults);
 
 			ExternalRequestLogEntry::logRequest('fine_payment.createPayPalOrder', 'POST', $accessTokenUrl, $payPalAuthRequest->getHeaders(), json_encode($postParams), $payPalAuthRequest->getResponseCode(), $accessTokenResults, ['client_secret' => $clientSecret]);
-		
+
 			if (empty($decodedAccessTokenResults->access_token)) {
 				return [
 					'success' => false,
@@ -5392,9 +5392,9 @@ class MyAccount_AJAX extends JSON_Action {
 
 			$paymentResponse = $payPalPaymentRequest->curlPostBodyData($paymentRequestUrl, $paymentRequestBody);
 			$decodedPaymentResponse = json_decode($paymentResponse);
-			
+
 			ExternalRequestLogEntry::logRequest('fine_payment.createPayPalOrder', 'POST', $paymentRequestUrl, $payPalPaymentRequest->getHeaders(), json_encode($postParams), $payPalPaymentRequest->getResponseCode(), $paymentResponse, []);
-			
+
 			if ($decodedPaymentResponse->status != 'CREATED') {
 				return [
 					'success' => false,
@@ -5493,9 +5493,9 @@ class MyAccount_AJAX extends JSON_Action {
 			$accessTokenUrl = $baseUrl . "/v1/oauth2/token";
 			$accessTokenResults = $payPalAuthRequest->curlPostPage($accessTokenUrl, $postParams);
 			$decodedAccessTokenResults = json_decode($accessTokenResults);
-			
+
 			ExternalRequestLogEntry::logRequest('fine_payment.completePayPalOrder', 'POST', $accessTokenUrl, $payPalAuthRequest->getHeaders(), json_encode($postParams), $payPalAuthRequest->getResponseCode(), $accessTokenResults, ['client_secret' => $clientSecret]);
-			
+
 			if (empty($decodedAccessTokenResults->access_token)) {
 				return [
 					'success' => false,
@@ -5723,7 +5723,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$decodedPaymentRequestResults = json_decode($paymentRequestResults);
 
 				ExternalRequestLogEntry::logRequest('fine_payment.completeSquareOrder', 'POST', $paymentUrl, $paymentRequest->getHeaders(), json_encode($body), $paymentRequest->getResponseCode(), $paymentRequestResults, []);
-				
+
 				if ($decodedPaymentRequestResults->payment) {
 					$paymentResults = $decodedPaymentRequestResults->payment;
 					if ($paymentResults->status == 'COMPLETED' || $paymentResults->status == 'APPROVED') {
@@ -6183,7 +6183,7 @@ class MyAccount_AJAX extends JSON_Action {
 					}
 
 					$createMerchantProfileResponse = $curlWrapper->curlSendPage($url, 'PUT', json_encode($createMerchantProfile));
-						
+
 					ExternalRequestLogEntry::logRequest('fine_payment.createpropayorder', 'PUT', $url, $curlWrapper->getHeaders(), json_encode($createMerchantProfile), $curlWrapper->getResponseCode(), $createMerchantProfileResponse, []);
 
 					if ($createMerchantProfileResponse && $curlWrapper->getResponseCode() == 200) {
@@ -6571,7 +6571,7 @@ class MyAccount_AJAX extends JSON_Action {
 				$result = json_decode($resultJSON);
 
 				ExternalRequestLogEntry::logRequest('fine_payment.createNCROrder', 'POST', $url, $newRedirectRequest->getHeaders(), json_encode($postParams), $newRedirectRequest->getResponseCode(), $resultJSON, []);
-			
+
 				if ($result->status != "ok") {
 					return [
 						'success' => false,
@@ -7266,8 +7266,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["client_includeInHash"]) {
 			$hashParams .= "client=";
 			if(isset($urlParameterSettings['client_kohaAdditionalField']) && $urlParameterSettings['client_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['client_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['client_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "client=" . $urlParameterSettings['client_value'] ? $urlParameterSettings['client_value'] : "";
 			}
@@ -7275,8 +7275,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["area_includeInHash"]) {
 			$hashParams .= "&area=";
 			if(isset($urlParameterSettings['area_kohaAdditionalField']) && $urlParameterSettings['area_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['area_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['area_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "area=" . $urlParameterSettings['area_value'] ? $urlParameterSettings['area_value'] : "";
 			}
@@ -7284,8 +7284,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["till_includeInHash"]) {
 			$hashParams .= "&till=";
 			if(isset($urlParameterSettings['till_kohaAdditionalField']) && $urlParameterSettings['till_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['till_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['till_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "till=" . $urlParameterSettings['till_value'] ? $urlParameterSettings['till_value'] : "";
 			}
@@ -7293,8 +7293,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["entity_includeInHash"]) {
 			$hashParams .= "&entity=";
 			if(isset($urlParameterSettings['entity_kohaAdditionalField']) && $urlParameterSettings['entity_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['entity_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['entity_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "entity=" . $urlParameterSettings['entity_value'] ? $urlParameterSettings['entity_value'] : "";
 			}
@@ -7302,8 +7302,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["co_includeInHash"]) {
 			$hashParams .= "&co=";
 			if(isset($urlParameterSettings['co_kohaAdditionalField']) && $urlParameterSettings['co_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['co_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['co_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "co=" . $urlParameterSettings['co_value'] ? $urlParameterSettings['co_value'] : "";
 			}
@@ -7311,8 +7311,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["bu_includeInHash"]) {
 			$hashParams .= "&bu=";
 			if(isset($urlParameterSettings['bu_kohaAdditionalField']) && $urlParameterSettings['bu_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['bu_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['bu_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "bu=" . $urlParameterSettings['bu_value'] ? $urlParameterSettings['bu_value'] : "";
 			}
@@ -7320,8 +7320,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["lang_includeInHash"]) {
 			$hashParams .= "&lang=";
 			if(isset($urlParameterSettings['lang_kohaAdditionalField']) && $urlParameterSettings['lang_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['lang_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['lang_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "lang=" . $urlParameterSettings['lang_value'] ? $urlParameterSettings['lang_value'] : "";
 			}
@@ -7329,18 +7329,18 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["mode_includeInHash"]) {
 			$hashParams .= "&mode=";
 			if(isset($urlParameterSettings['mode_kohaAdditionalField']) && $urlParameterSettings['mode_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['mode_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['mode_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($locationDetails[$snakeCaseFieldName]) && $locationDetails[$snakeCaseFieldName] ? $locationDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "mode=" . $urlParameterSettings['mode_value'] ? $urlParameterSettings['mode_value'] : "";
 			}
 		}
 
 		// multiline hash and URL parameters
-		foreach($finesSelected as $index => $fine) {	
+		foreach($finesSelected as $index => $fine) {
 			$fineDetails = $patron->getCatalogDriver()->hasAdditionalFineFields() ? $patron->getCatalogDriver()->getFineById($fine['id'], true) : [];
 			$multilineSuffix = $index > 0 ? "_$index=" : "=";
-			
+
 			// URL parameters
 			if($urlParameterSettings["pmtTyp_includeInUrl"]) {
 				$paymentRequestUrl .= "&pmtTyp" . $multilineSuffix;
@@ -7495,8 +7495,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["rurl_includeInHash"]) {
 			$hashParams .= "&rurl=";
 			if(isset($urlParameterSettings['rurl_kohaAdditionalField']) && $urlParameterSettings['rurl_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['rurl_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['rurl_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "rurl=" . $urlParameterSettings['rurl_value'] ? $urlParameterSettings['rurl_value'] : "";
 			}
@@ -7504,8 +7504,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["burl_includeInHash"]) {
 			$hashParams .= "&burl=";
 			if(isset($urlParameterSettings['burl_kohaAdditionalField']) && $urlParameterSettings['burl_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['burl_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['burl_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "burl=" . $urlParameterSettings['burl_value'] ? $urlParameterSettings['burl_value'] : "";
 			}
@@ -7513,8 +7513,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["email_includeInHash"]) {
 			$hashParams .= "&email=";
 			if(isset($urlParameterSettings['email_kohaAdditionalField']) && $urlParameterSettings['email_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['email_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['email_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "email=" . $urlParameterSettings['email_value'] ? $urlParameterSettings['email_value'] : $patron->email;
 			}
@@ -7522,8 +7522,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["ccemail_includeInHash"]) {
 			$hashParams .= "&ccemail=";
 			if(isset($urlParameterSettings['ccemail_kohaAdditionalField']) && $urlParameterSettings['ccemail_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['ccemail_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['ccemail_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "ccemail=" . $urlParameterSettings['ccemail_value'] ? $urlParameterSettings['ccemail_value'] : "";
 			}
@@ -7531,8 +7531,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["sid_includeInHash"]) {
 			$hashParams .= "&sid=";
 			if(isset($urlParameterSettings['sid_kohaAdditionalField']) && $urlParameterSettings['sid_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['sid_kohaAdditionalField']));
-					$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['sid_kohaAdditionalField']));
+				$hashParams .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$hashParams .= "sid=" . $urlParameterSettings['sid_value'] ? $urlParameterSettings['sid_value'] : "";
 			}
@@ -7542,8 +7542,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["rurl_includeInUrl"]) {
 			$paymentRequestUrl .= "&rurl=";
 			if(isset($urlParameterSettings['rurl_kohaAdditionalField']) && $urlParameterSettings['rurl_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['rurl_kohaAdditionalField']));
-					$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['rurl_kohaAdditionalField']));
+				$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$paymentRequestUrl .= $urlParameterSettings['rurl_value'] && $urlParameterSettings['rurl_value'] ? $urlParameterSettings['rurl_value'] . "/AJAX?method=completeHeyCentricOrder%26paymentId=" . $payment->id : $configArray['Site']['url'] . "/MyAccount/AJAX?method=completeHeyCentricOrder%26paymentId=" . $payment->id;
 			}
@@ -7551,8 +7551,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["burl_includeInUrl"]) {
 			$paymentRequestUrl .= "&burl=";
 			if(isset($urlParameterSettings['burl_kohaAdditionalField']) && $urlParameterSettings['burl_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['burl_kohaAdditionalField']));
-					$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['burl_kohaAdditionalField']));
+				$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$paymentRequestUrl .= $urlParameterSettings['burl_value'] ? $urlParameterSettings['burl_value'] : "";
 			}
@@ -7560,8 +7560,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["email_includeInUrl"]) {
 			$paymentRequestUrl .= "&email=";
 			if(isset($urlParameterSettings['email_kohaAdditionalField']) && $urlParameterSettings['email_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['email_kohaAdditionalField']));
-					$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['email_kohaAdditionalField']));
+				$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$paymentRequestUrl .= $urlParameterSettings['email_value'] ? $urlParameterSettings['email_value'] : $patron->email;
 			}
@@ -7569,8 +7569,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["ccemail_includeInUrl"]) {
 			$paymentRequestUrl .= "&ccemail=";
 			if(isset($urlParameterSettings['ccemail_kohaAdditionalField']) && $urlParameterSettings['ccemail_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['ccemail_kohaAdditionalField']));
-					$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['ccemail_kohaAdditionalField']));
+				$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$paymentRequestUrl .= $urlParameterSettings['ccemail_value'] ? $urlParameterSettings['ccemail_value'] : "";
 			}
@@ -7578,8 +7578,8 @@ class MyAccount_AJAX extends JSON_Action {
 		if($urlParameterSettings["sid_includeInUrl"]) {
 			$paymentRequestUrl .= "&sid=";
 			if(isset($urlParameterSettings['sid_kohaAdditionalField']) && $urlParameterSettings['sid_kohaAdditionalField'] != "none") {
-					$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['sid_kohaAdditionalField']));
-					$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
+				$snakeCaseFieldName = str_replace(" ", "_", strtolower($urlParameterSettings['sid_kohaAdditionalField']));
+				$paymentRequestUrl .= urlencode(isset($fineDetails[$snakeCaseFieldName]) && $fineDetails[$snakeCaseFieldName] ? $fineDetails[$snakeCaseFieldName] : "none specified");
 			} else {
 				$paymentRequestUrl .= $urlParameterSettings['sid_value'] ? $urlParameterSettings['sid_value'] : "";
 			}
@@ -7606,7 +7606,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$payment->id = $paymentId;
 
 		$updateDebtInIls = false;
-	
+
 		if ($rc == 'A') {
 			$payment->completed = true;
 			if ($recNo) {
@@ -7616,7 +7616,7 @@ class MyAccount_AJAX extends JSON_Action {
 		}
 		if ($rc == 'C') {
 			$payment->cancelled = true;
-		} 
+		}
 		if ($rc == 'D') {
 			$payment->declined = true;
 		}
@@ -9805,7 +9805,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$today = new DateTime();
 		$enrollmentStartDate = !empty($campaign->enrollmentStartDate) ? new DateTime($campaign->enrollmentStartDate) : null;
 		$enrollmentEndDate = !empty($campaign->enrollmentEndDate) ? new DateTime($campaign->enrollmentEndDate) : null;
-		
+
 		if ($enrollmentStartDate && $enrollmentEndDate) {
 			if ($today < $enrollmentStartDate) {
 				return [
@@ -10023,8 +10023,8 @@ class MyAccount_AJAX extends JSON_Action {
 
 	public function applyCampaignProgress($userId, $campaignId) {
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
-    	require_once ROOT_DIR . '/sys/CommunityEngagement/CampaignMilestone.php';
-    	require_once ROOT_DIR . '/sys/CommunityEngagement/CampaignMilestoneProgressEntry.php';
+		require_once ROOT_DIR . '/sys/CommunityEngagement/CampaignMilestone.php';
+		require_once ROOT_DIR . '/sys/CommunityEngagement/CampaignMilestoneProgressEntry.php';
 		$campaign = new Campaign();
 		$campaign->id = $campaignId;
 		if (!$campaign->find(true)) {
@@ -10048,8 +10048,8 @@ class MyAccount_AJAX extends JSON_Action {
 
 	private function getUserEntities($userId) {
 		require_once ROOT_DIR . '/sys/User/Hold.php';
-    	require_once ROOT_DIR . '/sys/User/Checkout.php';
-    	require_once ROOT_DIR . '/sys/LocalEnrichment/UserWorkReview.php';
+		require_once ROOT_DIR . '/sys/User/Checkout.php';
+		require_once ROOT_DIR . '/sys/LocalEnrichment/UserWorkReview.php';
 		$entities = [];
 
 		$hold = new Hold();
@@ -10102,19 +10102,19 @@ class MyAccount_AJAX extends JSON_Action {
 			while ($campaignMilestone->fetch()) {
 				$milestone = new Milestone();
 				$milestone->id = $campaignMilestone->milestoneId;
-	
+
 				if (!$milestone->find(true)) {
 					continue;
 				}
-	
+
 				if ($milestone->milestoneType !== $entity->type) {
 					continue;
 				}
-	
+
 				if (_campaignMilestoneProgressEntryObjectAlreadyExists($entity, $campaignMilestone)) {
 					continue;
 				}
-	
+
 				$campaignMilestone->addCampaignMilestoneProgressEntry($entity, $entity->userId, $entityId);
 			}
 		}
@@ -10198,39 +10198,16 @@ class MyAccount_AJAX extends JSON_Action {
 						# Handle milestone progress notification
 						echo "event: ce_notification\n";
 						echo "data: " . json_encode(
-							array(
-								'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_progress',
-								'title'=> translate(
+								array(
+									'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_progress',
+									'title'=> translate(
 										[
 											'text' => 'Milestone progress! Good job!',
 											'isPublicFacing' => true
 										]
 									),
-								'body' => $campaignMilestoneUsersProgress->progress.'/'.$campaignMilestone->goal.' ' .$milestone->name,
-								'icon' => "fa-chart-line",
-								'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
-										[
-											'text' => 'View all campaigns',
-											'isPublicFacing' => true
-										]
-									)]
-							)
-						) . "\n\n";
-
-						# Handle milestone completion notification
-						if ($campaignMilestoneUsersProgress->progress >= $campaignMilestone->goal && !$wantedOverflowProgress) {
-							echo "event: ce_notification\n";
-							echo "data: " . json_encode(
-								array(
-									'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_completed',
-									'title'=> translate(
-										[
-											'text' => 'Milestone completed! Well done!',
-											'isPublicFacing' => true
-										]
-									),
-									'body' => $milestone->name,
-									'icon' => "fa-clipboard-check",
+									'body' => $campaignMilestoneUsersProgress->progress.'/'.$campaignMilestone->goal.' ' .$milestone->name,
+									'icon' => "fa-chart-line",
 									'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
 										[
 											'text' => 'View all campaigns',
@@ -10239,30 +10216,53 @@ class MyAccount_AJAX extends JSON_Action {
 									)]
 								)
 							) . "\n\n";
+
+						# Handle milestone completion notification
+						if ($campaignMilestoneUsersProgress->progress >= $campaignMilestone->goal && !$wantedOverflowProgress) {
+							echo "event: ce_notification\n";
+							echo "data: " . json_encode(
+									array(
+										'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_completed',
+										'title'=> translate(
+											[
+												'text' => 'Milestone completed! Well done!',
+												'isPublicFacing' => true
+											]
+										),
+										'body' => $milestone->name,
+										'icon' => "fa-clipboard-check",
+										'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
+											[
+												'text' => 'View all campaigns',
+												'isPublicFacing' => true
+											]
+										)]
+									)
+								) . "\n\n";
 						}
 
 						# Handle campaign completion notification
 						if ($userCampaign->completed && !$wantedOverflowProgress) {
 							echo "event: ce_notification\n";
 							echo "data: " . json_encode(
-								array(
-									'id'=> $campaignMilestoneProgressEntry->id . '_ce_campaign_completed',
-									'title'=> translate(
-										[
-											'text' => 'Campaign completed! Awesome!',
-											'isPublicFacing' => true
-										]
-									),
-									'body' => $campaign->name,
-									'icon' => "fa-medal",
-									'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
-										[
-											'text' => 'View all campaigns',
-											'isPublicFacing' => true
-										]
-									)]
-								)
-							) . "\n\n";
+									array(
+										'id'=> $campaignMilestoneProgressEntry->id . '_ce_campaign_completed',
+										'title'=> translate(
+											[
+												'text' => 'Campaign completed! Awesome!',
+												'isPublicFacing' => true
+											]
+										),
+										'body' => $campaign->name,
+										'icon' => "fa-medal",
+										'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
+											[
+												'text' => 'View all campaigns',
+												'isPublicFacing' => true
+											]
+										)]
+									)
+								) . "\n\n";
 						}
 					}
 				}else{
@@ -10419,14 +10419,14 @@ class MyAccount_AJAX extends JSON_Action {
 		$userId = $_REQUEST['userId'] ?? null;
 		if (empty($userId)) {
 			return ['success' => false,
-					'title' => translate([
-						'text' => 'Error',
-						'isPublicFacing' => true,
-					]),
-					'message' => translate([
-						'text' => 'No User Id',
-						'isPublicFacing' => true,
-					]),
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'No User Id',
+					'isPublicFacing' => true,
+				]),
 			];
 		}
 
@@ -10434,14 +10434,14 @@ class MyAccount_AJAX extends JSON_Action {
 		$user->id = $userId;
 		if (!$user->find(true)){
 			return ['success' => false,
-					'title' => translate([
-						'text' => 'Error',
-						'isPublicFacing' => true,
-					]),
-					'message' => translate([
-						'text' => 'User not found',
-						'isPublicFacing' => true,
-					]),
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'User not found',
+					'isPublicFacing' => true,
+				]),
 			];
 		}
 
@@ -10459,14 +10459,14 @@ class MyAccount_AJAX extends JSON_Action {
 		$userId = $_REQUEST['userId'] ?? null;
 		if (empty($userId)) {
 			return ['success' => false,
-					'title' => translate([
-						'text' => 'Error',
-						'isPublicFacing' => true,
-					]),
-					'message' => translate([
-						'text' => 'No User Id',
-						'isPublicFacing' => true,
-					]),
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'No User Id',
+					'isPublicFacing' => true,
+				]),
 			];
 		}
 
@@ -10474,14 +10474,14 @@ class MyAccount_AJAX extends JSON_Action {
 		$user->id = $userId;
 		if (!$user->find(true)){
 			return ['success' => false,
-					'title' => translate([
-						'text' => 'Error',
-						'isPublicFacing' => true,
-					]),
-					'message' => translate([
-						'text' => 'User not found',
-						'isPublicFacing' => true,
-					]),
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'User not found',
+					'isPublicFacing' => true,
+				]),
 			];
 		}
 
@@ -10494,8 +10494,120 @@ class MyAccount_AJAX extends JSON_Action {
 		];
 	}
 
+	/**
+	 * Refresh user circulation cache by forcing reload of checkouts and holds data.
+	 *
+	 * @noinspection PhpUnused
+	 */
+	public function refreshUserCirculationCache(): array {
+		if (!UserAccount::isLoggedIn()) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You must be logged in to refresh circulation data.',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+		$user = UserAccount::getActiveUserObj();
+
+		// Skip if data was refreshed in the last 5 seconds to prevent multiple calls.
+		$lastRefresh = max($user->checkoutInfoLastLoaded, $user->holdInfoLastLoaded);
+		if ($lastRefresh > (time() - 5)) {
+			return [
+				'success' => true,
+			];
+		}
+		global $logger;
+		$logger->log("REFRESH CIRC CACHE!", Logger::LOG_ERROR);
+
+		$user->checkoutInfoLastLoaded = 0;
+		$user->holdInfoLastLoaded = 0;
+		$user->update();
+		$user->getCheckouts();
+		$user->getHolds();
+
+		return [
+			'success' => true,
+		];
+	}
+
+	/**
+	 * Get updated circulation button HTML for multiple records after cache refresh.
+	 *
+	 * @return array
+	 */
+	public function getUpdatedCirculationButtons(): array {
+		if (!UserAccount::isLoggedIn()) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'You must be logged in to get circulation buttons.',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+		$recordData = $_REQUEST['recordData'] ?? [];
+		if (empty($recordData)) {
+			return [
+				'success' => false,
+				'message' => 'No record data provided',
+			];
+		}
+
+		$user = UserAccount::getActiveUserObj();
+		$updatedButtons = [];
+
+		foreach ($recordData as $record) {
+			$source = $record['source'] ?? '';
+			$recordId = $record['recordId'] ?? '';
+			$clearAllButtons = false;
+
+			if (!empty($source) && !empty($recordId)) {
+				$actions = $user->getCirculatedRecordActions($source, $recordId);
+				// If actions are empty, there are no circulation actions,
+				// so load the default actions from the respective record driver.
+				if (empty($actions)) {
+					try {
+						require_once ROOT_DIR . '/RecordDrivers/RecordDriverFactory.php';
+						$recordDriver = RecordDriverFactory::initRecordDriverById($source . ':' . $recordId);
+						if ($recordDriver && !($recordDriver instanceof AspenError)) {
+							$actions = $recordDriver->getRecordActionsFromIndex();
+							$clearAllButtons = true;
+						}
+					} catch (Exception $e) {
+						global $logger;
+						$logger->log("Failed to load actions from record driver for $source:$recordId: " . $e->getMessage(), Logger::LOG_ERROR);
+					}
+				}
+
+				$updatedButtons[] = [
+					'source' => $source,
+					'recordId' => $recordId,
+					'actions' => $actions,
+					'clearAllButtons' => $clearAllButtons,
+				];
+			}
+		}
+
+		return [
+			'success' => true,
+			'buttons' => $updatedButtons,
+		];
+	}
+
 	/** @noinspection PhpUnused */
-	function getListPrintOptions() {
+	function getListPrintOptions(): array {
 		global $interface;
 		$interface->assign('printListId', strip_tags($_REQUEST['listId']));
 
@@ -10511,5 +10623,4 @@ class MyAccount_AJAX extends JSON_Action {
 				]) . "</button>",
 		];
 	}
-
 }

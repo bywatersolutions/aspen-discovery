@@ -8,7 +8,7 @@ function getUntitledVolumeHoldAction($module, $source, $id, $variationId) : arra
 		]),
 		'url' => '',
 		'id' => "actionButton$id",
-		'onclick' => "return AspenDiscovery.Record.showPlaceHold('$module', '$source', '$id', '~untitled~', '$variationId');",
+		'onclick' => "return AspenDiscovery.Record.showPlaceHold('$module', '$source', '$id', '~untitled~', '$variationId', this);",
 		'requireLogin' => false,
 		'type' => 'ils_hold',
 	];
@@ -22,7 +22,7 @@ function getHoldRequestAction($module, $source, $id, $variationId) : array {
 		]),
 		'url' => '',
 		'id' => "actionButton$id",
-		'onclick' => "return AspenDiscovery.Record.showPlaceHold('$module', '$source', '$id', '', '$variationId');",
+		'onclick' => "return AspenDiscovery.Record.showPlaceHold('$module', '$source', '$id', '', '$variationId', this);",
 		'requireLogin' => false,
 		'type' => 'ils_hold',
 	];
@@ -37,7 +37,7 @@ function getSpecificVolumeHoldAction($module, $source, $id, $volumeInfo) : array
 		]),
 		'url' => '',
 		'id' => "actionButton$id",
-		'onclick' => "return AspenDiscovery.Record.showPlaceHold('$module', '$source', '$id', '{$volumeInfo['volumeId']}');",
+		'onclick' => "return AspenDiscovery.Record.showPlaceHold('$module', '$source', '$id', '{$volumeInfo['volumeId']}', '', this);",
 		'requireLogin' => false,
 		'type' => 'ils_hold',
 		'volumeId' => $volumeInfo['volumeId'],
@@ -53,7 +53,7 @@ function getMultiVolumeHoldAction($module, $source, $id) : array {
 		]),
 		'url' => '',
 		'id' => "actionButton$id",
-		'onclick' => "return AspenDiscovery.Record.showPlaceHoldVolumes('$module', '$source', '$id');",
+		'onclick' => "return AspenDiscovery.Record.showPlaceHoldVolumes('$module', '$source', '$id', this);",
 		'requireLogin' => false,
 		'type' => 'ils_hold',
 	];

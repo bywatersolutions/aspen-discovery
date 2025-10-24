@@ -12,7 +12,6 @@ function getUpdates25_Q4_00(): array {
 			 ]
 		 ], //name*/
 
-		// Leo Stoyanov - BWS
 		'add_enable_third_party_sms_notifications_option' => [
 			'title' => 'Add "Enable Third Party SMS Notifications" Option',
 			'description' => 'Add "Enable Third Party SMS Notifications" option for CarlX to Library System settings.',
@@ -38,8 +37,6 @@ function getUpdates25_Q4_00(): array {
 				'ALTER TABLE grouped_work_display_settings ADD COLUMN showCopiesForPeriodicalsWithNoItems TINYINT(1) DEFAULT 0'
 			]
 		], //add_show_copies_for_periodicals_with_no_iems_setting
-
-		//Yanjun Li - ByWater
 		'add_hoopla_configurable_indexing_time' => [
 			'title' => 'Add Configurable Hoopla Indexing Time',
 			'description' => 'Add Hoopla Indexing Time',
@@ -94,6 +91,14 @@ function getUpdates25_Q4_00(): array {
 				'ALTER TABLE system_variables DROP COLUMN IF EXISTS ticketEmail'
 			]
 		], // remove_ticket_email_system_variable
+		'themes_show_button_shimmer' => [
+			'title' => 'Themes - Show Button Shimmer',
+			'description' => 'Add showButtonShimmer setting to themes table to allow libraries to disable shimmer effect on circulation buttons.',
+			'continueOnError' => true,
+			'sql' => [
+				'ALTER TABLE themes ADD COLUMN showButtonShimmer TINYINT(1) DEFAULT 1',
+			]
+		], // themes_show_button_shimmer
 
 	];
 }

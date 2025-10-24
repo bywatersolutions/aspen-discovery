@@ -23,18 +23,22 @@ AspenDiscovery.CloudLibrary = (function () {
 			});
 		},
 
-		checkOutTitle: function (patronId, id) {
+		checkOutTitle(patronId, id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.CloudLibrary.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.CloudLibrary.doCheckOut(promptInfo.patronId, id);
-				}
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				AspenDiscovery.CloudLibrary.getCheckOutPrompts(id, function(promptInfo) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.CloudLibrary.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.CloudLibrary.checkOutTitle(patronId, id);
-				});
+					AspenDiscovery.CloudLibrary.checkOutTitle(patronId, id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -100,28 +104,27 @@ AspenDiscovery.CloudLibrary = (function () {
 			});
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/CloudLibrary/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = true;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/CloudLibrary/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
 		getHoldPrompts: function (id) {
@@ -148,18 +151,20 @@ AspenDiscovery.CloudLibrary = (function () {
 			return result;
 		},
 
-		placeHold: function (id) {
+		placeHold(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for placing holds (email and format depending on the interface.
-				var promptInfo = AspenDiscovery.CloudLibrary.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const promptInfo = AspenDiscovery.CloudLibrary.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				// noinspection JSUnresolvedVariable
 				if (!promptInfo.promptNeeded) {
 					AspenDiscovery.CloudLibrary.doHold(promptInfo.patronId, id);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.CloudLibrary.placeHold(id);
-				});
+					AspenDiscovery.CloudLibrary.placeHold(id, button);
+				}, false);
 			}
 			return false;
 		},

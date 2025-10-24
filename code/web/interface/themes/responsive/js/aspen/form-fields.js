@@ -1,5 +1,5 @@
 /**
- * Javascript for enhancing form fields:
+ * Form Fields Module
  * - Character counter for maxlength attributes.
  * - Others could be added later....
 **/

@@ -38,6 +38,7 @@ aspen/ebsco.js
 aspen/econtent-record.js
 aspen/events.js
 aspen/grouped-work.js
+aspen/lazy-circulation.js
 aspen/lists.js
 aspen/collection-spotlights.js
 aspen/materials-request.js

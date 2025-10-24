@@ -178,7 +178,7 @@ class CloudLibraryRecordDriver extends MarcRecordDriver {
 			$loadDefaultActions = true;
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getActiveUserObj();
-				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActions('cloud_library', $this->id));
+				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActionsWithLazyLoading('cloud_library', $this->id));
 				$loadDefaultActions = count($this->_actions) == 0;
 			}
 
@@ -186,30 +186,48 @@ class CloudLibraryRecordDriver extends MarcRecordDriver {
 			global $offlineMode;
 			global $loginAllowedWhileOffline;
 			if ($loadDefaultActions && (!$offlineMode || $loginAllowedWhileOffline)) {
+				$needsLazyLoading = false;
+				if (UserAccount::isLoggedIn()) {
+					$user = UserAccount::getActiveUserObj();
+					if (!$user->areCirculationActionsDisabled()) $needsLazyLoading = !$user->isCirculationCacheFresh();
+				}
+
 				if ($isAvailable) {
 					$userId = UserAccount::getActiveUserId();
-					if ($userId == false) {
+					if (!$userId) {
 						$userId = 'null';
 					}
-					$this->_actions[] = [
+					$checkoutAction = [
 						'title' => translate([
 							'text' => 'Check Out cloudLibrary',
 							'isPublicFacing' => true,
 						]),
-						'onclick' => "return AspenDiscovery.CloudLibrary.checkOutTitle({$userId}, '{$this->id}');",
+						'onclick' => "return AspenDiscovery.CloudLibrary.checkOutTitle({$userId}, '{$this->id}', this);",
 						'requireLogin' => false,
 						'type' => 'cloud_library_checkout',
 					];
+					if ($needsLazyLoading) {
+						$checkoutAction['data-needs-refresh'] = 'true';
+						$checkoutAction['data-record-id'] = $this->id;
+						$checkoutAction['data-record-source'] = 'cloud_library';
+					}
+					$this->_actions[] = $checkoutAction;
 				} else {
-					$this->_actions[] = [
+					$holdAction = [
 						'title' => translate([
 							'text' => 'Place Hold cloudLibrary',
 							'isPublicFacing' => true,
 						]),
-						'onclick' => "return AspenDiscovery.CloudLibrary.placeHold('{$this->id}');",
+						'onclick' => "return AspenDiscovery.CloudLibrary.placeHold('{$this->id}', this);",
 						'requireLogin' => false,
 						'type' => 'cloud_library_hold',
 					];
+					if ($needsLazyLoading) {
+						$holdAction['data-needs-refresh'] = 'true';
+						$holdAction['data-record-id'] = $this->id;
+						$holdAction['data-record-source'] = 'cloud_library';
+					}
+					$this->_actions[] = $holdAction;
 				}
 			}
 		}

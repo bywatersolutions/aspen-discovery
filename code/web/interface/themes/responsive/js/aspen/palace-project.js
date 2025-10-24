@@ -32,42 +32,45 @@ AspenDiscovery.PalaceProject = (function () {
 			return false;
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/PalaceProject/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = false;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/PalaceProject/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
-		checkOutTitle: function (id) {
+		checkOutTitle(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.PalaceProject.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.PalaceProject.doCheckOut(promptInfo.patronId, id);
-				}
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				AspenDiscovery.PalaceProject.getCheckOutPrompts(id, function(promptInfo) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.PalaceProject.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.PalaceProject.checkOutTitle(id);
-				});
+					AspenDiscovery.PalaceProject.checkOutTitle(id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -138,18 +141,20 @@ AspenDiscovery.PalaceProject = (function () {
 			return false;
 		},
 
-		placeHold: function (id) {
+		placeHold(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for placing holds (email and format depending on the interface.
-				var promptInfo = AspenDiscovery.PalaceProject.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const promptInfo = AspenDiscovery.PalaceProject.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				// noinspection JSUnresolvedVariable
 				if (!promptInfo.promptNeeded) {
 					AspenDiscovery.PalaceProject.doHold(promptInfo.patronId, id);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.PalaceProject.placeHold(id);
-				});
+					AspenDiscovery.PalaceProject.placeHold(id, button);
+				}, false);
 			}
 			return false;
 		},

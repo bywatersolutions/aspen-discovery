@@ -23,7 +23,9 @@ AspenDiscovery.Hoopla = (function(){
 					if (data.success) {
 						AspenDiscovery.Account.loadMenuData();
 					}
-				}).fail(AspenDiscovery.ajaxFail)
+				}).fail(function() {
+					AspenDiscovery.ajaxFail();
+				})
 			}else{
 				AspenDiscovery.Account.ajaxLogin(null, function(){
 					AspenDiscovery.Hoopla.checkOutHooplaTitle(hooplaId, patronId, hooplaType);
@@ -32,37 +34,45 @@ AspenDiscovery.Hoopla = (function(){
 			return false;
 		},
 
-		getCheckOutPrompts: function (hooplaId, hooplaType) {
+		getCheckOutPrompts(hooplaId, hooplaType, button) {
 			if (Globals.loggedIn) {
-				var url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX?method=getCheckOutPrompts";
-				var params = {
-					'method' : 'getCheckOutPrompts',
-					hooplaType : hooplaType
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				const url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX?method=getCheckOutPrompts";
+				const params = {
+					'method': 'getCheckOutPrompts',
+					hooplaType: hooplaType
 				};
 				$.getJSON(url, params, function (data) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedReference
 					if (data.flexDirectCheckout) {
 						AspenDiscovery.Hoopla.checkOutHooplaTitle(hooplaId, data.patronId, data.hooplaType);
 					} else {
 						AspenDiscovery.showMessageWithButtons(data.title, data.body, data.buttons);
 					}
-				}).fail(AspenDiscovery.ajaxFail);
+				}).fail(function() {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+					AspenDiscovery.ajaxFail();
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Hoopla.getCheckOutPrompts(hooplaId, hooplaType);
+					AspenDiscovery.Hoopla.getCheckOutPrompts(hooplaId, hooplaType, button);
 				}, false);
 			}
 			return false;
 		},
 
-		returnCheckout: function (patronId, hooplaId) {
+		returnCheckout(patronId, hooplaId) {
 			if (Globals.loggedIn) {
 				if (confirm('Are you sure you want to return this title?')) {
 					AspenDiscovery.showMessage("Returning Title", "Returning your title in Hoopla.");
-					var url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX",
-							params = {
-								'method': 'returnCheckout'
-								,patronId: patronId
-							};
+					const url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX",
+						params = {
+							'method': 'returnCheckout'
+							, patronId: patronId
+						};
 					$.getJSON(url, params, function (data) {
 						AspenDiscovery.showMessage(data.success ? 'Success' : 'Error', data.message, data.success, data.success);
 					}).fail(AspenDiscovery.ajaxFail);
@@ -108,16 +118,19 @@ AspenDiscovery.Hoopla = (function(){
 			return result;
 		},
 
-		placeHold: function(id) {
+		placeHold(id, button) {
 			if (Globals.loggedIn) {
-				var promptInfo = AspenDiscovery.Hoopla.getHoldPrompts(id);
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const promptInfo = AspenDiscovery.Hoopla.getHoldPrompts(id);
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				if (promptInfo.success && !promptInfo.promptNeeded){
 					AspenDiscovery.Hoopla.doHold(promptInfo.patronId, id);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function() {
-					AspenDiscovery.Hoopla.placeHold(id);
-				});
+					AspenDiscovery.Hoopla.placeHold(id, button);
+				}, false);
 			}
 			return false;
 		},

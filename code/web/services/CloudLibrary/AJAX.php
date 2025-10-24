@@ -2,7 +2,7 @@
 require_once ROOT_DIR . '/JSON_Action.php';
 
 class CloudLibrary_AJAX extends JSON_Action {
-	function placeHold() {
+	function placeHold(): array {
 		$user = UserAccount::getLoggedInUser();
 
 		$id = $_REQUEST['id'];
@@ -14,6 +14,10 @@ class CloudLibrary_AJAX extends JSON_Action {
 			} else {
 				return [
 					'result' => false,
+					'title' => translate([
+						'text' => "Error Placing Hold on CloudLibrary Title",
+						'isPublicFacing' => true,
+					]),
 					'message' => translate([
 						'text' => 'Sorry, it looks like you don\'t have permissions to place holds for that user.',
 						'isPublicFacing' => true,
@@ -23,6 +27,10 @@ class CloudLibrary_AJAX extends JSON_Action {
 		} else {
 			return [
 				'result' => false,
+				'title' => translate([
+					'text' => "Error Placing Hold on CloudLibrary Title",
+					'isPublicFacing' => true,
+				]),
 				'message' => translate([
 					'text' => 'You must be logged in to place a hold.',
 					'isPublicFacing' => true,
@@ -31,7 +39,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 		}
 	}
 
-	function checkOutTitle() {
+	function checkOutTitle(): array {
 		$user = UserAccount::getLoggedInUser();
 		$id = $_REQUEST['id'];
 		if ($user) {
@@ -43,7 +51,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 				return [
 					'result' => false,
 					'title' => translate([
-						'text' => "Error Checking Out Title",
+						'text' => "Error Checking Out CloudLibrary Title",
 						'isPublicFacing' => true,
 					]),
 					'message' => translate([
@@ -56,7 +64,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 			return [
 				'result' => false,
 				'title' => translate([
-					'text' => "Error Checking Out Title",
+					'text' => "Error Checking Out CloudLibrary Title",
 					'isPublicFacing' => true,
 				]),
 				'message' => translate([
@@ -68,7 +76,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getHoldPrompts() {
+	function getHoldPrompts(): array {
 		$user = UserAccount::getLoggedInUser();
 		if (empty($user)) {
 			$loggedOutMessage = translate([
@@ -94,7 +102,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 		$settings = $driver->getSettings($user);
 
 		if (count($usersWithCloudLibraryAccess) > 1) {
-			$promptTitle = 'cloudLibrary Hold Options';
+			$promptTitle = 'CloudLibrary Hold Options';
 			$interface->assign('useAlternateLibraryCard', $settings->useAlternateLibraryCard);
 			$validCards = [];
 			foreach ($usersWithCloudLibraryAccess as $userWithAccess) {
@@ -123,9 +131,8 @@ class CloudLibrary_AJAX extends JSON_Action {
 				'promptNeeded' => false,
 			];
 		} else {
-			// No cloudLibrary Account Found
 			$invalidAccountMessage = translate([
-				'text' => "The barcode or library for this account is not valid for cloudLibrary. Please contact your local library for more information.",
+				'text' => "The barcode or library for this account is not valid for CloudLibrary. Please contact your local library for more information.",
 				'isPublicFacing' => true,
 			]);
 			return [
@@ -141,7 +148,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 	}
 
 	/** @noinspection PhpUnused */
-	function getCheckOutPrompts() {
+	function getCheckOutPrompts(): array {
 		$user = UserAccount::getLoggedInUser();
 		if (empty($user)) {
 			$loggedOutMessage = translate([
@@ -168,7 +175,7 @@ class CloudLibrary_AJAX extends JSON_Action {
 		$settings = $driver->getSettings($user);
 
 		if (count($usersWithCloudLibraryAccess) > 1) {
-			$promptTitle = 'cloudLibrary Checkout Options';
+			$promptTitle = 'CloudLibrary Checkout Options';
 			$interface->assign('useAlternateLibraryCard', $settings->useAlternateLibraryCard);
 			$validCards = [];
 			foreach ($usersWithCloudLibraryAccess as $userWithAccess) {
@@ -197,9 +204,8 @@ class CloudLibrary_AJAX extends JSON_Action {
 				'promptNeeded' => false,
 			];
 		} else {
-			// No cloudLibrary Account Found
 			$invalidAccountMessage = translate([
-				'text' => "The barcode or library for this account is not valid for cloudLibrary. Please contact your local library for more information.",
+				'text' => "The barcode or library for this account is not valid for CloudLibrary. Please contact your local library for more information.",
 				'isPublicFacing' => true,
 			]);
 			return [
@@ -324,41 +330,39 @@ class CloudLibrary_AJAX extends JSON_Action {
 	/**
 	 * @param $id
 	 * @param User $patron
-	 * @return false|array
+	 * @return array
 	 */
-	private function processHoldOrCheckout($id, User $patron) {
+	private function processHoldOrCheckout($id, User $patron): array {
 		require_once ROOT_DIR . '/Drivers/CloudLibraryDriver.php';
 		$driver = new CloudLibraryDriver();
 
-		//If using alternate library cards, first check if account exists in cloudLibrary
+		// If using alternate library cards, first check if account exists in CloudLibrary.
 		$settings = $driver->getSettings($patron);
 		if ($settings->useAlternateLibraryCard && !$driver->checkAuthentication($patron)) {
 			$result['message'] = translate([
-				'text' => 'Sorry, your alternate library card is not valid for cloudLibrary. Please check that you have entered it correctly.',
+				'text' => 'Sorry, your alternate library card is not valid for CloudLibrary. Please check that you have entered it correctly.',
 				'isPublicFacing' => true,
 			]);
 
-			// Result for API or app use
 			$result['api']['title'] = translate([
 				'text' => 'Invalid alternate library card.',
 				'isPublicFacing' => true,
 			]);
 			$result['api']['message'] = translate([
-				'text' => 'Sorry, your alternate library card is not valid for cloudLibrary. Please check that you have entered it correctly.',
+				'text' => 'Sorry, your alternate library card is not valid for CloudLibrary. Please check that you have entered it correctly.',
 				'isPublicFacing' => true,
 			]);
 			return $result;
 		}
 
-		//Before we place the hold, check the status since cloudLibrary doesn't always update properly
+		// Before placing the hold, check the status because CloudLibrary doesn't always update properly.
 		$itemStatus = $driver->getItemStatus($id, $patron);
 		if ($itemStatus == 'CAN_LOAN' || $itemStatus == 'RESERVATION') {
 			$result = $driver->checkoutTitle($patron, $id);
-			//$logger->log("Checkout result = $result", Logger::LOG_NOTICE);
 			if ($result['success']) {
 				/** @noinspection HtmlUnknownTarget */
 				$result['title'] = translate([
-					'text' => "Title Checked Out Successfully",
+					'text' => "CloudLibrary Title Checked Out Successfully",
 					'isPublicFacing' => true,
 				]);
 				$result['buttons'] = '<a class="btn btn-primary" href="/MyAccount/CheckedOut" role="button">' . translate([
@@ -376,6 +380,10 @@ class CloudLibrary_AJAX extends JSON_Action {
 		} elseif ($itemStatus == 'HOLD' || $itemStatus == 'ON_HOLD') {
 			$result = [
 				'result' => true,
+				'title' => translate([
+					'text' => "Failed to Place CloudLibrary Hold",
+					'isPublicFacing' => true,
+				]),
 				'message' => translate([
 					'text' => 'This title is already on hold for you.',
 					'isPublicFacing' => true,
@@ -384,6 +392,10 @@ class CloudLibrary_AJAX extends JSON_Action {
 		} elseif ($itemStatus == 'LOAN') {
 			$result = [
 				'result' => true,
+				'title' => translate([
+					'text' => "Failed to Check Out CloudLibrary Title",
+					'isPublicFacing' => true,
+				]),
 				'message' => translate([
 					'text' => 'This title is already checked out to you.',
 					'isPublicFacing' => true,
@@ -392,6 +404,10 @@ class CloudLibrary_AJAX extends JSON_Action {
 		} elseif ($itemStatus == 'CAN_WISH') {
 			$result = [
 				'result' => true,
+				'title' => translate([
+					'text' => "CloudLibrary Title Unavailable",
+					'isPublicFacing' => true,
+				]),
 				'message' => translate([
 					'text' => 'Sorry, this title is no longer available.',
 					'isPublicFacing' => true,
@@ -400,16 +416,24 @@ class CloudLibrary_AJAX extends JSON_Action {
 		} elseif ($itemStatus == 'Authentication failed') {
 			$result = [
 				'result' => true,
+				'title' => translate([
+					'text' => "Failed to Authenticate with CloudLibrary",
+					'isPublicFacing' => true,
+				]),
 				'message' => translate([
-					'text' => 'We were unable to authenticate your account in cloudLibrary. If this problem persists, please contact the library.',
+					'text' => 'We were unable to authenticate your account in CloudLibrary. If this problem persists, please contact the library.',
 					'isPublicFacing' => true,
 				]),
 			];
 		} else {
 			$result = [
 				'result' => true,
+				'title' => translate([
+					'text' => "Failed to Complete CloudLibrary Checkout or Hold",
+					'isPublicFacing' => true,
+				]),
 				'message' => translate([
-					'text' => "cloudLibrary returned an invalid item status (%1%).",
+					'text' => "CloudLibrary returned an invalid item status (%1%).",
 					1 => $itemStatus,
 					'isPublicFacing' => true,
 				]),

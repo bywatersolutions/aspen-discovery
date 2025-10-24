@@ -142,12 +142,8 @@ class UserAccount {
 	/**
 	 * @return bool|integer
 	 */
-	public static function getActiveUserId() {
-		if (isset($_SESSION['activeUserId'])) {
-			return $_SESSION['activeUserId'];
-		} else {
-			return false;
-		}
+	public static function getActiveUserId(): bool|int {
+		return $_SESSION['activeUserId'] ?? false;
 	}
 
 	/**

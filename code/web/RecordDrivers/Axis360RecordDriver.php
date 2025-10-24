@@ -207,7 +207,7 @@ class Axis360RecordDriver extends GroupedWorkSubDriver {
 		return [];
 	}
 
-	protected $_actions = null;
+	protected ?array $_actions = null;
 
 	public function getRecordActions($relatedRecord, $variationId, $isAvailable, $isHoldable, $volumeData = null) : array {
 		if ($this->_actions === null) {
@@ -216,7 +216,7 @@ class Axis360RecordDriver extends GroupedWorkSubDriver {
 			$loadDefaultActions = true;
 			if (UserAccount::isLoggedIn()) {
 				$user = UserAccount::getActiveUserObj();
-				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActions('axis360', $this->id));
+				$this->_actions = array_merge($this->_actions, $user->getCirculatedRecordActionsWithLazyLoading('axis360', $this->id));
 				$loadDefaultActions = count($this->_actions) == 0;
 			}
 
@@ -224,26 +224,44 @@ class Axis360RecordDriver extends GroupedWorkSubDriver {
 			global $offlineMode;
 			global $loginAllowedWhileOffline;
 			if ($loadDefaultActions && (!$offlineMode || $loginAllowedWhileOffline)) {
+				$needsLazyLoading = false;
+				if (UserAccount::isLoggedIn()) {
+					$user = UserAccount::getActiveUserObj();
+					if (!$user->areCirculationActionsDisabled()) $needsLazyLoading = !$user->isCirculationCacheFresh();
+				}
+
 				if ($isAvailable) {
-					$this->_actions[] = [
+					$checkoutAction = [
 						'title' => translate([
 							'text' => 'Check Out Boundless',
 							'isPublicFacing' => true,
 						]),
-						'onclick' => "return AspenDiscovery.Axis360.checkOutTitle('{$this->id}');",
+						'onclick' => "return AspenDiscovery.Axis360.checkOutTitle('{$this->id}', this);",
 						'requireLogin' => false,
 						'type' => 'axis360_checkout',
 					];
+					if ($needsLazyLoading) {
+						$checkoutAction['data-needs-refresh'] = 'true';
+						$checkoutAction['data-record-id'] = $this->id;
+						$checkoutAction['data-record-source'] = 'axis360';
+					}
+					$this->_actions[] = $checkoutAction;
 				} else {
-					$this->_actions[] = [
+					$holdAction = [
 						'title' => translate([
 							'text' => 'Place Hold Boundless',
 							'isPublicFacing' => true,
 						]),
-						'onclick' => "return AspenDiscovery.Axis360.placeHold('{$this->id}');",
+						'onclick' => "return AspenDiscovery.Axis360.placeHold('{$this->id}', this);",
 						'requireLogin' => false,
 						'type' => 'axis360_hold',
 					];
+					if ($needsLazyLoading) {
+						$holdAction['data-needs-refresh'] = 'true';
+						$holdAction['data-record-id'] = $this->id;
+						$holdAction['data-record-source'] = 'axis360';
+					}
+					$this->_actions[] = $holdAction;
 				}
 			}
 		}

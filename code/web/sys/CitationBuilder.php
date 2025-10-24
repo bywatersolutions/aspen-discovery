@@ -286,10 +286,13 @@ class CitationBuilder {
 	/**
 	 * Strip unwanted punctuation from the right side of a string.
 	 *
-	 * @param string $text The text to clean up.
+	 * @param string|null $text The text to clean up. May be null if 245$a is missing.
 	 * @return string The cleaned up text.
 	 */
-	private function stripPunctuation(string $text): string {
+	private function stripPunctuation(?string $text): string {
+		if ($text === null) {
+			return '';
+		}
 		$text = trim($text);
 		if ((str_ends_with($text, '.')) || (str_ends_with($text, ',')) || (str_ends_with($text, ':')) || (str_ends_with($text, ';')) || (str_ends_with($text, '/'))) {
 			$text = substr($text, 0, -1);

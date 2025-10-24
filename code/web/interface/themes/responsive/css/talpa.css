@@ -1,0 +1,69 @@
+.talpa_search_loading {
+  padding-right: 30px;
+  /* Ensure space for the image */
+  background-image: url('/images/loading.gif');
+  /* Replace with your image */
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  /* Align to the right */
+  background-size: 20px 20px;
+  /* Adjust the size */
+}
+#tryThisSearchOnTalpa {
+  margin-top: 20px;
+}
+#talpaExplainerText {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+#talpaExplainerText img {
+  float: left;
+  margin-right: 5px;
+}
+.talpaTextLoadingLine {
+  height: 25px;
+  width: 100%;
+  margin-bottom: 5px;
+  border-radius: 2px;
+  max-width: 80ch;
+}
+.talpaTextLoadingLine:last-child {
+  margin: 0;
+}
+.talpa_list_summary .talpaTextLoadingLine {
+  max-width: unset;
+}
+@-webkit-keyframes placeHolderShimmer {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100vw 0;
+  }
+}
+@keyframes placeHolderShimmer {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100vw 0;
+  }
+}
+.talpaTextLoading {
+  -webkit-animation-duration: 1.5s;
+  animation-duration: 1.5s;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  -webkit-animation-name: placeHolderShimmer;
+  animation-name: placeHolderShimmer;
+  -webkit-animation-timing-function: linear;
+  animation-timing-function: linear;
+  background: #0001;
+  background: linear-gradient(to right, #0001, rgba(133, 104, 104, 0.07) 18%, rgba(205, 183, 183, 0.07) 33%);
+  background-size: 100vw 100vh;
+  height: 25px;
+  position: relative;
+}
+/*# sourceMappingURL=talpa.css.map */

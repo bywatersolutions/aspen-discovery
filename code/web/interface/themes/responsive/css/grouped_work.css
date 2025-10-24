@@ -274,4 +274,8 @@
   margin-left: 0;
   margin-bottom: 1em;
 }
+.noCopiesOwnedMessage {
+  font-weight: bold;
+  font-size: initial;
+}
 /*# sourceMappingURL=grouped_work.css.map */

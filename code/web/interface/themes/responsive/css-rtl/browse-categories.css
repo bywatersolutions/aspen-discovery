@@ -1,12 +1,4 @@
-@media (min-width: 768px) {
-}@media (min-width: 768px) {
-}@media (max-width: 767px) {
-}@media (min-width: 768px) {
-}@media (min-width: 768px) {
-}@media (min-width: 768px) {
-}@media (max-width: 767px) {
-}@media (max-width: 767px) {
-}#home-page-browse-header {
+#home-page-browse-header {
   background-color: #d7dce3;
   padding-bottom: 15px;
 }
@@ -48,10 +40,16 @@
   text-decoration: none;
 }
 #browse-category-picker a.jcarousel-control-next:after {
-  content: "›";
+  font-family: "Font Awesome 5 Free";
+  content: "\f053";
+  font-weight: bold;
+  font-size: 35px;
 }
 #browse-category-picker a.jcarousel-control-prev:before {
-  content: "‹";
+  font-family: "Font Awesome 5 Free";
+  content: "\f054";
+  font-weight: bold;
+  font-size: 35px;
 }
 #browse-category-picker .jcarousel-pagination a,
 #browse-category-picker .jcarousel-pagination a:hover,
@@ -325,10 +323,11 @@
   -webkit-column-break-inside: avoid;
   display: inline-block;
   text-align: center;
+  min-height: 125px;
 }
 .browse-thumbnail > img,
 .browse-thumbnail a > img {
-  display: block;
+  display: inline-block;
   max-width: 100%;
   height: auto;
   margin-right: auto;
@@ -345,49 +344,28 @@ a.browse-thumbnail.active {
 }
 .browse-thumbnail img {
   width: 100%;
-  min-height: 100px;
 }
-.browse-thumbnail-sorted {
-  display: block;
-  padding: 4px;
-  margin-bottom: 20px;
-  line-height: 1.42857143;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
+.browse-thumbnail img.floating {
+  box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 15px 22px rgba(0, 0, 0, 0.072), 0 20px 33px 0 rgba(0, 0, 0, 0.086);
+  background: transparent;
   border-width: 0;
-  height: 210px;
-  overflow: hidden;
-  text-align: center;
+  padding: 0;
+  margin: 0 0 60px 0;
 }
-.browse-thumbnail-sorted > img,
-.browse-thumbnail-sorted a > img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin-right: auto;
-  margin-left: auto;
+.browse-thumbnail img.floating.browse-grid {
+  box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 15px 22px rgba(0, 0, 0, 0.072), 0 20px 33px 0 rgba(0, 0, 0, 0.086);
 }
-a.browse-thumbnail-sorted:hover,
-a.browse-thumbnail-sorted:focus,
-a.browse-thumbnail-sorted.active {
-  border-color: #3174AF;
+.browse-thumbnail img.floating.ratings-on {
+  margin: 0 0 10px 0;
 }
-.browse-thumbnail-sorted .caption {
-  padding: 9px;
-  color: #333333;
-}
-.browse-thumbnail-sorted img {
-  max-height: 150px;
+.browse-thumbnail.floating {
+  border: none;
 }
 .browse-list {
   break-inside: avoid-column;
   -webkit-column-break-inside: avoid;
-  display: inline-block;
+  display: inline-flex;
   text-align: right;
-  width: 100%;
 }
 .browse-list img {
   padding: 4px;
@@ -405,6 +383,34 @@ a.browse-thumbnail-sorted.active {
   width: 80px;
   border-radius: 3px;
 }
+.browse-list img.floating {
+  box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 15px 22px rgba(0, 0, 0, 0.072), 0 20px 33px 0 rgba(0, 0, 0, 0.086);
+  min-height: 2em;
+  background: transparent;
+  border-width: 0;
+  padding: 0;
+  margin: 0 0 1.5em;
+}
+.browse-list a {
+  display: inline-flex;
+}
+.browse-list .info {
+  display: inline-flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.home-page-browse-results-grid-masonry .browse-list {
+  width: 100%;
+}
+.home-page-browse-results-grid .browse-list img {
+  width: auto;
+}
+.home-page-browse-results-grid .browse-list a {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+}
 #more-browse-results {
   background-color: #e6e6e6;
   color: #c7c9ca;
@@ -420,9 +426,11 @@ a.browse-thumbnail-sorted.active {
 }
 #browse-sub-category-menu {
   margin-top: 10px;
+  padding-right: 10px;
 }
 #browse-sub-category-menu button {
   margin-left: 5px;
+  margin-bottom: 5px;
 }
 #browse-sub-category-menu button.selected {
   color: #fff;

@@ -1956,6 +1956,29 @@ var AspenDiscovery = (function(){
 
 			// Initialize focus and ARIA
 			focusSlide(currentIndex, false, false);
+		},
+
+		/**
+		 * Add spinning indicator to a button during actions.
+		 * @param {jQuery|string} button Button element or selector.
+		 * @param {boolean} spinning Whether to show or hide spinner.
+		 */
+		toggleButtonSpinner: function(button, spinning) {
+			const $button = $(button);
+
+			if (spinning) {
+				$button.prop('disabled', true);
+				$button.addClass('disabled');
+
+				if ($button.find('.fa-spinner').length === 0) {
+					const spinner = $('<i class="fas fa-spinner fa-spin" style="margin-right: 3px;"></i>');
+					$button.prepend(spinner);
+				}
+			} else {
+				$button.prop('disabled', false);
+				$button.removeClass('disabled');
+				$button.find('.fa-spinner').remove();
+			}
 		}
 	}
 
@@ -7923,18 +7946,22 @@ AspenDiscovery.Axis360 = (function () {
 			});
 		},
 
-		checkOutTitle: function (id) {
+		checkOutTitle(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.Axis360.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.Axis360.doCheckOut(promptInfo.patronId, id);
-				}
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				AspenDiscovery.Axis360.getCheckOutPrompts(id, function(promptInfo) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.Axis360.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Axis360.checkOutTitle(id);
-				});
+					AspenDiscovery.Axis360.checkOutTitle(id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -8004,28 +8031,27 @@ AspenDiscovery.Axis360 = (function () {
 			return true;
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/Axis360/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = false;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/Axis360/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
 		getHoldPrompts: function (id) {
@@ -8052,17 +8078,22 @@ AspenDiscovery.Axis360 = (function () {
 			return result;
 		},
 
-		placeHold: function (id) {
+		placeHold: function (id, button) {
 			if (Globals.loggedIn) {
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
 				//Get any prompts needed for placing holds (email and format depending on the interface.
 				var promptInfo = AspenDiscovery.Axis360.getHoldPrompts(id, 'hold');
+
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				// noinspection JSUnresolvedVariable
 				if (!promptInfo.promptNeeded) {
 					AspenDiscovery.Axis360.doHold(promptInfo.patronId, id, promptInfo.axis360Email, promptInfo.promptForAxis360Email);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Axis360.placeHold(id);
+					AspenDiscovery.Axis360.placeHold(id, button);
 				});
 			}
 			return false;
@@ -8985,18 +9016,22 @@ AspenDiscovery.CloudLibrary = (function () {
 			});
 		},
 
-		checkOutTitle: function (patronId, id) {
+		checkOutTitle(patronId, id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.CloudLibrary.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.CloudLibrary.doCheckOut(promptInfo.patronId, id);
-				}
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				AspenDiscovery.CloudLibrary.getCheckOutPrompts(id, function(promptInfo) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.CloudLibrary.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.CloudLibrary.checkOutTitle(patronId, id);
-				});
+					AspenDiscovery.CloudLibrary.checkOutTitle(patronId, id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -9062,28 +9097,27 @@ AspenDiscovery.CloudLibrary = (function () {
 			});
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/CloudLibrary/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = true;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/CloudLibrary/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
 		getHoldPrompts: function (id) {
@@ -9110,18 +9144,20 @@ AspenDiscovery.CloudLibrary = (function () {
 			return result;
 		},
 
-		placeHold: function (id) {
+		placeHold(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for placing holds (email and format depending on the interface.
-				var promptInfo = AspenDiscovery.CloudLibrary.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const promptInfo = AspenDiscovery.CloudLibrary.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				// noinspection JSUnresolvedVariable
 				if (!promptInfo.promptNeeded) {
 					AspenDiscovery.CloudLibrary.doHold(promptInfo.patronId, id);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.CloudLibrary.placeHold(id);
-				});
+					AspenDiscovery.CloudLibrary.placeHold(id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -11020,7 +11056,8 @@ AspenDiscovery.GroupedWork = (function(){
 			$.getJSON(url, params, function (data){
 				if (data.success) {
 					$("#variationInfo_" + workId).html(data.message);
-				}else{
+					AspenDiscovery.LazyCirculation.scanAndRefresh("#variationInfo_" + workId);
+				} else {
 					$("#variationInfo_" + workId).html("");
 				}
 			});
@@ -11040,7 +11077,8 @@ AspenDiscovery.GroupedWork = (function(){
 			$.getJSON(url, params, function (data){
 				if (data.success) {
 					$("#horizDisplayAllEditions_" + workId).html(data.message);
-				}else{
+					AspenDiscovery.LazyCirculation.scanAndRefresh("#horizDisplayAllEditions_" + workId);
+				} else {
 					$("#horizDisplayAllEditions_" + workId).html("");
 				}
 			});
@@ -11055,6 +11093,238 @@ AspenDiscovery.GroupedWork = (function(){
 		}
 	};
 }(AspenDiscovery.GroupedWork || {}));
+/**
+ * Lazy Circulation Loading Module
+ * - Handles lazy loading of checkout and holds data.
+ */
+AspenDiscovery.LazyCirculation = {
+	/**
+	 * Initialize lazy circulation loading.
+	 * Called on page load to detect and refresh stale circulation buttons.
+	 */
+	init() {
+		const $staleButtons = $('[data-needs-refresh="true"]');
+		if ($staleButtons.length > 0) {
+			this.refreshStaleButtons($staleButtons);
+		}
+	},
+
+	/**
+	 * Refresh circulation buttons with stale cache data
+	 *
+	 * @param $buttons
+	 */
+	refreshStaleButtons($buttons) {
+		const recordData = [];
+		const buttonMap = new Map();
+
+		$buttons.each((index, button) => {
+			const $button = $(button);
+			const recordId = $button.attr('data-record-id');
+			const source = $button.attr('data-record-source');
+
+			if (recordId && source) {
+				const key = `${source}:${recordId}`;
+				if (!buttonMap.has(key)) {
+					recordData.push({
+						recordId: recordId,
+						source: source
+					});
+					buttonMap.set(key, []);
+				}
+				buttonMap.get(key).push(button);
+			}
+		});
+
+		if (recordData.length === 0) {
+			return;
+		}
+
+		$.getJSON(`${Globals.path}/MyAccount/AJAX?method=refreshUserCirculationCache`, (response) => {
+			if (response.success) {
+				this.getUpdatedButtons(recordData, buttonMap);
+			} else {
+				console.error('Failed to refresh circulation cache: ', response.message || 'Unknown error');
+			}
+		});
+	},
+
+	/**
+	 * Get updated button data and refresh the UI.
+	 *
+	 * @param {Array} recordData Array of record objects.
+	 * @param {Map} buttonMap Map of record keys to button elements.
+	 */
+	getUpdatedButtons(recordData, buttonMap) {
+		const url = `${Globals.path}/MyAccount/AJAX?method=getUpdatedCirculationButtons`;
+		const data = {
+			recordData: recordData || []
+		};
+
+		// Use $.post instead of $.getJSON because recordData is sent in the request body.
+		$.post(url, data, (response) => {
+			if (response.success && response.buttons) {
+				this.updateButtonsInDOM(response.buttons, buttonMap);
+			} else {
+				console.error('Failed to get updated buttons:', response.message || 'Unknown error');
+			}
+		}, 'json');
+	},
+
+	/**
+	 * Update button elements in the DOM with fresh circulation data.
+	 *
+	 * @param {Array} buttonData Array of button data.
+	 * @param {Map} buttonMap Map of record keys to button elements.
+	 */
+	updateButtonsInDOM(buttonData, buttonMap) {
+		buttonData = buttonData || [];
+		buttonData.forEach(record => {
+			const { source = '', recordId = '', actions = [], clearAllButtons = false } = record || {};
+			const key = `${source}:${recordId}`;
+			const buttons = buttonMap.get(key);
+
+			if (buttons && buttons.length > 0) {
+				buttons.forEach(button => {
+					this.updateSingleButton(button, actions, clearAllButtons);
+				});
+			}
+		});
+	},
+
+	/**
+	 * Update a single button element with new action data.
+	 *
+	 * @param {Element} button The button element to update.
+	 * @param {Array} actions New action data.
+	 * @param {boolean} clearAllButtons Whether to clear all buttons.
+	 */
+	updateSingleButton(button, actions, clearAllButtons) {
+		const $button = $(button);
+
+		$button.addClass('shimmer-fade-out');
+		// Remove shimmer attributes and class after transition completes.
+		setTimeout(() => {
+			$button.removeAttr('data-needs-refresh');
+			$button.removeAttr('data-record-id');
+			$button.removeAttr('data-record-source');
+			$button.removeClass('shimmer-fade-out');
+		}, 500); // Match the CSS transition duration.
+
+		actions = actions || [];
+
+		// If there are circulation actions (checked out or on hold),
+		// replace the button with the circulation action.
+		if (actions && actions.length > 0) {
+			const $buttonContainer = $button.closest('.btn-group, .btn-toolbar, .manifestation-actions');
+			if ($buttonContainer.length > 0) {
+				// Clear all existing buttons in the container to avoid duplicates.
+				if (clearAllButtons) {
+					$buttonContainer.empty();
+					actions.forEach(action => {
+						const $newButton = this.createButtonElement(action);
+						if ($newButton) {
+							$buttonContainer.append($newButton);
+						}
+					});
+				} else {
+					// Insert new actions at the position of the old button.
+					actions.forEach(action => {
+						const $newButton = this.createButtonElement(action);
+						if ($newButton) {
+							$button.before($newButton);
+						}
+					});
+					$button.remove();
+				}
+			}
+		} else {
+			// If no actions, just remove the stale button.
+			$button.remove();
+		}
+	},
+
+	/**
+	 * Create a button element from action data.
+	 *
+	 * @param {Object} action Action data object.
+	 * @return {Element|null} Created button element or null if creation failed.
+	 */
+	createButtonElement(action) {
+		action = action || {};
+		const {
+			title = '', url = '#', btnType = 'btn-action', id = null,
+			onclick = null, target = null, requireLogin = false
+		} = action;
+		if (!title) return null;
+		const $button = $('<a>').attr('href', url).addClass(`btn btn-sm ${btnType} btn-wrap`.trim()).text(title);
+
+		if (id) {
+			$button.attr('id', id);
+		}
+
+		if (onclick) {
+			$button.attr('onclick', onclick);
+		}
+
+		if (target) {
+			$button.attr('target', target);
+		}
+
+		if (requireLogin) {
+			$button.attr('data-require-login', 'true');
+		}
+
+		return $button;
+	},
+
+	/**
+	 * Scan a specific container for stale circulation buttons and refresh them.
+	 * Used for dynamically loaded content like modals, AJAX responses, etc.
+	 *
+	 * @param {Element|string} container Container element or selector to scan.
+	 */
+	scanAndRefresh(container) {
+		const $container = typeof container === 'string' ? $(container) : $(container);
+		if ($container.length === 0) {
+			return;
+		}
+		const $staleButtons = $container.find('[data-needs-refresh="true"]');
+
+		if ($staleButtons.length > 0) {
+			this.refreshStaleButtons($staleButtons);
+		}
+	}
+};
+
+$(() => {
+	AspenDiscovery.LazyCirculation.init();
+
+	$(document).on('shown.bs.modal', '.modal', (event) => {
+		const modalElement = event.target;
+		let mutationTimeout = null;
+
+		const observer = new MutationObserver((mutations, observer) => {
+			if (mutationTimeout) {
+				clearTimeout(mutationTimeout);
+			}
+
+			mutationTimeout = setTimeout(() => {
+				const refreshButtons = modalElement.querySelectorAll('[data-needs-refresh]');
+				if (refreshButtons.length > 0) {
+					AspenDiscovery.LazyCirculation.scanAndRefresh(modalElement);
+				}
+
+				observer.disconnect();
+			}, 300);
+		});
+
+		observer.observe(modalElement, {
+			childList: true,
+			subtree: true
+		});
+	});
+});
 AspenDiscovery.Lists = (function(){
 	// noinspection JSUnusedGlobalSymbols
 	return {
@@ -11793,43 +12063,45 @@ AspenDiscovery.OverDrive = (function(){
 			}).error(AspenDiscovery.ajaxFail);
 		},
 
-		getCheckOutPrompts: function(overDriveId){
-			var url = Globals.path + "/OverDrive/" + overDriveId + "/AJAX?method=getCheckOutPrompts";
-			var result = true;
-			//This runs synchronously so we can return the data
+		getCheckOutPrompts(overDriveId, callback) {
+			const url = Globals.path + "/OverDrive/" + overDriveId + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function(data){
-					result = data;
 					// noinspection JSUnresolvedReference
 					if (data.promptNeeded){
 						// noinspection JSUnresolvedReference
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function(){
 					AspenDiscovery.showMessage('An Error occurred', "An error occurred processing your request in OverDrive.  Please try again in a few minutes.");
+					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			// noinspection JSUnresolvedReference
-			return result;
 		},
 
-		checkOutTitle: function(overDriveId){
-			if (Globals.loggedIn){
-				//Get any prompts needed for checking the title out.
-				var promptInfo = AspenDiscovery.OverDrive.getCheckOutPrompts(overDriveId);
-				// noinspection JSUnresolvedReference
-				if (!promptInfo.promptNeeded){
-					AspenDiscovery.OverDrive.doOverDriveCheckout(promptInfo.patronId, overDriveId);
-				}
-			}else{
+		checkOutTitle(overDriveId, button){
+			if (Globals.loggedIn) {
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				AspenDiscovery.OverDrive.getCheckOutPrompts(overDriveId, function(promptInfo) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedReference
+					if (promptInfo && !promptInfo.promptNeeded){
+						AspenDiscovery.OverDrive.doOverDriveCheckout(promptInfo.patronId, overDriveId);
+					}
+				});
+			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function(){
-					AspenDiscovery.OverDrive.checkOutTitle(overDriveId);
-				}, true);
+					AspenDiscovery.OverDrive.checkOutTitle(overDriveId, button);
+				}, false);
 			}
 			return false;
 		},
@@ -11950,10 +12222,15 @@ AspenDiscovery.OverDrive = (function(){
 			return result;
 		},
 
-		placeHold: function(overDriveId){
+		placeHold: function(overDriveId, button){
 			if (Globals.loggedIn){
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
 				//Get any prompts needed for placing holds (email and format) depending on the interface.
 				var promptInfo = AspenDiscovery.OverDrive.getOverDriveHoldPrompts(overDriveId);
+
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				// noinspection JSUnresolvedReference
 				if (promptInfo !== false && !promptInfo.promptNeeded){
 					// noinspection JSUnresolvedReference
@@ -11961,7 +12238,7 @@ AspenDiscovery.OverDrive = (function(){
 				}
 			}else{
 				AspenDiscovery.Account.ajaxLogin(null, function(){
-					AspenDiscovery.OverDrive.placeHold(overDriveId);
+					AspenDiscovery.OverDrive.placeHold(overDriveId, button);
 				}, true);
 			}
 			return false;
@@ -12055,8 +12332,8 @@ AspenDiscovery.OverDrive = (function(){
 		getLargeCover: function (id){
 			var url = Globals.path + '/OverDrive/' + id + '/AJAX?method=getLargeCover';
 			$.getJSON(url, function (data){
-				// noinspection JSUnresolvedReference
-				AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
+					// noinspection JSUnresolvedReference
+					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				}
 			);
 			return false;
@@ -12096,7 +12373,9 @@ AspenDiscovery.Hoopla = (function(){
 					if (data.success) {
 						AspenDiscovery.Account.loadMenuData();
 					}
-				}).fail(AspenDiscovery.ajaxFail)
+				}).fail(function() {
+					AspenDiscovery.ajaxFail();
+				})
 			}else{
 				AspenDiscovery.Account.ajaxLogin(null, function(){
 					AspenDiscovery.Hoopla.checkOutHooplaTitle(hooplaId, patronId, hooplaType);
@@ -12105,37 +12384,45 @@ AspenDiscovery.Hoopla = (function(){
 			return false;
 		},
 
-		getCheckOutPrompts: function (hooplaId, hooplaType) {
+		getCheckOutPrompts(hooplaId, hooplaType, button) {
 			if (Globals.loggedIn) {
-				var url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX?method=getCheckOutPrompts";
-				var params = {
-					'method' : 'getCheckOutPrompts',
-					hooplaType : hooplaType
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				const url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX?method=getCheckOutPrompts";
+				const params = {
+					'method': 'getCheckOutPrompts',
+					hooplaType: hooplaType
 				};
 				$.getJSON(url, params, function (data) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedReference
 					if (data.flexDirectCheckout) {
 						AspenDiscovery.Hoopla.checkOutHooplaTitle(hooplaId, data.patronId, data.hooplaType);
 					} else {
 						AspenDiscovery.showMessageWithButtons(data.title, data.body, data.buttons);
 					}
-				}).fail(AspenDiscovery.ajaxFail);
+				}).fail(function() {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+					AspenDiscovery.ajaxFail();
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Hoopla.getCheckOutPrompts(hooplaId, hooplaType);
+					AspenDiscovery.Hoopla.getCheckOutPrompts(hooplaId, hooplaType, button);
 				}, false);
 			}
 			return false;
 		},
 
-		returnCheckout: function (patronId, hooplaId) {
+		returnCheckout(patronId, hooplaId) {
 			if (Globals.loggedIn) {
 				if (confirm('Are you sure you want to return this title?')) {
 					AspenDiscovery.showMessage("Returning Title", "Returning your title in Hoopla.");
-					var url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX",
-							params = {
-								'method': 'returnCheckout'
-								,patronId: patronId
-							};
+					const url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX",
+						params = {
+							'method': 'returnCheckout'
+							, patronId: patronId
+						};
 					$.getJSON(url, params, function (data) {
 						AspenDiscovery.showMessage(data.success ? 'Success' : 'Error', data.message, data.success, data.success);
 					}).fail(AspenDiscovery.ajaxFail);
@@ -12181,16 +12468,19 @@ AspenDiscovery.Hoopla = (function(){
 			return result;
 		},
 
-		placeHold: function(id) {
+		placeHold(id, button) {
 			if (Globals.loggedIn) {
-				var promptInfo = AspenDiscovery.Hoopla.getHoldPrompts(id);
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const promptInfo = AspenDiscovery.Hoopla.getHoldPrompts(id);
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				if (promptInfo.success && !promptInfo.promptNeeded){
 					AspenDiscovery.Hoopla.doHold(promptInfo.patronId, id);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function() {
-					AspenDiscovery.Hoopla.placeHold(id);
-				});
+					AspenDiscovery.Hoopla.placeHold(id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -12261,7 +12551,6 @@ AspenDiscovery.Hoopla = (function(){
 		},
 	}
 }(AspenDiscovery.Hoopla || {}));
-
 AspenDiscovery.InterLibraryLoan = (function(){
 	return {
 		getInnReachResults: function(innReachNumTitlesToLoad, innReachSavedSearchId){
@@ -12534,10 +12823,9 @@ AspenDiscovery.Record = (function () {
 	// noinspection JSUnusedGlobalSymbols
 	return {
 		volumeHoldInProgress: false,
-		showPlaceHold: function (module, source, id, volume, variationId) {
+		showPlaceHold: function (module, source, id, volume, variationId, button) {
 			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getPlaceHoldForm&recordSource=" + source;
+				let url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getPlaceHoldForm&recordSource=" + source;
 				if (volume !== undefined) {
 					url += "&volume=" + volume;
 				}
@@ -12545,26 +12833,18 @@ AspenDiscovery.Record = (function () {
 					url += "&variationId=" + variationId;
 				}
 
-				var targetButton = $('#actionButton' + id);
-				targetButton.prop('disabled', true);
-				targetButton.addClass('disabled');
-
-				const spinner = $('<i class="fas fa-spinner fa-spin" style="margin-right: 3px;"></i>');
-				targetButton.prepend(spinner);
+				AspenDiscovery.toggleButtonSpinner(button, true);
 
 				$.getJSON(url, function (data) {
-					document.body.style.cursor = "default";
-					targetButton.prop('disabled', false);
-					targetButton.removeClass('disabled');
-
-					targetButton.find('.fa-spinner').remove();
+					let existingButton;
+					AspenDiscovery.toggleButtonSpinner(button, false);
 					if (data.holdFormBypassed) {
 						if (data.success) {
 							if (data.needsItemLevelHold) {
 								AspenDiscovery.showMessageWithButtons(data.title, data.message, data.modalButtons);
 							} else {
-								var existingButton = $("#onHoldAction" + id);
-								if (existingButton.length == 0) {
+								existingButton = $("#onHoldAction" + id);
+								if (existingButton.length === 0) {
 									$(data.viewHoldsAction).insertBefore('#actionButton' + id);
 									$(data.viewHoldsAction).insertBefore('#relatedRecordactionButton' + id);
 								}
@@ -12574,8 +12854,8 @@ AspenDiscovery.Record = (function () {
 						} else if (data.confirmationNeeded) {
 							AspenDiscovery.showMessageWithButtons(data.title, data.message, data.modalButtons);
 						} else {
-							var existingButton = $("#onHoldAction" + id);
-							if (existingButton.length == 0) {
+							existingButton = $("#onHoldAction" + id);
+							if (existingButton.length === 0) {
 								$(data.viewHoldsAction).insertBefore('#actionButton' + id);
 								$(data.viewHoldsAction).insertBefore('#relatedRecordactionButton' + id);
 							}
@@ -12590,15 +12870,12 @@ AspenDiscovery.Record = (function () {
 					}
 					AspenDiscovery.Account.reloadHolds();
 				}).fail(function() {
-					document.body.style.cursor = "default";
-					targetButton.prop('disabled', false);
-					targetButton.removeClass('disabled');
-					targetButton.find('.fa-spinner').remove();
+					AspenDiscovery.toggleButtonSpinner(button, false);
 					AspenDiscovery.ajaxFail.apply(this, arguments);
 				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showPlaceHold(module, source, id, volume);
+					AspenDiscovery.Record.showPlaceHold(module, source, id, volume, variationId, button);
 				}, false);
 			}
 			return false;
@@ -12741,7 +13018,7 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		showPlaceHoldEditions: function (module, source, id, volume, variationId) {
+		showPlaceHoldEditions: function (module, source, id, volume, variationId, button) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				let url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getPlaceHoldEditionsForm&recordSource=" + source;
@@ -12752,86 +13029,67 @@ AspenDiscovery.Record = (function () {
 					url += "&variationId=" + variationId;
 				}
 
-				const targetButton = $('#actionButton' + id);
-				targetButton.prop('disabled', true);
-				targetButton.addClass('disabled');
-				const spinner = $('<i class="fas fa-spinner fa-spin" style="margin-right: 3px;"></i>');
-				targetButton.prepend(spinner);
+				AspenDiscovery.toggleButtonSpinner(button, true);
 
 				$.getJSON(url, function (data) {
 					document.body.style.cursor = "default";
-					targetButton.prop('disabled', false);
-					targetButton.removeClass('disabled');
-					targetButton.find('.fa-spinner').remove();
+					AspenDiscovery.toggleButtonSpinner(button, false);
 					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				}).fail(function() {
 					document.body.style.cursor = "default";
-					targetButton.prop('disabled', false);
-					targetButton.removeClass('disabled');
-					targetButton.find('.fa-spinner').remove();
+					AspenDiscovery.toggleButtonSpinner(button, false);
 					AspenDiscovery.ajaxFail.apply(this, arguments);
 				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showPlaceHoldEditions(module, source, id, volume);
+					AspenDiscovery.Record.showPlaceHoldEditions(module, source, id, volume, variationId, button);
 				}, false);
 			}
 			return false;
 		},
 
-		showPlaceHoldVolumes: function (module, source, id) {
+		showPlaceHoldVolumes: function (module, source, id, button) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
 				const url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getPlaceHoldVolumesForm&recordSource=" + source;
 
-				const targetButton = $('#actionButton' + id);
-				targetButton.prop('disabled', true);
-				targetButton.addClass('disabled');
-				const spinner = $('<i class="fas fa-spinner fa-spin" style="margin-right: 3px;"></i>');
-				targetButton.prepend(spinner);
+				AspenDiscovery.toggleButtonSpinner(button, true);
 
 				$.getJSON(url, function (data) {
 					document.body.style.cursor = "default";
-					targetButton.prop('disabled', false);
-					targetButton.removeClass('disabled');
-					targetButton.find('.fa-spinner').remove();
+					AspenDiscovery.toggleButtonSpinner(button, false);
 					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
 				}).fail(function() {
 					document.body.style.cursor = "default";
-					targetButton.prop('disabled', false);
-					targetButton.removeClass('disabled');
-					targetButton.find('.fa-spinner').remove();
+					AspenDiscovery.toggleButtonSpinner(button, false);
 					AspenDiscovery.ajaxFail.apply(this, arguments);
 				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showPlaceHoldVolumes(module, source, id);
+					AspenDiscovery.Record.showPlaceHoldVolumes(module, source, id, button);
 				}, false);
 			}
 			return false;
 		},
 
 		submitHoldForm: function () {
-			var requestTitleButton = $('#requestTitleButton');
-			requestTitleButton.prop('disabled', true);
-			requestTitleButton.addClass('disabled');
+			const requestTitleButton = $('#requestTitleButton');
+			AspenDiscovery.toggleButtonSpinner(requestTitleButton, true);
 
 			document.body.style.cursor = "wait";
-			requestTitleButton.find('.fa-spinner').removeClass('hidden');
-			var id = $('#id').val();
+			const id = $('#id').val();
 
-			var targetButton = $('#actionButton' + id);
-			targetButton.prop('disabled', true);
-			targetButton.addClass('disabled');
+			const targetButton = $('#actionButton' + id);
+			AspenDiscovery.toggleButtonSpinner(targetButton, true);
 
-			var autoLogOut = $('#autologout').prop('checked');
-			var selectedItem = $('#selectedItem');
-			var module = $('#module').val();
-			var volume = $('#volume');
-			var variationId = $('#variationId');
-			var pickupSublocation = $('#pickupSublocation');
-			var cancelDateInput = $('#cancelDate');
-			var params = {
+			const autoLogOut = $('#autologout').prop('checked');
+			const selectedItem = $('#selectedItem');
+			const module = $('#module').val();
+			const volume = $('#volume');
+			const variationId = $('#variationId');
+			const pickupSublocation = $('#pickupSublocation');
+			const cancelDateInput = $('#cancelDate');
+			let params = {
 				'method': 'placeHold',
 				pickupBranch: $('#pickupBranch').val(),
 				pickupSublocation: pickupSublocation === undefined ? '' : pickupSublocation.val(),
@@ -12857,22 +13115,18 @@ AspenDiscovery.Record = (function () {
 				alert("Please select a location to pick up your hold when it is ready.");
 				return false;
 			}
-			var holdType = $('#holdType');
+			const holdType = $('#holdType');
 			if (holdType.length > 0) {
 				params['holdType'] = holdType.val();
 				if (holdType.val() === 'item' && selectedItem.val().length === 0) {
 					alert("Please select an item to place your hold on");
-					requestTitleButton.prop('disabled', false);
-					requestTitleButton.removeClass('disabled');
+					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
-					requestTitleButton.find('.fa-spinner').addClass('hidden');
 					return false;
 				} else if (holdType.val() === 'volume' && volume.val().length === 0) {
 					alert("Please select a volume to place your hold on");
-					requestTitleButton.prop('disabled', false);
-					requestTitleButton.removeClass('disabled');
+					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
-					requestTitleButton.find('.fa-spinner').addClass('hidden');
 					return false;
 				}
 			} else {
@@ -12882,27 +13136,23 @@ AspenDiscovery.Record = (function () {
 					params['holdType'] = 'item';
 					if (selectedItem.val().length === 0) {
 						alert("Please select an item to place your hold on");
-						requestTitleButton.prop('disabled', false);
-						requestTitleButton.removeClass('disabled');
+						AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 						document.body.style.cursor = "pointer";
-						requestTitleButton.find('.fa-spinner').addClass('hidden');
 						return false;
 					}
 				}
 			}
 			params = this.loadHoldNotificationOptions(params);
 
-			var cancelDate = cancelDateInput.val();
+			const cancelDate = cancelDateInput.val();
 			if (cancelDate) {
-				var today = new Date().getTime();
-				var cancelOn = new Date(cancelDate).getTime();
+				const today = new Date().getTime();
+				const cancelOn = new Date(cancelDate).getTime();
 
 				if (today > cancelOn) {
 					$("#cancelHoldDateHelpBlock").show();
-					requestTitleButton.prop('disabled', false);
-					requestTitleButton.removeClass('disabled');
+					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
-					requestTitleButton.find('.fa-spinner').addClass('hidden');
 					return false;
 				} else {
 					$("#cancelHoldDateHelpBlock").hide();
@@ -12913,17 +13163,14 @@ AspenDiscovery.Record = (function () {
 			$("#placingHoldMessage").show();
 			$.getJSON(Globals.path + "/" + module + "/" + id + "/AJAX", params, function (data) {
 				document.body.style.cursor = "default";
-				targetButton.prop('disabled', false);
-				targetButton.removeClass('disabled');
+				AspenDiscovery.toggleButtonSpinner(targetButton, false);
 				if (data.success) {
 					if (data.needsItemLevelHold) {
-						var requestTitleButton = $('#requestTitleButton');
-						requestTitleButton.prop('disabled', false);
-						requestTitleButton.removeClass('disabled');
+						const requestTitleButton = $('#requestTitleButton');
+						AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 
 						$("#placeHoldForm").show();
 						$("#placingHoldMessage").hide();
-						requestTitleButton.find('.fa-spinner').addClass('hidden');
 						$('.modal-body').html(data.message);
 					} else if (data.needsIllRequest) {
 						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
@@ -12987,18 +13234,15 @@ AspenDiscovery.Record = (function () {
 			return params;
 		},
 
-		placeVolumeHold: function () {
+		placeVolumeHold: function (button) {
 			// Prevent multiple volume hold submissions; button state alone is insufficient.
 			if (this.volumeHoldInProgress) {
 				return false;
 			}
 			this.volumeHoldInProgress = true;
 
-			const $placeHoldButton = $('.modal-footer .btn-primary');
-			$placeHoldButton.prop('disabled', true);
-			$placeHoldButton.addClass('disabled');
-			$placeHoldButton.find('.fa-spinner').removeClass('hidden');
-			
+			AspenDiscovery.toggleButtonSpinner(button, true);
+
 			const $volumeSelect = $("#selectedVolume");
 			const selectedVolume = $volumeSelect.find("option:selected").val();
 			const $holdTypeBib = $("#holdTypeBib");
@@ -13023,16 +13267,12 @@ AspenDiscovery.Record = (function () {
 				$('#volumeSelection').prepend(errorHtml);
 
 				this.volumeHoldInProgress = false;
-				$placeHoldButton.prop('disabled', false);
-				$placeHoldButton.removeClass('disabled');
-				$placeHoldButton.find('.fa-spinner').addClass('hidden');
+				AspenDiscovery.toggleButtonSpinner(button, false);
 				return false;
 			}
 
 			const requestTitleButton = $('#requestTitleButton');
-			requestTitleButton.prop('disabled', true);
-			requestTitleButton.addClass('disabled');
-			requestTitleButton.find('.fa-spinner').removeClass('hidden');
+			AspenDiscovery.toggleButtonSpinner(requestTitleButton, true);
 
 			const id = $('#id').val();
 			const autoLogOut = $('#autologout').prop('checked');
@@ -13056,9 +13296,7 @@ AspenDiscovery.Record = (function () {
 			if (params['pickupBranch'] === 'undefined') {
 				alert("Please select a location to pick up your hold when it is ready.");
 				this.volumeHoldInProgress = false;
-				$placeHoldButton.prop('disabled', false);
-				$placeHoldButton.removeClass('disabled');
-				$placeHoldButton.find('.fa-spinner').addClass('hidden');
+				AspenDiscovery.toggleButtonSpinner(button, false);
 				return false;
 			}
 			const holdType = $('#holdType');
@@ -13080,12 +13318,10 @@ AspenDiscovery.Record = (function () {
 					if (data.needsItemLevelHold) {
 						AspenDiscovery.Record.volumeHoldInProgress = false;
 						const requestTitleButton = $('#requestTitleButton');
-						requestTitleButton.prop('disabled', false);
-						requestTitleButton.removeClass('disabled');
+						AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 
 						$("#placeHoldForm").show();
 						$("#placingHoldMessage").hide();
-						requestTitleButton.find('.fa-spinner').addClass('hidden');
 						$('.modal-body').html(data.message);
 					} else if (data.needsIllRequest) {
 						AspenDiscovery.Record.volumeHoldInProgress = false;
@@ -13106,17 +13342,15 @@ AspenDiscovery.Record = (function () {
 		},
 
 		confirmHold: function (module, bibId, confirmationId) {
-			var params = {
+			const params = {
 				'method': 'confirmHold',
 				confirmationId: confirmationId
 			};
 			$.getJSON(Globals.path + "/" + module + "/" + bibId + "/AJAX", params, function (data) {
 				if (data.success) {
 					if (data.needsItemLevelHold) {
-						var requestTitleButton = $('#requestTitleButton');
-						requestTitleButton.prop('disabled', false);
-						requestTitleButton.removeClass('disabled');
-						requestTitleButton.find('.fa-spinner').addClass('hidden');
+						const requestTitleButton = $('#requestTitleButton');
+						AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 						$('.modal-body').html(data.message);
 					} else {
 						AspenDiscovery.showMessage(data.title, data.message, false);
@@ -13383,7 +13617,6 @@ AspenDiscovery.Record = (function () {
 		}
 	};
 }(AspenDiscovery.Record || {}));
-
 $(document).ready(function(){
 	$('#lookfor').on( 'keydown', function (event ){
 		if (event.which === 13 || event.which === 10){
@@ -15220,42 +15453,45 @@ AspenDiscovery.PalaceProject = (function () {
 			return false;
 		},
 
-		getCheckOutPrompts: function (id) {
-			var url = Globals.path + "/PalaceProject/" + id + "/AJAX?method=getCheckOutPrompts";
-			var result = false;
+		getCheckOutPrompts(id, callback) {
+			const url = Globals.path + "/PalaceProject/" + id + "/AJAX?method=getCheckOutPrompts";
 			$.ajax({
 				url: url,
 				cache: false,
 				success: function (data) {
-					result = data;
 					// noinspection JSUnresolvedVariable
 					if (data.promptNeeded) {
 						// noinspection JSUnresolvedVariable
 						AspenDiscovery.showMessageWithButtons(data.promptTitle, data.prompts, data.buttons);
 					}
+					if (callback) callback(data);
 				},
 				dataType: 'json',
-				async: false,
+				async: true,
 				error: function () {
 					alert("An error occurred processing your request.  Please try again in a few minutes.");
 					AspenDiscovery.closeLightbox();
+					if (callback) callback(false);
 				}
 			});
-			return result;
 		},
 
-		checkOutTitle: function (id) {
+		checkOutTitle(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for checking out a title
-				var promptInfo = AspenDiscovery.PalaceProject.getCheckOutPrompts(id);
-				// noinspection JSUnresolvedVariable
-				if (!promptInfo.promptNeeded) {
-					AspenDiscovery.PalaceProject.doCheckOut(promptInfo.patronId, id);
-				}
+				AspenDiscovery.toggleButtonSpinner(button, true);
+
+				AspenDiscovery.PalaceProject.getCheckOutPrompts(id, function(promptInfo) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+
+					// noinspection JSUnresolvedVariable
+					if (promptInfo && !promptInfo.promptNeeded) {
+						AspenDiscovery.PalaceProject.doCheckOut(promptInfo.patronId, id);
+					}
+				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.PalaceProject.checkOutTitle(id);
-				});
+					AspenDiscovery.PalaceProject.checkOutTitle(id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -15326,18 +15562,20 @@ AspenDiscovery.PalaceProject = (function () {
 			return false;
 		},
 
-		placeHold: function (id) {
+		placeHold(id, button) {
 			if (Globals.loggedIn) {
-				//Get any prompts needed for placing holds (email and format depending on the interface.
-				var promptInfo = AspenDiscovery.PalaceProject.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const promptInfo = AspenDiscovery.PalaceProject.getHoldPrompts(id, 'hold');
+				AspenDiscovery.toggleButtonSpinner(button, false);
+
 				// noinspection JSUnresolvedVariable
 				if (!promptInfo.promptNeeded) {
 					AspenDiscovery.PalaceProject.doHold(promptInfo.patronId, id);
 				}
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.PalaceProject.placeHold(id);
-				});
+					AspenDiscovery.PalaceProject.placeHold(id, button);
+				}, false);
 			}
 			return false;
 		},
@@ -16517,7 +16755,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 });
 /**
- * Javascript for enhancing form fields:
+ * Form Fields Module
  * - Character counter for maxlength attributes.
  * - Others could be added later....
 **/

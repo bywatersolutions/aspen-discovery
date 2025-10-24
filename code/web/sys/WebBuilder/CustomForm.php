@@ -103,7 +103,7 @@ class CustomForm extends DB_LibraryLinkedObject {
 				'label' => 'Email Results To (separate multiple addresses with semi-colons)',
 				'description' => 'An email address to send submission results to',
 				'size' => '40',
-				'maxLength' => 150,
+				'maxLength' => 250,
 			],
 			'includeIntroductoryTextInEmail' => [
 				'property' => 'includeIntroductoryTextInEmail',

@@ -2,9 +2,9 @@
 require_once ROOT_DIR . '/recaptcha/recaptchalib.php';
 
 class WebBuilder_SubmitForm extends Action {
-	private $form;
+	private ?CustomForm $form;
 
-	function launch() {
+	function launch() : void {
 		require_once ROOT_DIR . '/sys/WebBuilder/CustomForm.php';
 		require_once ROOT_DIR . '/sys/WebBuilder/CustomFormSubmission.php';
 		require_once ROOT_DIR . '/sys/WebBuilder/CustomFormSubmissionSelection.php';
@@ -97,12 +97,16 @@ class WebBuilder_SubmitForm extends Action {
 				//Save form fields content to the database
 				$this->saveFieldsContent($data,$submission->id);
 
-				//Get per library emailResultsTo
+				//Get the default emailResultsTo
 				$emailResultsTo = $this->form->emailResultsTo;
+				//Get per library emailResultsTo
 				$libraryList = $this->form->getLibraries();
 				foreach ($libraryList as $librarySelected) {
 					if ($librarySelected->libraryId == $library->libraryId) {
-						$emailResultsTo = $librarySelected->emailResultsTo;
+						//Don't use the library setting if it is blank
+						if (!empty($librarySelected->emailResultsTo)) {
+							$emailResultsTo = $librarySelected->emailResultsTo;
+						}
 						break;
 					}
 				}

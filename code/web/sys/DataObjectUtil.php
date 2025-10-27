@@ -868,4 +868,33 @@ class DataObjectUtil {
 
 		return $propertyName;
 	}
+
+	/**
+	 * Preprocess oneToMany relationships to include instance-specific structures
+	 * for each sub-object before passing to the template.
+	 *
+	 * @param mixed $object The parent object containing oneToMany relationships.
+	 * @param array $structure The object structure definition.
+	 */
+	static function preprocessOneToManySubObjects(mixed $object, array &$structure) : void {
+		foreach ($structure as &$property) {
+			if ($property['type'] == 'section') {
+				DataObjectUtil::preprocessOneToManySubObjects($object, $property['properties']);
+			} elseif ($property['type'] == 'oneToMany') {
+				$propName = $property['property'];
+				$propValue = $object->$propName;
+
+				if (!empty($propValue) && is_array($propValue)) {
+					foreach ($propValue as $subObject) {
+						if (method_exists($subObject, 'updateStructureForEditingObject')) {
+							$instanceStructure = $subObject->updateStructureForEditingObject($property['structure']);
+							$subObject->_instanceStructure = $instanceStructure;
+						} else {
+							$subObject->_instanceStructure = null;
+						}
+					}
+				}
+			}
+		}
+	}
 }

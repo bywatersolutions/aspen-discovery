@@ -108,6 +108,13 @@ function getUpdates25_Q4_00(): array {
 				'ALTER TABLE web_builder_custom_form CHANGE COLUMN emailResultsTo emailResultsTo varchar(250) DEFAULT ""'
 			]
 		], //increase_length_of_library_email_for_custom_forms
-
+		'add_num_total_entries_to_show_in_more_to_grouped_work_facet' => [
+			'title' => 'Add Total Num Entries To Show In More To Grouped Work Facet',
+			'description' => 'Add configurable field to control how many facet values show in the "More..." popup/expansion.',
+			'continueOnError' => false,
+			'sql' => [
+				'ALTER TABLE grouped_work_facet ADD COLUMN IF NOT EXISTS numTotalEntriesToShowInMore INT(11) NOT NULL DEFAULT 30',
+			]
+		], // add_num_total_entries_to_show_in_more_to_grouped_work_facet
 	];
 }

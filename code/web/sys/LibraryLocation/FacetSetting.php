@@ -2,16 +2,17 @@
 
 abstract class FacetSetting extends DataObject {
 	public $__displayNameColumn = 'displayName';
-	public $id;                      //int(25)
-	public $displayName;                    //varchar(255)
+	public $id;
+	public $displayName;
 	public $displayNamePlural;
 	public $facetName;
 	public $weight;
-	public $numEntriesToShowByDefault; //
-	public $showAsDropDown;   //True or false
+	public $numEntriesToShowByDefault;
+	public $numTotalEntriesToShowInMore;
+	public $showAsDropDown;
 	public $multiSelect;
 	public $canLock;
-	public $sortMode;         //alphabetically = alphabetically, num_results = by number of results
+	public $sortMode;
 	public $showAboveResults;
 	public $showInResults;
 	public $showInAdvancedSearch;

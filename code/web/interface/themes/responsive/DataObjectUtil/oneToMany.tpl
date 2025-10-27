@@ -20,6 +20,7 @@
 			<tbody>
 			{foreach from=$propValue item=subObject}
 				{assign var=subObjectId value=$subObject->getPrimaryKeyValue()}
+				{assign var=instanceStructure value=$subObject->_instanceStructure}
 				<tr id="{$propName}{$subObject->id}" class="{$propName}Row" data-id="{$subObject->id}">
 					<input type="hidden" id="{$propName}Id_{$subObject->id}" name="{$propName}Id[{$subObject->id}]" value="{$subObject->id}"/>
 					{if !empty($property.sortable)}
@@ -33,21 +34,30 @@
 							<td class="oneToManyCell" {if !empty($subProperty.relatedIls)}data-related-ils="~{implode subject=$subProperty.relatedIls glue='~'}~"{/if}>
 								{assign var=subPropName value=$subProperty.property}
 								{assign var=subPropValue value=$subObject->$subPropName}
+								{* Check for instance-specific readonly conditions *}
+								{assign var=instanceReadOnly value=false}
+								{assign var=instanceReadOnlyReason value=null}
+								{if !empty($instanceStructure[$subPropName].readOnly)}
+									{assign var=instanceReadOnly value=true}
+									{if !empty($instanceStructure[$subPropName].readOnlyReason)}
+										{assign var=instanceReadOnlyReason value=$instanceStructure[$subPropName].readOnlyReason}
+									{/if}
+								{/if}
 								{if $subProperty.type=='text' || $subProperty.type=='regularExpression' || $subProperty.type=='integer' || $subProperty.type=='html'}
-									<input type="text" name="{$propName}_{$subPropName}[{$subObject->id}]" value="{$subPropValue|escape}" class="form-control{if $subProperty.type=="integer"} integer{/if}{if !empty($subProperty.required)} required{/if}" {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly{/if}{if !empty($subProperty.maxLength)} maxlength="{$subProperty.maxLength}"{/if} data-id="{$subObject->id}">
+								<input type="text" name="{$propName}_{$subPropName}[{$subObject->id}]" value="{$subPropValue|escape}" class="form-control{if $subProperty.type=="integer"} integer{/if}{if !empty($subProperty.required)} required{/if}" {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} readonly{if $instanceReadOnly && !empty($instanceReadOnlyReason)} title="{$instanceReadOnlyReason|escape}"{/if}{/if}{if !empty($subProperty.maxLength)} maxlength="{$subProperty.maxLength}"{/if}{if $subProperty.type=="integer" && empty($subProperty.readOnly) && empty($property.readOnly) && !$instanceReadOnly && !empty($subProperty.max)} max="{$subProperty.max}"{/if}{if $subProperty.type=="integer" && empty($subProperty.readOnly) && empty($property.readOnly) && !$instanceReadOnly && !empty($subProperty.min)} min="{$subProperty.min}"{/if} data-id="{$subObject->id}">
 								{elseif $subProperty.type=='date'}
-									<input type="date" name="{$propName}_{$subPropName}[{$subObject->id}]" value="{$subPropValue|escape}" class="form-control{if !empty($subProperty.required)} required{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly disabled{/if} data-id="{$subObject->id}">
+								<input type="date" name="{$propName}_{$subPropName}[{$subObject->id}]" value="{$subPropValue|escape}" class="form-control{if !empty($subProperty.required)} required{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} readonly disabled{/if} data-id="{$subObject->id}">
 								{elseif $subProperty.type=='time'}
-									<input type="time" name="{$propName}_{$subPropName}[{$subObject->id}]" value="{$subPropValue|escape}" class="form-control{if !empty($subProperty.required)} required{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly disabled{/if} data-id="{$subObject->id}">
+								<input type="time" name="{$propName}_{$subPropName}[{$subObject->id}]" value="{$subPropValue|escape}" class="form-control{if !empty($subProperty.required)} required{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} readonly disabled{/if} data-id="{$subObject->id}">
 								{elseif $subProperty.type=='dynamic_label'}
-									<span id="{$propName}_{$subPropName}_{$subObject->id}" data-id="{$subObject->id}">{$subPropValue|escape}<span>
+								<span id="{$propName}_{$subPropName}_{$subObject->id}" data-id="{$subObject->id}">{$subPropValue|escape}<span>
 								{elseif $subProperty.type=='textarea' || $subProperty.type=='multilineRegularExpression'}
-									<textarea name="{$propName}_{$subPropName}[{$subObject->id}]" class="form-control{if !empty($subProperty.autoResizeTextArea)} auto-grow-textarea{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly{/if}{if !empty($subProperty.maxLength)} maxlength="{$subProperty.maxLength}"{/if} data-id="{$subObject->id}">{$subPropValue|escape}</textarea>
+									<textarea name="{$propName}_{$subPropName}[{$subObject->id}]" class="form-control{if !empty($subProperty.autoResizeTextArea)} auto-grow-textarea{/if}"{if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} readonly{/if}{if !empty($subProperty.maxLength)} maxlength="{$subProperty.maxLength}"{/if} data-id="{$subObject->id}">{$subPropValue|escape}</textarea>
 								{elseif $subProperty.type=='checkbox'}
-									{if !empty($subProperty.readOnly) || !empty($property.readOnly)}
+									{if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly}
 										{if $subPropValue == 1}{translate text='Yes' isAdminFacing=true}{else}{translate text='No' isAdminFacing=true}{/if}
 									{/if}
-									<input type='checkbox' name='{$propName}_{$subPropName}[{$subObject->id}]' {if $subPropValue == 1}checked='checked'{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly)} style="display: none"{/if} data-id="{$subObject->id}" {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if}/>
+									<input type='checkbox' name='{$propName}_{$subPropName}[{$subObject->id}]' {if $subPropValue == 1}checked='checked'{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} style="display: none"{/if} data-id="{$subObject->id}" {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if}/>
 								{elseif $subProperty.type=='multiSelect'}
 									<span id="{$propName}_{$subPropName}_{$subObject->id}" data-id="{$subObject->id}">
 										{if is_array($subPropValue) && count($subPropValue) > 0}
@@ -72,7 +82,7 @@
 									<span>
 								{else}
 									{if $subObject->canActiveUserChangeSelection()}
-										<select name='{$propName}_{$subPropName}[{$subObject->id}]' id='{$propName}{$subPropName}_{$subObject->id}' class='form-control {if !empty($subProperty.required)} required{/if}' {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly disabled{/if} data-id="{$subObject->id}">
+										<select name='{$propName}_{$subPropName}[{$subObject->id}]' id='{$propName}{$subPropName}_{$subObject->id}' class='form-control {if !empty($subProperty.required)} required{/if}' {if !empty($subProperty.onchange)}onchange="{$subProperty.onchange}"{/if} {if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} readonly disabled{/if} data-id="{$subObject->id}">
 											{foreach from=$subProperty.values item=propertyName key=propertyValue}
 												<option value='{$propertyValue}' {if $subPropValue == $propertyValue}selected='selected'{/if}>{if !empty($subProperty.translateValues)}{translate text=$propertyName|escape inAttribute=true isPublicFacing=$subProperty.isPublicFacing isAdminFacing=$subProperty.isAdminFacing }{else}{$propertyName|escape}{/if}</option>
 											{/foreach}
@@ -100,7 +110,7 @@
 										{assign var=subPropName value=$subProperty.property}
 										{assign var=subPropValue value=$subObject->$subPropName}
 										{foreach from=$subProperty.values item=propertyName}
-											<input name='{$propName}_{$subPropName}[{$subObject->id}][]' type="checkbox" value='{$propertyName}' {if is_array($subPropValue) && in_array($propertyName, $subPropValue)}checked='checked'{/if}{if !empty($subProperty.readOnly) || !empty($property.readOnly)} readonly disabled{/if}>
+											<input name='{$propName}_{$subPropName}[{$subObject->id}][]' type="checkbox" value='{$propertyName}' {if is_array($subPropValue) && in_array($propertyName, $subPropValue)}checked='checked'{/if}{if !empty($subProperty.readOnly) || !empty($property.readOnly) || $instanceReadOnly} readonly disabled{/if}>
 											{$propertyName|escape}
 											<br>
 										{/foreach}
@@ -231,6 +241,8 @@
 									"value='{if !empty($subProperty.default)}{$subProperty.default}{/if}' " +
 									"class='form-control{if $subProperty.type=="integer"} integer{/if}{if !empty($subProperty.required)} required{/if}'" +
 									'{if !empty($subProperty.maxLength)} maxlength="{$subProperty.maxLength}"{/if}' +
+									'{if $subProperty.type=="integer" && !empty($subProperty.max)} max="{$subProperty.max}"{/if}' +
+									'{if $subProperty.type=="integer" && !empty($subProperty.min)} min="{$subProperty.min}"{/if}' +
 									" data-id='" + numAdditional{$propName}
 								+ "'>";
 							{/if}

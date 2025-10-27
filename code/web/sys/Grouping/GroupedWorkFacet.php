@@ -4,9 +4,11 @@ class GroupedWorkFacet extends FacetSetting {
 	public $__table = 'grouped_work_facet';
 	public $facetGroupId;
 
+
 	public function getNumericColumnNames(): array {
 		$numericColumns = parent::getNumericColumnNames();
 		$numericColumns[] = 'facetGroupId';
+		$numericColumns[] = 'numTotalEntriesToShowInMore';
 		return $numericColumns;
 	}
 
@@ -180,13 +182,48 @@ class GroupedWorkFacet extends FacetSetting {
 			'numEntriesToShowByDefault' => [
 				'property' => 'numEntriesToShowByDefault',
 				'type' => 'integer',
-				'label' => 'Num Entries',
-				'description' => 'The number of values to show by default.',
-				'default' => '5',
+				'label' => 'Num Default Entries',
+				'description' => 'The number of facets to display under a facet group by default.',
+				'default' => 5,
+			],
+			'numTotalEntriesToShowInMore' => [
+				'property' => 'numTotalEntriesToShowInMore',
+				'type' => 'integer',
+				'label' => 'Num Total Entries',
+				'description' => 'The number of values to show in the displayed after clicking &quot;More...&quot;. This setting is ignored for Format, Available At, and Owning Location facets, which use calculated limits.',
+				'default' => 30,
+				'max' => 100,
+				'min' => 30,
 			],
 		];
 
 		self::$_objectStructure[$context] = $structure;
 		return self::$_objectStructure[$context];
+	}
+
+	public static function calculateDynamicFacetLimit(string $facetName): int {
+		if ($facetName == 'format') {
+			require_once ROOT_DIR . '/sys/Indexing/IndexedFormat.php';
+			$indexedFormat = new IndexedFormat();
+			return $indexedFormat->count();
+		} elseif ($facetName == 'available_at' || $facetName == 'owning_location') {
+			require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
+			require_once ROOT_DIR . '/sys/Indexing/SideLoad.php';
+			$location = new Location();
+			$numLocations = $location->count();
+			$sideload = new SideLoad();
+			return $numLocations + $sideload->count() + 10;
+		}
+		return 0;
+	}
+
+	public function updateStructureForEditingObject($structure): array {
+		$dynamicLimitFacets = ['format', 'available_at', 'owning_location'];
+		if (isset($structure['numTotalEntriesToShowInMore']) && in_array($this->facetName, $dynamicLimitFacets)) {
+			$structure['numTotalEntriesToShowInMore']['readOnly'] = true;
+			$structure['numTotalEntriesToShowInMore']['readOnlyReason'] = 'This value is automatically calculated based on the number of ' . ($this->facetName == 'format' ? 'indexed formats' : 'locations and sideloads') . ' in the system.';
+			$this->numTotalEntriesToShowInMore = self::calculateDynamicFacetLimit($this->facetName);
+		}
+		return $structure;
 	}
 }

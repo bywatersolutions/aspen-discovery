@@ -364,15 +364,10 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 			$this->facetOptions["f.rating_facet.facet.method"] = 'enum';
 			$this->facetOptions["f.format_category.facet.method"] = 'enum';
 			$this->facetOptions["f.format.facet.method"] = 'enum';
-			//Limit the number of formats returned to the total number we have indexed so all can show.
-			require_once ROOT_DIR . "/sys/Indexing/IndexedFormat.php";
-			$indexedFormat = new IndexedFormat();
-			$numFormats = $indexedFormat->count();
-			$location = new Location();
-			$numLocations = $location->count();
-			$sideload = new Sideload();
-			$numLocations = $numLocations + $sideload->count() + 10;
-			$this->facetOptions["f.format.facet.limit"] = $numFormats;
+			$this->setPerFacetLimits();
+			require_once ROOT_DIR . '/sys/Grouping/GroupedWorkFacet.php';
+			$this->facetOptions["f.format.facet.limit"] = GroupedWorkFacet::calculateDynamicFacetLimit('format');
+			$numLocations = GroupedWorkFacet::calculateDynamicFacetLimit('available_at');
 			$this->facetOptions["f.available_at.facet.limit"] = $numLocations;
 			$this->facetOptions["f.owning_location.facet.limit"] = $numLocations;
 			$this->facetOptions["f.availability_toggle.facet.method"] = 'enum';
@@ -1059,5 +1054,27 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 		require_once ROOT_DIR . '/RecordDrivers/GroupedWorkDriver.php';
 		$record = $this->cleanScopedFieldsForRecord($record);
 		return new GroupedWorkDriver($record);
+	}
+
+	/**
+	 * Set individual facet limits based on numTotalEntriesToShowInMore configuration.
+	 */
+	private function setPerFacetLimits(): void {
+		$searchLibrary = Library::getActiveLibrary();
+		global $locationSingleton;
+		$searchLocation = $locationSingleton->getActiveLocation();
+
+		if ($searchLocation != null) {
+			$facets = $searchLocation->getGroupedWorkDisplaySettings()->getFacets();
+		} else {
+			$facets = $searchLibrary->getGroupedWorkDisplaySettings()->getFacets();
+		}
+
+		foreach ($facets as $facet) {
+			if (!empty($facet->numTotalEntriesToShowInMore)) {
+				$facetName = $this->getScopedFieldName($facet->getFacetName($this->searchVersion));
+				$this->facetOptions["f.{$facetName}.facet.limit"] = $facet->numTotalEntriesToShowInMore;
+			}
+		}
 	}
 }

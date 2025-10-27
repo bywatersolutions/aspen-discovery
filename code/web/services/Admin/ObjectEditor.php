@@ -567,6 +567,8 @@ abstract class ObjectEditor extends Admin_Admin {
 			$interface->assign('structure', $structure);
 			$isNewObject = false;
 		}
+
+		DataObjectUtil::preprocessOneToManySubObjects($existingObject, $structure);
 		$interface->assign('object', $existingObject);
 		//Check to see if the request should be multipart/form-data
 		$contentType = DataObjectUtil::getFormContentType($structure);

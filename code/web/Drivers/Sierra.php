@@ -2122,7 +2122,7 @@ class Sierra extends Millennium {
 			if ($selfRegistrationForm->selfRegUseAgency) {
 				$params['fixedFields']['158'] = [
 					'label' => 'Patron Agency',
-					'value' => $selfRegistrationForm->selfRegAgency
+					'value' => (string)$selfRegistrationForm->selfRegAgency
 				];
 			}
 			if ($selfRegistrationForm->addSelfRegNote) {

@@ -1873,13 +1873,13 @@ class Record_AJAX extends Action {
 						return true;
 					}
 					foreach ($validLocationCodesFromILS as $validCode) {
-						if (strpos($validCode, $location->code) === 0) {
+						if (str_starts_with($validCode, $location->code)) {
 							return true;
 						}
 					}
 					return false;
 				});
-			} else {
+			} elseif (empty($getPickupLocationsFromILS['useDefaultLocationFiltering'])) {
 				$locations = [];
 			}
 		}

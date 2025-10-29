@@ -2295,14 +2295,14 @@ class UserAPI extends AbstractAPI {
 							$validLocationCodesFromILS = $getPickupLocationsFromILS['locationCodes'];
 							$pickupLocations = array_filter($pickupLocations, function ($location) use ($validLocationCodesFromILS) {
 								foreach ($validLocationCodesFromILS as $validCode) {
-									if (strpos($validCode, $location['locationCode']) === 0) {
+									if (str_starts_with($validCode, $location['locationCode'])) {
 										return true;
 									}
 								}
 								return false;
 							});
 							$pickupLocations = array_values($pickupLocations);
-						} else {
+						} elseif (empty($getPickupLocationsFromILS['useDefaultLocationFiltering'])) {
 							$pickupLocations = [];
 						}
 					}

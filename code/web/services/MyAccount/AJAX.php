@@ -2072,13 +2072,13 @@ class MyAccount_AJAX extends JSON_Action {
 								return true;
 							}
 							foreach ($validLocationCodesFromILS as $validCode) {
-								if (strpos($validCode, $location->code) === 0) {
+								if (str_starts_with($validCode, $location->code)) {
 									return true;
 								}
 							}
 							return false;
 						});
-					} else {
+					} elseif (empty($getPickupLocationsFromILS['useDefaultLocationFiltering'])) {
 						$pickupBranches = [];
 					}
 				}

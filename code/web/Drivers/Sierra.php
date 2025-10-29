@@ -509,6 +509,7 @@ class Sierra extends Millennium {
 			return [
 				'success' => false,
 				'message' => 'Missing record or patron; unable to retrieve valid pickup locations',
+				'useDefaultLocationFiltering' => true,
 			];
 		}
 		$patronId = $patron->unique_ils_id;
@@ -535,10 +536,11 @@ class Sierra extends Millennium {
 		} else {
 			$message = 'Unable to retrieve valid pickup locations from Sierra. ';
 			$message .= $pickupLocationsResponse->name ?? '';
-			$message .= $pickupLocationsResponse->description ? ': ' . $pickupLocationsResponse->description : '';
+			$message .= !empty($pickupLocationsResponse->description) ? ': ' . $pickupLocationsResponse->description : '';
 			return [
 				'success' => false,
 				'message' => $message,
+				'useDefaultLocationFiltering' => true,
 			];
 		}
 	}

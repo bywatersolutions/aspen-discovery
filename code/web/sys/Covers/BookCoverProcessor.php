@@ -794,6 +794,7 @@ class BookCoverProcessor {
 		$context = stream_context_create([
 			'http' => [
 				'header' => "User-Agent: {$this->configArray['Catalog']['catalogUserAgent']}\r\n",
+				'timeout' => 3,
 			],
 		]);
 
@@ -2247,6 +2248,7 @@ class BookCoverProcessor {
 		$context = stream_context_create([
 			'http' => [
 				'header' => "User-Agent: {$this->configArray['Catalog']['catalogUserAgent']}\r\n",
+				'timeout' => 3,
 			],
 		]);
 		$image = @file_get_contents($url, false, $context);

@@ -2264,12 +2264,12 @@ class UserAPI extends AbstractAPI {
 				$pickupLocations = [];
 				foreach ($tmpPickupLocations as $pickupLocation) {
 					if (!is_string($pickupLocation)) {
-						//$pickupLocationArray = $pickupLocation->toArray();
 						$pickupLocationArray = [];
 						$pickupLocationArray['locationId'] = (string)$pickupLocation->locationId;
 						$pickupLocationArray['libraryId'] = (string)$pickupLocation->libraryId;
 						$pickupLocationArray['locationCode'] = (string)$pickupLocation->code;
 						$pickupLocationArray['code'] = (string)$pickupLocation->code;
+						$pickupLocationArray['historicCode'] = (string)$pickupLocation->historicCode;
 						$pickupLocationArray['displayName'] = (string)$pickupLocation->displayName;
 						$pickupLocations[] = $pickupLocationArray;
 					}

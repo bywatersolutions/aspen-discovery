@@ -452,6 +452,7 @@ class Grouping_Record {
 		if ($this->hasItemSummary($variationId, $key)) {
 			$this->_itemSummary[$variationId][$key]['totalCopies'] += $itemSummaryInfo['totalCopies'];
 			$this->_itemSummary[$variationId][$key]['availableCopies'] += $itemSummaryInfo['availableCopies'];
+			$this->_itemSummary[$variationId][$key]['available'] = $this->_itemSummary[$variationId][$key]['availableCopies'] > 0;
 			if ($itemSummaryInfo['displayByDefault']) {
 				$this->_itemSummary[$variationId][$key]['displayByDefault'] = true;
 			}
@@ -476,6 +477,7 @@ class Grouping_Record {
 			if (isset($this->_itemsDisplayedByDefault[$key])) {
 				$this->_itemsDisplayedByDefault[$key]['totalCopies'] += $itemSummaryInfo['totalCopies'];
 				$this->_itemsDisplayedByDefault[$key]['availableCopies'] += $itemSummaryInfo['availableCopies'];
+				$this->_itemsDisplayedByDefault[$key]['available'] = $this->_itemsDisplayedByDefault[$key]['availableCopies'] > 0;
 				$this->_itemsDisplayedByDefault[$key]['onOrderCopies'] += $itemSummaryInfo['onOrderCopies'];
 				$lastStatus = $this->_itemsDisplayedByDefault[$key]['status'];
 				$this->_itemsDisplayedByDefault[$key]['status'] = GroupedWorkDriver::keepBestGroupedStatus($lastStatus, $groupedStatus);

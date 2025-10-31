@@ -5,6 +5,7 @@ function mergeItemSummary(array $localCopies, array $itemSummary) : array {
 		if (isset($localCopies[$key])) {
 			$localCopies[$key]['totalCopies'] += $item['totalCopies'];
 			$localCopies[$key]['availableCopies'] += $item['availableCopies'];
+			$localCopies[$key]['available'] = $localCopies[$key]['availableCopies'] > 0;
 			if ($item['displayByDefault']) {
 				$localCopies[$key]['displayByDefault'] = true;
 			}

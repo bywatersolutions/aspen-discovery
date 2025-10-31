@@ -204,7 +204,7 @@ class Grouping_Manifestation {
 				$manifestationIsAvailable = true;
 			} elseif ($this->getStatusInformation()->isAvailable()) {
 				foreach ($this->getItemSummary() as $itemSummary) {
-					if (strlen($itemSummary['shelfLocation']) && substr_compare($itemSummary['shelfLocation'], $selectedDetailedAvailability, 0)) {
+					if (strlen($itemSummary['shelfLocation']) && substr_compare($itemSummary['shelfLocation'], $selectedDetailedAvailability, 0, strlen($selectedDetailedAvailability)) == 0) {
 						if ($itemSummary['available']) {
 							$manifestationIsAvailable = true;
 							break;

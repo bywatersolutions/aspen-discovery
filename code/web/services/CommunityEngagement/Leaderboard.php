@@ -14,10 +14,15 @@ class CommunityEngagement_Leaderboard extends Action {
 			return;
 		}
 
-		$user = userAccount::getActiveUserObj();
-		$userIsAdmin = $user->isUserAdmin();
-		if ($user->getHomeLibrary() != null) {
-			$campaignLeaderboardDisplay = $user->getHomeLibrary()->campaignLeaderboardDisplay;
+		$user = UserAccount::getActiveUserObj();
+		$userIsAdmin = false;
+		if ($user) {
+			$userIsAdmin = $user->isUserAdmin();
+			if ($user->getHomeLibrary() != null) {
+				$campaignLeaderboardDisplay = $user->getHomeLibrary()->campaignLeaderboardDisplay;
+			} else {
+				$campaignLeaderboardDisplay = $library->campaignLeaderboardDisplay;
+			}
 		} else {
 			$campaignLeaderboardDisplay = $library->campaignLeaderboardDisplay;
 		}
@@ -36,7 +41,8 @@ class CommunityEngagement_Leaderboard extends Action {
 			$this->display('leaderboard.tpl', 'Leaderboard');
 		}
 	}
-	public function getLeaderboardTemplate() {
+	public function getLeaderboardTemplate(): ?GrapesTemplate {
+		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
 		$template = new GrapesTemplate();
 		$template->templateName = 'leaderboard_template';
 

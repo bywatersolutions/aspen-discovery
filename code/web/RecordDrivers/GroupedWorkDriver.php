@@ -2389,6 +2389,20 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				} else {
 					$seriesFromIndex = $this->getIndexedSeries();
 					if ($seriesFromIndex != null && count($seriesFromIndex) > 0) {
+						// Sort series entries by volume for consistent display order.
+						usort($seriesFromIndex, function($a, $b) {
+							$volA = $a['volume'] ?? '';
+							$volB = $b['volume'] ?? '';
+							preg_match('/(\d+)/', $volA, $matchesA);
+							preg_match('/(\d+)/', $volB, $matchesB);
+							$numA = isset($matchesA[1]) ? intval($matchesA[1]) : 0;
+							$numB = isset($matchesB[1]) ? intval($matchesB[1]) : 0;
+							if ($numA == $numB) {
+								return strcmp($volA, $volB);
+							}
+							return $numA - $numB;
+						});
+
 						$firstSeries = $seriesFromIndex[0];
 						$this->seriesData = [
 							'seriesTitle' => $firstSeries['seriesTitle'],
@@ -2396,6 +2410,17 @@ class GroupedWorkDriver extends IndexRecordDriver {
 							'fromNovelist' => false,
 							'fromSeriesIndex' => false
 						];
+						if (count($seriesFromIndex) > 1) {
+							$this->seriesData['additionalSeries'] = [];
+							for ($i = 1; $i < count($seriesFromIndex); $i++) {
+								$this->seriesData['additionalSeries'][] = [
+									'seriesTitle' => $seriesFromIndex[$i]['seriesTitle'],
+									'volume' => $seriesFromIndex[$i]['volume'] ?? '',
+									'fromNovelist' => false,
+									'fromSeriesIndex' => false
+								];
+							}
+						}
 					} else {
 						return null;
 					}

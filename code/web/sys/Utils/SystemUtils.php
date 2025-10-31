@@ -90,7 +90,7 @@ class SystemUtils {
 	}
 
 	static function validateAddress($streetAddress, $city, $state, $zip): bool {
-		$baseUrl = 'https://api.usps.com';
+		$baseUrl = 'https://apis.usps.com';
 		require_once ROOT_DIR . '/sys/CurlWrapper.php';
 
 		//GET OAUTH TOKEN

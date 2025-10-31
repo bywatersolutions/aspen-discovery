@@ -124,7 +124,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 		foreach ($availabilityInfo  as $availability) {
 			$availableCopies += $availability->copiesAvailable;
 			$totalCopies += $availability->copiesOwned;
-			$numHolds = $availability->numberOfHolds;
+			$numHolds += $availability->numberOfHolds;
 		}
 
 		//Load status summary

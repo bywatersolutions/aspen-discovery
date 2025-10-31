@@ -120,7 +120,7 @@ class OverDriveAPIProductAvailability extends DataObject {
 					$overDriveProduct->overdriveId = $identifier;
 					$availability->joinAdd($overDriveProduct, 'INNER', 'product', 'productId', 'id');
 					$availability->selectAdd();
-					$availability->selectAdd('overdrive_api_products.*');
+					$availability->selectAdd('overdrive_api_product_availability.*');
 					$availability->selectAdd('overdriveId');
 
 					$availability->settingId = $overDriveScope->settingId;

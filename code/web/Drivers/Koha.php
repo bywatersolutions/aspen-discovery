@@ -504,6 +504,7 @@ class Koha extends AbstractIlsDriver {
 		require_once ROOT_DIR . '/sys/Indexing/IlsRecord.php';
 		IlsRecord::preloadIlsRecords($this->getIndexingProfile()->name, $allBibNumbers);
 
+		$circControl = $this->getKohaSystemPreference('CircControl', 'PatronLibrary');
 		foreach ($allRows as $curRow) {
 			$curCheckout = new Checkout();
 			$curCheckout->type = 'ils';
@@ -563,13 +564,19 @@ class Koha extends AbstractIlsDriver {
 
 			$patronType = $patron->patronType;
 			$itemType = $curRow['itype'];
-			$checkoutBranch = $curRow['branchcode'];
+			if ($circControl == 'PatronLibrary') {
+				$circBranch = $patron->getHomeLocationCode();
+			} else if ($circControl == 'PickupLibrary') {
+				$circBranch = Library::getActiveLibrary()->subdomain;
+			} else {
+				$circBranch = $curRow['branchcode'];
+			}
 
 			$curCheckout->returnClaim = '';
 
 			//Check if patron is allowed to auto-renew based on circulation rules
 
-			$circulationRulesKey = "$patronType~$itemType~$checkoutBranch";
+			$circulationRulesKey = "$patronType~$itemType~$circBranch";
 			$rulesFound = [];
 			if (array_key_exists($circulationRulesKey, $circulationRulesForCheckouts)){
 				$circulationRulesForCheckout = $circulationRulesForCheckouts[$circulationRulesKey];
@@ -580,9 +587,9 @@ class Koha extends AbstractIlsDriver {
 				$circulationRulesSql = "
 					SELECT * FROM circulation_rules
 					WHERE (categorycode IN ('$patronType', '*') OR categorycode IS NULL)
-					  AND (itemtype IN('$itemType', '*') OR itemtype is null)
-					  AND (branchcode IN ('$checkoutBranch', '*') OR branchcode IS NULL)
-					  AND rule_name like '%renew%'
+					AND (itemtype IN('$itemType', '*') OR itemtype is null)
+					AND (branchcode IN ('$circBranch', '*') OR branchcode IS NULL)
+					AND rule_name like '%renew%'
 					ORDER BY branchcode desc, categorycode desc, itemtype desc
 				";
 				$circulationRulesRS = mysqli_query($this->dbConnection, $circulationRulesSql);
@@ -2337,6 +2344,8 @@ class Koha extends AbstractIlsDriver {
 		require_once ROOT_DIR . '/sys/Indexing/IlsRecord.php';
 		IlsRecord::preloadIlsRecords($this->getIndexingProfile()->name, $allBibNumbers);
 
+		$circControl = $this->getKohaSystemPreference('CircControl', 'PatronLibrary');
+
 		foreach ($allRows as $curRow) {
 			//Each row in the table represents a hold
 			$curHold = new Hold();
@@ -2417,9 +2426,15 @@ class Koha extends AbstractIlsDriver {
 				if($this->getKohaVersion() >= 22.11) {
 					$patronType = $patron->patronType;
 					$itemType = $curRow['itype'];
-					$checkoutBranch = $curRow['branchcode'];
+					if ($circControl == 'PatronLibrary') {
+						$circBranch = $patron->getHomeLocationCode();
+					} else if ($circControl == 'PickupLibrary') {
+						$circBranch = Library::getActiveLibrary()->subdomain;
+					} else {
+						$circBranch = $curRow['branchcode'];
+					}
 					/** @noinspection SqlResolve */
-					$issuingRulesSql = "SELECT *  FROM circulation_rules where rule_name =  'waiting_hold_cancellation' AND (categorycode IN ('$patronType', '*') OR categorycode IS NULL) and (itemtype IN('$itemType', '*') OR itemtype is null) and (branchcode IN ('$checkoutBranch', '*') OR branchcode IS NULL) order by branchcode desc, categorycode desc, itemtype desc limit 1";
+					$issuingRulesSql = "SELECT *  FROM circulation_rules where rule_name =  'waiting_hold_cancellation' AND (categorycode IN ('$patronType', '*') OR categorycode IS NULL) and (itemtype IN('$itemType', '*') OR itemtype is null) and (branchcode IN ('$circBranch', '*') OR branchcode IS NULL) order by branchcode desc, categorycode desc, itemtype desc limit 1";
 					$issuingRulesRS = mysqli_query($this->dbConnection, $issuingRulesSql);
 					if ($issuingRulesRS !== false) {
 						if ($issuingRulesRow = $issuingRulesRS->fetch_assoc()) {
@@ -2970,6 +2985,8 @@ class Koha extends AbstractIlsDriver {
 			$renewResponse = $this->getXMLWebServiceResponse($renewURL);
 			ExternalRequestLogEntry::logRequest('koha.renewCheckout', 'GET', $renewURL, $this->curlWrapper->getHeaders(), '', $this->curlWrapper->getResponseCode(), $renewResponse, []);
 
+			$circControl = $this->getKohaSystemPreference('CircControl', 'PatronLibrary');
+
 			//Parse the result
 			if (isset($renewResponse->success) && ($renewResponse->success == 1)) {
 				$renewResults = mysqli_query($this->dbConnection, $renewSql);
@@ -2977,14 +2994,20 @@ class Koha extends AbstractIlsDriver {
 				while ($curRow = mysqli_fetch_assoc($renewResults)) {
 					$patronType = $patron->patronType;
 					$itemType = $curRow['itype'];
-					$checkoutBranch = $curRow['branchcode'];
+					if ($circControl == 'PatronLibrary') {
+						$circBranch = $patron->getHomeLocationCode();
+					} else if ($circControl == 'PickupLibrary') {
+						$circBranch = Library::getActiveLibrary()->subdomain;
+					} else {
+						$circBranch = $curRow['branchcode'];
+					}
 					if ($this->getKohaVersion() >= 22.11) {
 						$renewCount = $curRow['renewals_count'];
 					} else {
 						$renewCount = $curRow['renewals'];
 					}
 					/** @noinspection SqlResolve */
-					$issuingRulesSql = "SELECT *  FROM circulation_rules where rule_name =  'renewalsallowed' AND (categorycode IN ('$patronType', '*') OR categorycode IS NULL) and (itemtype IN('$itemType', '*') OR itemtype is null) and (branchcode IN ('$checkoutBranch', '*') OR branchcode IS NULL) order by branchcode desc, categorycode desc, itemtype desc limit 1";
+					$issuingRulesSql = "SELECT *  FROM circulation_rules where rule_name =  'renewalsallowed' AND (categorycode IN ('$patronType', '*') OR categorycode IS NULL) and (itemtype IN('$itemType', '*') OR itemtype is null) and (branchcode IN ('$circBranch', '*') OR branchcode IS NULL) order by branchcode desc, categorycode desc, itemtype desc limit 1";
 					$issuingRulesRS = mysqli_query($this->dbConnection, $issuingRulesSql);
 					if ($issuingRulesRS !== false) {
 						if ($issuingRulesRow = $issuingRulesRS->fetch_assoc()) {
@@ -6496,6 +6519,35 @@ class Koha extends AbstractIlsDriver {
 		}
 		$borrowerRS->close();
 
+		// Check if Account Expiry notice is mandatory for this patron's category (Koha 25.05+).
+		$mandatoryExpiryAttributeId = null;
+		if ($this->getKohaVersion() >= 25.05) {
+			$patronResponse = $this->kohaApiUserAgent->get("/api/v1/patrons/" . $patron->unique_ils_id, 'koha.getPatron');
+			if ($patronResponse && isset($patronResponse['content']['category_id'])) {
+				$patronCategoryCode = $patronResponse['content']['category_id'];
+				$categoriesResponse = $this->kohaApiUserAgent->get("/api/v1/patron_categories", 'koha.getPatronCategories');
+				if ($categoriesResponse && isset($categoriesResponse['content'])) {
+					$categoriesData = $categoriesResponse['content'];
+					if (is_array($categoriesData)) {
+						foreach ($categoriesData as $category) {
+							if (isset($category['patron_category_id']) && $category['patron_category_id'] === $patronCategoryCode) {
+								if (!empty($category['enforce_expiry_notice'])) {
+									/** @noinspection SqlResolve */
+									$expiryAttributeSql = "SELECT message_attribute_id FROM message_attributes WHERE message_name = 'Patron_Expiry'";
+									$expiryAttributeRS = mysqli_query($this->dbConnection, $expiryAttributeSql);
+									if ($expiryAttributeRow = $expiryAttributeRS->fetch_assoc()) {
+										$mandatoryExpiryAttributeId = $expiryAttributeRow['message_attribute_id'];
+									}
+									$expiryAttributeRS->close();
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
 		//Lookup which transports are allowed
 		/** @noinspection SqlResolve */
 		$transportSettingSql = "SELECT message_attribute_id, MAX(is_digest) as allowDigests, message_transport_type FROM message_transports GROUP by message_attribute_id, message_transport_type";
@@ -6527,52 +6579,30 @@ class Koha extends AbstractIlsDriver {
 		}
 		$systemPreferencesRS->close();
 
-
-
+		$messageAttributes = [];
 		$messageAttributesSql = "SELECT * FROM message_attributes";
 		$messageAttributesRS = mysqli_query($this->dbConnection, $messageAttributesSql);
 		while ($messageType = $messageAttributesRS->fetch_assoc()) {
-			switch ($messageType['message_name']) {
-				case "Item_Due":
-					$messageType['label'] = 'Item due';
-					break;
-				case "Advance_Notice":
-					$messageType['label'] = 'Advance notice';
-					break;
-				case "Hold_Filled":
-					$messageType['label'] = 'Hold filled';
-					break;
-				case "Item_Check_in":
-					$messageType['label'] = 'Item check-in';
-					break;
-				case "Item_Checkout":
-					$messageType['label'] = 'Item checkout';
-					break;
-				case "Ill_ready":
-					$messageType['label'] = 'ILL ready';
-					break;
-				case "Ill_unavailable":
-					$messageType['label'] = 'ILL unavailable';
-					break;
-				case "Auto_Renewals":
-					$messageType['label'] = 'Auto Renewals';
-					break;
-				case "Ill_update":
-					$messageType['label'] = 'ILL update';
-					break;
-				case "Hold_Reminder":
-					$messageType['label'] = 'Hold Reminder';
-					break;
-				default:
-					$messageType['label'] = $messageType['message_name'];
-			}
+			$messageType['label'] = match ($messageType['message_name']) {
+				"Item_Due" => 'Item Due',
+				"Advance_Notice" => 'Advance Notice',
+				"Hold_Filled" => 'Hold Filled',
+				"Item_Check_in" => 'Item Check-In',
+				"Item_Checkout" => 'Item Checkout',
+				"Ill_ready" => 'ILL Ready',
+				"Ill_unavailable" => 'ILL Unavailable',
+				"Auto_Renewals" => 'Auto Renewals',
+				"Ill_update" => 'ILL Update',
+				"Hold_Reminder" => 'Hold Reminder',
+				"Patron_Expiry" => 'Patron Expiry',
+				default => $messageType['message_name'],
+			};
 			$messageAttributes[] = $messageType;
 		}
 		$messageAttributesRS->close();
 		$activeMessagesAttributes = [];
 		
 		foreach($messageAttributes as $messageAttribute){
-
 			# Check if the ILL Module is enabled and if the attribute's name starts with 'ill_.
 			$isDisableILLModule = !$preferences['ILLModule'] && str_starts_with($messageAttribute['message_name'],"Ill_");
 
@@ -6583,16 +6613,17 @@ class Koha extends AbstractIlsDriver {
 
 			# Check if AutoRenewalNotices preference is set according to patron messaging preferences.
 			# Also checks if the attribute's name is "Auto_Renewals"
-			# Notify to the user about renewals.
 			$isDisableAutoRenewal = $messageAttribute['message_name'] == "Auto_Renewals" && $preferences['AutoRenewalNotices'] != 'preferences';
 
 			# Check if patron use recalls and if the attribute's name starts with 'Recall_.
 			$isDisableUseRecalls = !$preferences['UseRecalls'] && str_starts_with($messageAttribute['message_name'],"Recall_");
 
-			if ($isDisableILLModule || $isDisableExpiryNotice || $isDisableAutoRenewal || $isDisableUseRecalls) {
+			$isMandatoryExpiryNotice = $messageAttribute['message_name'] == "Patron_Expiry" && $messageAttribute['message_attribute_id'] == $mandatoryExpiryAttributeId;
+
+			if ($isDisableILLModule || $isDisableExpiryNotice || $isDisableAutoRenewal || $isDisableUseRecalls || $isMandatoryExpiryNotice) {
 				continue;
 			}
-			$activeMessagesAttributes [] = $messageAttribute;			
+			$activeMessagesAttributes[] = $messageAttribute;
 		}
 		$interface->assign('messageAttributes', $activeMessagesAttributes);
 

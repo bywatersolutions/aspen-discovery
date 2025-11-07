@@ -1700,7 +1700,7 @@ class Sierra extends Millennium {
 				if (isset($_REQUEST['phone'])) {
 					$patron->phone = $_REQUEST['phone'];
 					$tmpPhone = new stdClass();
-					$tmpPhone->type = 'p';
+					$tmpPhone->type = 't';
 					$tmpPhone->number = $_REQUEST['phone'];
 					$params['phones'][] = $tmpPhone;
 				}
@@ -1712,7 +1712,7 @@ class Sierra extends Millennium {
 				if (isset($_REQUEST['workPhone'])) {
 					$patron->_workPhone = $_REQUEST['workPhone'];
 					$tmpPhone = new stdClass();
-					$tmpPhone->type = 't';
+					$tmpPhone->type = 'p';
 					$tmpPhone->number = $_REQUEST['workPhone'];
 					$params['phones'][] = $tmpPhone;
 				}

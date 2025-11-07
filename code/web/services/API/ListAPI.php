@@ -1321,12 +1321,34 @@ class ListAPI extends AbstractAPI {
 				$userCanEdit = $user->canEditList($list);
 				if ($userCanEdit) {
 					$optOutOfSoftDeletion = !empty($_REQUEST['optOutOfSoftDeletion']) && filter_var($_REQUEST['optOutOfSoftDeletion'], FILTER_VALIDATE_BOOLEAN);
-					$list->delete(false, $optOutOfSoftDeletion);
-					return [
-						'success' => true,
-						'title' => translate(['text' => 'Success', 'isPublicFacing' => true]),
-						'message' => translate(['text' => 'List deleted successfully', 'isPublicFacing' => true]),
-					];
+					$result = $list->delete(false, $optOutOfSoftDeletion);
+					if($result === 1) //we successfully modified our list
+					{
+						return [
+							'success' => true,
+							'title' => translate(['text' => 'Success', 'isPublicFacing' => true]),
+							'message' => translate(['text' => 'List deleted successfully', 'isPublicFacing' => true]),
+						];
+					}
+					else if($result === true) // true is returned from DataObject if no changes were detected
+					{
+						// this branch shouldn't happen because if we found the list we should have changes to update but better to be safe.
+						// in an ideal world we shoiuld only need the first section.
+						return [
+							'success' => false,
+							'title' => translate(['text' => 'Error', 'isPublicFacing' => true]),
+							'message' => translate(['text' => 'We attempted to delete your list but it looks like no changes occurred', 'isPublicFacing' => true]),
+						];
+					} else { // some kind of DB error happened and we almost certainly did not successfully delete the list.
+						global $logger;
+						$logger->log($list->getLastError(), Logger::LOG_ERROR); //log the error since we don't want to risk exposing it to end users.
+						return [
+							'success' => false,
+							'title' => translate(['text' => 'Error', 'isPublicFacing' => true]),
+							'result' => $result,
+							'message' => translate(['text' => 'A Database error occurred attempting to delete your list.', 'isPublicFacing' => true]),
+						];
+					}
 				} else {
 					return [
 						'success' => false,

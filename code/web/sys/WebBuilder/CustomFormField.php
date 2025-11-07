@@ -74,8 +74,7 @@ class CustomFormField extends DataObject {
 				'type' => 'text',
 				'label' => 'Label',
 				'description' => 'A label for the field',
-				'size' => '40',
-				'maxLength' => 100,
+				'maxLength' => 255,
 				'required' => true,
 			],
 			'fieldType' => [

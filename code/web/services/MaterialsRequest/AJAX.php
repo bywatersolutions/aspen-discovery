@@ -53,9 +53,12 @@ class MaterialsRequest_AJAX extends Action {
 				$cancelledStatus->isPatronCancel = 1;
 				$cancelledStatus->libraryId = $homeLibrary->libraryId;
 				$cancelledStatus->find(true);
-
-				$materialsRequest->dateUpdated = time();
 				$materialsRequest->status = $cancelledStatus->id;
+				if ($cancelledStatus->checkForHolds == 0) {
+					$materialsRequest->readyForHolds = 0;
+				}
+				$materialsRequest->dateUpdated = time();
+
 				if ($materialsRequest->update()) {
 					require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestUsage.php';
 					MaterialsRequestUsage::incrementStat($materialsRequest->status, $materialsRequest->libraryId);

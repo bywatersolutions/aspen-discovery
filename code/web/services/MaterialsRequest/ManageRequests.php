@@ -177,6 +177,8 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				$assigneesToShow[] = $adminStickyFilter->filterValue;
 			}
 		}
+
+		$showUnassigned = false;
 		$adminStickyFilter = new StickyFilter();
 		$adminStickyFilter->userId = $user->id;
 		$adminStickyFilter->filterFor = "MaterialsRequest_ShowUnassigned";
@@ -188,7 +190,6 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 			$showUnassigned = !empty($_REQUEST['showUnassigned']) && $_REQUEST['showUnassigned'] == 'on';
 		}
 
-
 		$interface->assign('assigneesFilter', $assigneesToShow);
 		$interface->assign('showUnassigned', $showUnassigned);
 
@@ -199,12 +200,20 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 			//Look for which titles should be modified
 			$selectedRequests = $_REQUEST['select'];
 			$statusToSet = $_REQUEST['newStatus'];
+
+			$newStatusObject = new MaterialsRequestStatus();
+			$newStatusObject->id = $statusToSet;
+			$newStatusObject->find(true);
+
 			foreach ($selectedRequests as $requestId => $selected) {
 				$materialRequest = new MaterialsRequest();
 				$materialRequest->id = $requestId;
 				if ($materialRequest->find(true)) {
 					if ($materialRequest->status != $statusToSet) {
 						$materialRequest->status = $statusToSet;
+						if ($newStatusObject->checkForHolds == 0) {
+							$materialRequest->readyForHolds = 0;
+						}
 						$materialRequest->dateUpdated = time();
 						$materialRequest->update();
 

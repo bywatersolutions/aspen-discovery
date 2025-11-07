@@ -239,7 +239,7 @@ class MaterialsRequest_RequestsNeedingHolds extends ObjectEditor {
 	}
 
 	/** @noinspection PhpUnused */
-	function updateRequestStatus()  : void {
+	function updateRequestStatus(): void {
 		global $interface;
 		$newStatus = $_REQUEST['newStatus'];
 		if ($newStatus == 'unselected') {
@@ -262,6 +262,9 @@ class MaterialsRequest_RequestsNeedingHolds extends ObjectEditor {
 							if ($materialsRequest->status != $newStatus) {
 								if ($newStatusObject->holdFailed || $newStatusObject->holdPlacedSuccessfully || $newStatusObject->holdNotNeeded) {
 									$materialsRequest->holdsCreated = 1;
+								}
+								if ($newStatusObject->checkForHolds == 0) {
+									$materialsRequest->readyForHolds = 0;
 								}
 								$materialsRequest->status = $newStatus;
 								$materialsRequest->dateUpdated = time();

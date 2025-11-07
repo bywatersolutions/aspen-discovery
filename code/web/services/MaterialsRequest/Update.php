@@ -5,8 +5,7 @@ require_once ROOT_DIR . "/sys/MaterialsRequests/MaterialsRequest.php";
 
 class MaterialsRequest_Update extends Admin_Admin {
 
-	function launch() {
-		global $configArray;
+	function launch(): void {
 		global $interface;
 
 		//Load the materials request to determine if it can be edited
@@ -42,8 +41,7 @@ class MaterialsRequest_Update extends Admin_Admin {
 				$user->update();
 				$processForm = false;
 			} elseif (UserAccount::userHasPermission('Manage Library Materials Requests') && $requestUser && ($user->getHomeLibrary() == null || ($requestUser->getHomeLibrary()->libraryId == $user->getHomeLibrary()->libraryId))) {
-				//Ok to process because they are an admin for the user's home library
-				$processForm = true;
+				// Process form because user is an admin for their home library.
 			} elseif ($user->id != $materialsRequest->createdBy) {
 				$user->updateMessage = translate([
 					'text' => 'Sorry, you do not have permission to update this materials request.',
@@ -95,6 +93,15 @@ class MaterialsRequest_Update extends Admin_Admin {
 						if ($materialsRequest->status != $_REQUEST['status']) {
 							$materialsRequest->status = $_REQUEST['status'];
 							$statusChanged = true;
+
+							require_once ROOT_DIR . '/sys/MaterialsRequests/MaterialsRequestStatus.php';
+							$newStatus = new MaterialsRequestStatus();
+							$newStatus->id = $_REQUEST['status'];
+							if ($newStatus->find(true)) {
+								if ($newStatus->checkForHolds == 0) {
+									$materialsRequest->readyForHolds = 0;
+								}
+							}
 						}
 					}
 					$assigneeChanged = false;

@@ -807,6 +807,7 @@ class Location extends DataObject {
 				'label' => 'Grouped Work Display Settings',
 				'hideInLists' => false,
 				'permissions' => ['Location Catalog Options'],
+				'forcesReindex' => true,
 			],
 
 			'searchingSection' => [

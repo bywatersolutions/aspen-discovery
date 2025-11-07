@@ -9655,9 +9655,9 @@ a.browse-thumbnail.active {
   min-height: 100px;
 }
 .browse-thumbnail img.use-original-covers {
+  width: 100%;
   max-width: 180px;
   max-height: 225px;
-  width: auto;
   height: auto;
 }
 .browse-thumbnail img.floating {

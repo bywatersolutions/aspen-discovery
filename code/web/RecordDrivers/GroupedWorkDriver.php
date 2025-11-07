@@ -2389,18 +2389,45 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				} else {
 					$seriesFromIndex = $this->getIndexedSeries();
 					if ($seriesFromIndex != null && count($seriesFromIndex) > 0) {
-						// Sort series entries by volume for consistent display order.
+						// Sort series entries by series name first, then by volume.
 						usort($seriesFromIndex, function($a, $b) {
+							$seriesA = $a['seriesTitle'] ?? '';
+							$seriesB = $b['seriesTitle'] ?? '';
+
+							$seriesCompare = strcmp($seriesA, $seriesB);
+							if ($seriesCompare !== 0) {
+								return $seriesCompare;
+							}
+							// Within the same series, sort by volume.
 							$volA = $a['volume'] ?? '';
 							$volB = $b['volume'] ?? '';
+
+							$hasVolA = !empty($volA);
+							$hasVolB = !empty($volB);
+							// If one has volume and one doesn't, the one with volume comes first.
+							if ($hasVolA && !$hasVolB) {
+								return -1;
+							}
+							if (!$hasVolA && $hasVolB) {
+								return 1;
+							}
+							// If neither has volume, they're equal.
+							if (!$hasVolA && !$hasVolB) {
+								return 0;
+							}
+
+							// Both have volumes: extract numeric portion for comparison.
 							preg_match('/(\d+)/', $volA, $matchesA);
 							preg_match('/(\d+)/', $volB, $matchesB);
 							$numA = isset($matchesA[1]) ? intval($matchesA[1]) : 0;
 							$numB = isset($matchesB[1]) ? intval($matchesB[1]) : 0;
-							if ($numA == $numB) {
-								return strcmp($volA, $volB);
+
+							// If numeric portions differ, sort by number.
+							if ($numA !== $numB) {
+								return $numA - $numB;
 							}
-							return $numA - $numB;
+							// If numeric portions are the same, do string comparison of full volume.
+							return strcmp($volA, $volB);
 						});
 
 						$firstSeries = $seriesFromIndex[0];

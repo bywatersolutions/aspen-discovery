@@ -2,7 +2,13 @@
 <div class="col-sm-12">
 	<div class="row">
 		<div class="col-sm-12 manifestation-format">
-			{translate text=$relatedManifestation->format isPublicFacing=true}
+			{if $relatedManifestation->hasInvalidFormat()}
+				<span class="text-warning" title="{translate text='Format information is missing for this item' inAttribute=true isPublicFacing=true}">
+					{translate text='Unknown Format' isPublicFacing=true}
+				</span>
+			{else}
+				{translate text=$relatedManifestation->format isPublicFacing=true}
+			{/if}
 		</div>
 	</div>
 	{foreach from=$relatedManifestation->getVariations() item=variation}

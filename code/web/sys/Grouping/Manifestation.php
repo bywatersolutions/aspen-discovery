@@ -28,11 +28,11 @@ class Grouping_Manifestation {
 	function __construct(Grouping_Record|array $record) {
 		$this->_statusInformation = new Grouping_StatusInformation();
 		if (is_array($record)) {
-			$this->format = $record['format'];
-			$this->formatCategory = $record['formatCategory'];
+			$this->format = $record['format'] ?? '';
+			$this->formatCategory = $record['formatCategory'] ?? '';
 		} else {
-			$this->format = $record->format;
-			$this->formatCategory = $record->formatCategory;
+			$this->format = $record->format ?? '';
+			$this->formatCategory = $record->formatCategory ?? '';
 			$this->addRecord($record);
 		}
 	}
@@ -469,6 +469,16 @@ class Grouping_Manifestation {
 			'variations' => $variationsData
 		];
 		return json_encode($data);
+	}
+
+	/**
+	 * Check if this manifestation has invalid/missing format information.
+	 *
+	 * @return bool
+	 * @noinspection PhpUnused
+	 */
+	function hasInvalidFormat(): bool {
+		return empty($this->format) || empty($this->formatCategory);
 	}
 
 }

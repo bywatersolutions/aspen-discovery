@@ -20,7 +20,14 @@
 				{if $recordDriver->getFormats()}
 					<br>
 					<small>
-						({implode subject=$recordDriver->getFormats() glue=", " translate=true isPublicFacing=true})
+						{assign var=formats value=$recordDriver->getFormats()}
+						{assign var=hasEmptyFormat value=false}
+						{foreach from=$formats item=format}
+							{if empty($format)}
+								{assign var=hasEmptyFormat value=true}
+							{/if}
+						{/foreach}
+						({if $hasEmptyFormat}{translate text="Missing Format" isPublicFacing=true}{else}{implode subject=$formats glue=", " translate=true isPublicFacing=true}{/if})
 						{if $recordDriver->isClosedCaptioned()}
 							&nbsp;<i class="fas fa-closed-captioning"></i>
 						{/if}

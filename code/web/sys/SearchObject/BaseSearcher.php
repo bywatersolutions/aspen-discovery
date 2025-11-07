@@ -518,7 +518,10 @@ abstract class SearchObject_BaseSearcher {
 			// Advanced Search
 			$params[] = "join=" . urlencode($this->searchTerms[0]['join']);
 			for ($i = 0; $i < count($this->searchTerms); $i++) {
-				$params[] = "bool" . $i . "[]=" . urlencode($this->searchTerms[$i]['group'][0]['bool']);
+				$boolValue = $this->searchTerms[$i]['group'][0]['bool'];
+				if (!empty($boolValue)) {
+					$params[] = "bool" . $i . "[]=" . urlencode($boolValue);
+				}
 				for ($j = 0; $j < count($this->searchTerms[$i]['group']); $j++) {
 					$params[] = "lookfor" . $i . "[" . $j . "]=" . urlencode($this->searchTerms[$i]['group'][$j]['lookfor']);
 					$params[] = "type" . $i . "[" . $j . "]=" . urlencode($this->searchTerms[$i]['group'][$j]['field']);

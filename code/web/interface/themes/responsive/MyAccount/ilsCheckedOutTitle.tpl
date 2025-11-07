@@ -208,7 +208,7 @@
 								{if empty($record->maxRenewals)}
 									0
 								{else}
-									{$record->maxRenewals}
+									{$record->maxRenewals-$record->renewCount}
 								{/if}
 							</div>
 						</div>

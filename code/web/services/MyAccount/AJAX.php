@@ -3727,6 +3727,10 @@ class MyAccount_AJAX extends JSON_Action {
 				if ($showRenewed) {
 					$sortOptions['renewed'] = 'Times Renewed';
 				}
+				if ($showRenewalsRemaining) {
+					$sortOptions['renewalsRemainingAsc'] = 'Renewals Remaining Asc';
+					$sortOptions['renewalsRemainingDesc'] = 'Renewals Remaining Desc';
+				}
 
 				$interface->assign('sortOptions', $sortOptions);
 
@@ -4494,6 +4498,12 @@ class MyAccount_AJAX extends JSON_Action {
 				} else {
 					$sortKey = '***' . '-' . $sortTitle;
 				}
+			} elseif ($selectedSortOption == 'renewalsRemainingAsc') {
+				$numRenewalsRemaining = $curTitle->maxRenewals - $curTitle->renewCount;
+				$sortKey = str_pad($numRenewalsRemaining, 3, '0', STR_PAD_LEFT) . '-' . $sortTitle;
+			} elseif ($selectedSortOption == 'renewalsRemainingDesc') {
+				$numRenewalsRemaining = $curTitle->maxRenewals - $curTitle->renewCount;
+				$sortKey = str_pad(999-$numRenewalsRemaining, 3, '0', STR_PAD_LEFT) . '-' . $sortTitle;
 			} elseif ($selectedSortOption == 'libraryAccount') {
 				$sortKey = $curTitle->getUserName() . '-' . $sortTitle;
 			}

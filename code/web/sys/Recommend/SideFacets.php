@@ -42,20 +42,7 @@ class SideFacets implements RecommendationInterface {
 		}
 	}
 
-	/* init
-	 *
-	 * Called before the SearchObject performs its main search.  This may be used
-	 * to set SearchObject parameters in order to generate recommendations as part
-	 * of the search.
-	 *
-	 * @access  public
-	 */
-	public function init() {
-		// Turn on side facets in the search results:
-//		foreach($this->mainFacets as $name => $desc) {
-//			$this->searchObject->addFacet($name, $this->facetSettings[$name]);
-//		}
-	}
+	public function init(): void {}
 
 	/* process
 	 *
@@ -65,7 +52,7 @@ class SideFacets implements RecommendationInterface {
 	 *
 	 * @access  public
 	 */
-	public function process() {
+	public function process(): void {
 		global $interface;
 		global $library;
 
@@ -84,14 +71,39 @@ class SideFacets implements RecommendationInterface {
 		//visible if there is not a value selected for the facet (makes it single select
 		$sideFacets = $this->searchObject->getFacetList($this->mainFacets);
 
+		// Mark loaded facets and create placeholders for facets that weren't loaded
+		foreach ($this->facetSettings as $facetKey => $facetSetting) {
+			if ($facetSetting->showAboveResults) {
+				continue;
+			}
+
+			if (isset($sideFacets[$facetKey])) {
+				$sideFacets[$facetKey]['loadedValues'] = true;
+				if (!isset($sideFacets[$facetKey]['field'])) {
+					$sideFacets[$facetKey]['field'] = $facetKey;
+				}
+			} else {
+				$sideFacets[$facetKey] = [
+					'field' => $facetKey,
+					'field_name' => $facetKey,
+					'label' => $facetSetting->displayName,
+					'displayNamePlural' => $facetSetting->displayNamePlural,
+					'list' => [],
+					'hasApplied' => false,
+					'loadedValues' => false, // Flag to indicate values not loaded.
+					'multiSelect' => $facetSetting->multiSelect,
+				];
+			}
+		}
+
 		$lockSection = $this->searchObject->getSearchName();
 		if (UserAccount::isLoggedIn()) {
 			$user = UserAccount::getActiveUserObj();
 			$lockedFacets = !empty($user->lockedFacets) ? json_decode($user->lockedFacets, true) : [];
 		} else {
-			$lockedFacets = isset($_SESSION['lockedFilters']) ? $_SESSION['lockedFilters'] : [];
+			$lockedFacets = $_SESSION['lockedFilters'] ?? [];
 		}
-		$lockedFacets = isset($lockedFacets[$lockSection]) ? $lockedFacets[$lockSection] : [];
+		$lockedFacets = $lockedFacets[$lockSection] ?? [];
 
 		//Figure out which counts to show.
 		$searchSource = $_REQUEST['searchSource'];
@@ -194,13 +206,14 @@ class SideFacets implements RecommendationInterface {
 		}
 
 		$interface->assign('sideFacetSet', $sideFacets);
+		$interface->assign('searchId', $this->searchObject->getSearchId());
 	}
 
-	private function updateTimeSinceAddedFacet($timeSinceAddedFacet) {
+	public function updateTimeSinceAddedFacet(array $timeSinceAddedFacet): array {
 		//See if there is a value selected
 		$valueSelected = false;
 		foreach ($timeSinceAddedFacet['list'] as $facetValue) {
-			if (isset($facetValue['isApplied']) && $facetValue['isApplied'] == true) {
+			if (isset($facetValue['isApplied']) && $facetValue['isApplied']) {
 				$valueSelected = true;
 			}
 		}
@@ -208,7 +221,7 @@ class SideFacets implements RecommendationInterface {
 			//Get rid of all values except the selected value which will allow the value to be removed
 			//We remove the other values because it is confusing to have results both longer and shorter than the current value.
 			foreach ($timeSinceAddedFacet['list'] as $facetKey => $facetValue) {
-				if (!isset($facetValue['isApplied']) || $facetValue['isApplied'] == false) {
+				if (!isset($facetValue['isApplied']) || !$facetValue['isApplied']) {
 					unset($timeSinceAddedFacet['list'][$facetKey]);
 				}
 			}
@@ -254,7 +267,7 @@ class SideFacets implements RecommendationInterface {
 		return $timeSinceAddedFacet;
 	}
 
-	private function updateUserRatingsFacet($userRatingFacet) {
+	public function updateUserRatingsFacet(array $userRatingFacet): array {
 		global $interface;
 		$ratingApplied = false;
 		$ratingLabels = [];
@@ -278,7 +291,7 @@ class SideFacets implements RecommendationInterface {
 		return $userRatingFacet;
 	}
 
-	private function updateStartDateRatingsFacet($startDateFacet) {
+	private function updateStartDateRatingsFacet(array $startDateFacet): array {
 		if (!isset($_REQUEST['filter'])) {
 			return $startDateFacet;
 		}
@@ -317,7 +330,7 @@ class SideFacets implements RecommendationInterface {
 	 * @access  public
 	 * @return  string      The template to use to display the recommendations.
 	 */
-	public function getTemplate() {
+	public function getTemplate(): string {
 		return 'Search/Recommend/SideFacets.tpl';
 	}
 
@@ -327,7 +340,7 @@ class SideFacets implements RecommendationInterface {
 	 * @param FacetSetting $facetSetting
 	 * @return array
 	 */
-	private function applyFacetSettings($facetKey, array $sideFacets, FacetSetting $facetSetting, $lockedFacets): array {
+	private function applyFacetSettings(string $facetKey, array $sideFacets, FacetSetting $facetSetting, array $lockedFacets): array {
 		//Do additional handling of the display
 		if ($facetSetting->sortMode == 'alphabetically') {
 			asort($sideFacets[$facetKey]['list']);

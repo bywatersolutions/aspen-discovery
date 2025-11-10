@@ -126,6 +126,11 @@ class Grouping_Variation {
 	 */
 	public function getActions(): array {
 		global $timer;
+		global $logger;
+		$actionsTimingEnabled = isset($logger);
+		$actionsStart = ($actionsTimingEnabled && $this->_actions == null) ? microtime(true) : 0.0;
+		$formatLabel = $this->manifestation?->format ?? 'unknown';
+		$variationLabel = trim($this->label ?? 'unknown');
 		if ($this->_actions == null) {
 			if ($this->getNumRelatedRecords() == 0) {
 				$this->_actions = [];
@@ -135,6 +140,9 @@ class Grouping_Variation {
 			} else {
 				//Figure out what the preferred record is to place a hold on.  Since sorting has been done properly, this should always be the first
 				$bestRecord = $this->getFirstRecord();
+				$getActionsStart = $actionsTimingEnabled ? microtime(true) : 0.0;
+				$bestRecordActions = $bestRecord->getActions($this->databaseId);
+				$this->logDetailedVariationTiming('bestRecordActions', $getActionsStart, $formatLabel, $variationLabel);
 
 				if ($this->getNumRelatedRecords() > 1 && array_key_exists($bestRecord->getStatusInformation()->getGroupedStatus(), GroupedWorkDriver::$statusRankings) && GroupedWorkDriver::$statusRankings[$bestRecord->getStatusInformation()->getGroupedStatus()] <= 5) {
 					// Check to set prompt for Alternate Edition for any grouped status equal to or less than that of "Checked Out"
@@ -148,103 +156,122 @@ class Grouping_Variation {
 					}
 					if ($promptForAlternateEdition) {
 						$alteredActions = [];
-						foreach ($bestRecord->getActions($this->databaseId) as $action) {
+						$alternateEditionStart = $actionsTimingEnabled ? microtime(true) : 0.0;
+						foreach ($bestRecordActions as $action) {
 							$action['onclick'] = str_replace('Record.showPlaceHold(', 'Record.showPlaceHoldEditions(', $action['onclick']);
 							$alteredActions[] = $action;
 						}
+						$this->logDetailedVariationTiming('alterAlternateEditionActions', $alternateEditionStart, $formatLabel, $variationLabel);
 						$this->_actions = $alteredActions;
 					} else {
-						$this->_actions = $bestRecord->getActions($this->databaseId);
+						$this->_actions = $bestRecordActions;
 					}
 					$timer->logTime("Done checking for whether or not we should be prompting for an alternate edition");
 				} else {
-					$this->_actions = $bestRecord->getActions($this->databaseId);
+					$this->_actions = $bestRecordActions;
 				}
 
-				//Check to see if there are any downloadable files for the related records and if so make sure we have an action to download them.
-				$numDownloadablePDFs = 0;
-				$downloadPdfAction = '';
-				$numDownloadableSupplementalFiles = 0;
-				$downloadSupplementalFileAction = '';
-				foreach ($this->_records as $relatedRecord) {
-					$actions = $relatedRecord->getActions($this->databaseId);
-					foreach ($actions as $action) {
-						if(isset($action['type'])) {
-							if ($action['type'] == 'download_pdf') {
-								$numDownloadablePDFs += 1;
-								if ($numDownloadablePDFs == 1) {
-									$downloadPdfAction = $action;
-								}
-							} elseif ($action['type'] == 'download_supplemental_file') {
-								$numDownloadableSupplementalFiles += 1;
-								if ($numDownloadableSupplementalFiles == 1) {
-									$downloadSupplementalFileAction = $action;
+				if (!$this->isEContent) {
+					// Only physical/locally-uploaded records can have downloadable PDF/supplemental actions
+					$numDownloadablePDFs = 0;
+					$downloadPdfAction = '';
+					$numDownloadableSupplementalFiles = 0;
+					$downloadSupplementalFileAction = '';
+					$scanDownloadActionsStart = $actionsTimingEnabled ? microtime(true) : 0.0;
+					foreach ($this->_records as $relatedRecord) {
+						$actions = $relatedRecord->getActions($this->databaseId);
+						foreach ($actions as $action) {
+							if(isset($action['type'])) {
+								if ($action['type'] == 'download_pdf') {
+									$numDownloadablePDFs += 1;
+									if ($numDownloadablePDFs == 1) {
+										$downloadPdfAction = $action;
+									}
+								} elseif ($action['type'] == 'download_supplemental_file') {
+									$numDownloadableSupplementalFiles += 1;
+									if ($numDownloadableSupplementalFiles == 1) {
+										$downloadSupplementalFileAction = $action;
+									}
 								}
 							}
 						}
 					}
-				}
-				if (($downloadPdfAction > 0) || ($numDownloadableSupplementalFiles > 0)) {
-					//Remove the action for downloading pdf & supplemental files if they exist
-					foreach ($this->_actions as $key => $action) {
-						if ($action['type'] == 'download_pdf' || $action['type'] == 'view_pdf' || $action['type'] == 'download_supplemental_file') {
-							unset($this->_actions[$key]);
+					$this->logDetailedVariationTiming('scanDownloadableActions', $scanDownloadActionsStart, $formatLabel, $variationLabel);
+					if (($downloadPdfAction > 0) || ($numDownloadableSupplementalFiles > 0)) {
+						//Remove the action for downloading pdf & supplemental files if they exist
+						$downloadMergeStart = $actionsTimingEnabled ? microtime(true) : 0.0;
+						foreach ($this->_actions as $key => $action) {
+							if ($action['type'] == 'download_pdf' || $action['type'] == 'view_pdf' || $action['type'] == 'download_supplemental_file') {
+								unset($this->_actions[$key]);
+							}
 						}
-					}
-					if ($numDownloadablePDFs == 1) {
-						//Add the existing action
-						$this->_actions[] = $downloadPdfAction;
-					} elseif ($numDownloadablePDFs > 1) {
-						//Create a new action to allow the patron to select the correct pdf
-						$driver = $bestRecord->getDriver();
-						if ($driver == null) {
-							$driver = RecordDriverFactory::initRecordDriverById($bestRecord->id);
+						if ($numDownloadablePDFs == 1) {
+							//Add the existing action
+							$this->_actions[] = $downloadPdfAction;
+						} elseif ($numDownloadablePDFs > 1) {
+							//Create a new action to allow the patron to select the correct pdf
+							$driver = $bestRecord->getDriver();
+							if ($driver == null) {
+								$driver = RecordDriverFactory::initRecordDriverById($bestRecord->id);
+							}
+							$this->_actions[] = [
+								'title' => translate([
+									'text' => 'View PDF',
+									'isPublicFacing' => true,
+								]),
+								'url' => '',
+								'onclick' => "return AspenDiscovery.GroupedWork.selectFileToView('{$driver->getPermanentId()}', 'RecordPDF');",
+								'requireLogin' => false,
+								'type' => 'view_pdfs',
+							];
+							$this->_actions[] = [
+								'title' => translate([
+									'text' => 'Download PDF',
+									'isPublicFacing' => true,
+								]),
+								'url' => '',
+								'onclick' => "return AspenDiscovery.GroupedWork.selectFileDownload('{$driver->getPermanentId()}', 'RecordPDF');",
+								'requireLogin' => false,
+								'type' => 'download_pdfs',
+							];
 						}
-						$this->_actions[] = [
-							'title' => translate([
-								'text' => 'View PDF',
-								'isPublicFacing' => true,
-							]),
-							'url' => '',
-							'onclick' => "return AspenDiscovery.GroupedWork.selectFileToView('{$driver->getPermanentId()}', 'RecordPDF');",
-							'requireLogin' => false,
-							'type' => 'view_pdfs',
-						];
-						$this->_actions[] = [
-							'title' => translate([
-								'text' => 'Download PDF',
-								'isPublicFacing' => true,
-							]),
-							'url' => '',
-							'onclick' => "return AspenDiscovery.GroupedWork.selectFileDownload('{$driver->getPermanentId()}', 'RecordPDF');",
-							'requireLogin' => false,
-							'type' => 'download_pdfs',
-						];
-					}
-					if ($numDownloadableSupplementalFiles == 1) {
-						//Add the existing action
-						$this->_actions[] = $downloadSupplementalFileAction;
-					} elseif ($numDownloadableSupplementalFiles > 1) {
-						//Create a new action to allow the patron to select the correct supplemental file
-						$driver = $bestRecord->getDriver();
-						if ($driver == null) {
-							$driver = RecordDriverFactory::initRecordDriverById($bestRecord->id);
+						if ($numDownloadableSupplementalFiles == 1) {
+							//Add the existing action
+							$this->_actions[] = $downloadSupplementalFileAction;
+						} elseif ($numDownloadableSupplementalFiles > 1) {
+							//Create a new action to allow the patron to select the correct supplemental file
+							$driver = $bestRecord->getDriver();
+							if ($driver == null) {
+								$driver = RecordDriverFactory::initRecordDriverById($bestRecord->id);
+							}
+							$this->_actions[] = [
+								'title' => translate([
+									'text' => 'Download Supplemental File',
+									'isPublicFacing' => true,
+								]),
+								'url' => '',
+								'onclick' => "return AspenDiscovery.GroupedWork.selectFileDownload('{$driver->getPermanentId()}', 'RecordSupplementalFile');",
+								'requireLogin' => false,
+								'type' => 'download_supplemental_file',
+							];
 						}
-						$this->_actions[] = [
-							'title' => translate([
-								'text' => 'Download Supplemental File',
-								'isPublicFacing' => true,
-							]),
-							'url' => '',
-							'onclick' => "return AspenDiscovery.GroupedWork.selectFileDownload('{$driver->getPermanentId()}', 'RecordSupplementalFile');",
-							'requireLogin' => false,
-							'type' => 'download_supplemental_file',
-						];
+						$this->logDetailedVariationTiming('applyDownloadableActions', $downloadMergeStart, $formatLabel, $variationLabel);
 					}
 				}
 			}
 			global $timer;
 			$timer->logTime("Loaded actions for variation");
+		}
+		if ($actionsTimingEnabled && $actionsStart > 0) {
+			$durationMs = (microtime(true) - $actionsStart) * 1000;
+			if ($durationMs >= 200.0) {
+				$manifestationFormat = $this->manifestation?->format ?? 'unknown';
+				$logger->log(
+					"Variation actions timing format={$manifestationFormat} label=" . trim($this->label ?: 'unknown') . " duration=" . number_format($durationMs, 2) . "ms",
+					Logger::LOG_NOTICE,
+					true
+				);
+			}
 		}
 		return $this->_actions;
 
@@ -360,5 +387,21 @@ class Grouping_Variation {
 			'groupedStatus' => translate(['text' => $this->getStatusInformation()->getGroupedStatus(), 'isPublicFacing' => true]),
 			'numEditions' => $this->getNumRelatedRecords()
 		];
+	}
+
+	private function logDetailedVariationTiming(string $stage, float $startTime, string $formatLabel, string $variationLabel): void {
+		global $logger;
+		if ($startTime <= 0.0 || !isset($logger)) {
+			return;
+		}
+		$durationMs = (microtime(true) - $startTime) * 1000;
+		if ($durationMs < 100.0) {
+			return;
+		}
+		$logger->log(
+			"Variation actions detail format={$formatLabel} label={$variationLabel} stage={$stage} duration=" . number_format($durationMs, 2) . "ms",
+			Logger::LOG_NOTICE,
+			true
+		);
 	}
 }

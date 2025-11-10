@@ -8,6 +8,11 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 
 	public ?string $selectedAvailabilityToggleValue;
 
+	protected float $recordRenderLogThresholdMs = 350.0;
+	protected float $recordDriverInitLogThresholdMs = 250.0;
+	protected float $recordTemplateRenderLogThresholdMs = 400.0;
+	protected float $perRecordTimingLogThresholdMs = 1200.0;
+
 	private bool $automaticFacetsApplied = false;
 
 	/**
@@ -427,6 +432,10 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 		global $memoryWatcher;
 		global $timer;
 		global $solrScope;
+		global $logger;
+
+		$renderTimingEnabled = isset($logger);
+		$renderStart = microtime(true);
 
 		$searchEntry = new SearchEntry();
 		$searchEntry = $searchEntry->getSavedSearchByUrl($this->renderSearchUrl(false), session_id(), UserAccount::getActiveUserId());
@@ -449,6 +458,8 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 			for ($x = 0; $x < count($this->indexResult['response']['docs']); $x++) {
 				$memoryWatcher->logMemory("Started loading record information for index $x");
 				$current = &$this->indexResult['response']['docs'][$x];
+				$recordId = $current[$this->idFieldName] ?? ($current['id'] ?? 'unknown');
+				$singleRecordStart = $renderTimingEnabled ? microtime(true) : 0.0;
 				if (!$this->debug) {
 					unset($current['explain']);
 					unset($current['score']);
@@ -466,10 +477,32 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 					$interface->assign('isNew', false);
 				}
 				/** @var GroupedWorkDriver $record */
+				$recordDriverInitStart = $renderTimingEnabled ? microtime(true) : 0.0;
 				$record = RecordDriverFactory::initRecordDriver($current);
+				if ($renderTimingEnabled) {
+					$recordDriverInitDurationMs = (microtime(true) - $recordDriverInitStart) * 1000;
+					if ($recordDriverInitDurationMs >= $this->recordDriverInitLogThresholdMs) {
+						$logger->log(
+							"Search record timing {$this->getSearchName()} id=$recordId stage=initRecordDriver duration=" . number_format($recordDriverInitDurationMs, 2) . "ms",
+							Logger::LOG_NOTICE,
+							true
+						);
+					}
+				}
 				if (!($record instanceof AspenError)) {
 					$interface->assign('recordDriver', $record);
+					$recordTemplateRenderStart = $renderTimingEnabled ? microtime(true) : 0.0;
 					$html[] = $interface->fetch($record->getSearchResult($this->view));
+					if ($renderTimingEnabled) {
+						$recordTemplateRenderDurationMs = (microtime(true) - $recordTemplateRenderStart) * 1000;
+						if ($recordTemplateRenderDurationMs >= $this->recordTemplateRenderLogThresholdMs) {
+							$logger->log(
+								"Search record timing {$this->getSearchName()} id=$recordId stage=renderTemplate duration=" . number_format($recordTemplateRenderDurationMs, 2) . "ms",
+								Logger::LOG_NOTICE,
+								true
+							);
+						}
+					}
 				} else {
 					$html[] = "Unable to find record";
 				}
@@ -478,6 +511,26 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 				unset($record);
 				$memoryWatcher->logMemory("Finished loading record information for index $x");
 				$timer->logTime('Loaded search result for ' . $current['id']);
+				if ($renderTimingEnabled) {
+					$singleRecordDurationMs = (microtime(true) - $singleRecordStart) * 1000;
+					if ($singleRecordDurationMs >= $this->perRecordTimingLogThresholdMs) {
+						$logger->log(
+							"Search record timing {$this->getSearchName()} id=$recordId stage=total duration=" . number_format($singleRecordDurationMs, 2) . "ms",
+							Logger::LOG_NOTICE,
+							true
+						);
+					}
+				}
+			}
+		}
+		if ($renderTimingEnabled) {
+			$renderDurationMs = (microtime(true) - $renderStart) * 1000;
+			if ($renderDurationMs >= $this->recordRenderLogThresholdMs) {
+				$logger->log(
+					"Search render timing {$this->getSearchName()} total=" . number_format($renderDurationMs, 2) . "ms records=" . count($html) . " view={$this->view}",
+					Logger::LOG_NOTICE,
+					true
+				);
 			}
 		}
 		return $html;

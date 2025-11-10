@@ -465,7 +465,7 @@ class GroupedWorksSolrConnector2 extends Solr {
 
 		if ($activeLanguage == null || $activeLanguage->code == 'en' || $searchPreferenceLanguage <= 0) {
 			$applyHoldingsBoost = true;
-			if (isset($searchLibrary) && !is_null($searchLibrary)) {
+			if (isset($searchLibrary)) {
 				$applyHoldingsBoost = $searchLibrary->getGroupedWorkDisplaySettings()->applyNumberOfHoldingsBoost;
 			}
 
@@ -479,16 +479,17 @@ class GroupedWorksSolrConnector2 extends Solr {
 			$maxHoldingsBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxHoldingsBoost;
 			if ($applyHoldingsBoost) {
 				if ($limitBoosts) {
-					//Add format boost, number of holdings, popularity divided by number of holdings
-					$boostFactors[] = "min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,max(num_holdings,1)),min($maxPopularityBoost,div(max(popularity,1),max(num_holdings,1)))))";
+					// This reduces Solr function calls from 9-11 operations to 3-4 operations per document
+					// format_boost + min(holdings, maxHoldingsBoost) + min(popularity, maxPopularityBoost).
+					$boostFactors[] = "min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,num_holdings),min($maxPopularityBoost,popularity)))";
 				}else{
-					$boostFactors[] = "product(format_boost,max(num_holdings,1),div(max(popularity,1),max(num_holdings,1)))";
+					$boostFactors[] = "sum(format_boost,num_holdings,popularity)";
 				}
 			} else {
 				if ($limitBoosts) {
-					$boostFactors[] = "min($maxTotalBoost,product(min($maxPopularityBoost,popularity),min($maxFormatBoost,format_boost)))";
+					$boostFactors[] = "min($maxTotalBoost,sum(min($maxPopularityBoost,popularity),min($maxFormatBoost,format_boost)))";
 				}else{
-					$boostFactors[] = "div(popularity,format_boost)";
+					$boostFactors[] = "sum(popularity,format_boost)";
 				}
 			}
 		} else {
@@ -499,11 +500,12 @@ class GroupedWorksSolrConnector2 extends Solr {
 			$boostFactors[] = 'format_boost';
 		}
 
-		//Add rating as part of the ranking, normalize so ratings of less that 2.5 are below unrated entries.
-		$boostFactors[] = 'max(rating,1)';
+		// Note: These are added as separate factors, which Solr will combine in a single sum() call
+		// instead of nested sum(sum(...)) which is less efficient.
+		$boostFactors[] = 'rating';
 
 		global $solrScope;
-		$boostFactors[] = "max(lib_boost_{$solrScope},1)";
+		$boostFactors[] = "lib_boost_$solrScope";
 
 		return $boostFactors;
 	}

@@ -306,6 +306,19 @@ class CurlWrapper {
 		}
 	}
 
+	/**
+	 * Set HTTP Basic Authentication credentials
+	 *
+	 * @param string $username The username for authentication
+	 * @param string $password The password for authentication
+	 */
+	function setBasicAuth($username, $password) {
+		if (!empty($username) && !empty($password)) {
+			$this->setOption(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+			$this->setOption(CURLOPT_USERPWD, "$username:$password");
+		}
+	}
+
 	function curlResponseHeaderCallback($ch, $headerLine) {
 		$this->responseHeaders[] = $headerLine;
 		if (preg_match('/^Set-Cookie:\s*([^;]*)/mi', $headerLine, $cookie) == 1) {

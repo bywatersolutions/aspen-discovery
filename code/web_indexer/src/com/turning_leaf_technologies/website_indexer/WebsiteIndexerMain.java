@@ -64,7 +64,7 @@ public class WebsiteIndexerMain {
 						solrHost = "localhost";
 					}
 				}
-				ConcurrentUpdateHttp2SolrClient solrUpdateServer = setupSolrClient(solrHost, solrPort);
+				ConcurrentUpdateHttp2SolrClient solrUpdateServer = setupSolrClient(solrHost, solrPort, configIni);
 
 				PreparedStatement getSitesToIndexStmt = aspenConn.prepareStatement("SELECT * from website_indexing_settings where deleted = 0");
 				PreparedStatement getLibrariesForSettingsStmt = aspenConn.prepareStatement("SELECT library.subdomain From library_website_indexing inner join library on library.libraryId = library_website_indexing.libraryId where settingId = ?");
@@ -290,8 +290,15 @@ public class WebsiteIndexerMain {
 		System.exit(0);
 	}
 
-	private static ConcurrentUpdateHttp2SolrClient setupSolrClient(String solrHost, String solrPort) {
-		Http2SolrClient http2Client = new Http2SolrClient.Builder().build();
+	private static ConcurrentUpdateHttp2SolrClient setupSolrClient(String solrHost, String solrPort, Ini configIni) {
+		String solrUsername = configIni.get("Index", "solrUsername");
+		String solrPassword = configIni.get("Index", "solrPassword");
+		Http2SolrClient.Builder http2ClientBuilder = new Http2SolrClient.Builder();
+		if (solrUsername != null && !solrUsername.isEmpty() && solrPassword != null && !solrPassword.isEmpty()) {
+			http2ClientBuilder.withBasicAuthCredentials(solrUsername, solrPassword);
+			logger.info("Solr basic authentication enabled");
+		}
+		Http2SolrClient http2Client = http2ClientBuilder.build();
 		try {
 			return new ConcurrentUpdateHttp2SolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr/website_pages", http2Client)
 					.withThreadCount(1)

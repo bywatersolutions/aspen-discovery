@@ -522,7 +522,14 @@ public class OaiIndexerMain {
 	}
 
 	private static void setupSolrClient(String solrHost, String solrPort) {
-		Http2SolrClient http2Client = new Http2SolrClient.Builder().build();
+		String solrUsername = configIni.get("Index", "solrUsername");
+		String solrPassword = configIni.get("Index", "solrPassword");
+		Http2SolrClient.Builder http2ClientBuilder = new Http2SolrClient.Builder();
+		if (solrUsername != null && !solrUsername.isEmpty() && solrPassword != null && !solrPassword.isEmpty()) {
+			http2ClientBuilder.withBasicAuthCredentials(solrUsername, solrPassword);
+			logger.info("Solr basic authentication enabled for user");
+		}
+		Http2SolrClient http2Client = http2ClientBuilder.build();
 		try {
 			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr/open_archives", http2Client)
 					.withThreadCount(1)

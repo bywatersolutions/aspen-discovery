@@ -48,7 +48,14 @@ class CourseReservesIndexer {
 			}
 		}
 
-		Http2SolrClient http2Client = new Http2SolrClient.Builder().build();
+		String solrUsername = configIni.get("Index", "solrUsername");
+		String solrPassword = configIni.get("Index", "solrPassword");
+		Http2SolrClient.Builder http2ClientBuilder = new Http2SolrClient.Builder();
+		if (solrUsername != null && !solrUsername.isEmpty() && solrPassword != null && !solrPassword.isEmpty()) {
+			http2ClientBuilder.withBasicAuthCredentials(solrUsername, solrPassword);
+			logger.info("Solr basic authentication enabled for user");
+		}
+		Http2SolrClient http2Client = http2ClientBuilder.build();
 		try {
 			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr/course_reserves", http2Client)
 					.withThreadCount(1)
@@ -59,7 +66,11 @@ class CourseReservesIndexer {
 			System.exit(-7);
 		}
 
-		groupedWorkServer = new Http2SolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr/grouped_works_v2").build();
+		Http2SolrClient.Builder groupedWorkHttpBuilder = new Http2SolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr/grouped_works_v2");
+		if (solrUsername != null && !solrUsername.isEmpty() && solrPassword != null && !solrPassword.isEmpty()) {
+			groupedWorkHttpBuilder.withBasicAuthCredentials(solrUsername, solrPassword);
+		}
+		groupedWorkServer = groupedWorkHttpBuilder.build();
 
 		scopes = IndexingUtils.loadScopes(dbConn, logger);
 	}

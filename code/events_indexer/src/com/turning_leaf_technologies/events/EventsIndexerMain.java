@@ -67,7 +67,7 @@ public class EventsIndexerMain {
 					}
 				}
 
-				ConcurrentUpdateHttp2SolrClient solrUpdateServer = setupSolrClient(solrHost, solrPort);
+				ConcurrentUpdateHttp2SolrClient solrUpdateServer = setupSolrClient(solrHost, solrPort, configIni);
 
 				// LibraryMarket LibraryCalendar
 				PreparedStatement getEventsSitesToIndexStmt = aspenConn.prepareStatement("SELECT * from lm_library_calendar_settings");
@@ -187,9 +187,20 @@ public class EventsIndexerMain {
 		System.exit(0);
 	}
 
-	private static ConcurrentUpdateHttp2SolrClient setupSolrClient(String solrHost, String solrPort) {
+	private static ConcurrentUpdateHttp2SolrClient setupSolrClient(String solrHost, String solrPort, Ini configIni) {
 		try {
-			Http2SolrClient http2Client = new Http2SolrClient.Builder().build();
+			// Load Solr authentication credentials if configured
+			String solrUsername = configIni.get("Index", "solrUsername");
+			String solrPassword = configIni.get("Index", "solrPassword");
+
+			// Build Http2SolrClient with optional basic authentication
+			Http2SolrClient.Builder http2ClientBuilder = new Http2SolrClient.Builder();
+			if (solrUsername != null && !solrUsername.isEmpty() && solrPassword != null && !solrPassword.isEmpty()) {
+				http2ClientBuilder.withBasicAuthCredentials(solrUsername, solrPassword);
+				logger.info("Solr basic authentication enabled for user");
+			}
+			Http2SolrClient http2Client = http2ClientBuilder.build();
+
 			return new ConcurrentUpdateHttp2SolrClient.Builder("http://" + solrHost + ":" + solrPort + "/solr/events", http2Client)
 					.withThreadCount(1)
 					.withQueueSize(25)

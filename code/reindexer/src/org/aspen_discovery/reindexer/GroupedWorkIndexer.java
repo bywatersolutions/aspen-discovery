@@ -383,7 +383,18 @@ public class GroupedWorkIndexer {
 		}else{
 			solrUrl = "http://" + solrHost + ":" + solrPort + "/solr/grouped_works_v2";
 		}
-		Http2SolrClient http2Client = new Http2SolrClient.Builder().build();
+
+		// Load Solr authentication credentials if configured
+		String solrUsername = configIni.get("Index", "solrUsername");
+		String solrPassword = configIni.get("Index", "solrPassword");
+
+		// Build Http2SolrClient with optional basic authentication
+		Http2SolrClient.Builder http2ClientBuilder = new Http2SolrClient.Builder();
+		if (solrUsername != null && !solrUsername.isEmpty() && solrPassword != null && !solrPassword.isEmpty()) {
+			http2ClientBuilder.withBasicAuthCredentials(solrUsername, solrPassword);
+			logEntry.addNote("Solr basic authentication enabled");
+		}
+		Http2SolrClient http2Client = http2ClientBuilder.build();
 		try {
 			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder(solrUrl, http2Client)
 				.withThreadCount(1)

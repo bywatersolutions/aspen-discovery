@@ -156,6 +156,12 @@ abstract class Solr {
 		// If we're still processing then solr is online
 		$this->client = new CurlWrapper();
 
+		// Configure Solr basic authentication if credentials are provided
+		if (isset($configArray['Index']['solrUsername']) && !empty($configArray['Index']['solrUsername']) &&
+			isset($configArray['Index']['solrPassword']) && !empty($configArray['Index']['solrPassword'])) {
+			$this->client->setBasicAuth($configArray['Index']['solrUsername'], $configArray['Index']['solrPassword']);
+		}
+
 		// Read in preferred boolean behavior:
 		$searchSettings = getExtraConfigArray($this->getSearchesFile());
 		if (isset($searchSettings['General']['case_sensitive_bools'])) {

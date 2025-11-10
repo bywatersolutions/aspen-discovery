@@ -27,7 +27,9 @@
 	<div class="{if empty($hasHiddenFormats) && $hideInMobile && count($relatedManifestations) > 1}hidden-xs {/if}col-xs-12 formatDisplayVertical" id="relatedManifestationsValue{$summId|escape}">
 		{* Hide Formats section on mobile view, unless there is a single format or a format has been selected by the user *}
 		{* relatedManifestationsValue ID is used by the Formats button *}
-		{include file="GroupedWork/relatedManifestations.tpl" id=$summId workId=$summId}
+		{timing label="relatedManifestationsVertical" threshold=400}
+			{include file="GroupedWork/relatedManifestations.tpl" id=$summId workId=$summId}
+		{/timing}
 	</div>
 {else}
 	{if count($relatedManifestations) == 0}

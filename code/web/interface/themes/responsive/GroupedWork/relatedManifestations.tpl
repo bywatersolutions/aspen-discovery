@@ -5,6 +5,8 @@
 			{if $relatedManifestation->hasHiddenFormats() || (isset($activeFormat) && $relatedManifestation->format != $activeFormat)}
 				{assign var=hasHiddenFormats value=true}
 			{/if}
+			{assign var=manifestationTimingLabel value="manifestation:`$workId`:`$relatedManifestation->format`"}
+			{timing label=$manifestationTimingLabel threshold=400}
 			{* Display the manifestation (the format being displayed) *}
 			<div class="row related-manifestation grouped {if $relatedManifestation->isHideByDefault() || (isset($activeFormat) && $relatedManifestation->format != $activeFormat)}hiddenManifestation_{$workId}{/if}" {if $relatedManifestation->isHideByDefault() || (isset($activeFormat) && $relatedManifestation->format != $activeFormat)}style="display: none"{/if}>
 				{* Display information about the format *}
@@ -14,6 +16,7 @@
 					{include file="GroupedWork/multipleVariationManifestion.tpl" workId=$workId summTitle=$recordDriver->getTitle()}
 				{/if}
 			</div>
+			{/timing}
 		{foreachelse}
 			<div class="row related-manifestation">
 				<div class="col-xs-12">

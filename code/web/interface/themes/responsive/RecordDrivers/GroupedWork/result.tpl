@@ -6,22 +6,24 @@
 		{/if}
 
 		<div class="row">
-			{if !empty($showCovers)}
-				<div class="coversColumn col-xs-3 col-sm-3{if !empty($viewingCombinedResults)} col-md-3 col-lg-2{/if} text-center" aria-hidden="true" role="presentation">
-					{if $disableCoverArt != 1}
-						<div class="listResultImage img-thumbnail {$coverStyle}">
-							<a href="{$summUrl}" tabindex="-1">
-								{if !empty($isNew)}<span class="list-cover-badge">{translate text="New!" isPublicFacing=true}</span> {/if}
-								<img src="{$bookCoverUrlMedium}" class="{if $useOriginalCoverUrls}use-original-covers{/if}" alt="{$summTitle|removeTrailingPunctuation|escapeCSS}" title="{$summTitle|removeTrailingPunctuation|escapeCSS}">
-							</a>
-						</div>
-					{/if}
+				{if !empty($showCovers)}
+					<div class="coversColumn col-xs-3 col-sm-3{if !empty($viewingCombinedResults)} col-md-3 col-lg-2{/if} text-center" aria-hidden="true" role="presentation">
+						{if $disableCoverArt != 1}
+							<div class="listResultImage img-thumbnail {$coverStyle}">
+								<a href="{$summUrl}" tabindex="-1">
+									{if !empty($isNew)}<span class="list-cover-badge">{translate text="New!" isPublicFacing=true}</span> {/if}
+									<img src="{$bookCoverUrlMedium}" class="{if $useOriginalCoverUrls}use-original-covers{/if}" alt="{$summTitle|removeTrailingPunctuation|escapeCSS}" title="{$summTitle|removeTrailingPunctuation|escapeCSS}">
+								</a>
+							</div>
+						{/if}
 
-					{if !empty($showRatings)}
-						{include file="GroupedWork/title-rating.tpl" id=$summId ratingData=$summRating}
-					{/if}
-				</div>
-			{/if}
+						{if !empty($showRatings)}
+							{timing label="titleRating" threshold=200}
+								{include file="GroupedWork/title-rating.tpl" id=$summId ratingData=$summRating}
+							{/timing}
+						{/if}
+					</div>
+				{/if}
 
 			<div class="{if empty($showCovers)}col-xs-12{else}col-xs-9 col-sm-9{if !empty($viewingCombinedResults)} col-md-9 col-lg-10{/if}{/if}">{* May turn out to be more than one situation to consider here *}
 				<div class="row">
@@ -239,11 +241,17 @@
 						</div>
 					{/if}
 
-					{include file="GroupedWork/relatedLists.tpl" isSearchResults=true}
+					{timing label="relatedLists" threshold=200}
+						{include file="GroupedWork/relatedLists.tpl" isSearchResults=true}
+					{/timing}
 
-					{include file="GroupedWork/readingHistoryIndicator.tpl" isSearchResults=true}
+					{timing label="readingHistoryIndicator" threshold=200}
+						{include file="GroupedWork/readingHistoryIndicator.tpl" isSearchResults=true}
+					{/timing}
 
-					{include file="GroupedWork/allManifestations.tpl" isSearchResults=true}
+					{timing label="allManifestations" threshold=400}
+						{include file="GroupedWork/allManifestations.tpl" isSearchResults=true}
+					{/timing}
 
 					{if empty($viewingCombinedResults)}
 						{* Description Section *}
@@ -262,7 +270,9 @@
 						{/if}
 
 						<div class="col-xs-12">
-							{include file='GroupedWork/result-tools-horizontal.tpl' ratingData=$summRating recordUrl=$summUrl showMoreInfo=true showNotInterested=false}
+							{timing label="resultTools" threshold=200}
+								{include file='GroupedWork/result-tools-horizontal.tpl' ratingData=$summRating recordUrl=$summUrl showMoreInfo=true showNotInterested=false}
+							{/timing}
 						</div>
 
 					{/if}

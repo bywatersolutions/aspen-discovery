@@ -7,6 +7,7 @@ require_once ROOT_DIR . '/sys/File/MARC.php';
 class GroupedWorkDriver extends IndexRecordDriver {
 	private ?string $permanentId = null;
 	public bool $isValid = true;
+	private bool $groupedWorkTimingEnabled = false;
 
 	/** @var SearchObject_AbstractGroupedWorkSearcher */
 	private static ?SearchObject_AbstractGroupedWorkSearcher $recordLookupSearcher = null;
@@ -50,6 +51,31 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				$this->permanentId = $indexFields['id'];
 			}
 		}
+
+		global $logger;
+		$this->groupedWorkTimingEnabled = isset($logger);
+	}
+
+	private function logGroupedWorkStage(string $label, float $startTime, float $thresholdMs = 200.0): void {
+		if (!$this->groupedWorkTimingEnabled || $startTime <= 0.0) {
+			return;
+		}
+
+		global $logger;
+		if (!isset($logger)) {
+			return;
+		}
+
+		$durationMs = (microtime(true) - $startTime) * 1000;
+		if ($durationMs < $thresholdMs) {
+			return;
+		}
+
+		$logger->log(
+			"GroupedWork result timing id={$this->getUniqueID()} stage=$label duration=" . number_format($durationMs, 2) . "ms",
+			Logger::LOG_NOTICE,
+			true
+		);
 	}
 
 	private static function compareOwnedEditions(Grouping_Record $a, Grouping_Record $b): int {
@@ -99,6 +125,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$summLanguage = null;
 		$summClosedCaptioned = null;
 		$isFirst = true;
+		$summaryDetailsStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		foreach ($relatedRecords as $relatedRecord) {
 			if ($isFirst) {
 				$summPublisher = $relatedRecord->publisher;
@@ -806,14 +833,18 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		} else {
 			$interface->assign('summShortId', $id);
 		}
+		$relatedManifestationsStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		$relatedManifestations = $this->getRelatedManifestations();
+		$this->logGroupedWorkStage('getRelatedManifestations', $relatedManifestationsStart, 200.0);
 		$interface->assign('relatedManifestations', $relatedManifestations);
 		$timer->logTime("Loaded related manifestations");
 		$memoryWatcher->logMemory("Loaded related manifestations for {$this->getUniqueID()}");
 
 		//Build the link URL.
 		//If there is only one record for the work we will link straight to that.
+		$relatedRecordsStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		$relatedRecords = $this->getRelatedRecords();
+		$this->logGroupedWorkStage('getRelatedRecords', $relatedRecordsStart, 200.0);
 		$timer->logTime("Loaded related records");
 		$memoryWatcher->logMemory("Loaded related records");
 		if (count($relatedRecords) == 1) {
@@ -859,6 +890,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$alwaysShowMainDetails = $groupedWorkDisplaySettings->alwaysShowSearchResultsMainDetails;
 		$interface->assign('formatDisplayStyle', $groupedWorkDisplaySettings->formatDisplayStyle);
 		$interface->assign('hideManifestationsInMobileView', $groupedWorkDisplaySettings->hideManifestationsInMobileView);
+		$summaryDetailsStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 
 		foreach ($relatedRecords as $relatedRecord) {
 			if ($isFirst) {
@@ -915,6 +947,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$interface->assign('summEdition', $summEdition);
 		$interface->assign('summLanguage', $summLanguage);
 		$timer->logTime("Finished assignment of data based on related records");
+		$this->logGroupedWorkStage('buildSummaryDetails', $summaryDetailsStart, 250.0);
 
 		if (IPAddress::showDebuggingInformation()) {
 			$interface->assign('summScore', $this->getScore());
@@ -923,13 +956,18 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$timer->logTime("Finished assignment of data based on solr debug info");
 
 		//Get Rating
+		$ratingStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		$interface->assign('summRating', $this->getRatingData());
+		$this->logGroupedWorkStage('loadRatingData', $ratingStart, 200.0);
 		$timer->logTime("Finished loading rating data");
 
 		//Description
+		$descriptionStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		$interface->assign('summDescription', $this->getDescriptionFast(true));
+		$this->logGroupedWorkStage('loadDescription', $descriptionStart, 200.0);
 		$timer->logTime('Finished Loading Description');
 		$memoryWatcher->logMemory("Finished Loading Description");
+		$seriesStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		if ($this->hasCachedSeries()) {
 			$interface->assign('ajaxSeries', false);
 			$interface->assign('summSeries', $this->getSeries(false));
@@ -937,6 +975,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 			$interface->assign('ajaxSeries', true);
 			$interface->assign('summSeries', null);
 		}
+		$this->logGroupedWorkStage('loadSeries', $seriesStart, 200.0);
 		$timer->logTime('Finished Loading Series');
 		$memoryWatcher->logMemory("Finished Loading Series");
 
@@ -2052,6 +2091,8 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		global $timer;
 		global $memoryWatcher;
 
+		$groupedWorkTotalStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
+
 		$interface->assign('displayingSearchResults', true);
 
 		$id = $this->getUniqueID();
@@ -2114,10 +2155,14 @@ class GroupedWorkDriver extends IndexRecordDriver {
 
 		//Check to see if there are lists the record is on
 		require_once ROOT_DIR . '/sys/UserLists/UserList.php';
+		$userListsStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		$appearsOnLists = UserList::getUserListsForRecord('GroupedWork', $this->getPermanentId());
+		$this->logGroupedWorkStage('loadUserLists', $userListsStart, 200.0);
 		$interface->assign('appearsOnLists', $appearsOnLists);
 
+		$readingHistoryStart = $this->groupedWorkTimingEnabled ? microtime(true) : 0.0;
 		$this->loadReadingHistoryIndicator();
+		$this->logGroupedWorkStage('loadReadingHistoryIndicator', $readingHistoryStart, 200.0);
 
 		$summPublisher = null;
 		$summPubDate = null;
@@ -2227,7 +2272,9 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$interface->assign('recordDriver', $this);
 
 		$timer->logTime("Assigned all information to show search results");
-		return 'RecordDrivers/GroupedWork/result.tpl';
+		$template = 'RecordDrivers/GroupedWork/result.tpl';
+		$this->logGroupedWorkStage('total', $groupedWorkTotalStart, 400.0);
+		return $template;
 	}
 
 	private bool $_requiredDataForActionsPreloaded = false;

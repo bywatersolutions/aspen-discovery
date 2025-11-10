@@ -14,13 +14,33 @@ class Search_Results extends ResultsAction {
 		global $memoryWatcher;
 		global $library;
 		global $aspenUsage;
+		global $logger;
 		$aspenUsage->incGroupedWorkSearches();
 
 		$this->validateAndProcessSearchParameters();
 		$searchSource = !empty($_REQUEST['searchSource']) ? $_REQUEST['searchSource'] : 'local';
 
+		$searchResultsTimingEnabled = isset($logger);
+		$searchResultsStart = microtime(true);
+		$searchResultsLastCheckpoint = $searchResultsStart;
+		$logSearchResultsCheckpoint = function(string $label) use (&$logger, &$searchResultsLastCheckpoint, $searchResultsTimingEnabled, &$searchSource) : void {
+			if (!$searchResultsTimingEnabled) {
+				return;
+			}
+			$now = microtime(true);
+			$durationMs = ($now - $searchResultsLastCheckpoint) * 1000;
+			$lookfor = $_REQUEST['lookfor'] ?? '';
+			$logger->log(
+				"Search controller timing $label source=$searchSource lookfor=\"" . trim($lookfor) . "\" took " . number_format($durationMs, 2) . "ms",
+				Logger::LOG_NOTICE,
+				true
+			);
+			$searchResultsLastCheckpoint = $now;
+		};
+
 		//Load Placards (do this first so we can test both the original and the replacement term)
 		$this->loadPlacards();
+		$logSearchResultsCheckpoint('loadPlacards');
 
 		if (isset($_REQUEST['replacementTerm'])) {
 			$replacementTerm = $_REQUEST['replacementTerm'];
@@ -107,6 +127,7 @@ class Search_Results extends ResultsAction {
 		require_once ROOT_DIR . '/sys/SolrConnector/Solr.php';
 		$timer->logTime('Include search engine');
 		$memoryWatcher->logMemory('Include search engine');
+		$logSearchResultsCheckpoint('includeSearchEngine');
 
 		//Check to see if the year has been set and if so, convert to a filter and resend.
 		$dateFilters = [
@@ -158,6 +179,7 @@ class Search_Results extends ResultsAction {
 					$queryParamStrings[] = "&filter[]=$dateFilter:[$yearFrom+TO+$yearTo]";
 				}
 				$queryParamString = join('&', $queryParamStrings);
+				$logSearchResultsCheckpoint('redirectDateFilter');
 				header("Location: /Search/Results?$queryParamString");
 				exit;
 			}
@@ -201,6 +223,7 @@ class Search_Results extends ResultsAction {
 					$queryParamStrings[] = "&filter[]=$filter:[$from+TO+$to]";
 				}
 				$queryParamString = join('&', $queryParamStrings);
+				$logSearchResultsCheckpoint('redirectRangeFilter');
 				header("Location: /Search/Results?$queryParamString");
 				exit;
 			}
@@ -228,20 +251,24 @@ class Search_Results extends ResultsAction {
 		$searchObject->setPrimarySearch(true);
 		$timer->logTime("Init Search Object");
 		$memoryWatcher->logMemory("Init Search Object");
+		$logSearchResultsCheckpoint('initSearchObject');
 
 		// Build RSS Feed for Results (if requested)
 		if ($searchObject->getView() == 'rss') {
 			// Throw the XML to screen
 			echo $searchObject->buildRSS();
+			$logSearchResultsCheckpoint('buildRSS');
 			// And we're done
 			exit;
 		} elseif ($searchObject->getView() == 'excel') {
 			// Throw the Excel spreadsheet to screen for download
 			$searchObject->buildExcel();
+			$logSearchResultsCheckpoint('buildExcel');
 			// And we're done
 			exit;
 		} elseif ($searchObject->getView() == 'ris') {
 			$searchObject->buildRisExport();
+			$logSearchResultsCheckpoint('buildRIS');
 			exit;
 		}
 		$displayMode = $searchObject->getView();
@@ -251,6 +278,7 @@ class Search_Results extends ResultsAction {
 
 		// Process Search
 		$result = $searchObject->processSearch(true, true);
+		$logSearchResultsCheckpoint('processSearchInitial');
 
 		$hasAutomaticFacetsApplied = $searchObject->hasAutomaticFacetsApplied();
 		//Check to see if automatic filters gave us nothing
@@ -258,6 +286,7 @@ class Search_Results extends ResultsAction {
 			$searchObject = SearchObjectFactory::initSearchObject();
 			$searchObject->init($searchSource);
 			$result = $searchObject->processSearch(true, true);
+			$logSearchResultsCheckpoint('processSearchWithoutAutoFacets');
 			$hasAutomaticFacetsApplied = false;
 		}
 
@@ -311,6 +340,7 @@ class Search_Results extends ResultsAction {
 				$aspenUsage->incTimedOutSearches();
 			}
 			$interface->assign('error', $timeoutMessage);
+			$logSearchResultsCheckpoint('searchTimedOut');
 			$this->display('searchError.tpl', 'Error in Search', '');
 			return;
 		} elseif ($result instanceof AspenError || !empty($result['error'])) {
@@ -362,11 +392,13 @@ class Search_Results extends ResultsAction {
 			if (!$this->getGlobalSearchResults($searchObject, $interface)) {
 				$this->getKeywordSearchResults($searchObject, $interface);
 			}
+			$logSearchResultsCheckpoint('searchError');
 			$this->display('searchError.tpl', 'Error in Search', '');
 			return;
 		}
 		$timer->logTime('Process Search');
 		$memoryWatcher->logMemory('Process Search');
+		$logSearchResultsCheckpoint('postProcessSearch');
 
 		// Some more variables
 		//   Those we can construct AFTER the search is executed, but we need
@@ -589,6 +621,7 @@ class Search_Results extends ResultsAction {
 			} else {
 				header("Location: " . "/GroupedWork/{$record['id']}/Home");
 			}
+			$logSearchResultsCheckpoint('singleResultRedirect');
 			exit();
 
 		} else {
@@ -600,6 +633,7 @@ class Search_Results extends ResultsAction {
 			$interface->assign('recordStart', $summary['startRecord']);
 			$interface->assign('recordEnd', $summary['endRecord']);
 			$memoryWatcher->logMemory('Get Result Summary');
+			$logSearchResultsCheckpoint('getResultSummary');
 		}
 
 		// What Mode will search results be Displayed In //
@@ -631,6 +665,7 @@ class Search_Results extends ResultsAction {
 		$interface->assign('recordSet', $recordSet);
 		$timer->logTime('load result records');
 		$memoryWatcher->logMemory('load result records');
+		$logSearchResultsCheckpoint('loadResultRecords');
 
 		//Setup explore more
 		$showExploreMoreBar = true;
@@ -664,6 +699,7 @@ class Search_Results extends ResultsAction {
 		// Done, display the page
 		$sidebar = ($searchObject->getResultTotal() > 0 || $hasAppliedFacets) ? 'Search/results-sidebar.tpl' : '';
 		$this->display($searchObject->getResultTotal() ? 'list.tpl' : 'list-none.tpl', $pageTitle, $sidebar, false);
+		$logSearchResultsCheckpoint('renderResults');
 	} // End launch()
 
 	/**

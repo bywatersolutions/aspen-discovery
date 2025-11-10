@@ -281,6 +281,11 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 		if (empty($this->selectedAvailabilityToggleValue)) {
 			$this->selectedAvailabilityToggleValue = 'global';
 		}
+
+		$hasSelectedAvailableAt = !empty($selectedAvailableAtValues);
+		$hasSelectedFormatCategories = !empty($selectedFormatCategoryValues);
+		$hasSelectedFormats = !empty($selectedFormatValues);
+
 		if (empty($selectedAvailableAtValues)) {
 			$selectedAvailableAtValues[] = '*';
 		}
@@ -290,8 +295,15 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 		if (empty($selectedFormatValues)) {
 			$selectedFormatValues[] = '*';
 		}
+
 		$allEditionFilters = [];
-		if (!$this->indexEngine->editionLimitersAreDisabled()) {
+		$shouldApplyEditionFilters = !$this->indexEngine->editionLimitersAreDisabled() && (
+			$this->selectedAvailabilityToggleValue !== 'global'
+			|| $hasSelectedAvailableAt
+			|| $hasSelectedFormatCategories
+			|| $hasSelectedFormats
+		);
+		if ($shouldApplyEditionFilters) {
 			foreach ($selectedAvailableAtValues as $selectedAvailableAtValue) {
 				$selectedAvailableAtValue = str_replace('(', '\(', $selectedAvailableAtValue);
 				$selectedAvailableAtValue = str_replace(')', '\)', $selectedAvailableAtValue);
@@ -315,6 +327,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 
 		// Build a list of facets we want from the index
 		$facetConfig = $this->getFacetConfig();
+		$activeFacetFields = [];
 		if ($recommendations && !empty($facetConfig)) {
 			$facetSet['limit'] = $this->facetLimit;
 			foreach ($facetConfig as $facetField => $facetInfo) {
@@ -349,6 +362,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 
 					$isMultiSelect = $facetInfo->multiSelect;
 					$additionalTags = '';
+					$activeFacetFields[] = $facetField;
 					if ($facetName == 'availability_toggle' || $facetName == "availability_toggle_$solrScope") {
 						$isMultiSelect = true;
 						$additionalTags = 'edition_info,edition_info_available_at,edition_info_format_category,edition_info_format';
@@ -388,29 +402,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 				$facetSet['sort'] = $this->facetSort;
 			}
 
-			$this->facetOptions["f.series_facet.facet.mincount"] = 2;
-			$this->facetOptions["f.target_audience_full.facet.method"] = 'enum';
-			$this->facetOptions["f.target_audience.facet.method"] = 'enum';
-			$this->facetOptions["f.literary_form_full.facet.method"] = 'enum';
-			$this->facetOptions["f.literary_form.facet.method"] = 'enum';
-			$this->facetOptions["f.lexile_code.facet.method"] = 'enum';
-			$this->facetOptions["f.mpaa_rating.facet.method"] = 'enum';
-			$this->facetOptions["f.rating_facet.facet.method"] = 'enum';
-			$this->facetOptions["f.format_category.facet.method"] = 'enum';
-			$this->facetOptions["f.format.facet.method"] = 'enum';
-			$this->setPerFacetLimits();
-			require_once ROOT_DIR . '/sys/Grouping/GroupedWorkFacet.php';
-			$this->facetOptions["f.format.facet.limit"] = GroupedWorkFacet::calculateDynamicFacetLimit('format');
-			$numLocations = GroupedWorkFacet::calculateDynamicFacetLimit('available_at');
-			$this->facetOptions["f.available_at.facet.limit"] = $numLocations;
-			$this->facetOptions["f.owning_location.facet.limit"] = $numLocations;
-			$this->facetOptions["f.availability_toggle.facet.method"] = 'enum';
-			$this->facetOptions["f.local_time_since_added_$solrScope.facet.method"] = 'enum';
-			$this->facetOptions["f.owning_library.facet.method"] = 'enum';
-			$this->facetOptions["f.owning_location.facet.method"] = 'enum';
-			foreach (SearchObject_GroupedWorkSearcher2::$scopedFields as $facetName) {
-				$this->facetOptions["f.$facetName.facet.prefix"] = "$solrScope#";
-			}
+			$this->applyFacetOptionSettings($activeFacetFields);
 		}
 		if (!empty($this->facetSearchTerm) && !empty($this->facetSearchField)) {
 			$this->facetOptions["f.$this->facetSearchField.facet.contains"] = $this->facetSearchTerm;
@@ -1062,7 +1054,10 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 	/**
 	 * Set individual facet limits based on numTotalEntriesToShowInMore configuration.
 	 */
-	private function setPerFacetLimits(): void {
+	private function setPerFacetLimits(array $activeFacetLookup): void {
+		if (empty($activeFacetLookup)) {
+			return;
+		}
 		$searchLibrary = Library::getActiveLibrary();
 		global $locationSingleton;
 		$searchLocation = $locationSingleton->getActiveLocation();
@@ -1073,9 +1068,18 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 			$facets = $searchLibrary->getGroupedWorkDisplaySettings()->getFacets();
 		}
 
+		global $solrScope;
 		foreach ($facets as $facet) {
 			if (!empty($facet->numTotalEntriesToShowInMore)) {
-				$facetName = $this->getScopedFieldName($facet->getFacetName($this->searchVersion));
+				$baseFacetName = $facet->getFacetName($this->searchVersion);
+				$scopedFacetName = $baseFacetName . '_' . $solrScope;
+				if (
+					!isset($activeFacetLookup[$baseFacetName]) &&
+					!isset($activeFacetLookup[$scopedFacetName])
+				) {
+					continue;
+				}
+				$facetName = $this->getScopedFieldName($baseFacetName);
 				$this->facetOptions["f.$facetName.facet.limit"] = $facet->numTotalEntriesToShowInMore;
 			}
 		}
@@ -1090,5 +1094,86 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 	 */
 	public function setBypassAsyncFacetLogic(bool $bypass): void {
 		$this->bypassAsyncFacetLogic = $bypass;
+	}
+
+	private function applyFacetOptionSettings(array $activeFacetFields): void {
+		if (empty($activeFacetFields)) {
+			return;
+		}
+
+		global $solrScope;
+		$scopeSuffix = '_' . $solrScope;
+		$scopeSuffixLength = strlen($scopeSuffix);
+		$activeFacetLookup = [];
+		foreach ($activeFacetFields as $fieldName) {
+			if (empty($fieldName)) {
+				continue;
+			}
+			$activeFacetLookup[$fieldName] = true;
+			if ($scopeSuffixLength > 0 && str_ends_with($fieldName, $scopeSuffix)) {
+				$activeFacetLookup[substr($fieldName, 0, -$scopeSuffixLength)] = true;
+			}
+		}
+		if (empty($activeFacetLookup)) {
+			return;
+		}
+
+		$isActive = function(string $facetName) use ($activeFacetLookup, $solrScope) : bool {
+			if (isset($activeFacetLookup[$facetName])) {
+				return true;
+			}
+			$scopedName = $facetName . '_' . $solrScope;
+			return isset($activeFacetLookup[$scopedName]);
+		};
+
+		$this->setPerFacetLimits($activeFacetLookup);
+
+		if ($isActive('series_facet')) {
+			$this->facetOptions['f.series_facet.facet.mincount'] = 2;
+		}
+
+		$enumFacets = [
+			'target_audience_full',
+			'target_audience',
+			'literary_form_full',
+			'literary_form',
+			'lexile_code',
+			'mpaa_rating',
+			'rating_facet',
+			'format_category',
+			'format',
+			'availability_toggle',
+			'owning_library',
+			'owning_location',
+		];
+		foreach ($enumFacets as $facetName) {
+			if ($isActive($facetName)) {
+				$this->facetOptions["f.$facetName.facet.method"] = 'enum';
+			}
+		}
+
+		if ($isActive('format')) {
+			require_once ROOT_DIR . '/sys/Grouping/GroupedWorkFacet.php';
+			$this->facetOptions['f.format.facet.limit'] = GroupedWorkFacet::calculateDynamicFacetLimit('format');
+		}
+		if ($isActive('available_at') || $isActive('owning_location')) {
+			require_once ROOT_DIR . '/sys/Grouping/GroupedWorkFacet.php';
+			$numLocations = GroupedWorkFacet::calculateDynamicFacetLimit('available_at');
+			if ($isActive('available_at')) {
+				$this->facetOptions['f.available_at.facet.limit'] = $numLocations;
+			}
+			if ($isActive('owning_location')) {
+				$this->facetOptions['f.owning_location.facet.limit'] = $numLocations;
+			}
+		}
+		if ($isActive('local_time_since_added')) {
+			$this->facetOptions["f.local_time_since_added_$solrScope.facet.method"] = 'enum';
+		}
+
+		foreach (SearchObject_GroupedWorkSearcher2::$scopedFields as $facetName) {
+			if ($isActive($facetName)) {
+				$this->facetOptions["f.$facetName.facet.prefix"] = "$solrScope#";
+			}
+		}
 	}
 }

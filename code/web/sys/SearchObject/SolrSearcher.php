@@ -34,6 +34,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 
 	protected $facetSearchField;
 	protected $facetSearchTerm;
+	protected float $slowSearchLogThresholdMs = 500.0;
 
 	public function __construct() {
 		parent::__construct();
@@ -260,12 +261,30 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 	 * @return  AspenError|array solr result structure (for now)
 	 */
 	public function processSearch($returnIndexErrors = false, $recommendations = false, $preventQueryModification = false) : AspenError|array|null {
+		global $logger;
+		$searchTimingEnabled = isset($logger);
+		$searchTimingStart = microtime(true);
+		$lastTimingCheckpoint = $searchTimingStart;
+		$searchTimingDetails = [];
+		$logTimingCheckpoint = function(string $label) use (&$searchTimingDetails, &$lastTimingCheckpoint, $searchTimingEnabled) : void {
+			if (!$searchTimingEnabled) {
+				return;
+			}
+			$now = microtime(true);
+			$searchTimingDetails[] = [
+				'label' => $label,
+				'duration' => ($now - $lastTimingCheckpoint) * 1000,
+			];
+			$lastTimingCheckpoint = $now;
+		};
+
 		// Our search has already been processed in init()
 		$search = $this->searchTerms;
 
 		// Build a recommendations module appropriate to the current search:
 		if ($recommendations) {
 			$this->initRecommendations();
+			$logTimingCheckpoint('initRecommendations');
 		}
 
 		// Build Query
@@ -277,6 +296,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 		if (($query instanceof AspenError)) {
 			return $query;
 		}
+		$logTimingCheckpoint('buildQuery');
 
 		// Only use the query we just built if there isn't an override in place.
 		if ($this->query == null) {
@@ -330,6 +350,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 				$filterQuery[] = "$fieldPrefix$field:($fieldValue)";
 			}
 		}
+		$logTimingCheckpoint('buildFilters');
 
 		// If we are only searching one field, use the DisMax handler
 		//    for that field. If left at null, let solr take care of it
@@ -372,6 +393,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 		if (!empty($this->facetOptions)) {
 			$facetSet['additionalOptions'] = $this->facetOptions;
 		}
+		$logTimingCheckpoint('buildFacets');
 
 		// Build our spellcheck query
 		if ($this->spellcheckEnabled) {
@@ -385,6 +407,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 		} else {
 			$spellcheck = "";
 		}
+		$logTimingCheckpoint('buildSpellcheck');
 
 		// Get time before the query
 		$this->startQueryTimer();
@@ -409,6 +432,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 			'POST',     // HTTP Request method
 			$returnIndexErrors // Include errors in response?
 		);
+		$logTimingCheckpoint('solrSearch');
 
 		// Get time after the query
 		$this->stopQueryTimer();
@@ -428,6 +452,7 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 					$current->process();
 				}
 			}
+			$logTimingCheckpoint('processRecommendations');
 		}
 
 		//Add debug information to the results if available
@@ -438,6 +463,25 @@ abstract class SearchObject_SolrSearcher extends SearchObject_BaseSearcher {
 					$result['explain'] = $explainInfo[$result[$this->getUniqueField()]];
 					$this->indexResult['response']['docs'][$key] = $result;
 				}
+			}
+			$logTimingCheckpoint('attachDebugInfo');
+		}
+
+		if ($searchTimingEnabled) {
+			$totalTimeMs = (microtime(true) - $searchTimingStart) * 1000;
+			if ($totalTimeMs >= $this->slowSearchLogThresholdMs) {
+				$timingParts = [];
+				foreach ($searchTimingDetails as $timingDetail) {
+					$timingParts[] = $timingDetail['label'] . '=' . number_format($timingDetail['duration'], 2) . 'ms';
+				}
+				$querySummary = $this->displayQuery();
+				$searchName = $this->getSearchName();
+				$resultTotal = $this->resultsTotal ?? 0;
+				$logger->log(
+					"Search timing $searchName total=" . number_format($totalTimeMs, 2) . "ms results=$resultTotal query=\"" . trim($querySummary) . "\" segments=[" . implode(', ', $timingParts) . "]",
+					Logger::LOG_NOTICE,
+					true
+				);
 			}
 		}
 

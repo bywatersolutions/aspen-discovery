@@ -427,11 +427,10 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 	public function getOverDriveFormats() : array {
 		if ($this->_overDriveFormats == null) {
 			$this->_overDriveFormats = [];
-			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj());
+			$relatedRecord = $this->getRelatedRecord();
+			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj(), $relatedRecord);
 			//Look for available actions, we don't want to get duplicate actions for the same reader name
 			if (count($settingsToProcess) > 0) {
-				$relatedRecord = $this->getRelatedRecord();
-
 				foreach ($settingsToProcess as $settingId => $librarySettings) {
 					require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
 					$overDriveDriver = OverDriveDriver::getOverDriveDriver($settingId);
@@ -586,7 +585,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 
 		$relatedRecord = $this->getRelatedRecord();
 		//We have overdrive scopes to process
-		$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj());
+		$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj(), $relatedRecord);
 
 		$availablePlatforms = [];
 		//Look for available actions, we don't want to get duplicate actions for the same reader name
@@ -916,7 +915,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 	 *
 	 * @return LibraryOverDriveSettings[]
 	 */
-	public function getValidCollectionsForRecord(null|false|User $patron) : array {
+	public function getValidCollectionsForRecord(null|false|User $patron, ?Grouping_Record $relatedRecord = null) : array {
 		$validCollections = [];
 
 		global $library;
@@ -931,26 +930,27 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 		}
 		$overDriveSettings = $activeLibrary->getLibraryOverdriveSettings();
 
-		if (count($overDriveSettings) > 0) {
+		if ($relatedRecord == null) {
 			$relatedRecord = $this->getRelatedRecord();
+		}
 
-			if ($relatedRecord != null) {
-				foreach ($relatedRecord->getItems() as $item) {
-					//Get the settings for the item
-					if (substr_count($item->itemId, ':') >= 2) {
-						list(, $settingId, ) = explode(':', $item->itemId, 3);
-						foreach ($overDriveSettings as $settings) {
-							if ($settings->settingId == $settingId) {
-								$validCollections[$settingId] = $settings;
-								break;
-							}
-						}
-					}else{
-						//This is still indexed assuming one setting id per library
-						// use the first collection
-						$firstSetting = reset($overDriveSettings);
-						$validCollections[$firstSetting->settingId] = $firstSetting;
+		if (count($overDriveSettings) > 0 && $relatedRecord != null) {
+			$settingsById = [];
+			foreach ($overDriveSettings as $settings) {
+				$settingsById[$settings->settingId] = $settings;
+			}
+			$overDriveSettingIds = $relatedRecord->getOverDriveSettingIds();
+			if (!empty($overDriveSettingIds)) {
+				foreach ($overDriveSettingIds as $settingId) {
+					if (isset($settingsById[$settingId])) {
+						$validCollections[$settingId] = $settingsById[$settingId];
 					}
+				}
+			}
+			if (empty($validCollections) && !empty($overDriveSettings)) {
+				$firstSetting = reset($overDriveSettings);
+				if ($firstSetting) {
+					$validCollections[$firstSetting->settingId] = $firstSetting;
 				}
 			}
 		}
@@ -967,8 +967,13 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 			}
 			$this->_actions = [];
 			global $library;
+			global $logger;
+			$recordActionTimingEnabled = isset($logger);
+			$totalRecordActionsStart = $recordActionTimingEnabled ? microtime(true) : 0.0;
+			$validCollectionsStart = $recordActionTimingEnabled ? microtime(true) : 0.0;
 
-			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj());
+			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj(), $relatedRecord);
+			$this->logOverDriveRecordActionTiming('loadValidCollections', $validCollectionsStart);
 
 			if (!empty($settingsToProcess)) {
 				//Check to see if the title is on hold or checked out to the patron.
@@ -976,7 +981,9 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 				if (UserAccount::isLoggedIn()) {
 					$activeUser = UserAccount::getActiveUserObj();
 					if ($activeUser->isValidForEContentSource('overdrive')) {
+						$circulatedActionsStart = $recordActionTimingEnabled ? microtime(true) : 0.0;
 						$this->_actions = array_merge($this->_actions, $activeUser->getCirculatedRecordActionsWithLazyLoading('overdrive', $this->id));
+						$this->logOverDriveRecordActionTiming('loadCirculatedActions', $circulatedActionsStart);
 					}
 					$loadDefaultActions = count($this->_actions) == 0;
 				}else{
@@ -1001,6 +1008,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 					}
 
 					foreach ($settingsToProcess as $settingId => $librarySettings) {
+						$processSettingStart = $recordActionTimingEnabled ? microtime(true) : 0.0;
 						//Check to see if OverDrive circulation is enabled
 						require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
 						$overDriveDriver = OverDriveDriver::getOverDriveDriver($settingId);
@@ -1067,6 +1075,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 								}
 							}
 						} //End checking if circulation is enabled
+						$this->logOverDriveRecordActionTiming('processSetting', $processSettingStart, (string)$settingId);
 					} // Loop through each setting
 
 					//Add the appropriate actions to the action array
@@ -1084,6 +1093,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 			} // End check of if we have any scopes that apply to the library
 
 			$this->_actions = array_merge($this->_actions, $this->getPreviewActions());
+			$this->logOverDriveRecordActionTiming('buildRecordActions', $totalRecordActionsStart);
 		}
 		return $this->_actions;
 	}
@@ -1292,5 +1302,25 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 			$conformance[] = str_replace('{certifierCredential}', $statement->certifierCredential, $mappings['CertifierCredential']);
 		}
 		return $conformance;
+	}
+
+	private function logOverDriveRecordActionTiming(string $stage, float $startTime, string $extraDetail = ''): void {
+		global $logger;
+		if ($startTime <= 0.0 || !isset($logger)) {
+			return;
+		}
+		$durationMs = (microtime(true) - $startTime) * 1000;
+		if ($durationMs < 100.0) {
+			return;
+		}
+		$detailSuffix = '';
+		if ($extraDetail !== '') {
+			$detailSuffix = " settingId={$extraDetail}";
+		}
+		$logger->log(
+			"OverDrive record actions timing id={$this->id} stage={$stage}{$detailSuffix} duration=" . number_format($durationMs, 2) . "ms",
+			Logger::LOG_NOTICE,
+			true
+		);
 	}
 }

@@ -18,33 +18,41 @@
 		{/if}
 		<div class="col-tn-8 col-xs-8{if empty($viewingCombinedResults)} col-md-5 col-lg-6{/if}">
 			{if $printInterface === false}
-			{include file='GroupedWork/statusIndicator.tpl' statusInformation=$relatedManifestation->getStatusInformation() viewingIndividualRecord=0}
+				{timing label="statusIndicator" threshold=200}
+					{include file='GroupedWork/statusIndicator.tpl' statusInformation=$relatedManifestation->getStatusInformation() viewingIndividualRecord=0}
+				{/timing}
 			{/if}
             {if $printInterface === false || ($printInterface === true && $printEntryHoldings === true)}
 			{if $relatedManifestation->showCopySummary()}
 				{if $relatedManifestation->getNumRelatedRecords() == 1}
-					{include file='GroupedWork/copySummary.tpl' summary=$relatedManifestation->getItemsDisplayedByDefault() totalCopies=$relatedManifestation->getCopies() itemSummaryId=$workId recordViewUrl=$relatedManifestation->getUrl() format=$relatedManifestation->format isEContent=$relatedManifestation->isEContent()}
+					{timing label="copySummary" threshold=200}
+						{include file='GroupedWork/copySummary.tpl' summary=$relatedManifestation->getItemsDisplayedByDefault() totalCopies=$relatedManifestation->getCopies() itemSummaryId=$workId recordViewUrl=$relatedManifestation->getUrl() format=$relatedManifestation->format isEContent=$relatedManifestation->isEContent()}
+					{/timing}
 				{else}
-					{include file='GroupedWork/copySummary.tpl' summary=$relatedManifestation->getItemsDisplayedByDefault() totalCopies=$relatedManifestation->getCopies() itemSummaryId=$workId format=$relatedManifestation->format isEContent=$relatedManifestation->isEContent()}
+					{timing label="copySummary" threshold=200}
+						{include file='GroupedWork/copySummary.tpl' summary=$relatedManifestation->getItemsDisplayedByDefault() totalCopies=$relatedManifestation->getCopies() itemSummaryId=$workId format=$relatedManifestation->format isEContent=$relatedManifestation->isEContent()}
+					{/timing}
 				{/if}
 			{/if}
 			{/if}
 		</div>
 		{if $printInterface === false}
 		<div class="col-tn-8 col-tn-offset-4 col-xs-8 col-xs-offset-4{if empty($viewingCombinedResults)} col-md-4 col-md-offset-0 col-lg-3{/if} manifestation-actions">
-			<div class="btn-toolbar">
-				<div class="btn-group btn-group-vertical btn-block">
-					{foreach from=$relatedManifestation->getActions() item=curAction}
-						{if $relatedManifestation->showActionButton()}
-							{if !empty($curAction.url)}
-								<a href="{$curAction.url}" class="btn btn-sm {if empty($curAction.btnType)}btn-action{else}{$curAction.btnType}{/if} btn-wrap{if !empty($curAction.cssClasses)} {$curAction.cssClasses}{/if}" {if !empty($curAction.target)}target="{$curAction.target}"{/if} id="actionButton" onclick="{if !empty($curAction.requireLogin)}return AspenDiscovery.Account.followLinkIfLoggedIn(this, '{$curAction.url}');{/if}" {if !empty($curAction.alt)}title="{translate text=$curAction.alt inAttribute=true isPublicFacing=true}"{/if} {if !empty($curAction['data-needs-refresh'])}data-needs-refresh="{$curAction['data-needs-refresh']}"{/if} {if !empty($curAction['data-record-id'])}data-record-id="{$curAction['data-record-id']}"{/if} {if !empty($curAction['data-record-source'])}data-record-source="{$curAction['data-record-source']}"{/if} data-prompt-edition="{if $relatedManifestation->getNumRelatedRecords() > 1 && $curAction.type == 'ils_hold' && $curAction.subtype == 'standard_ils_hold'}true{else}false{/if}">{if !empty($curAction.target) && $curAction.target == "_blank"}<i class="fas fa-external-link-alt" role="presentation"></i> {/if}{$curAction.title}</a>
-							{else}
-								<a href="#" class="btn btn-sm {if empty($curAction.btnType)}btn-action{else}{$curAction.btnType}{/if} btn-wrap{if !empty($curAction.cssClasses)} {$curAction.cssClasses}{/if}" {if !empty($curAction.id)}id="{$curAction.id}"{/if}{if !empty($curAction.target)}target="{$curAction.target}"{/if} {if !empty($curAction.id)}id="{$curAction.id}"{/if} onclick="{$curAction.onclick}" {if !empty($curAction.alt)}title="{translate text=$curAction.alt inAttribute=true isPublicFacing=true}"{/if} {if !empty($curAction['data-needs-refresh'])}data-needs-refresh="{$curAction['data-needs-refresh']}"{/if} {if !empty($curAction['data-record-id'])}data-record-id="{$curAction['data-record-id']}"{/if} {if !empty($curAction['data-record-source'])}data-record-source="{$curAction['data-record-source']}"{/if} data-prompt-edition="{if $relatedManifestation->getNumRelatedRecords() > 1 && $curAction.type == 'ils_hold' && $curAction.subtype == 'standard_ils_hold'}true{else}false{/if}">{if !empty($curAction.target) && $curAction.target == "_blank"}<i class="fas fa-external-link-alt" role="presentation"></i> {/if}{$curAction.title}</a>
+			{timing label="manifestationActions" threshold=300}
+				<div class="btn-toolbar">
+					<div class="btn-group btn-group-vertical btn-block">
+						{foreach from=$relatedManifestation->getActions() item=curAction}
+							{if $relatedManifestation->showActionButton()}
+								{if !empty($curAction.url)}
+									<a href="{$curAction.url}" class="btn btn-sm {if empty($curAction.btnType)}btn-action{else}{$curAction.btnType}{/if} btn-wrap{if !empty($curAction.cssClasses)} {$curAction.cssClasses}{/if}" {if !empty($curAction.target)}target="{$curAction.target}"{/if} id="actionButton" onclick="{if !empty($curAction.requireLogin)}return AspenDiscovery.Account.followLinkIfLoggedIn(this, '{$curAction.url}');{/if}" {if !empty($curAction.alt)}title="{translate text=$curAction.alt inAttribute=true isPublicFacing=true}"{/if} {if !empty($curAction['data-needs-refresh'])}data-needs-refresh="{$curAction['data-needs-refresh']}"{/if} {if !empty($curAction['data-record-id'])}data-record-id="{$curAction['data-record-id']}"{/if} {if !empty($curAction['data-record-source'])}data-record-source="{$curAction['data-record-source']}"{/if} data-prompt-edition="{if $relatedManifestation->getNumRelatedRecords() > 1 && $curAction.type == 'ils_hold' && $curAction.subtype == 'standard_ils_hold'}true{else}false{/if}">{if !empty($curAction.target) && $curAction.target == "_blank"}<i class="fas fa-external-link-alt" role="presentation"></i> {/if}{$curAction.title}</a>
+								{else}
+									<a href="#" class="btn btn-sm {if empty($curAction.btnType)}btn-action{else}{$curAction.btnType}{/if} btn-wrap{if !empty($curAction.cssClasses)} {$curAction.cssClasses}{/if}" {if !empty($curAction.id)}id="{$curAction.id}"{/if}{if !empty($curAction.target)}target="{$curAction.target}"{/if} {if !empty($curAction.id)}id="{$curAction.id}"{/if} onclick="{$curAction.onclick}" {if !empty($curAction.alt)}title="{translate text=$curAction.alt inAttribute=true isPublicFacing=true}"{/if} {if !empty($curAction['data-needs-refresh'])}data-needs-refresh="{$curAction['data-needs-refresh']}"{/if} {if !empty($curAction['data-record-id'])}data-record-id="{$curAction['data-record-id']}"{/if} {if !empty($curAction['data-record-source'])}data-record-source="{$curAction['data-record-source']}"{/if} data-prompt-edition="{if $relatedManifestation->getNumRelatedRecords() > 1 && $curAction.type == 'ils_hold' && $curAction.subtype == 'standard_ils_hold'}true{else}false{/if}">{if !empty($curAction.target) && $curAction.target == "_blank"}<i class="fas fa-external-link-alt" role="presentation"></i> {/if}{$curAction.title}</a>
+								{/if}
 							{/if}
-						{/if}
-					{/foreach}
+						{/foreach}
+					</div>
 				</div>
-			</div>
+			{/timing}
 		</div>
 		{/if}
 	</div>

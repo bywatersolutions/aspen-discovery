@@ -52,6 +52,7 @@ class Grouping_Record {
 	private array $_volumeData;
 	private ?array $_unsuppressedVolumeData = null;
 	private ?array $_unsuppressedLocalVolumeData = null;
+	private array $_overDriveSettingIds = [];
 
 	//Is the record an OverDrive record?
 	//If so, the number of owned and available copies are already set.
@@ -150,6 +151,7 @@ class Grouping_Record {
 			}
 			if ($this->_driver instanceof OverDriveRecordDriver) {
 				$this->_driver->setNumHoldsForItem($item);
+				$this->recordOverDriveSettingId($item);
 			}
 			$this->setIsEContent(true);
 			$this->_statusInformation->setIsEContent(true);
@@ -504,15 +506,21 @@ class Grouping_Record {
 	 * @return array
 	 */
 	public function getActions(?string $variationId = ''): array {
+		global $logger;
+		$recordActionsTimingEnabled = isset($logger);
+		$recordIdForTiming = $this->id ?? 'unknown';
 		if (empty($variationId)) {
 			$variationId = 'any';
 		}
 		if (!array_key_exists($variationId, $this->_allActions)) {
+			$buildActionsStart = $recordActionsTimingEnabled ? microtime(true) : 0.0;
 			$this->_allActions[$variationId] = [];
 
 			//TODO: Add volume information
 			if ($this->getDriver() != null) {
+				$driverActionsStart = $recordActionsTimingEnabled ? microtime(true) : 0.0;
 				$this->setActions($variationId, $this->getDriver()->getRecordActions($this, $variationId, $this->getStatusInformation()->isAvailableLocally() || $this->getStatusInformation()->isAvailableOnline(), $this->isHoldable(), []));
+				$this->logRecordActionTiming('driverRecordActions', $driverActionsStart, $variationId, $recordIdForTiming);
 			}
 
 			$actionsToReturn = $this->_actions[$variationId];
@@ -520,15 +528,18 @@ class Grouping_Record {
 				$actionsToReturn = [];
 			}
 			if (empty($actionsToReturn) && $this->getDriver() != null) {
+				$itemActionsStart = $recordActionsTimingEnabled ? microtime(true) : 0.0;
 				foreach ($this->_items as $item) {
 					if ($item->variationId == $variationId || $variationId == 'any') {
 						$item->setActions($this->getDriver()->getItemActions($item));
 						$actionsToReturn = array_merge($actionsToReturn, $item->getActions());
 					}
 				}
+				$this->logRecordActionTiming('itemActionsMerge', $itemActionsStart, $variationId, $recordIdForTiming);
 			}
 
 			$this->_allActions[$variationId] = $actionsToReturn;
+			$this->logRecordActionTiming('buildRecordActions', $buildActionsStart, $variationId, $recordIdForTiming);
 		}
 
 		return $this->_allActions[$variationId];
@@ -755,5 +766,38 @@ class Grouping_Record {
 			$bookcoverUrl = $recordDriver->getBookcoverUrl($size);
 		}
 		return $bookcoverUrl;
+	}
+
+	private function recordOverDriveSettingId(Grouping_Item $item): void {
+		if (empty($item->itemId) || substr_count($item->itemId, ':') < 2) {
+			return;
+		}
+		[, $settingId, ] = explode(':', $item->itemId, 3);
+		if (!empty($settingId)) {
+			$this->_overDriveSettingIds[$settingId] = true;
+		}
+	}
+
+	public function getOverDriveSettingIds(): array {
+		if (empty($this->_overDriveSettingIds)) {
+			return [];
+		}
+		return array_keys($this->_overDriveSettingIds);
+	}
+
+	private function logRecordActionTiming(string $stage, float $startTime, string $variationId, string $recordId): void {
+		global $logger;
+		if ($startTime <= 0.0 || !isset($logger)) {
+			return;
+		}
+		$durationMs = (microtime(true) - $startTime) * 1000;
+		if ($durationMs < 50.0) {
+			return;
+		}
+		$logger->log(
+			"Grouping_Record actions timing recordId={$recordId} variationId={$variationId} stage={$stage} duration=" . number_format($durationMs, 2) . "ms",
+			Logger::LOG_NOTICE,
+			true
+		);
 	}
 }

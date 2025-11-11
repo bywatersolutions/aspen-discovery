@@ -479,17 +479,16 @@ class GroupedWorksSolrConnector2 extends Solr {
 			$maxHoldingsBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxHoldingsBoost;
 			if ($applyHoldingsBoost) {
 				if ($limitBoosts) {
-					// This reduces Solr function calls from 9-11 operations to 3-4 operations per document
-					// format_boost + min(holdings, maxHoldingsBoost) + min(popularity, maxPopularityBoost).
-					$boostFactors[] = "min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,num_holdings),min($maxPopularityBoost,popularity)))";
+					//Add format boost, number of holdings, popularity divided by number of holdings
+					$boostFactors[] = "min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,max(num_holdings,1)),min($maxPopularityBoost,div(max(popularity,1),max(num_holdings,1)))))";
 				}else{
-					$boostFactors[] = "sum(format_boost,num_holdings,popularity)";
+					$boostFactors[] = "product(format_boost,max(num_holdings,1),div(max(popularity,1),max(num_holdings,1)))";
 				}
 			} else {
 				if ($limitBoosts) {
-					$boostFactors[] = "min($maxTotalBoost,sum(min($maxPopularityBoost,popularity),min($maxFormatBoost,format_boost)))";
+					$boostFactors[] = "min($maxTotalBoost,product(min($maxPopularityBoost,popularity),min($maxFormatBoost,format_boost)))";
 				}else{
-					$boostFactors[] = "sum(popularity,format_boost)";
+					$boostFactors[] = "div(popularity,format_boost)";
 				}
 			}
 		} else {
@@ -500,12 +499,9 @@ class GroupedWorksSolrConnector2 extends Solr {
 			$boostFactors[] = 'format_boost';
 		}
 
-		// Note: These are added as separate factors, which Solr will combine in a single sum() call
-		// instead of nested sum(sum(...)) which is less efficient.
-		$boostFactors[] = 'rating';
-
+		$boostFactors[] = 'max(rating,1)';
 		global $solrScope;
-		$boostFactors[] = "lib_boost_$solrScope";
+		$boostFactors[] = "max(lib_boost_{$solrScope},1)";
 
 		return $boostFactors;
 	}

@@ -278,7 +278,6 @@ Keyword:
     # Title fields (no proximity)
     - title_proper:
       - [ "onephrase", "800" ]
-      - [ "single_word_removal", "1" ]
     - title_author:
       - [ "onephrase", "500" ]
     # Subject

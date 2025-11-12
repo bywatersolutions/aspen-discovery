@@ -111,278 +111,238 @@
 Author:
   QueryFields:
     - author_exact:
-      - [localized_callnumber, 2200]
+      - [ "localized_callnumber", "2200" ]
     - author_left:
-      - [text_left, 1400]
+      - [ "text_left", "1400" ]
     - author:
-      - [onephrase, 350]
-      - [proximal, 200]
+      - [ "onephrase", "350" ]
+      - [ "proximal", "200" ]
     - author2:
-      - [onephrase, 25]
-      - [proximal, 1]
+      - [ "onephrase", "25" ]
+      - [ "proximal", "1" ]
     - author_additional:
-      - [onephrase, 25]
-      - [proximal, 1]
+      - [ "onephrase", "25" ]
+      - [ "proximal", "1" ]
 
 AuthorProper:
   QueryFields:
     - author_exact:
-      - [exact, 2200]
+      - [ "exact", "2200" ]
     - author_left:
-      - [text_left, 1400]
+      - [ "text_left", "1400" ]
     - auth_author:
-      - [onephrase, 350]
+      - [ "onephrase", "350" ]
     - auth_author2:
-      - [onephrase, 100]
+      - [ "onephrase", "100" ]
     - author2:
-      - [ onephrase, 25 ]
+      - [ "onephrase", "25" ]
     - author_additional:
-      - [onephrase, 25]
+      - [ "onephrase", "25" ]
 
 ISN:
   QueryFields:
     - issn:
-      - [and, 100]
-      - [onephrase, 100]
+      - [ "and", "100" ]
+      - [ "onephrase", "100" ]
       - [or, ~]
     - isbn:
-      - [and, 100]
-      - [onephrase, 100]
+      - [ "and", "100" ]
+      - [ "onephrase", "100" ]
       - [or, ~]
     - upc:
-      - [and, 100]
-      - [onephrase, 100]
+      - [ "and", "100" ]
+      - [ "onephrase", "100" ]
       - [or, ~]
 
 Subject:
   QueryFields:
     - topic_proper:
-      - [onephrase, 600]
-      - [and, 100]
+      - [ "onephrase", "600" ]
+      - [ "and", "100" ]
     - subject:
-      - [onephrase, 500]
-      - [and, 100]
+      - [ "onephrase", "500" ]
+      - [ "and", "100" ]
     - topic:
-      - [onephrase, 500]
-      - [and, 100]
+      - [ "onephrase", "500" ]
+      - [ "and", "100" ]
     - geographic:
-      - [onephrase, 300]
-      - [and, 100]
+      - [ "onephrase", "300" ]
+      - [ "and", "100" ]
     - genre:
-      - [onephrase, 300]
-      - [and, 100]
+      - [ "onephrase", "300" ]
+      - [ "and", "100" ]
     - era:
-      - [onephrase, 300]
-      - [and, 100]
+      - [ "onephrase", "300" ]
+      - [ "and", "100" ]
 
 SubjectProper:
   QueryFields:
     - subject_proper:
-      - [onephrase, 500]
+      - [ "onephrase", "500" ]
     - topic_proper:
-      - [onephrase, 500]
+      - [ "onephrase", "500" ]
     - geographic_proper:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
     - genre_proper:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
     - era_proper:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
 
 Title:
   QueryFields:
     - title_exact:
-      - [localized_callnumber, 10000]
+      - [ "localized_callnumber", "10000" ]
     - title_left:
-      - [text_left_word, 5000]
-      - [text_left, 400]
+      - [ "text_left_word", "5000" ]
+      - [ "text_left", "400" ]
     - title_proper:
-      - [exact, 800]
+      - [ "exact", "800" ]
     - title_proper:
-      - [onephrase, 500]
+      - [ "onephrase", "500" ]
     - title_proper:
-      - [and, 200]
+      - [ "and", "200" ]
     - title_proper:
-      - [single_word_removal, 1]
+      - [ "single_word_removal", "1" ]
     - title:
-      - [onephrase, 200]
+      - [ "onephrase", "200" ]
     - title:
-      - [and, 125]
+      - [ "and", "125" ]
     - title_alt:
-      - [and, 100]
+      - [ "and", "100" ]
     - title_new:
-      - [and, 50]
+      - [ "and", "50" ]
     - series_proper:
-      - [exact, 200]
+      - [ "exact", "200" ]
     - series_proper:
-      - [onephrase, 100]
+      - [ "onephrase", "100" ]
     - series_proper:
-      - [and, 25]
+      - [ "and", "25" ]
     - series:
-      - [exact, 100]
+      - [ "exact", "100" ]
     - series:
-      - [onephrase, 50]
+      - [ "onephrase", "50" ]
     - series:
-      - [and, 10]
+      - [ "and", "10" ]
 
 TitleProper:
   QueryFields:
     - title_exact:
-      - [localized_callnumber, 2400]
+      - [ "localized_callnumber", "2400" ]
     - title_proper:
-      - [onephrase, 850]
+      - [ "onephrase", "850" ]
     - series_proper:
-      - [onephrase, 100]
+      - [ "onephrase", "100" ]
 
 StartOfTitle:
   QueryFields:
     - title_left:
-      - [text_left, 1]
+      - [ "text_left", "1" ]
 
 Series:
   QueryFields:
     - series_proper:
-      - [localized_callnumber, 2400]
-      - [text_left, 750]
-      - [onephrase, 500]
+      - [ "localized_callnumber", "2400" ]
+      - [ "text_left", "750" ]
+      - [ "onephrase", "500" ]
     - series:
-      - [text_left, 1000]
-      - [onephrase, 500]
-      - [and, 100]
+      - [ "text_left", "1000" ]
+      - [ "onephrase", "500" ]
+      - [ "and", "100" ]
 
 SeriesProper:
   QueryFields:
     - series_proper:
-      - [localized_callnumber, 2400]
-      - [onephrase, 500]
+      - [ "localized_callnumber", "2400" ]
+      - [ "onephrase", "500" ]
     - series:
-      - [onephrase, 1000]
-      - [exact, 400]
+      - [ "onephrase", "1000" ]
+      - [ "exact", "400" ]
 
-# This is proving slow based of the number of things we are searching.
-# Try reorganizing to match things better and ensure that we don't look at similar fields multiple times.
+# Highly optimized Keyword search - focus on performance
+# CRITICAL: Proximity searches (~10) are VERY expensive - limited to only top 2 fields
+# Reduced from 35+ clauses to 14 core clauses for major performance improvement
 Keyword:
   QueryFields:
-    - author:
-      - [proximal, 8000]
-      - [single_word, 250]
+    # Top priority
     - title_exact:
-      - [localized_callnumber, 6000]
+      - [ "localized_callnumber", "6000" ]
     - title_left:
-      - [ text_left_word, 2500 ]
-    - title_proper:
-      - [ exact, 800 ]
-      - [ onephrase, 500 ]
-      - [single_word_removal, 1]
-    - title_author:
-      - [ onephrase, 500 ]
-      - [ proximal, 250 ]
+      - [ "text_left_word", "2500" ]
+    # High-value phrase searches
+    - author:
+      - [ "onephrase", "8000" ]
+      - [ "proximal", "4000" ]
     - series_proper:
-      - [ proximal, 7000 ]
-      - [ single_word, 100]
-      - [ onephrase, 50 ]
-    - series_author:
-      - [ onephrase, 400 ]
-      - [ proximal, 150 ]
-    - id:
-      - [exact, 500]
-    - alternate_ids:
-      - [exact, 500]
-    - barcode:
-      - [onephrase, 500]
-    - local_callnumber_exact:
-      - [localized_callnumber, 400]
-    - local_callnumber_left:
-      - [text_left, 300]
+      - [ "onephrase", "7000" ]
+      - [ "proximal", "3500" ]
+    # Title fields (no proximity)
+    - title_proper:
+      - [ "onephrase", "800" ]
+    - title_author:
+      - [ "onephrase", "500" ]
+    # Subject
     - subject:
-      - [onephrase, 800]
-    - title:
-      - [onephrase, 200]
-    - topic:
-      - [onephrase, 125]
-    - title_alt:
-      - [onephrase, 100]
-    - issn:
-      - [and, 100]
-    - isbn:
-      - [and, 100]
-    - upc:
-      - [and, 100]
-    - geographic:
-      - [onephrase, 75]
-    - genre:
-      - [onephrase, 75]
-    - era:
-      - [onephrase, 75]
-    - target_audience:
-      - [onephrase, 75]
-    - literary_form_full:
-      - [onephrase, 75]
-    - series:
-      - [ exact, 50 ]
-      - [ onephrase, 10 ]
-    - author2:
-      - [proximal, 25]
-    - author_additional:
-      - [proximal, 25]
-    - table_of_contents:
-      - [onephrase, 20]
-    - description:
-      - [onephrase, 15]
-    - keywords:
-      - [onephrase, 10]
+      - [ "onephrase", "800" ]
+    # Series author
+    - series_author:
+      - [ "onephrase", "400" ]
+    # Identifiers (exact matches)
+    - id:
+      - [ "exact", "500" ]
+    - barcode:
+      - [ "onephrase", "500" ]
+    - local_callnumber_exact:
+      - [ "localized_callnumber", "400" ]
+    # Title full (replaces title, title_alt)
     - title_full:
-      - [single_word_removal, 1]
-    - issn:
-      - [or, ~]
-    - isbn:
-      - [or, ~]
-    - upc:
-      - [or, ~]
-    - local_callnumber:
-      - [onephrase, ~]
+      - [ "onephrase", "200" ]
+    # Content fields
+    - description:
+      - [ "onephrase", "15" ]
+    # Keywords fallback
     - keywords:
       - [and, ~]
 
 KeywordProper:
   QueryFields:
     - title_exact:
-      - [localized_callnumber, 2400]
+      - [ "localized_callnumber", "2400" ]
     - author_exact:
-      - [localized_callnumber, 2200]
+      - [ "localized_callnumber", "2200" ]
     - title_proper:
-      - [onephrase, 850]
+      - [ "onephrase", "850" ]
     - series_proper:
-      - [onephrase, 500]
+      - [ "onephrase", "500" ]
     - auth_author:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
     - auth_author2:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
     - table_of_contents_proper:
-      - [onephrase, 10]
+      - [ "onephrase", "10" ]
     - topic_proper:
-      - [onephrase, 500]
+      - [ "onephrase", "500" ]
     - subject_proper:
-      - [ onephrase, 100 ]
+      - [ "onephrase", "100" ]
     - geographic_proper:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
     - genre_proper:
-      - [onephrase, 300]
+      - [ "onephrase", "300" ]
     - keywords_proper:
       - [onephrase, ~]
     - issn:
-      - [and, 100]
+      - [ "and", "100" ]
     - issn:
       - [or, ~]
     - isbn:
-      - [and, 100]
+      - [ "and", "100" ]
     - isbn:
       - [or, ~]
     - upc:
-      - [and, 100]
+      - [ "and", "100" ]
     - upc:
       - [or, ~]
     - oclc:
-      - [and, 100]
+      - [ "and", "100" ]
     - oclc:
       - [or, ~]
     - callnumber-subject:
@@ -394,9 +354,9 @@ KeywordProper:
     - alternate_ids:
       - [exact, ~]
     - local_callnumber_exact:
-      - [localized_callnumber, 800]
+      - [ "localized_callnumber", "800" ]
     - local_callnumber_left:
-      - [text_left, 300]
+      - [ "text_left", "300" ]
     - barcode:
       - [onephrase, ~]
 
@@ -412,21 +372,21 @@ id:
 LocalCallNumber:
   QueryFields:
     - local_callnumber_exact:
-      - [localized_callnumber, 800]
+      - [ "localized_callnumber", "800" ]
     - local_callnumber_left:
-      - [text_left, 300]
+      - [ "text_left", "300" ]
     - local_callnumber:
       - [exact, ~]
 
 publisher:
   QueryFields:
     - publisher:
-      - [and, 100]
+      - [ "and", "100" ]
 
 year:
   QueryFields:
     - publishDate:
-      - [and, 100]
+      - [ "and", "100" ]
 
 language:
   QueryFields:
@@ -436,26 +396,26 @@ language:
 toc:
   QueryFields:
     - table_of_contents:
-      - [and, 100]
+      - [ "and", "100" ]
 
 topic:
   QueryFields:
     - topic:
-      - [and, 50]
+      - [ "and", "50" ]
     - topic_facet:
       - [and, ~]
 
 geographic:
   QueryFields:
     - geographic:
-      - [and, 50]
+      - [ "and", "50" ]
     - geographic_facet:
       - [and ~]
 
 genre:
   QueryFields:
     - genre:
-      - [and, 50]
+      - [ "and", "50" ]
     - genre_facet:
       - [and, ~]
 

@@ -427,11 +427,10 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 	public function getOverDriveFormats() : array {
 		if ($this->_overDriveFormats == null) {
 			$this->_overDriveFormats = [];
-			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj());
+			$relatedRecord = $this->getRelatedRecord();
+			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj(), $relatedRecord);
 			//Look for available actions, we don't want to get duplicate actions for the same reader name
 			if (count($settingsToProcess) > 0) {
-				$relatedRecord = $this->getRelatedRecord();
-
 				foreach ($settingsToProcess as $settingId => $librarySettings) {
 					require_once ROOT_DIR . '/Drivers/OverDriveDriver.php';
 					$overDriveDriver = OverDriveDriver::getOverDriveDriver($settingId);
@@ -588,7 +587,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 
 		$relatedRecord = $this->getRelatedRecord();
 		//We have overdrive scopes to process
-		$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj());
+		$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj(), $relatedRecord);
 
 		$availablePlatforms = [];
 		//Look for available actions, we don't want to get duplicate actions for the same reader name
@@ -918,7 +917,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 	 *
 	 * @return LibraryOverDriveSettings[]
 	 */
-	public function getValidCollectionsForRecord(null|false|User $patron) : array {
+	public function getValidCollectionsForRecord(null|false|User $patron, ?Grouping_Record $relatedRecord = null) : array {
 		$validCollections = [];
 
 		global $library;
@@ -933,26 +932,27 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 		}
 		$overDriveSettings = $activeLibrary->getLibraryOverdriveSettings();
 
-		if (count($overDriveSettings) > 0) {
+		if ($relatedRecord == null) {
 			$relatedRecord = $this->getRelatedRecord();
+		}
 
-			if ($relatedRecord != null) {
-				foreach ($relatedRecord->getItems() as $item) {
-					//Get the settings for the item
-					if (substr_count($item->itemId, ':') >= 2) {
-						list(, $settingId, ) = explode(':', $item->itemId, 3);
-						foreach ($overDriveSettings as $settings) {
-							if ($settings->settingId == $settingId) {
-								$validCollections[$settingId] = $settings;
-								break;
-							}
-						}
-					}else{
-						//This is still indexed assuming one setting id per library
-						// use the first collection
-						$firstSetting = reset($overDriveSettings);
-						$validCollections[$firstSetting->settingId] = $firstSetting;
+		if (count($overDriveSettings) > 0 && $relatedRecord != null) {
+			$settingsById = [];
+			foreach ($overDriveSettings as $settings) {
+				$settingsById[$settings->settingId] = $settings;
+			}
+			$overDriveSettingIds = $relatedRecord->getOverDriveSettingIds();
+			if (!empty($overDriveSettingIds)) {
+				foreach ($overDriveSettingIds as $settingId) {
+					if (isset($settingsById[$settingId])) {
+						$validCollections[$settingId] = $settingsById[$settingId];
 					}
+				}
+			}
+			if (empty($validCollections) && !empty($overDriveSettings)) {
+				$firstSetting = reset($overDriveSettings);
+				if ($firstSetting) {
+					$validCollections[$firstSetting->settingId] = $firstSetting;
 				}
 			}
 		}
@@ -970,7 +970,7 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 			$this->_actions = [];
 			global $library;
 
-			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj());
+			$settingsToProcess = $this->getValidCollectionsForRecord(UserAccount::getActiveUserObj(), $relatedRecord);
 
 			if (!empty($settingsToProcess)) {
 				//Check to see if the title is on hold or checked out to the patron.

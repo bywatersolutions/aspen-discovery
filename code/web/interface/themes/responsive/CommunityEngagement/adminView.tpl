@@ -23,7 +23,7 @@
 						<select id="user_id" class="form-control-sm" style="margin-bottom: 3px;" onchange="AspenDiscovery.CommunityEngagement.filterDropdownOptions('user')">
 							<option value="">-</option>
 							{foreach from=$users item=$user}
-									<option value="{$user.id}">{$user.displayName}</option>
+								<option value="{$user.id}">{$user.displayName}{if $user.ils_barcode} - {$user.ils_barcode}{/if}</option>
 							{/foreach}
 						</select>
 						<button class="btn btn-sm btn-primary" onclick="$('#addUserByBarcodeModal').modal('show')">Add User by Barcode</button>

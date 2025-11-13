@@ -6,6 +6,7 @@
 	</div>
 	{if !empty($user->email)}
 		<p id="addresToSendEmails" class="mt-5">{translate text="Emails will be sent to: %1%" 1=$user->email isPublicFacing=true}</p>
+		<p id="updateEmailAddressLink" class="mt-5">{translate text="To change your email address, please update your %2%" 2='<a href="/MyAccount/ContactInformation">contact information</a>' isPublicFacing=true}</p>
 	{else}
 		<p id="noAddressToSendEmails" class="mt-5">{translate text="Please update your email address in your %1%" 1='<a href="/MyAccount/ContactInformation">contact information</a>' isPublicFacing=true}</p>
 	{/if}

@@ -10502,6 +10502,7 @@ class MyAccount_AJAX extends JSON_Action {
 			ob_end_flush();
 
 			$interval = 10;
+			global $interface;
 
 			while (true) {
 
@@ -10553,16 +10554,50 @@ class MyAccount_AJAX extends JSON_Action {
 						# Handle milestone progress notification
 						echo "event: ce_notification\n";
 						echo "data: " . json_encode(
-								array(
-									'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_progress',
-									'title'=> translate(
+							array(
+								'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_progress',
+								'title'=> translate(
 										[
 											'text' => 'Milestone progress! Good job!',
 											'isPublicFacing' => true
 										]
 									),
-									'body' => $campaignMilestoneUsersProgress->progress.'/'.$campaignMilestone->goal.' ' .$milestone->name,
-									'icon' => "fa-chart-line",
+								'body' => translate([
+									'text' => '%1% of %2% progressed!',
+									1=> $milestone->name,
+									2=> $campaign->name,
+									'isPublicFacing' => true,
+								]),
+								$campaignMilestoneUsersProgress->progress.'/'.$campaignMilestone->goal.' ' .$milestone->name,
+								'icon' => "fa-chart-line",
+								'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
+										[
+											'text' => 'View all campaigns',
+											'isPublicFacing' => true
+										]
+									)]
+							)
+						) . "\n\n";
+
+						# Handle milestone completion notification
+						if ($campaignMilestoneUsersProgress->progress >= $campaignMilestone->goal && !$wantedOverflowProgress) {
+							echo "event: ce_notification\n";
+							echo "data: " . json_encode(
+								array(
+									'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_completed',
+									'title'=> translate(
+										[
+											'text' => 'Milestone completed! Well done!',
+											'isPublicFacing' => true
+										]
+									),
+									'body' => translate([
+										'text' => '%1% of %2% complete.',
+										1 =>$milestone->name,
+										2=>$campaign->name,
+										'isPublicFacing' => true,
+									]),
+									'icon' => "fa-clipboard-check",
 									'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
 										[
 											'text' => 'View all campaigns',
@@ -10571,53 +10606,34 @@ class MyAccount_AJAX extends JSON_Action {
 									)]
 								)
 							) . "\n\n";
-
-						# Handle milestone completion notification
-						if ($campaignMilestoneUsersProgress->progress >= $campaignMilestone->goal && !$wantedOverflowProgress) {
-							echo "event: ce_notification\n";
-							echo "data: " . json_encode(
-									array(
-										'id'=> $campaignMilestoneProgressEntry->id . '_ce_milestone_completed',
-										'title'=> translate(
-											[
-												'text' => 'Milestone completed! Well done!',
-												'isPublicFacing' => true
-											]
-										),
-										'body' => $milestone->name,
-										'icon' => "fa-clipboard-check",
-										'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
-											[
-												'text' => 'View all campaigns',
-												'isPublicFacing' => true
-											]
-										)]
-									)
-								) . "\n\n";
 						}
 
 						# Handle campaign completion notification
 						if ($userCampaign->completed && !$wantedOverflowProgress) {
 							echo "event: ce_notification\n";
 							echo "data: " . json_encode(
-									array(
-										'id'=> $campaignMilestoneProgressEntry->id . '_ce_campaign_completed',
-										'title'=> translate(
-											[
-												'text' => 'Campaign completed! Awesome!',
-												'isPublicFacing' => true
-											]
-										),
-										'body' => $campaign->name,
-										'icon' => "fa-medal",
-										'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
-											[
-												'text' => 'View all campaigns',
-												'isPublicFacing' => true
-											]
-										)]
-									)
-								) . "\n\n";
+								array(
+									'id'=> $campaignMilestoneProgressEntry->id . '_ce_campaign_completed',
+									'title'=> translate(
+										[
+											'text' => 'Campaign completed! Awesome!',
+											'isPublicFacing' => true
+										]
+									),
+									'body' => translate([
+										'text' => '%1% campaign complete!',
+										1 => $campaign->name,
+										'isPublicFacing' => true
+									]),
+									'icon' => "fa-medal",
+									'link' => ['href' => '/MyAccount/MyCampaigns', 'text' => translate(
+										[
+											'text' => 'View all campaigns',
+											'isPublicFacing' => true
+										]
+									)]
+								)
+							) . "\n\n";
 						}
 					}
 				}else{
@@ -11308,6 +11324,115 @@ class MyAccount_AJAX extends JSON_Action {
 		}
 
 		return $result;
-
 	}
+
+	public function removeCampaignModal() {
+		$userId = $_REQUEST['userId'] ?? null;
+		$campaignId = $_REQUEST['campaignId'] ?? null;
+
+		if (!$userId) {
+			return [
+				'sucess' =>false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' -> translate([
+					'text' => 'Cannot find a user for this campaign',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+
+		if (!$campaignId) {
+			return [
+				'sucess' =>false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' -> translate([
+					'text' => 'Cannot find a campaign with this ID',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
+
+		$campaign = new Campaign();
+		$campaign->id = $campaignId;
+		if (!$campaign->find(true)) {
+			return [
+				'sucess' =>false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'Campaign not found',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+
+		$campaignName = $campaign->name;
+		global $interface;
+		$interface->assign('campaignName', $campaignName);
+
+		return [
+			'success' =>true,
+			'title' => translate([
+				'text' => 'Remove Campaign',
+				'isPublicFacing' => true,
+			]),
+			'modalBody' => $interface->fetch('MyAccount/remove-campaign-modal.tpl'),
+			'modalButtons' => "<button class='tool btn btn-primary' onclick='AspenDiscovery.Account.removeCampaignFromUI($campaignId, $userId)'>" . translate([
+				'text' => 'Remove',
+				'isAdminFacing' => 'true',
+			]) . "</button>",
+		];
+	}
+
+	public function removeCampaignFromUI() {
+		$userId = $_REQUEST['userId'] ?? null;
+		$campaignId = $_REQUEST['campaignId'] ?? null;
+
+		if (!$campaignId || !$userId) {
+			return [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'Missing Parameter',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+		require_once ROOT_DIR . '/sys/CommunityEngagement/UserRemovedCampaign.php';
+
+		$removedCampaign = new UserRemovedCampaign();
+		$removedCampaign->userId = $userId;
+		$removedCampaign->campaignId = $campaignId;
+
+		if (!$removedCampaign->find(true)) {
+			$removedCampaign->insert();
+		}
+
+		return [
+			'success' => true,
+			'title' => translate([
+				'text' => 'Success',
+				'isPublicFacing' => true,
+			]),
+			'message' => translate([
+				'text' => 'Campaign removed from view',
+				'isPublicFacing' => true,
+			]),
+		];
+	}
+
 }

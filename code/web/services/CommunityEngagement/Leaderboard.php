@@ -41,6 +41,7 @@ class CommunityEngagement_Leaderboard extends Action {
 			$this->display('leaderboard.tpl', 'Leaderboard');
 		}
 	}
+
 	public function getLeaderboardTemplate(): ?GrapesTemplate {
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
 		$template = new GrapesTemplate();

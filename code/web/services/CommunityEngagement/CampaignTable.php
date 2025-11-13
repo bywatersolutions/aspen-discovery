@@ -107,6 +107,7 @@ class CommunityEngagement_CampaignTable extends Admin_Dashboard {
 		$breadcrumbs = [];
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home', 'Administration Home');
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home#communityEngagement', 'Community Engagement');
+		$breadcrumbs[] = new Breadcrumb('/CommunityEngagement/AdminView', 'Community Engagement Admin View');
 		return $breadcrumbs;
 	}
 

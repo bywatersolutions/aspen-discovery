@@ -11,5 +11,29 @@ function getUpdates26_Q1_00(): array {
 				 ''
 			 ]
 		 ], //name*/
+
+		//alexander - Open Fifth
+		'change_data_types_for_grapes_js_columns' => [
+			'title' => 'Change Data Types For Grapes JS Columns',
+			'description' => 'Update column types to allow for longer pages',
+			'continueOnError' => false,
+			'sql' => [
+				"ALTER TABLE grapes_web_builder MODIFY templateContent LONGTEXT",
+				"ALTER TABLE grapes_web_builder MODIFY htmlData LONGTEXT",
+				"ALTER TABLE grapes_web_builder MODIFY cssData LONGTEXT",
+			]
+		], //change_data_types_for_grapes_js_columns
+
+		'add_admin_view_permission_to_community_engagement' => [
+			'title' => 'Add Admin View Permission to Community Engagement',
+			'description' => 'Add a new permission for admin view page for commnuity engagement',
+			'continueOnError' => false,
+			'sql' => [
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Primary Configuration', 'View Community Engagement Admin View', 'Community Engagement', 200, 'Allows the user to view the Community Engagement Admin View.')",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES 
+					((SELECT roleId FROM roles WHERE name='opacAdmin'), 
+						(SELECT id FROM permissions WHERE name='View Community Engagement Admin View'))"
+			]
+		],// add_admin_view_permission_to_community_engagement
 	];
 }

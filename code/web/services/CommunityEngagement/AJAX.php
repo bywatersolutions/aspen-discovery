@@ -148,6 +148,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 					$html .= "<button class='btn btn-primary btn-sm' onclick='AspenDiscovery.CommunityEngagement.refreshCurrentUserStats($userId); return false;' style='margin: 5px 0;'>Refresh Campaign Progress</button>";
 
 					foreach ($allEligibleCampaigns as $campaign) {
+						$isRemoved = $this->userRemovedCampaignCheck($campaign->id, $userId);
 						$html .= '<div class="dashboardCategory" style="border: 1px solid #3174AF; padding: 15px; margin-bottom: 20px;">';
 
 						$html .= "<h5><a href=\"/CommunityEngagement/CampaignTable?id={$campaign->id}\">" . htmlspecialchars($campaign->name) . "</a></h5>";
@@ -341,6 +342,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 							$html .= "<button class='btn btn-primary' style='margin-right: 5px;' onclick='AspenDiscovery.CommunityEngagement.adminCampaignRewardGiven({$userId}, {$campaign->id}); return false;'>Give Campaign Reward</button>";
 						}
 
+						if ($isRemoved) {
+							$html .= "<button class='btn btn-warning' onclick='AspenDiscovery.CommunityEngagement.restoreCampaignForUser({$campaign->id}, {$userId}); return false;'>Restore Campaign for User</button>";
+						}
+
 						// Enrollment buttons
 						if (($campaign->isActive || $campaign->isUpcoming) && $library->allowAdminToEnrollUsersInAdminView && $campaign->canEnroll) {
 							if ($campaign->enrolled) {
@@ -369,7 +374,89 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		echo json_encode($response);
 		exit;
 	}
+
+	private function userRemovedCampaignCheck($campaignId, $userId) {
+		require_once ROOT_DIR . '/sys/CommunityEngagement/UserRemovedCampaign.php';
+
+		$removed = new UserRemovedCampaign();
+		$removed->campaignId = $campaignId;
+		$removed->userId = $userId;
+		
+		return $removed->find(true);
+	}
 	
+	public function restoreCampaignForUser() {
+		$userId = $_REQUEST['userId'] ?? null;
+		$campaignId = $_REQUEST['campaignId'] ?? null;
+
+		if (!$userId) {
+			$response = [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'No User ID ',
+					'isPublicFacing' => true,
+				]),
+			];
+			header('Content-Type: application/json');
+			echo json_encode($response);
+			exit;
+		}
+
+		if (!$campaignId) {
+			$respone = [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'No Campaign ID ',
+					'isPublicFacing' => true,
+				]),
+			];
+			header('Content-Type: application/json');
+			echo json_encode($response);
+			exit;
+		}
+		require_once ROOT_DIR . '/sys/CommunityEngagement/UserRemovedCampaign.php';
+
+		$removed = new userRemovedCampaign();
+		$removed->campaignId = $campaignId;
+		$removed->userId = $userId;
+		if ($removed->find(true)) {
+			$removed->delete();
+			$response = [
+				'success' => true,
+				'title' => translate([
+					'text' => 'Campaign Restored',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'The campaign has been restored for this user.',
+					'isPublicFacing' => true,
+				]),	
+			];
+		} else {
+			$response = [
+				'success' => false,
+				'title' => translate([
+					'text' => 'Error',
+					'isPublicFacing' => true,
+				]),
+				'message' => translate([
+					'text' => 'Unable to restore the campaign for this user.',
+					'isPublicFacing' => true,
+				]),
+			];
+		}
+		header('Content-Type: application/json');
+		echo json_encode($response);
+		exit;
+	}
 
 	public function filterLeaderboardCampaigns() {
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
@@ -1189,6 +1276,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 				$users[] = array(
 					'id' => $user->id,
 					'displayName' => $user->displayName,
+					'ils_barcode' => $user->ils_barcode,
 				);
 			} 
 		}

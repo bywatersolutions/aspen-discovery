@@ -471,7 +471,7 @@ AspenDiscovery.CommunityEngagement = function() {
 			} else {
 				resultsDiv.innerHTML = users.map(user =>
 					`<div class="search-result-item" onclick="AspenDiscovery.CommunityEngagement.selectUser('${user.id}', '${user.displayName.replace(/'/g, "\\'")}')">
-						${user.displayName}
+						${user.displayName}${user.ils_barcode ? ' (' + user.ils_barcode + ')' : ''}
 					</div>`
 				).join('');
 			}
@@ -498,7 +498,7 @@ AspenDiscovery.CommunityEngagement = function() {
 			hiddenInput.value = '';
 			AspenDiscovery.CommunityEngagement.getLibraryUsers(function(users) {
 				const filteredUsers = users.filter(user =>
-					user.displayName.toLowerCase().includes(query.toLowerCase())
+					user.displayName.toLowerCase().includes(query.toLowerCase()) || (user.ils_barcode && user.ils_barcode.toLowerCase().includes(query.toLowerCase()))
 				);
 				AspenDiscovery.CommunityEngagement.displaySearchResults(filteredUsers);
 			});
@@ -837,6 +837,33 @@ AspenDiscovery.CommunityEngagement = function() {
 				}
 			}).fail(function (jqXHR, textStatus, errorThrown) {
 				AspenDiscovery.ajaxFail(jqXHR, textStatus, errorThrown);
+			})
+		},
+		restoreCampaignForUser: function(campaignId, userId) {
+			const url = Globals.path + "/CommunityEngagement/AJAX";
+			const params = {
+				method: 'restoreCampaignForUser',
+				userId: userId,
+				campaignId: campaignId,
+			};
+
+			$.getJSON(url, params, function(data) {
+				AspenDiscovery.showMessage(data.title, data.message);
+				if (data.success) {
+					const refreshUrl = Globals.path + "/CommunityEngagement/AJAX";
+					const refreshParams = {
+						method: 'filterCampaigns',
+						filterType: 'user',
+						userId: userId
+					};
+					$.getJSON(refreshUrl, refreshParams, function (refreshData) {
+						if (refreshData.success && refreshData.html) {
+							$("#filteredCampaign").html(refreshData.html);
+						}
+					});
+				}
+			}).fail (function(jqXHR, textStatus, errorThrown) {
+				console.error('AJAX Error: ', textStatus, errorThrown);
 			})
 		}
 	}

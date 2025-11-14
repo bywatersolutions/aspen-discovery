@@ -898,22 +898,15 @@ class AJAX extends Action {
 		// Get facet data for the requested facet.
 		$facetList = $restoredSearch->getFacetList([$facetName => $facetSetting]);
 
-		if (!isset($facetList[$facetName])) {
-			return [
-				'success' => false,
-				'message' => translate([
-					'text' => 'No facet data returned',
-					'isPublicFacing' => true,
-				])
-			];
-		}
-
 		global $interface;
-		$cluster = $facetList[$facetName];
-
-		// Set fullPath for form action (needed for year facet filters).
-		$fullPath = $restoredSearch->renderSearchUrl();
-		$interface->assign('fullPath', $fullPath);
+		if (!isset($facetList[$facetName])) {
+			$cluster = [
+				'list' => [],
+				'label' => $facetSetting->displayName ?? $facetName,
+			];
+		} else {
+			$cluster = $facetList[$facetName];
+		}
 
 		// Do special processing for certain facet types.
 		if (preg_match('/time_since_added/i', $facetName)) {
@@ -1004,20 +997,34 @@ class AJAX extends Action {
 
 		// Determine which template to use based on facet configuration.
 		$template = 'Search/Recommend/standardFacet.tpl';
+		$isFormBasedFacet = false;
 
 		// Check for special facet types by name first
 		if ($facetName == 'publishDate' || $facetName == 'birthYear' || $facetName == 'deathYear' || $facetName == 'publishDateSort') {
 			$template = 'Search/Recommend/yearFacetFilter.tpl';
+			$isFormBasedFacet = true;
 		} elseif ($facetName == 'rating_facet') {
 			$template = 'Search/Recommend/ratingFacet.tpl';
 		} elseif ($facetName == 'lexile_score' || $facetName == 'accelerated_reader_reading_level' || $facetName == 'accelerated_reader_point_value') {
 			$template = 'Search/Recommend/sliderFacet.tpl';
+			$isFormBasedFacet = true;
 		} elseif ($facetName == 'start_date') {
 			$template = 'Search/Recommend/calendarFacet.tpl';
+			$isFormBasedFacet = true;
 		} elseif (!empty($facetSetting->showAsDropDown)) {
 			$template = 'Search/Recommend/dropDownFacet.tpl';
 		} elseif (!empty($facetSetting->multiSelect)) {
 			$template = 'Search/Recommend/multiSelectFacet.tpl';
+			$isFormBasedFacet = true;
+		}
+
+		// For form-based facets, pass search parameters to preserve search state.
+		// Needed because GET form submissions discard the action URL's query string.
+		if ($isFormBasedFacet) {
+			$interface->assign('fullPath', $restoredSearch->renderSearchUrl());
+			$interface->assign('searchTerms', $restoredSearch->getSearchTerms() ?? []);
+			$interface->assign('restoredFilters', $restoredSearch->getFilterList() ?? []);
+			$interface->assign('searchSource', $restoredSearch->getSearchSource());
 		}
 
 		return [

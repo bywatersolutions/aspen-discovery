@@ -207,6 +207,13 @@ class SideFacets implements RecommendationInterface {
 
 		$interface->assign('sideFacetSet', $sideFacets);
 		$interface->assign('searchId', $this->searchObject->getSearchId());
+
+		// For form-based facets (year, slider, calendar, multiselect), pass search parameters
+		// to preserve search state when forms are submitted.
+		$interface->assign('searchTerms', $this->searchObject->getSearchTerms());
+		$interface->assign('restoredFilters', $this->searchObject->getFilterList());
+		$interface->assign('searchSource', $this->searchObject->getSearchSource());
+		$interface->assign('fullPath', $this->searchObject->renderSearchUrl());
 	}
 
 	public function updateTimeSinceAddedFacet(array $timeSinceAddedFacet): array {

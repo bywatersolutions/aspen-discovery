@@ -161,7 +161,7 @@ class Search_Results extends ResultsAction {
 					}
 				}
 				if ($yearFrom != '*' || $yearTo != '*') {
-					$queryParamStrings[] = "&filter[]=$dateFilter:[$yearFrom+TO+$yearTo]";
+					$queryParamStrings[] = "filter[]=$dateFilter:[$yearFrom+TO+$yearTo]";
 				}
 				$queryParamString = join('&', $queryParamStrings);
 				header("Location: /Search/Results?$queryParamString");
@@ -204,7 +204,7 @@ class Search_Results extends ResultsAction {
 					}
 				}
 				if ($from != '*' || $to != '*') {
-					$queryParamStrings[] = "&filter[]=$filter:[$from+TO+$to]";
+					$queryParamStrings[] = "filter[]=$filter:[$from+TO+$to]";
 				}
 				$queryParamString = join('&', $queryParamStrings);
 				header("Location: /Search/Results?$queryParamString");

@@ -246,6 +246,6 @@ class FileUpload extends DataObject {
 		}
 		$deleteObj = new static();
 		$deleteObj->whereAddIn($deleteObj->getPrimaryKey(), $expiredIds, false);
-		return $deleteObj->delete(true);
+		return $deleteObj->delete(true, true);
 	}
 }

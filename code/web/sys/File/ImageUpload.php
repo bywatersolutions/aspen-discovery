@@ -397,6 +397,8 @@ class ImageUpload extends DataObject {
 	 * @return int
 	 */
 	public static function purgeExpired(int $olderThanSecs = 2592000): int {
+		global $serverName;
+		$baseDir = '/data/aspen-discovery/' . $serverName . '/uploads/web_builder_image';
 		$cutOff = time() - $olderThanSecs;
 		$expiredIds = [];
 		$fetchObj = new static();
@@ -406,10 +408,20 @@ class ImageUpload extends DataObject {
 		$fetchObj->find();
 		while ($fetchObj->fetch()) {
 			// Remove each size variant from disk.
-			foreach ([$fetchObj->fullSizePath, $fetchObj->xLargeSizePath, $fetchObj->largeSizePath,
-						 $fetchObj->mediumSizePath, $fetchObj->smallSizePath] as $path) {
-				if (!empty($path) && file_exists($path)) {
-					@unlink($path);
+			$paths = [
+				'full' => $fetchObj->fullSizePath,
+				'x-large' => $fetchObj->xLargeSizePath,
+				'large' => $fetchObj->largeSizePath,
+				'medium' => $fetchObj->mediumSizePath,
+				'small' => $fetchObj->smallSizePath,
+			];
+
+			foreach ($paths as $size => $filename) {
+				if (!empty($filename)) {
+					$fullPath = $baseDir . '/' . $size . '/' . $filename;
+					if (file_exists($fullPath)) {
+						@unlink($fullPath);
+					}
 				}
 			}
 			$expiredIds[] = $fetchObj->id;
@@ -420,6 +432,6 @@ class ImageUpload extends DataObject {
 
 		$deleteObj = new static();
 		$deleteObj->whereAddIn($deleteObj->getPrimaryKey(), $expiredIds, false);
-		return $deleteObj->delete(true);
+		return $deleteObj->delete(true, true);
 	}
 }

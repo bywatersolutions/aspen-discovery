@@ -581,12 +581,19 @@ abstract class DataObject implements JsonSerializable {
 		}
 
 		if (!$hardDelete && $this->supportsSoftDelete()) {
-			/** @noinspection PhpUndefinedFieldInspection */
-			$this->deleted = 1;
-			/** @noinspection PhpUndefinedFieldInspection */
-			$this->dateDeleted = time();
-			/** @noinspection PhpUndefinedFieldInspection */
-			$this->deletedBy = UserAccount::getActiveUserId();
+			// Only set these values if they haven't already been set by the derived class' delete() call.
+			if (empty($this->deleted)) {
+				/** @noinspection PhpUndefinedFieldInspection */
+				$this->deleted = 1;
+			}
+			if (empty($this->dateDeleted)) {
+				/** @noinspection PhpUndefinedFieldInspection */
+				$this->dateDeleted = time();
+			}
+			if (empty($this->deletedBy)) {
+				/** @noinspection PhpUndefinedFieldInspection */
+				$this->deletedBy = UserAccount::getActiveUserId();
+			}
 			return $this->update();
 		}
 

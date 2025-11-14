@@ -1321,7 +1321,7 @@ class ListAPI extends AbstractAPI {
 				$userCanEdit = $user->canEditList($list);
 				if ($userCanEdit) {
 					$optOutOfSoftDeletion = !empty($_REQUEST['optOutOfSoftDeletion']) && filter_var($_REQUEST['optOutOfSoftDeletion'], FILTER_VALIDATE_BOOLEAN);
-					$result = $list->delete(false, $optOutOfSoftDeletion);
+					$result = $list->delete(false, $optOutOfSoftDeletion, $user->id);
 					if($result === 1) //we successfully modified our list
 					{
 						return [

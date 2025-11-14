@@ -66,18 +66,34 @@ class Admin_ObjectRestorations extends ObjectEditor {
 
 	function getAllObjects($page, $recordsPerPage): array {
 		$sort = $this->getSort();
-		$cacheKey = "page_{$page}_size_{$recordsPerPage}_sort_{$sort}";
+		$filterFields = $this->getFilterFields(ObjectRestoration::getObjectStructure());
+		$appliedFilters = $this->getAppliedFilters($filterFields);
+		$filterKey = md5(serialize($appliedFilters));
+		$cacheKey = "page_{$page}_size_{$recordsPerPage}_sort_{$sort}_filter_{$filterKey}";
+
 		if (!isset($this->cachedRows[$cacheKey])) {
-			$this->cachedRows[$cacheKey] = $this->buildRows($page, $recordsPerPage, $sort);
+			if (!isset($this->cachedRows['_all_filtered'])) {
+				$this->cachedRows['_all_filtered'] = $this->buildAllFilteredRows($sort);
+			}
+			$offset = ($page - 1) * $recordsPerPage;
+			$this->cachedRows[$cacheKey] = array_slice($this->cachedRows['_all_filtered'], $offset, $recordsPerPage, true);
 		}
 		return $this->cachedRows[$cacheKey];
 	}
-	
-	function getNumObjects(): int { 
-		if (!isset($this->cachedRows['_total_count'])) {
-			$this->cachedRows['_total_count'] = $this->getTotalRowCount();
+
+	function getNumObjects(): int {
+		$filterFields = $this->getFilterFields(ObjectRestoration::getObjectStructure());
+		$appliedFilters = $this->getAppliedFilters($filterFields);
+		$filterKey = md5(serialize($appliedFilters));
+		$countKey = "_total_count_filter_{$filterKey}";
+
+		if (!isset($this->cachedRows[$countKey])) {
+			if (!isset($this->cachedRows['_all_filtered'])) {
+				$this->cachedRows['_all_filtered'] = $this->buildAllFilteredRows($this->getSort());
+			}
+			$this->cachedRows[$countKey] = count($this->cachedRows['_all_filtered']);
 		}
-		return $this->cachedRows['_total_count'];
+		return $this->cachedRows[$countKey];
 	}
 
 	function getObjectStructure($context = ''): array {
@@ -168,15 +184,13 @@ class Admin_ObjectRestorations extends ObjectEditor {
 	}
 
 	/**
-	 * Scan all managed classes for paginated rows where
+	 * Scan all managed classes for all filtered and sorted rows where
 	 * `deleted = 1` and `dateDeleted > 0`.
 	 *
-	 * @param int $page Page number (1-based).
-	 * @param int $recordsPerPage Number of records per page.
 	 * @param string $sort Sort field and direction (e.g., 'deletedOn desc').
 	 * @return ObjectRestoration[] Keyed by composite ID `<Class>_<pk>`.
 	 */
-	private function buildRows(int $page = 1, int $recordsPerPage = 25, string $sort = 'deletedOn desc'): array {
+	private function buildAllFilteredRows(string $sort = 'deletedOn desc'): array {
 		$allObjects = [];
 		foreach (self::$managedClasses as $class => $info) {
 			// Lazy-load class definition only when iterating.
@@ -212,13 +226,55 @@ class Admin_ObjectRestorations extends ObjectEditor {
 			}
 		}
 
-		// Convert to ObjectRestoration objects first for proper sorting.
+		// Convert to ObjectRestoration objects first for proper sorting and filtering.
 		$restorationObjects = [];
 		foreach ($allObjects as $objectData) {
 			$sample = $objectData['object'];
 			$class = $objectData['class'];
 			$titleColumn = $objectData['titleColumn'];
 			$restorationObjects[] = $this->createRestorationItem($sample, $class, $titleColumn);
+		}
+
+		$filterFields = $this->getFilterFields(ObjectRestoration::getObjectStructure());
+		$appliedFilters = $this->getAppliedFilters($filterFields);
+		if (!empty($appliedFilters)) {
+			$restorationObjects = array_filter($restorationObjects, function($obj) use ($appliedFilters) {
+				foreach ($appliedFilters as $fieldName => $filter) {
+					$fieldValue = $obj->$fieldName ?? '';
+					$filterValue = $filter['filterValue'];
+					$filterType = $filter['filterType'];
+
+					if ($filterType == 'matches') {
+						if ($filter['field']['type'] == 'enum' && $filterValue == 'all_values') {
+							continue;
+						}
+						if ($fieldValue != $filterValue) {
+							return false;
+						}
+					} elseif ($filterType == 'contains') {
+						if (stripos($fieldValue, $filterValue) === false) {
+							return false;
+						}
+					} elseif ($filterType == 'startsWith') {
+						if (stripos($fieldValue, $filterValue) !== 0) {
+							return false;
+						}
+					} elseif ($filterType == 'beforeTime') {
+						$fieldTimestamp = strtotime($fieldValue);
+						$filterTimestamp = strtotime($filter['filterValue2']);
+						if ($fieldTimestamp === false || $filterTimestamp === false || $fieldTimestamp >= $filterTimestamp) {
+							return false;
+						}
+					} elseif ($filterType == 'afterTime') {
+						$fieldTimestamp = strtotime($fieldValue);
+						$filterTimestamp = strtotime($filter['filterValue2']);
+						if ($fieldTimestamp === false || $filterTimestamp === false || $fieldTimestamp <= $filterTimestamp) {
+							return false;
+						}
+					}
+				}
+				return true;
+			});
 		}
 
 		[$fieldName, $direction] = array_pad(explode(' ', $sort), 2, 'desc');
@@ -243,9 +299,7 @@ class Admin_ObjectRestorations extends ObjectEditor {
 			return (strtolower($direction) === 'desc') ? -$cmp : $cmp;
 		});
 
-		$offset = ($page - 1) * $recordsPerPage;
-		$pagedObjects = array_slice($restorationObjects, $offset, $recordsPerPage);
-		return array_column($pagedObjects, null, 'compositeId');
+		return array_column($restorationObjects, null, 'compositeId');
 	}
 
 	/**

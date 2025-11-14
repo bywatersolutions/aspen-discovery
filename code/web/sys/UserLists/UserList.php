@@ -205,13 +205,21 @@ class UserList extends DataObject {
 		return $result;
 	}
 
-	public function delete(bool $useWhere = false, bool $hardDelete = false) : bool|int {
+	public function delete(bool $useWhere = false, bool $hardDelete = false, int $deletedByUserId = null) : bool|int {
+		// Use provided user ID, fall back to active user ID, then to list owner.
+		if (empty($deletedByUserId)) {
+			$deletedByUserId = UserAccount::getActiveUserId();
+		}
+		if (empty($deletedByUserId)) {
+			$deletedByUserId = $this->user_id;
+		}
+		$this->deletedBy = $deletedByUserId;
+
 		if ($hardDelete && !empty($this->id) && $this->id >= 1) {
 			// Hard delete by marking for index cleanup and updating deletion information.
 			$this->deleteFromIndex = 1;
 			$this->deleted = 1;
 			$this->dateDeleted = time();
-			$this->deletedBy = UserAccount::getActiveUserId();
 			$ret = $this->update();
 			if ($ret) {
 				require_once ROOT_DIR . '/sys/UserLists/UserListEntry.php';
@@ -224,7 +232,13 @@ class UserList extends DataObject {
 		}
 
 		global $memCache;
-		$memCache->delete('user_list_data_' . UserAccount::getActiveUserId());
+		$activeUserId = UserAccount::getActiveUserId();
+		if (!empty($activeUserId)) {
+			$memCache->delete('user_list_data_' . $activeUserId);
+		}
+		if (!empty($this->user_id) && $this->user_id != $activeUserId) {
+			$memCache->delete('user_list_data_' . $this->user_id);
+		}
 		return $ret;
 	}
 

@@ -324,25 +324,26 @@ class UserList extends DataObject {
 					$indexedFormat = new IndexedFormat();
 					$listEntry->joinAdd($indexedFormat, "LEFT", 'fmt', 'gwRecords.formatId', 'id');
 
-					$indexedPubDate = new class extends DataObject {
-						public $__table = 'indexed_publication_date';
-						public $id;
-						public $publicationDate;
-					};
+					require_once ROOT_DIR . '/sys/Indexing/IndexedPublicationDate.php';
+					$indexedPubDate = new IndexedPublicationDate();
 					$listEntry->joinAdd($indexedPubDate, "LEFT", 'indexedPubDate', 'gwRecords.publicationDateId', 'id');
-					
+
 					$fmtGate = $formatFilterEnabled ? " AND fmt.format IN $formatInClause " : "";
-					$listEntry->selectAdd("CASE
+					// Use MIN for oldest first, MAX for newest first to handle multiple records per grouped work.
+					$aggregate = $sort == "publication_date" ? "MIN" : "MAX";
+					$yearExpression = "CASE
 						WHEN user_list_entry.source = 'GroupedWork' $fmtGate
 							AND indexedPubDate.publicationDate IS NOT NULL
 							AND indexedPubDate.publicationDate REGEXP '[0-9]{4}' THEN
 							CAST(REGEXP_SUBSTR(indexedPubDate.publicationDate, '[0-9]{4}') AS UNSIGNED)
 						ELSE NULL
-					END AS NormalizedYear");
+					END";
+					$listEntry->selectAdd("$aggregate($yearExpression) AS NormalizedYear");
 					$listEntry->groupBy('user_list_entry.id');
 
 					$order = $sort == "publication_date" ? "ASC" : "DESC";
-					$listEntry->orderBy("CASE WHEN NormalizedYear IS NULL THEN 1 ELSE 0 END ASC, NormalizedYear $order");
+					// Must repeat the aggregate expression in ORDER BY due to MariaDB limitation with group function references.
+					$listEntry->orderBy("CASE WHEN $aggregate($yearExpression) IS NULL THEN 1 ELSE 0 END ASC, $aggregate($yearExpression) $order");
 
 					// Call number sort: Sorts ILS records by call number then shelf location; places other record types at bottom.
 					// Joins through grouped_work -> grouped_work_records -> grouped_work_record_items -> indexed_call_number + indexed_shelf_location.
@@ -370,29 +371,24 @@ class UserList extends DataObject {
 					$indexedFormat = new IndexedFormat();
 					$listEntry->joinAdd($indexedFormat, "LEFT", 'fmt', 'gwRecords.formatId', 'id');
 
-					$indexedCallNumber = new class extends DataObject {
-						public $__table = 'indexed_call_number';
-						public $id;
-						public $callNumber;
-					};
+					require_once ROOT_DIR . '/sys/Indexing/IndexedCallNumber.php';
+					$indexedCallNumber = new IndexedCallNumber();
 					$listEntry->joinAdd($indexedCallNumber, "LEFT", 'indexedCallNumber', 'gwItems.callNumberId', 'id');
 
-					$shelfLocation = new class extends DataObject {
-						public $__table = 'indexed_shelf_location';
-						public $id;
-						public $shelfLocation;
-					};
+					require_once ROOT_DIR . '/sys/Indexing/IndexedShelfLocation.php';
+					$shelfLocation = new IndexedShelfLocation();
 					$listEntry->joinAdd($shelfLocation, "LEFT", 'shelfLoc', 'gwItems.shelfLocationId', 'id');
 
 					$fmtGate = $formatFilterEnabled ? " AND fmt.format IN $formatInClause " : "";
 
 					$listEntry->selectAdd("
 						MIN(
-							CASE 
+							CASE
 								WHEN user_list_entry.source = 'GroupedWork'
 									AND (gwVariation.eContentSourceId IS NULL OR gwVariation.eContentSourceId <= 0)
 									$fmtGate
 									AND indexedCallNumber.callNumber IS NOT NULL
+									AND indexedCallNumber.callNumber != ''
 								THEN indexedCallNumber.callNumber
 								ELSE NULL
 							END
@@ -410,6 +406,7 @@ class UserList extends DataObject {
 								AND (gwVariation.eContentSourceId IS NULL OR gwVariation.eContentSourceId <= 0)
 								$fmtGate
 								AND indexedCallNumber.callNumber IS NOT NULL
+								AND indexedCallNumber.callNumber != ''
 							THEN indexedCallNumber.callNumber
 							ELSE NULL
 						END

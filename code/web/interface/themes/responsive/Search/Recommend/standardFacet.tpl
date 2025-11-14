@@ -1,4 +1,8 @@
-{if isset($cluster.showMoreFacetPopup) && $cluster.showMoreFacetPopup}
+{if empty($cluster.list)}
+	<div class="facetValue" style="font-style: italic; color: #666;">
+		{translate text="No options available for current search." isPublicFacing=true}
+	</div>
+{elseif isset($cluster.showMoreFacetPopup) && $cluster.showMoreFacetPopup}
 	{foreach from=$cluster.list item=thisFacet name="narrowLoop"}
 		{if $smarty.foreach.narrowLoop.iteration == ($cluster.valuesToShow + 1)}
 			{* Show More link if facet isn't searchable*}

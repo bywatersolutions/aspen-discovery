@@ -911,6 +911,10 @@ class AJAX extends Action {
 		global $interface;
 		$cluster = $facetList[$facetName];
 
+		// Set fullPath for form action (needed for year facet filters).
+		$fullPath = $restoredSearch->renderSearchUrl();
+		$interface->assign('fullPath', $fullPath);
+
 		// Do special processing for certain facet types.
 		if (preg_match('/time_since_added/i', $facetName)) {
 			require_once ROOT_DIR . '/sys/Recommend/SideFacets.php';

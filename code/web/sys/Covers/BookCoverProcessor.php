@@ -2065,7 +2065,7 @@ class BookCoverProcessor {
 		return false;
 	}
 
-	private function getReferencedGroupedWorkCover($permanentId) {
+	private function getReferencedGroupedWorkCover(string $permanentId): bool {
 		require_once ROOT_DIR . '/sys/Grouping/GroupedWork.php';
 		$groupedWork = new GroupedWork();
 		$groupedWork->permanent_id = $permanentId;
@@ -2094,6 +2094,16 @@ class BookCoverProcessor {
 						$referencedCoverInfo->setRecordType($referenceRecordType);
 						$referencedCoverInfo->setRecordId($referenceRecordId);
 						if ($referencedCoverInfo->find(true)) {
+							if ($referencedCoverInfo->getImageSource() === 'upload') {
+								// If there's an uploaded cover, check disk instead of using original URL
+								if (file_exists($referencedCoverURL_lg)) {
+									return $this->processImageURL('reference ' . $referenceId, $referencedCoverURL_lg);
+								} elseif (file_exists($referencedCoverURL_md)) {
+									return $this->processImageURL('reference ' . $referenceId, $referencedCoverURL_md);
+								}
+								return false;
+							}
+
 							$originalUrl = $referencedCoverInfo->getOriginalUrl();
 							if (!empty($originalUrl)) {
 								$url = $originalUrl;

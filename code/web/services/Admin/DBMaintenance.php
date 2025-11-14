@@ -34,6 +34,10 @@ class Admin_DBMaintenance extends Admin_Admin {
 			SystemVariables::forceNightlyIndex();
 
 			Theme::updateCssForAllThemes();
+
+			//Clear cached values after successful maintenance
+			require_once ROOT_DIR . '/sys/MemoryCache/CachedValue.php';
+			CachedValue::clearAllCachedValues();
 		}
 
 		//Check to see which updates have already been performed.

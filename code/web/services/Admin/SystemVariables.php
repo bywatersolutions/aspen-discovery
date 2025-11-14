@@ -72,4 +72,42 @@ class Admin_SystemVariables extends ObjectEditor {
 	function canView(): bool {
 		return UserAccount::userHasPermission('Administer System Variables');
 	}
+
+	function getAdditionalObjectActions($existingObject): array {
+		$objectActions = [];
+		if ($existingObject instanceof SystemVariables) {
+			$objectActions[] = [
+				'text' => 'Clear Cached Values',
+				'url' => '/Admin/SystemVariables?objectAction=clearCachedValues',
+			];
+		}
+		return $objectActions;
+	}
+
+	/** @noinspection PhpUnused */
+	function clearCachedValues(): void {
+		require_once ROOT_DIR . '/sys/MemoryCache/CachedValue.php';
+		$user = UserAccount::getActiveUserObj();
+		$success = CachedValue::clearAllCachedValues();
+
+		if ($user != null) {
+			if ($success) {
+				$user->updateMessage = translate([
+					'text' => 'Cached values were cleared successfully.',
+					'isAdminFacing' => true,
+				]);
+				$user->updateMessageIsError = 0;
+			} else {
+				$user->updateMessage = translate([
+					'text' => 'Cached values could not be cleared.',
+					'isAdminFacing' => true,
+				]);
+				$user->updateMessageIsError = 1;
+			}
+			$user->update();
+		}
+
+		header('Location: /Admin/SystemVariables');
+		exit();
+	}
 }

@@ -32,6 +32,8 @@ class YearInReviewSetting extends DataObject {
 		}
 
 		$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All System Messages'));
+		$current_year = date('Y');
+		$last_year = $current_year - 1;
 		$structure = [
 			'id' => [
 				'property' => 'id',
@@ -50,7 +52,8 @@ class YearInReviewSetting extends DataObject {
 				'type' => 'enum',
 				'label' => 'Year',
 				'values' => [
-					2024 => '2024'
+					$last_year => $last_year,
+					$current_year => $current_year
 				],
 				'description' => 'The year for the Year in review',
 			],

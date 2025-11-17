@@ -46,7 +46,7 @@ function generateYearInReview(User $patron) : void {
 					$userYearInReview->wrappedActive = true;
 					$slidesToShow = [];
 					//Calculate information for use in the display of Year in Review
-					if ($yearInReviewSetting->year == 2024) {
+					if ($yearInReviewSetting->year >= 2024) {
 						$yearInReviewData = new stdClass();
 						$yearInReviewData->userData = [];
 						$yearInReviewData->activeStyle = $yearInReviewSetting->style;

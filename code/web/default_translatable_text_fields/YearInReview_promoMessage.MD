@@ -1,1 +1,1 @@
-Your 2024 Shelved is available now! Would you like to view it now?
+Your 2025 Shelved is available now! Would you like to view it now?

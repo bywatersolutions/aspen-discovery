@@ -1,0 +1,197 @@
+{
+  "slides": [
+    {
+      "title": "Your 2027 Shelved",
+      "background" : "perennial_0_1.png",
+      "overlay_text" : []
+    },
+    {
+      "title": "Your Borrower Experience Points",
+      "background" : "perennial_0_2a.png",
+      "overlay_text" : [
+        {
+          "text": "You checked out {totalCheckouts} titles.",
+          "left": "525px",
+          "top": "325px",
+          "width": "40%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "center"
+        },
+        {
+          "text": "And saved {yearlyCostSavings}!",
+          "left": "525px",
+          "top": "450px",
+          "width": "40%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "title": "Your Borrower Experience Points",
+      "background" : "perennial_0_2b.png",
+      "overlay_text" : [
+        {
+          "text": "You checked out {totalCheckouts} titles.",
+          "left": "540px",
+          "top": "350px",
+          "width": "40%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2.6em",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "title": "Your Hot Month",
+      "background" : "perennial_0_3a.png",
+      "overlay_text" : [
+        {
+          "text": "In {topMonth}, you borrowed the most from the library.",
+          "left": "225px",
+          "top": "200px",
+          "width": "40%",
+          "height": "20%",
+          "color" : "white",
+          "font_size": "2.5em",
+          "align": "left"
+        }
+      ]
+    },
+    {
+      "title": "Every Month was Your Busy Month",
+      "background" : "perennial_0_3b.png",
+      "overlay_text" : [
+        {
+          "text": "You were a steady user of the library this year with a checkout average of {averageCheckouts} per month.",
+          "left": "41%",
+          "top": "24%",
+          "width": "45%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "left"
+        }
+      ]
+    },
+    {
+      "title": "Top Formats",
+      "background" : "perennial_0_4.png",
+      "overlay_text" : [
+        {
+          "text": "{topFormat1}",
+          "left": "25%",
+          "top": "265px",
+          "width": "30%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "left"
+        },
+        {
+          "text": "{topFormat2}",
+          "left": "25%",
+          "top": "415px",
+          "width": "30%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "left"
+        },
+        {
+          "text": "{topFormat3}",
+          "left": "25%",
+          "top": "565px",
+          "width": "30%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "left"
+        }
+      ]
+    },
+    {
+      "title": "Favorite Genres",
+      "background" : "perennial_0_5.png",
+      "overlay_text" : [
+        {
+          "text": "{topGenres}",
+          "left": "25%",
+          "top": "300px",
+          "width": "50%",
+          "height": "30%",
+          "color" : "black",
+          "font_size": "1.9em",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "title": "Author You Couldn't Put Down",
+      "background" : "perennial_0_6.png",
+      "overlay_text" : [
+        {
+          "text": "You checked out multiple titles by {topAuthor}.",
+          "left": "50px",
+          "top": "500px",
+          "width": "40%",
+          "height": "30%",
+          "color" : "black",
+          "font_size": "2em",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "title": "Top Series",
+      "background" : "perennial_0_7.png",
+      "overlay_text" : [
+        {
+          "text": "{topSeries}",
+          "left": "100px",
+          "top": "300px",
+          "width": "40%",
+          "height": "35%",
+          "color" : "black",
+          "font_size": "2.25em",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "title": "Your Forecast for Next Year",
+      "background" : "perennial_0_8.png",
+      "overlay_text" : [],
+      "overlay_images" : [
+        {
+          "source": "recommendation_0",
+          "left" : "125px",
+          "top" : "350px",
+          "width": "175px"
+        },
+        {
+          "source": "recommendation_1",
+          "left" : "325px",
+          "top" : "350px",
+          "width": "175px"
+        },
+        {
+          "source": "recommendation_2",
+          "left" : "525px",
+          "top" : "350px",
+          "width": "175px"
+        }
+      ]
+    },
+    {
+      "title": "Thank you for using the library!",
+      "background" : "perennial_0_9.png",
+      "overlay_text" : []
+    }
+  ]
+}

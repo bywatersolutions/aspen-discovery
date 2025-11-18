@@ -361,6 +361,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 
 					$isMultiSelect = $facetInfo->multiSelect;
 					$additionalTags = '';
+					$activeFacetFields[] = $facetField;
 					if ($facetName == 'availability_toggle' || $facetName == "availability_toggle_$solrScope") {
 						$isMultiSelect = true;
 						$additionalTags = 'edition_info,edition_info_available_at,edition_info_format_category,edition_info_format';

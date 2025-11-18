@@ -3082,6 +3082,10 @@ class SearchAPI extends AbstractAPI {
 		$searchObject = SearchObjectFactory::initSearchObject($searchEngine);
 		$searchObject->init();
 
+		if (method_exists($searchObject, 'setBypassAsyncFacetLogic')) {
+			$searchObject->setBypassAsyncFacetLogic(true);
+		}
+
 		if (isset($_REQUEST['pageSize']) && is_numeric($_REQUEST['pageSize'])) {
 			$searchObject->setLimit($_REQUEST['pageSize']);
 		}
@@ -3562,7 +3566,7 @@ class SearchAPI extends AbstractAPI {
 	 * @param bool $processSearch - Whether or not the search should be processed before returning it
 	 * @return mixed - false if no search is found, a Search Object if the search can be restored, or an AspenError if the user does not have access to the search
 	 */
-	public function restoreSearch(string|int $id, bool $processSearch = true): mixed {
+	public function restoreSearch(string|int $id, bool $processSearch = true, bool $bypassAsyncFacetLogic = false): mixed {
 		require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 		$search = new SearchEntry();
 		$search->id = $id;
@@ -3647,7 +3651,7 @@ class SearchAPI extends AbstractAPI {
 		}
 		require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 		$id = $_REQUEST['id'];
-		$searchObj = $this->restoreSearch($id);
+		$searchObj = $this->restoreSearch($id, true, true);
 		if ($searchObj) {
 			global $interface;
 			$topFacetSet = $interface->getVariable('topFacetSet');
@@ -3692,7 +3696,7 @@ class SearchAPI extends AbstractAPI {
 		}
 		$includeSortList = $_REQUEST['includeSortList'] ?? true;
 		$id = $_REQUEST['id'];
-		$searchObj = $this->restoreSearch($id);
+		$searchObj = $this->restoreSearch($id, true, true);
 		if ($searchObj) {
 			global $interface;
 			$topFacetSet = $interface->getVariable('topFacetSet');
@@ -3842,7 +3846,7 @@ class SearchAPI extends AbstractAPI {
 		$id = $_REQUEST['id'];
 		$facet = $_REQUEST['facet'];
 		$term = $_REQUEST['term'] ?? '';
-		$searchObj = $this->restoreSearch($id);
+		$searchObj = $this->restoreSearch($id, true, true);
 		if ($searchObj) {
 			$items = [];
 			$index = 0;
@@ -3943,7 +3947,7 @@ class SearchAPI extends AbstractAPI {
 		}
 		$includeSort = $_REQUEST['includeSort'] ?? true;
 		$id = $_REQUEST['id'];
-		$searchObj = $this->restoreSearch($id);
+		$searchObj = $this->restoreSearch($id, true, true);
 		if ($searchObj) {
 			global $interface;
 			$facets = $interface->getVariable('sideFacetSet');
@@ -4148,7 +4152,7 @@ class SearchAPI extends AbstractAPI {
 		}
 		$id = $_REQUEST['id'];
 		$key = $_REQUEST['cluster'];
-		$searchObj = $this->restoreSearch($id);
+		$searchObj = $this->restoreSearch($id, true, true);
 		if ($searchObj) {
 			$facets = $searchObj->getFacetList();
 			$cluster = $facets[$key] ?? [];
@@ -4180,8 +4184,7 @@ class SearchAPI extends AbstractAPI {
 			];
 		}
 		$id = $_REQUEST['id'];
-		$term = $_REQUEST['term'];
-		$searchObj = $this->restoreSearch($id);
+		$searchObj = $this->restoreSearch($id, true, true);
 		if ($searchObj) {
 			// do something with the term
 		}

@@ -657,7 +657,7 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 			header('Content-Disposition: attachment;filename="SearchResults.csv"');
 			$fp = fopen('php://output', 'w');
 
-			$fields = array('Link', 'Title', 'Author', 'Publisher', 'Publish Date', 'Place of Publication', 'Format', 'Location & Call Number');
+			$fields = array('Link', 'Title', 'Author', 'ISBN', 'UPC', 'Publisher', 'Publish Date', 'Place of Publication', 'Format', 'Location & Call Number');
 			fputcsv($fp, $fields);
 
 			$docs = $result['response']['docs'];
@@ -677,6 +677,30 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 
 					$author = '';
 					$author = $curDoc['author_display'];
+
+					$isbn = '';
+					if (isset($curDoc['primary_isbn'])) {
+						$isbn = $curDoc['primary_isbn'];
+					} elseif (isset($curDoc['isbn'])) {
+						if (is_array($curDoc['isbn'])) {
+							$isbnArray = array_slice($curDoc['isbn'], 0, 3);
+							$isbn = implode(', ', $isbnArray);
+						} else {
+							$isbn = $curDoc['isbn'];
+						}
+					}
+
+					$upc = '';
+					if (isset($curDoc['primary_upc'])) {
+						$upc = $curDoc['primary_upc'];
+					} elseif (isset($curDoc['upc'])) {
+						if (is_array($curDoc['upc'])) {
+							$upcArray = array_slice($curDoc['upc'], 0, 3);
+							$upc = implode(', ', $upcArray);
+						} else {
+							$upc = $curDoc['upc'];
+						}
+					}
 
 					$publisher = '';
 					if (isset($curDoc['publisherStr'])) {
@@ -766,7 +790,7 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 					}
 					$groupedWorkDriver = null;
 					$output = implode(',', $output);
-					$row = array ($link, $title, $author, $publisher, $publishDate, $placeOfPublication, $uniqueFormats, $output);
+					$row = array ($link, $title, $author, $isbn, $upc, $publisher, $publishDate, $placeOfPublication, $uniqueFormats, $output);
 					fputcsv($fp, $row);
 				}
 			}
@@ -815,7 +839,7 @@ abstract class SearchObject_AbstractGroupedWorkSearcher extends SearchObject_Sol
 			$logger->log("Unable to create RIS file: " . $e->getMessage(), Logger::LOG_ERROR);
 		}
 	}
-	
+
 	/**
 	 * Retrieves a document specified by the ID.
 	 *

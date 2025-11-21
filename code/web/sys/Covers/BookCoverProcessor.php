@@ -2376,7 +2376,8 @@ class BookCoverProcessor {
 	private function checkForEarlyRedirect(): bool {
 		if ($this->bookCoverInfo &&
 			!empty($this->bookCoverInfo->getOriginalUrl()) &&
-			SystemVariables::getSystemVariables()->useOriginalCoverUrls
+			SystemVariables::getSystemVariables()->useOriginalCoverUrls &&
+			!str_starts_with($this->bookCoverInfo->getImageSource(), 'reference')
 		) {
 			$validationFields = [
 				$this->bookCoverInfo->imageSource,

@@ -2572,7 +2572,7 @@ class Polaris extends AbstractIlsDriver {
 		];
 		if ($type == 'selfReg' && $library && $library->promptForBirthDateInSelfReg) {
 			$birthDateMin = date('Y-m-d', strtotime('-113 years'));
-			$birthDateMax = date('Y-m-d', strtotime('-13 years'));
+			$birthDateMax = date('Y-m-d', strtotime('-' . $library->minSelfRegAge . ' years'));
 			$fields['personalInformationSection']['properties']['birthDate'] = [
 				'property' => 'birthDate',
 				'type' => 'date',

@@ -3,12 +3,56 @@
 require_once ROOT_DIR . '/recaptcha/recaptchalib.php';
 
 class SelfReg extends Action {
-	function launch($msg = null) {
+	function launch(): void {
 		header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 		header("Pragma: no-cache");
 		header("Expires: 0");
 		global $interface;
 		global $library;
+
+		if (isset($_SESSION['selfRegResult'])) {
+			$interface->assign('selfRegResult', $_SESSION['selfRegResult']);
+			unset($_SESSION['selfRegResult']);
+		}
+		if (isset($_SESSION['selfRegError'])) {
+			$errorType = $_SESSION['selfRegError'];
+			switch ($errorType) {
+				case 'captcha':
+					$interface->assign('captchaMessage', 'The CAPTCHA response was incorrect, please try again.');
+					break;
+				case 'email':
+					$emailMessage = translate([
+						'text' => 'Please enter a valid email address.',
+						'isPublicFacing' => true
+					]);
+					$interface->assign('emailMessage', $emailMessage);
+					break;
+				case 'phone':
+					$phoneMessage = translate([
+						'text' => 'Please enter a valid phone number.',
+						'isPublicFacing' => true
+					]);
+					$interface->assign('phoneMessage', $phoneMessage);
+					break;
+				case 'address':
+					$addressMessage = translate([
+						'text' => 'The address you entered does not appear to be valid. Please check your address and try again.',
+						'isPublicFacing' => true
+					]);
+					$interface->assign('addressMessage', $addressMessage);
+					break;
+				case 'age':
+					$text = $_SESSION['selfRegAgeText'] ?? 'Age not valid.';
+					$ageMessage = translate([
+						'text' => $text,
+						'isPublicFacing' => true
+					]);
+					$interface->assign('ageMessage', $ageMessage);
+					unset($_SESSION['selfRegAgeText']);
+					break;
+			}
+			unset($_SESSION['selfRegError']);
+		}
 
 		$catalog = CatalogFactory::getCatalogConnectionInstance();
 		$selfRegFields = $catalog->getSelfRegistrationFields();
@@ -22,12 +66,14 @@ class SelfReg extends Action {
 			$this->display('selfRegistrationNotAllowed.tpl', 'Register for a Library Card', '');
 		} else {
 			if (isset($_REQUEST['submit'])) {
-
 				require_once ROOT_DIR . '/sys/Enrichment/RecaptchaSetting.php';
 				$recaptchaValid = RecaptchaSetting::validateRecaptcha();
 
 				if (!$recaptchaValid) {
-					$interface->assign('captchaMessage', 'The CAPTCHA response was incorrect, please try again.');
+					$_SESSION['selfRegError'] = 'captcha';
+					$_SESSION['selfRegFormData'] = $_REQUEST;
+					header("Location: /MyAccount/SelfReg");
+					exit;
 				} else {
 					require_once ROOT_DIR . '/sys/Administration/USPS.php';
 					require_once ROOT_DIR . '/sys/Utils/SystemUtils.php';
@@ -41,20 +87,12 @@ class SelfReg extends Action {
 					//validate phone and email
 					$invalidContactInfo = false;
 					if (!empty($_REQUEST['email']) && !filter_var($_REQUEST['email'], FILTER_VALIDATE_EMAIL)) {
-						$emailMessage = translate([
-							'text' => 'Please enter a valid email address.',
-							'isPublicFacing' => true
-						]);
-						$interface->assign('emailMessage', $emailMessage);
+						$_SESSION['selfRegError'] = 'email';
 						$invalidContactInfo = true;
 					}
 					if (!empty($_REQUEST['phone'])) {
 						if (!SystemUtils::validatePhoneNumber($_REQUEST['phone'])) {
-							$phoneMessage = translate([
-								'text' => 'Please enter a valid phone number.',
-								'isPublicFacing' => true
-							]);
-							$interface->assign('phoneMessage', $phoneMessage);
+							$_SESSION['selfRegError'] = 'phone';
 							$invalidContactInfo = true;
 						}
 					}
@@ -90,24 +128,20 @@ class SelfReg extends Action {
 							if (!empty($dob)) {
 								if (SystemUtils::validateAge($library->minSelfRegAge, $dob)) {
 									$result = $catalog->selfRegister();
-									$interface->assign('selfRegResult', $result);
+									$_SESSION['selfRegResult'] = $result;
+									header("Location: /MyAccount/SelfReg");
+									exit;
 								}else {
-									$ageMessage = translate([
-										'text' => 'Age not valid.',
-										'isPublicFacing' => true
-									]);
-									$interface->assign('ageMessage', $ageMessage);
+									$_SESSION['selfRegError'] = 'age';
 								}
 							} else {
 								$result = $catalog->selfRegister();
-								$interface->assign('selfRegResult', $result);
+								$_SESSION['selfRegResult'] = $result;
+								header("Location: /MyAccount/SelfReg");
+								exit;
 							}
 						} else {
-							$addressMessage = translate([
-								'text' => 'The address you entered does not appear to be valid. Please check your address and try again.',
-								'isPublicFacing' => true
-							]);
-							$interface->assign('addressMessage', $addressMessage);
+							$_SESSION['selfRegError'] = 'address';
 						}
 					} else {
 						//Submit form to ILS if age is validated and contact info is not invalid
@@ -116,46 +150,58 @@ class SelfReg extends Action {
 							if (SystemUtils::validateAge($library->minSelfRegAge, $dob, $maxSelfRegAge)){
 								if (!$invalidContactInfo) {
 									$result = $catalog->selfRegister();
-									$interface->assign('selfRegResult', $result);
+									$_SESSION['selfRegResult'] = $result;
+									header("Location: /MyAccount/SelfReg");
+									exit;
 								}
 							} else {
-								if((int) $library->minSelfRegAge > 0 && !empty($maxSelfRegAge) && (int) $maxSelfRegAge > 0){
-									$text = "You must be at least $library->minSelfRegAge and no older than $maxSelfRegAge years old. Please enter a valid date of birth";
+								$_SESSION['selfRegError'] = 'age';
+								if((int) $library->minSelfRegAge > 0 && !empty($maxSelfRegAge) && (int)$maxSelfRegAge > 0){
+									$_SESSION['selfRegAgeText'] = "You must be at least $library->minSelfRegAge and no older than $maxSelfRegAge years old. Please enter a valid date of birth.";
 								} elseif($library->minSelfRegAge > 0){
-									$text = "You must be at least $library->minSelfRegAge years old. Please enter a valid date of birth";
-								} elseif(!empty($maxSelfRegAge) && (int) $maxSelfRegAge > 0) {
-									$text = "You must be no older than $maxSelfRegAge years old. Please enter a valid date of birth";
+									$_SESSION['selfRegAgeText'] = "You must be at least $library->minSelfRegAge years old. Please enter a valid date of birth.";
+								} elseif(!empty($maxSelfRegAge) && (int)$maxSelfRegAge > 0) {
+									$_SESSION['selfRegAgeText'] = "You must be no older than $maxSelfRegAge years old. Please enter a valid date of birth.";
 								} else {
-									$text = "Please enter a valid date of birth";
+									$_SESSION['selfRegAgeText'] = "Please enter a valid date of birth";
 								}
-								$ageMessage = translate([
-									'text' => $text,
-									'isPublicFacing' => true
-								]);
-								$interface->assign('ageMessage', $ageMessage);
 							}
 						} else {
 							if (!$invalidContactInfo) {
 								$result = $catalog->selfRegister();
-								$interface->assign('selfRegResult', $result);
+								$_SESSION['selfRegResult'] = $result;
+								header("Location: /MyAccount/SelfReg");
+								exit;
 							}
 						}
 					}
+
+					if ($invalidContactInfo || isset($_SESSION['selfRegError'])) {
+						$_SESSION['selfRegFormData'] = $_REQUEST;
+						header("Location: /MyAccount/SelfReg");
+						exit;
+					}
 				}
-				// Pre-fill form with user supplied data
+			}
+
+			// Pre-fill form with user supplied data from session (after POST/Redirect/GET).
+			if (isset($_SESSION['selfRegFormData'])) {
 				foreach ($selfRegFields as &$property) {
 					if ($property['type'] == 'section') {
 						foreach ($property['properties'] as &$propertyInSection) {
-							if (isset($_REQUEST[$propertyInSection['property']])) {
-								$userValue = $_REQUEST[$propertyInSection['property']];
+							if (isset($_SESSION['selfRegFormData'][$propertyInSection['property']])) {
+								$userValue = $_SESSION['selfRegFormData'][$propertyInSection['property']];
 								$propertyInSection['default'] = $userValue;
 							}
 						}
 					} else {
-						$userValue = $_REQUEST[$property['property']];
-						$property['default'] = $userValue;
+						if (isset($_SESSION['selfRegFormData'][$property['property']])) {
+							$userValue = $_SESSION['selfRegFormData'][$property['property']];
+							$property['default'] = $userValue;
+						}
 					}
 				}
+				unset($_SESSION['selfRegFormData']);
 			}
 
 			$interface->assign('submitUrl', '/MyAccount/SelfReg');

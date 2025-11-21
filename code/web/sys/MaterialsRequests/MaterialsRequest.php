@@ -700,10 +700,10 @@ class MaterialsRequest extends DataObject {
 		}
 	}
 
-	/** @noinspection PhpUnused */
 	function getCreatedByUserBarcode() : string {
 		if ($this->getCreatedByUser()) {
-			return $this->_createdByUser->getBarcode();
+			$barcode = $this->_createdByUser->getBarcode();
+			return $barcode !== null ? $barcode : '';
 		} else {
 			return '';
 		}

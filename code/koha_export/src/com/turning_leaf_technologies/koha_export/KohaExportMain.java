@@ -1202,24 +1202,6 @@ public class KohaExportMain {
 							}
 						}
 						kohaHoursRS.close();
-
-					} else {
-						// Fallback: create default hours if none exist and hours updates not enabled.
-						existingHoursStmt.setLong(1, existingLocationId);
-						ResultSet existingHoursRS = existingHoursStmt.executeQuery();
-						if (existingHoursRS.next()) {
-							long numHours = existingHoursRS.getLong(1);
-							if (numHours == 0) {
-								for (int i = 0; i < 7; i++) {
-									addHoursStmt.setLong(1, existingLocationId);
-									addHoursStmt.setInt(2, i);
-									addHoursStmt.setString(3, "09:00");
-									addHoursStmt.setString(4, "17:00");
-									addHoursStmt.executeUpdate();
-								}
-							}
-						}
-						existingHoursRS.close();
 					}
 
 					kohaRepeatableHolidaysStmt.setString(1, ilsCode);

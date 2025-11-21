@@ -354,7 +354,8 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				$interface->assign('startDate', $_REQUEST['startDate']);
 			}
 			if (isset($_REQUEST['endDate']) && strlen($_REQUEST['endDate']) > 0) {
-				$endDate = strtotime($_REQUEST['endDate']);
+				// Add 86399 seconds (23:59:59) to make the end date inclusive of the entire day.
+				$endDate = strtotime($_REQUEST['endDate']) + 86399;
 				$materialsRequests->whereAdd("dateCreated <= $endDate");
 				$interface->assign('endDate', $_REQUEST['endDate']);
 			}

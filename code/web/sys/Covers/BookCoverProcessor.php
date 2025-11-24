@@ -604,6 +604,16 @@ class BookCoverProcessor {
 				}
 			}
 
+			require_once ROOT_DIR . '/sys/Enrichment/ChiliFreshSetting.php';
+			$chiliFreshSettings = new ChiliFreshSetting();
+			if ($chiliFreshSettings->find(true)) {
+				if ($chiliFreshSettings->enabled) {
+					if ($this->chiliFresh($chiliFreshSettings->genericArtCode)) {
+						return true;
+					}
+				}
+			}
+
 			require_once ROOT_DIR . '/sys/Enrichment/ContentCafeSetting.php';
 			$contentCafeSettings = new ContentCafeSetting();
 			if ($contentCafeSettings->find(true)) {
@@ -826,7 +836,6 @@ class BookCoverProcessor {
 			}
 
 			$this->log("Processing url $url to $finalFile", Logger::LOG_DEBUG);
-
 			// If some services can't provide an image, they will serve a 1x1 blank
 			// or give us invalid image data.  Let's analyze what came back before
 			// proceeding.
@@ -959,6 +968,33 @@ class BookCoverProcessor {
 			$this->log("Could not load the file as an image $url", Logger::LOG_NOTICE);
 			return false;
 		}
+	}
+
+	function chiliFresh($genericArtCode) {
+		if (is_null($this->isn) && is_null($this->upc) && is_null($this->issn)) {
+			return false;
+		}
+		switch ($this->size) {
+			case 'small':
+				$size = 'S';
+				break;
+			case 'medium':
+				$size = 'M';
+				break;
+			case 'large':
+				$size = 'L';
+				break;
+			default:
+				$size = 'S';
+		}
+
+		$url = "https://content.chilifresh.com/?size={$size}&isbn=";
+		$url .= implode(',', array_filter([$this->isn, $this->issn, $this->upc]));
+		if (isset($genericArtCode)) {
+			$url .= "&generic=$genericArtCode";
+		}
+		$this->log("Chilifresh URL: $url", Logger::LOG_DEBUG);
+		return $this->processImageURL('chilifresh', $url, true);
 	}
 
 	function syndetics($key) {

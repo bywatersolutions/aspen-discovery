@@ -60,6 +60,10 @@ abstract class Search_AdvancedBase extends Action {
 		$hasSelectedFacet = false;
 		$facets = [];
 		foreach ($facetList as $facetField => $list) {
+			if (empty($list['list'])) {
+				continue;
+			}
+
 			if ($list['label'] instanceof FacetSetting) {
 				$facetLabel = $list['label']->displayName;
 			} else {
@@ -159,7 +163,9 @@ abstract class Search_AdvancedBase extends Action {
 					}
 				}
 				if (!$valueSelected) {
+					// Set default as selected but with empty filter so it doesn't get submitted.
 					$currentList[$availabilityToggleValue]['selected'] = true;
+					$currentList[$availabilityToggleValue]['filter'] = '';
 				}
 			}
 

@@ -204,7 +204,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 			foreach ($filter as $value) {
 				if ($facetName == 'availability_toggle' || $facetName == "availability_toggle_$solrScope") {
 					$this->selectedAvailabilityToggleValue = $value;
-					$availabilityToggleId = $facetInfo->id;
+					$availabilityToggleId = isset($facetInfo) ? $facetInfo->id : null;
 				} elseif ($facetName == 'available_at' || $facetName == "available_at_$solrScope") {
 					$selectedAvailableAtValues[] = $value;
 				} elseif ($facetName == 'format_category') {

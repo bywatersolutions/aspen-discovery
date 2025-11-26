@@ -103,7 +103,7 @@
 					{* addGroup() returns the variable nextGroupNumber so the return false is necessary *}
 					<input type="submit" name="submit" value="{translate text="Find" inAttribute=true isPublicFacing=true inAttribute=true}" class="btn btn-primary pull-right">
 					<br><br>
-					{if $facetList || $showPublicationDate}
+					{if $facetList}
 						<div class="accordion">
 							<div {*id="facet-accordion"*} class="panel panel-default">
 								<div class="panel-heading">

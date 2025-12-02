@@ -79,6 +79,14 @@
 								<div class="adminActionLabel"><a href="/Greenhouse/ObjectHistoryLog">{translate text="Object History Log"  isAdminFacing=true}</a></div>
 							</div>
 						</div>
+						<div class="adminAction row">
+							<div class="col-tn-2 col-xs-1 col-sm-2 col-md-1 adminActionLabel">
+								<a href="/Greenhouse/ExternalRequestSettings" title="{translate text="External Request Settings" inAttribute="true" isAdminFacing=true}"><i class="fas fa-chevron-circle-right fa"></i></a>
+							</div>
+							<div class="col-tn-10 col-xs-11 col-sm-10 col-md-11">
+								<div class="adminActionLabel"><a href="/Greenhouse/ExternalRequestSettings">{translate text="External Request Settings"  isAdminFacing=true}</a></div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

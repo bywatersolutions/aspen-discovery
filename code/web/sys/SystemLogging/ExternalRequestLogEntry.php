@@ -147,7 +147,42 @@ class ExternalRequestLogEntry extends DataObject {
 			$status = self::getForcePaymentDebugLogging();
 		}
 
-		return $status;
+		if(!$status)
+		{
+			require_once ROOT_DIR . '/sys/Greenhouse/ExternalRequestSettings.php';
+			$settings = new ExternalRequestSettings();
+			$settings->requestType = $requestType;
+			$settings->enabled = true;
+			if($settings->find())
+			{
+				while($settings->fetch()) //using fetch to avoid issues with multiple matching settings if the first is not enabled
+				{
+					if($settings->enabled && $settings->expireDate >= date("Y-m-d"))
+					{
+						$status = true;
+						break;
+					}
+				}
+			}
+			if(!$status)//check API level only if we didn't find anything
+			{
+				$settings->requestType = explode(".",$requestType)[0];
+				if($settings->find())
+				{
+					while($settings->fetch()) //using fetch to avoid issues with multiple matching settings if the first is not enabled
+					{
+						if($settings->enabled && $settings->expireDate >= date("Y-m-d"))
+						{
+							$status = true;
+							break;
+						}
+					}
+				}
+
+			}
+		}
+
+		return $status; 
 	}
 
 	/**

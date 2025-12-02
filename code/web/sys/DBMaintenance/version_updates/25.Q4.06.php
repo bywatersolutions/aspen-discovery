@@ -63,5 +63,19 @@ function getUpdates25_Q4_06(): array {
 				'ALTER TABLE nyt_api_settings CHANGE COLUMN booksApiKey booksApiKey VARCHAR(48) NOT NULL'
 			]
 		], //increase_new_york_times_key_length
+		// Imani -BWS
+		'externalRequestSettings' => [
+			'title' => 'Add External Request Settings',
+			'description' => 'Create table for External Request Settings',
+			'sql' => [
+				'CREATE TABLE IF NOT EXISTS `external_request_settings` (
+				`id` int(11) NOT NULL AUTO_INCREMENT,
+				`requestType` varchar(50) DEFAULT NULL,
+				`enabled` tinyint(1) DEFAULT 0,
+				`expireDate` DATE DEFAULT NULL,
+				PRIMARY KEY (`id`)
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;'
+			]
+		], //add external request settings table
 	];
 }

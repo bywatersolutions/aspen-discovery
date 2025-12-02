@@ -1703,6 +1703,14 @@ CREATE TABLE `external_request_log` (
   KEY `responseCode` (`responseCode`),
   KEY `requestType` (`requestType`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS external_request_settings;
+CREATE TABLE `external_request_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `requestType` varchar(50) DEFAULT NULL,
+  `enabled` tinyint(1) DEFAULT 0,
+  `expireDate` DATE DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 DROP TABLE IF EXISTS failed_logins_by_ip_address;
 CREATE TABLE `failed_logins_by_ip_address` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

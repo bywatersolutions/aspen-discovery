@@ -33,6 +33,7 @@
 						<div class="panel-body">
 							<div class="adminMenuLink "><a href="/Greenhouse/ExternalRequestLog">{translate text="External Request Log" isAdminFacing=true}</a></div>
 							<div class="adminMenuLink "><a href="/Greenhouse/ObjectHistoryLog">{translate text="Object History Log" isAdminFacing=true}</a></div>
+							<div class="adminMenuLink "><a href="/Greenhouse/ExternalRequestSettings">{translate text="External Request Settings" isAdminFacing=true}</a></div>
 						</div>
 					</div>
 				</div>

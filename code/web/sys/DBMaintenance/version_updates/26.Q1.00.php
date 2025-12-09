@@ -3,6 +3,14 @@
 /** @noinspection PhpUnused */
 function getUpdates26_Q1_00(): array {
 	return [
+		/*'name' => [
+			 'title' => '',
+			 'description' => '',
+			 'continueOnError' => false,
+			 'sql' => [
+				 ''
+			 ]
+		 ], //name*/
 		//yanjun
 		'overdrive_suppress_kindle_format' => [
 			'title' => 'OverDrive Suppress Kindle Format',

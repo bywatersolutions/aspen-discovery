@@ -344,7 +344,11 @@ class YearInReviewSetting extends DataObject {
 			//Get the background image for the slide
 			$backgroundImageFile = ROOT_DIR . '/year_in_review/images/' . $slideInfo->background;
 			$backgroundImageFile = realpath($backgroundImageFile);
-			$backgroundImage = imagecreatefrompng($backgroundImageFile);
+			if (str_ends_with($backgroundImageFile, '.png')) {
+				$backgroundImage = imagecreatefrompng($backgroundImageFile);
+			}elseif (str_ends_with($backgroundImageFile, '.gif')) {
+				$backgroundImage = imagecreatefromgif($backgroundImageFile);
+			}
 			$backgroundImageInfo = getimagesize($backgroundImageFile);
 			$backgroundWidth = $backgroundImageInfo[0];
 			$backgroundHeight = $backgroundImageInfo[1];
@@ -477,7 +481,11 @@ class YearInReviewSetting extends DataObject {
 			}
 
 			//Output the image to the browser
-			imagepng($slideCanvas);
+			if (str_ends_with($backgroundImageFile, '.png')) {
+				imagepng($slideCanvas);
+			}elseif (str_ends_with($backgroundImageFile, '.gif')) {
+				imagegif($slideCanvas);
+			}
 			imagedestroy($slideCanvas);
 			$gotImage = true;
 		}

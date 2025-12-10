@@ -32,22 +32,6 @@
       ]
     },
     {
-      "title": "Your Borrower Experience Points",
-      "background" : "perennial_2_2.png",
-      "overlay_text" : [
-        {
-          "text": "You checked out {totalCheckouts} titles.",
-          "left": "500px",
-          "top": "350px",
-          "width": "40%",
-          "height": "20%",
-          "color" : "black",
-          "font_size": "2.6em",
-          "align": "center"
-        }
-      ]
-    },
-    {
       "title": "Your Hot Month",
       "background" : "perennial_2_3.png",
       "overlay_text" : [
@@ -170,20 +154,20 @@
       "overlay_images" : [
         {
           "source": "recommendation_0",
-          "left" : "125px",
-          "top" : "500px",
+          "left" : "180px",
+          "top" : "390px",
           "width": "175px"
         },
         {
           "source": "recommendation_1",
-          "left" : "325px",
-          "top" : "500px",
+          "left" : "380px",
+          "top" : "390px",
           "width": "175px"
         },
         {
           "source": "recommendation_2",
-          "left" : "525px",
-          "top" : "500px",
+          "left" : "580px",
+          "top" : "390px",
           "width": "175px"
         }
       ]

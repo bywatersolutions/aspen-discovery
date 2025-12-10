@@ -68,7 +68,11 @@ function generateYearInReview(User $patron) : void {
 							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 2 : 3;
 						}else{
 							//Show the version with just the number of checkouts
-							$slidesToShow[] = $yearInReviewSetting->style == 0 ? 3 : 4;
+							$slidesToShow[] = match ($yearInReviewSetting->style) {
+								0 => 3,
+								1 => 4,
+								2, 3 => 3
+							};
 						}
 
 						//Hot Month / Busy Months

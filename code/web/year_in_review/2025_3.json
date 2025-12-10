@@ -37,9 +37,9 @@
       "overlay_text" : [
         {
           "text": "You checked out {totalCheckouts} titles.",
-          "left": "540px",
-          "top": "350px",
-          "width": "40%",
+          "left": "25px",
+          "top": "455px",
+          "width": "80%",
           "height": "20%",
           "color" : "black",
           "font_size": "2.6em",

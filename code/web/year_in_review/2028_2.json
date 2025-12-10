@@ -32,6 +32,22 @@
       ]
     },
     {
+      "title": "Your Borrower Experience Points",
+      "background" : "perennial_2_2.png",
+      "overlay_text" : [
+        {
+          "text": "You checked out {totalCheckouts} titles.",
+          "left": "500px",
+          "top": "350px",
+          "width": "40%",
+          "height": "20%",
+          "color" : "black",
+          "font_size": "2.6em",
+          "align": "center"
+        }
+      ]
+    },
+    {
       "title": "Your Hot Month",
       "background" : "perennial_2_3.png",
       "overlay_text" : [

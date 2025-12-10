@@ -11,8 +11,8 @@
       "overlay_text" : [
         {
           "text": "You checked out {totalCheckouts} titles.",
-          "left": "525px",
-          "top": "325px",
+          "left": "500px",
+          "top": "330px",
           "width": "40%",
           "height": "20%",
           "color" : "black",
@@ -21,28 +21,12 @@
         },
         {
           "text": "And saved {yearlyCostSavings}!",
-          "left": "525px",
-          "top": "450px",
+          "left": "500px",
+          "top": "430px",
           "width": "40%",
           "height": "20%",
           "color" : "black",
           "font_size": "2em",
-          "align": "center"
-        }
-      ]
-    },
-    {
-      "title": "Your Borrower Experience Points",
-      "background" : "perennial_2_2.png",
-      "overlay_text" : [
-        {
-          "text": "You checked out {totalCheckouts} titles.",
-          "left": "540px",
-          "top": "350px",
-          "width": "40%",
-          "height": "20%",
-          "color" : "black",
-          "font_size": "2.6em",
           "align": "center"
         }
       ]
@@ -53,13 +37,13 @@
       "overlay_text" : [
         {
           "text": "In {topMonth}, you borrowed the most from the library.",
-          "left": "225px",
-          "top": "200px",
+          "left": "190px",
+          "top": "160px",
           "width": "40%",
           "height": "20%",
-          "color" : "green",
+          "color" : "black",
           "font_size": "2.5em",
-          "align": "left"
+          "align": "center"
         }
       ]
     },
@@ -69,7 +53,7 @@
       "overlay_text" : [
         {
           "text": "You were a steady user of the library this year with a checkout average of {averageCheckouts} per month.",
-          "left": "41%",
+          "left": "42%",
           "top": "24%",
           "width": "45%",
           "height": "20%",
@@ -86,7 +70,7 @@
         {
           "text": "{topFormat1}",
           "left": "25%",
-          "top": "265px",
+          "top": "275px",
           "width": "30%",
           "height": "20%",
           "color" : "black",
@@ -125,7 +109,7 @@
           "top": "300px",
           "width": "50%",
           "height": "30%",
-          "color" : "black",
+          "color" : "green",
           "font_size": "1.9em",
           "align": "center"
         }
@@ -138,7 +122,7 @@
         {
           "text": "You checked out multiple titles by {topAuthor}.",
           "left": "50px",
-          "top": "500px",
+          "top": "450px",
           "width": "40%",
           "height": "30%",
           "color" : "green",
@@ -154,10 +138,10 @@
         {
           "text": "{topSeries}",
           "left": "100px",
-          "top": "300px",
+          "top": "280px",
           "width": "40%",
           "height": "35%",
-          "color" : "green",
+          "color" : "black",
           "font_size": "2.25em",
           "align": "center"
         }
@@ -170,20 +154,20 @@
       "overlay_images" : [
         {
           "source": "recommendation_0",
-          "left" : "125px",
-          "top" : "350px",
+          "left" : "175px",
+          "top" : "390px",
           "width": "175px"
         },
         {
           "source": "recommendation_1",
-          "left" : "325px",
-          "top" : "350px",
+          "left" : "375px",
+          "top" : "390px",
           "width": "175px"
         },
         {
           "source": "recommendation_2",
-          "left" : "525px",
-          "top" : "350px",
+          "left" : "575px",
+          "top" : "390px",
           "width": "175px"
         }
       ]

@@ -2,18 +2,18 @@
   "slides": [
     {
       "title": "A Year in Checkouts",
-      "background" : "perennial_2_1.png",
+      "background" : "perennial_3_1.gif",
       "overlay_text" : []
     },
     {
       "title": "Your Borrower Experience Points",
-      "background" : "perennial_2_2.png",
+      "background" : "perennial_3_2.gif",
       "overlay_text" : [
         {
           "text": "You checked out {totalCheckouts} titles.",
-          "left": "500px",
-          "top": "330px",
-          "width": "40%",
+          "left": "25px",
+          "top": "450px",
+          "width": "80%",
           "height": "20%",
           "color" : "black",
           "font_size": "2em",
@@ -21,125 +21,93 @@
         },
         {
           "text": "And saved {yearlyCostSavings}!",
-          "left": "500px",
-          "top": "430px",
-          "width": "40%",
+          "left": "25px",
+          "top": "525px",
+          "width": "80%",
           "height": "20%",
           "color" : "black",
           "font_size": "2em",
-          "align": "center"
-        }
-      ]
-    },
-    {
-      "title": "Your Borrower Experience Points",
-      "background" : "perennial_2_2.png",
-      "overlay_text" : [
-        {
-          "text": "You checked out {totalCheckouts} titles.",
-          "left": "540px",
-          "top": "350px",
-          "width": "40%",
-          "height": "20%",
-          "color" : "black",
-          "font_size": "2.6em",
           "align": "center"
         }
       ]
     },
     {
       "title": "Your Hot Month",
-      "background" : "perennial_2_3.png",
+      "background" : "perennial_3_3.gif",
       "overlay_text" : [
         {
           "text": "In {topMonth}, you borrowed the most from the library.",
-          "left": "190px",
-          "top": "160px",
-          "width": "40%",
-          "height": "20%",
-          "color" : "black",
-          "font_size": "2.5em",
-          "align": "center"
-        }
-      ]
-    },
-    {
-      "title": "Every Month was Your Busy Month",
-      "background" : "perennial_2_4.png",
-      "overlay_text" : [
-        {
-          "text": "You were a steady user of the library this year with a checkout average of {averageCheckouts} per month.",
-          "left": "42%",
-          "top": "24%",
-          "width": "45%",
-          "height": "20%",
+          "left": "22%",
+          "top": "60%",
+          "width": "65%",
+          "height": "30%",
           "color" : "green",
-          "font_size": "2em",
+          "font_size": "2.5em",
           "align": "left"
         }
       ]
     },
     {
       "title": "Top Formats",
-      "background" : "perennial_2_5.png",
+      "background" : "perennial_3_4.gif",
       "overlay_text" : [
         {
           "text": "{topFormat1}",
-          "left": "25%",
-          "top": "275px",
+          "left": "22%",
+          "top": "450px",
           "width": "30%",
           "height": "20%",
           "color" : "black",
-          "font_size": "2em",
+          "font_size": "2.5em",
           "align": "left"
         },
         {
           "text": "{topFormat2}",
-          "left": "25%",
-          "top": "415px",
+          "left": "22%",
+          "top": "590px",
           "width": "30%",
           "height": "20%",
           "color" : "black",
-          "font_size": "2em",
+          "font_size": "2.5em",
           "align": "left"
         },
         {
           "text": "{topFormat3}",
-          "left": "25%",
-          "top": "565px",
+          "left": "22%",
+          "top": "745px",
           "width": "30%",
           "height": "20%",
           "color" : "black",
-          "font_size": "2em",
+          "font_size": "2.5em",
           "align": "left"
         }
       ]
     },
     {
       "title": "Favorite Genres",
-      "background" : "perennial_2_6.png",
+      "background" : "perennial_3_5.gif",
       "overlay_text" : [
         {
           "text": "{topGenres}",
-          "left": "25%",
-          "top": "300px",
-          "width": "50%",
+          "left": "10%",
+          "top": "375px",
+          "width": "80%",
           "height": "30%",
-          "color" : "green",
-          "font_size": "1.9em",
+          "color" : "black",
+          "font_size": "2.2em",
           "align": "center"
         }
       ]
     },
     {
       "title": "Author You Couldn't Put Down",
-      "background" : "perennial_2_7.png",
+      "background" : "perennial_3_6.gif",
       "overlay_text" : [
         {
           "text": "You checked out multiple titles by {topAuthor}.",
-          "left": "50px",
-          "top": "450px",
-          "width": "40%",
+          "left": "200px",
+          "top": "400px",
+          "width": "60%",
           "height": "30%",
           "color" : "green",
           "font_size": "2em",
@@ -149,15 +117,15 @@
     },
     {
       "title": "Top Series",
-      "background" : "perennial_2_8.png",
+      "background" : "perennial_3_7.gif",
       "overlay_text" : [
         {
           "text": "{topSeries}",
           "left": "100px",
-          "top": "280px",
+          "top": "300px",
           "width": "40%",
           "height": "35%",
-          "color" : "black",
+          "color" : "green",
           "font_size": "2.25em",
           "align": "center"
         }
@@ -190,7 +158,7 @@
     },
     {
       "title": "Thank you for using the library!",
-      "background" : "perennial_2_10.png",
+      "background" : "perennial_3_9.gif",
       "overlay_text" : []
     }
   ]

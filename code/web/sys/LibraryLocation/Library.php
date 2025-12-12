@@ -230,6 +230,7 @@ class Library extends DataObject {
 	public /** @noinspection PhpUnused */
 		$allowAutomaticSearchReplacements;
 	public $loralSettingId;
+	public $allowAutomaticSearchReplacements;
 
 	public /** @noinspection PhpUnused */
 		$worldCatUrl;
@@ -3342,6 +3343,19 @@ class Library extends DataObject {
 						'description' => 'The Loral Settings to use',
 						'default' => '-1',
 						'hideInLists' => true,
+					]
+				],
+			],
+
+			//Event Display
+			'eventSection' => [
+				'property' => 'eventSection',
+				'type' => 'section',
+				'label' => 'Events',
+				'hideInLists' => true,
+				'properties' => [
+					'aspenEventsToInclude' => [
+						'property' => 'aspenEventsToInclude',
 					]
 				],
 			],

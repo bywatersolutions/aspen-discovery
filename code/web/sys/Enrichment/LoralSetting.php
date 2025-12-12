@@ -1,7 +1,7 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
 
 class LoralSetting extends DataObject {
-	public $__table = 'Loral_settings';    // table name
+	public $__table = 'loral_settings';    // table name
 	public $id;
 	public $name;
 	public $loralUrl;

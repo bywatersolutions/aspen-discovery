@@ -12,8 +12,8 @@ require_once ROOT_DIR . '/sys/CurlWrapper.php';
  * @access      public
  */
 class ExternalReviews {
-	private $isbn;
-	private $results;
+	private ?string $isbn;
+	private ?array $results;
 
 	/**
 	 * Constructor
@@ -21,9 +21,9 @@ class ExternalReviews {
 	 * Do the actual work of loading the reviews.
 	 *
 	 * @access  public
-	 * @param string $isbn ISBN of book to find reviews for
+	 * @param ?string $isbn ISBN of book to find reviews for
 	 */
-	public function __construct($isbn) {
+	public function __construct(?string $isbn) {
 		$this->isbn = $isbn;
 		$this->results = [];
 
@@ -35,12 +35,14 @@ class ExternalReviews {
 		// Fetch from provider
 		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
 		global $library;
-		$syndeticsSettings = new SyndeticsSetting();
-		$syndeticsSettings->id = $library->syndeticsSettingId;
-		if ($syndeticsSettings->find(true)) {
-			$result = $this->syndetics($syndeticsSettings);
-			if ($result != null) {
-				$this->results['syndetics'] = $result;
+		if ($library->syndeticsSettingId > 0) {
+			$syndeticsSettings = new SyndeticsSetting();
+			$syndeticsSettings->id = $library->syndeticsSettingId;
+			if ($syndeticsSettings->find(true)) {
+				$result = $this->syndetics($syndeticsSettings);
+				if ($result != null) {
+					$this->results['syndetics'] = $result;
+				}
 			}
 		}
 		require_once ROOT_DIR . '/sys/Enrichment/ContentCafeSetting.php';
@@ -50,6 +52,17 @@ class ExternalReviews {
 				$result = $this->contentCafe($contentCafeSettings);
 				if ($result != null) {
 					$this->results['contentCafe'] = $result;
+				}
+			}
+		}
+		require_once ROOT_DIR . '/sys/Enrichment/LoralSetting.php';
+		if ($library->loralSettingId > 0) {
+			$loralSettings = new LoralSetting();
+			$loralSettings->id = $library->loralSettingId;
+			if ($loralSettings->find(true)) {
+				$result = $this->loral($loralSettings);
+				if ($result != null) {
+					$this->results['loral'] = $result;
 				}
 			}
 		}
@@ -93,7 +106,7 @@ class ExternalReviews {
 	 * @return  array|null  Returns array with review data, otherwise null.
 	 * @access  private
 	 */
-	private function syndetics(SyndeticsSetting $settings) {
+	private function syndetics(SyndeticsSetting $settings) : ?array {
 		global $library;
 		global $locationSingleton;
 		global $timer;
@@ -237,7 +250,7 @@ class ExternalReviews {
 	 * @param ContentCafeSetting $settings Content Cafe Key
 	 * @return array|null
 	 */
-	private function contentCafe($settings) {
+	private function contentCafe(ContentCafeSetting $settings) : ?array {
 		global $library;
 		global $locationSingleton;
 
@@ -307,15 +320,60 @@ class ExternalReviews {
 
 			} catch (Exception $e) {
 				global $logger;
-				$logger->log('Failed ContentCafe SOAP Request', Logger::LOG_ERROR);
+				$logger->log('Failed ContentCafe SOAP Request' . $e->getMessage(), Logger::LOG_ERROR);
 				return null;
 			}
 		} catch (SoapFault $e) {
 			global $logger;
-			$logger->log('SoapFault making ContentCafe SOAP Request ' . $e, Logger::LOG_ERROR);
+			$logger->log('SoapFault making ContentCafe SOAP Request ' . $e->getMessage(), Logger::LOG_ERROR);
 			return null;
 		}
 		return $review;
+	}
+
+	/**
+	 * Load review information from Content Cafe based on the ISBN
+	 *
+	 * @param LoralSetting $settings Content Cafe Key
+	 * @return array|null
+	 */
+	private function loral(LoralSetting $settings) : ?array {
+		global $library;
+		global $locationSingleton;
+
+		$location = $locationSingleton->getActiveLocation();
+		if ($location != null) {
+			if ($location->getGroupedWorkDisplaySettings()->showStandardReviews == 0) {
+				return null;
+			}
+		} elseif ($library->getGroupedWorkDisplaySettings()->showStandardReviews == 0) {
+			return null;
+		}
+
+		$url = $settings->loralUrl;
+		$authentication = base64_encode($settings->loralId . ':' . $settings->password);
+		$url .= "/Enrichment/Reviews?isn=$this->isbn";
+
+		global $configArray;
+		$headers = "User-Agent: {$configArray['Catalog']['catalogUserAgent']}\r\n";
+		$headers .= "Authorization: Basic $authentication\r\n";
+		$context = stream_context_create([
+			'http' => [
+				'header' => $headers,
+			],
+		]);
+		$response = @file_get_contents($url, false, $context);
+		if ($response) {
+			$jsonResponse = json_decode($response, true);
+
+			if ($jsonResponse['success']) {
+				return $jsonResponse['reviews'];
+			}else{
+				//Got a bad response from Loral
+				return null;
+			}
+		}
+		return null;
 	}
 
 	function cleanupReview($reviewData) {

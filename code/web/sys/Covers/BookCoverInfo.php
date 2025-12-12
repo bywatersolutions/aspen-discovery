@@ -7,6 +7,7 @@ class BookCoverInfo extends DataObject {
 	protected $recordType;
 	protected $recordId;
 	protected $firstLoaded;
+	/** @noinspection PhpUnused */
 	protected $lastUsed;
 	protected $imageSource;
 	protected $sourceWidth;
@@ -50,7 +51,7 @@ class BookCoverInfo extends DataObject {
 		$this->query("UPDATE " . $this->__table . " SET thumbnailLoaded = 0, mediumLoaded = 0, largeLoaded = 0 where imageSource = 'omdb_title' OR imageSource = 'omdb_title_year'");
 	}
 
-	public function getImageSource() : string {
+	public function getImageSource() : ?string {
 		return $this->imageSource;
 	}
 
@@ -66,27 +67,24 @@ class BookCoverInfo extends DataObject {
 	}
 
 	/**
-	 * @return mixed
+	 * @return string
 	 */
-	public function getRecordType() {
+	public function getRecordType() : string {
 		return $this->recordType;
 	}
 
 	/**
-	 * @param mixed $recordType
+	 * @param string $recordType
 	 */
-	public function setRecordType($recordType): void {
+	public function setRecordType(string $recordType): void {
 		$this->__set('recordType', $recordType);
 	}
 
-	/**
-	 * @param mixed $recordId
-	 */
-	public function setRecordId($recordId): void {
+	public function setRecordId(string $recordId): void {
 		$this->__set('recordId', $recordId);
 	}
 
-	public function setImageSource($imageSource): void {
+	public function setImageSource(string $imageSource): void {
 		$this->__set('imageSource', $imageSource);
 	}
 
@@ -134,5 +132,54 @@ class BookCoverInfo extends DataObject {
 
 	public function setLargeLoaded(int $loaded) : void {
 		$this->__set('largeLoaded', $loaded);
+	}
+
+	public function isThumbnailLoaded() : bool {
+		return $this->thumbnailLoaded;
+	}
+
+	public function isMediumLoaded() : bool {
+		return $this->mediumLoaded;
+	}
+
+	public function isLargeLoaded() : bool {
+		return $this->largeLoaded;
+	}
+
+	public function setLastUsed(int $lastUsed): void {
+		$this->__set('lastUsed', $lastUsed);
+	}
+
+	public function getSourceWidth() : ?int {
+		return $this->sourceWidth;
+	}
+
+	public function setSourceWidth(int $sourceWidth): void {
+		$this->sourceWidth = $sourceWidth;
+	}
+
+	public function getSourceHeight() : ?int {
+		return $this->sourceHeight;
+	}
+
+	public function setSourceHeight(int $sourceHeight): void {
+		$this->sourceHeight = $sourceHeight;
+	}
+
+	public function getUploadedImage() : ?bool {
+		return $this->uploadedImage;
+	}
+
+	public function setUploadedImage(bool $uploadedImage): void {
+		$this->uploadedImage = $uploadedImage;
+	}
+
+	/** @noinspection PhpUnused */
+	public function getFirstLoaded() : ?int {
+		return $this->firstLoaded;
+	}
+
+	public function setFirstLoaded(int $firstLoaded): void {
+		$this->firstLoaded = $firstLoaded;
 	}
 }

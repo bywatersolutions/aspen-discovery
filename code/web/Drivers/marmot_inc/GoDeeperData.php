@@ -29,7 +29,7 @@ class GoDeeperData {
 					try {
 						if ($syndeticsSettings->hasSummary || $syndeticsSettings->hasAvSummary || $syndeticsSettings->hasToc || $syndeticsSettings->hasExcerpt || $syndeticsSettings->hasFictionProfile || $syndeticsSettings->hasAuthorNotes || $syndeticsSettings->hasVideoClip) {
 							$clientKey = $syndeticsSettings->syndeticsKey;
-							$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/INDEX.XML&client=$clientKey&type=xw10&upc=$upc";
+							$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/INDEX.XML&client=$clientKey&type=xw10&upc=$upc";
 
 							//Get the XML from the service
 							$ctx = stream_context_create([
@@ -44,68 +44,66 @@ class GoDeeperData {
 							//echo($response);
 
 							//Parse the XML
-							if (!preg_match('/<!DOCTYPE\\sHTML.*/', $response)) {
+							if (!preg_match('/<!DOCTYPE\\sHTML/', $response)) {
 								//Got a valid response
 								$data = new SimpleXMLElement($response);
 
 								$validEnrichmentTypes = [];
-								if (isset($data)) {
-									if ($syndeticsSettings->hasSummary && isset($data->SUMMARY)) {
+								if ($syndeticsSettings->hasSummary && isset($data->SUMMARY)) {
+									$validEnrichmentTypes['summary'] = 'Summary';
+									if (!isset($defaultOption)) {
+										$defaultOption = 'summary';
+									}
+								}
+								if ($syndeticsSettings->hasAvSummary && isset($data->AVSUMMARY)) {
+									//AV Summary is weird since it combines both summary and table of contents for movies and music
+									$avSummary = GoDeeperData::getAVSummary($syndeticsSettings, $isbn, $upc);
+									if (isset($avSummary['summary'])) {
 										$validEnrichmentTypes['summary'] = 'Summary';
 										if (!isset($defaultOption)) {
 											$defaultOption = 'summary';
 										}
 									}
-									if ($syndeticsSettings->hasAvSummary && isset($data->AVSUMMARY)) {
-										//AV Summary is weird since it combines both summary and table of contents for movies and music
-										$avSummary = GoDeeperData::getAVSummary($syndeticsSettings, $isbn, $upc);
-										if (isset($avSummary['summary'])) {
-											$validEnrichmentTypes['summary'] = 'Summary';
-											if (!isset($defaultOption)) {
-												$defaultOption = 'summary';
-											}
-										}
-										if (isset($avSummary['trackListing'])) {
-											$validEnrichmentTypes['tableOfContents'] = 'Table of Contents';
-											if (!isset($defaultOption)) {
-												$defaultOption = 'tableOfContents';
-											}
-										}
-									}
-									if ($syndeticsSettings->hasAvProfile && isset($data->AVPROFILE)) {
-										//Profile has similar bands and tags for music.  Not sure how to best use this
-										$validEnrichmentTypes['avProfile'] = 'Profile';
-									}
-									if ($syndeticsSettings->hasToc && isset($data->TOC)) {
+									if (isset($avSummary['trackListing'])) {
 										$validEnrichmentTypes['tableOfContents'] = 'Table of Contents';
 										if (!isset($defaultOption)) {
 											$defaultOption = 'tableOfContents';
 										}
 									}
-									if ($syndeticsSettings->hasExcerpt && isset($data->DBCHAPTER)) {
-										$validEnrichmentTypes['excerpt'] = 'Excerpt';
-										if (!isset($defaultOption)) {
-											$defaultOption = 'excerpt';
-										}
+								}
+								if ($syndeticsSettings->hasAvProfile && isset($data->AVPROFILE)) {
+									//Profile has similar bands and tags for music.  Not sure how to best use this
+									$validEnrichmentTypes['avProfile'] = 'Profile';
+								}
+								if ($syndeticsSettings->hasToc && isset($data->TOC)) {
+									$validEnrichmentTypes['tableOfContents'] = 'Table of Contents';
+									if (!isset($defaultOption)) {
+										$defaultOption = 'tableOfContents';
 									}
-									if ($syndeticsSettings->hasFictionProfile && isset($data->FICTION)) {
-										$validEnrichmentTypes['fictionProfile'] = 'Character Information';
-										if (!isset($defaultOption)) {
-											$defaultOption = 'fictionProfile';
-										}
+								}
+								if ($syndeticsSettings->hasExcerpt && isset($data->DBCHAPTER)) {
+									$validEnrichmentTypes['excerpt'] = 'Excerpt';
+									if (!isset($defaultOption)) {
+										$defaultOption = 'excerpt';
 									}
-									if ($syndeticsSettings->hasAuthorNotes && isset($data->ANOTES)) {
-										$validEnrichmentTypes['authorNotes'] = 'Author Notes';
-										if (!isset($defaultOption)) {
-											$defaultOption = 'authorNotes';
-										}
+								}
+								if ($syndeticsSettings->hasFictionProfile && isset($data->FICTION)) {
+									$validEnrichmentTypes['fictionProfile'] = 'Character Information';
+									if (!isset($defaultOption)) {
+										$defaultOption = 'fictionProfile';
 									}
-									if ($syndeticsSettings->hasVideoClip && isset($data->VIDEOCLIP)) {
-										//Profile has similar bands and tags for music.  Not sure how to best use this
-										$validEnrichmentTypes['videoClip'] = 'Video Clip';
-										if (!isset($defaultOption)) {
-											$defaultOption = 'videoClip';
-										}
+								}
+								if ($syndeticsSettings->hasAuthorNotes && isset($data->ANOTES)) {
+									$validEnrichmentTypes['authorNotes'] = 'Author Notes';
+									if (!isset($defaultOption)) {
+										$defaultOption = 'authorNotes';
+									}
+								}
+								if ($syndeticsSettings->hasVideoClip && isset($data->VIDEOCLIP)) {
+									//Profile has similar bands and tags for music.  Not sure how to best use this
+									$validEnrichmentTypes['videoClip'] = 'Video Clip';
+									if (!isset($defaultOption)) {
+										$defaultOption = 'videoClip';
 									}
 								}
 							}
@@ -127,7 +125,7 @@ class GoDeeperData {
 			if ($contentCafeSettings->find(true)) {
 				if ($contentCafeSettings->enabled) {
 					$response = self::getContentCafeData($contentCafeSettings, $isbn, $upc);
-					if ($response != false) {
+					if ($response) {
 						$availableContent = $response[0]->AvailableContent;
 						if ($contentCafeSettings->hasExcerpt && $availableContent->Excerpt) {
 							$validEnrichmentTypes['excerpt'] = 'Excerpt';
@@ -208,20 +206,22 @@ class GoDeeperData {
 			}
 		} catch (Exception $e) {
 			global $logger;
-			$logger->log('Failed ContentCafe SOAP Request', Logger::LOG_ERROR);
+			$logger->log('Failed ContentCafe SOAP Request ' . $e->getMessage(), Logger::LOG_ERROR);
 		}
 
 		return false;
 	}
 
-	static function getSummary($workId, $isbn, $upc) {
+	static function getSummary(?string $workId, ?string $isbn, ?string $upc) : array {
 		global $library;
 		$summaryData = [];
-		require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
-		$syndeticsSettings = new SyndeticsSetting();
-		$syndeticsSettings->id = $library->syndeticsSettingId;
-		if ($syndeticsSettings->find(true) && ($syndeticsSettings->syndeticsUnbound == false)) {
-			$summaryData = self::getSyndeticsSummary($syndeticsSettings, $workId, $isbn, $upc);
+		if ($library->syndeticsSettingId > 0) {
+			require_once ROOT_DIR . '/sys/Enrichment/SyndeticsSetting.php';
+			$syndeticsSettings = new SyndeticsSetting();
+			$syndeticsSettings->id = $library->syndeticsSettingId;
+			if ($syndeticsSettings->find(true) && !$syndeticsSettings->syndeticsUnbound) {
+				$summaryData = self::getSyndeticsSummary($syndeticsSettings, $workId, $isbn, $upc);
+			}
 		}
 		require_once ROOT_DIR . '/sys/Enrichment/ContentCafeSetting.php';
 		$contentCafeSettings = new ContentCafeSetting();
@@ -230,19 +230,22 @@ class GoDeeperData {
 				$summaryData = self::getContentCafeSummary($contentCafeSettings, $isbn, $upc);
 			}
 		}
+		if ($library->loralSettingId > 0) {
+			require_once ROOT_DIR . '/sys/Enrichment/LoralSetting.php';
+			$loralSettings = new LoralSetting();
+			$loralSettings->id = $library->loralSettingId;
+			if ($loralSettings->find(true)) {
+				$summaryData = self::getLoralSummary($loralSettings, $isbn, $upc);
+			}
+		}
+
 		return $summaryData;
 	}
 
-	/**
-	 * @param ContentCafeSetting $settings
-	 * @param string $isbn
-	 * @param string $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getContentCafeSummary(ContentCafeSetting $settings, $isbn, $upc) {
+	private static function getContentCafeSummary(ContentCafeSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$memCacheKey = "contentcafe_summary_{$isbn}_{$upc}";
+		$memCacheKey = "contentcafe_summary_{$isbn}_$upc";
 		$summaryData = $memCache->get($memCacheKey);
 		if (!$summaryData || isset($_REQUEST['reload'])) {
 			$summaryData = [];
@@ -274,19 +277,12 @@ class GoDeeperData {
 
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param string $workId
-	 * @param string $isbn
-	 * @param string $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getSyndeticsSummary($settings, $workId, $isbn, $upc) {
+	private static function getSyndeticsSummary(SyndeticsSetting $settings, ?string $workId, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 
 		if ($settings->hasSummary) {
 			/** @var Memcache $memCache */ global $memCache;
-			$key = "syndetics_summary_{$isbn}_{$upc}";
+			$key = "syndetics_summary_{$isbn}_$upc";
 			$summaryData = $memCache->get($key);
 
 			if (!$summaryData || isset($_REQUEST['reload'])) {
@@ -310,7 +306,7 @@ class GoDeeperData {
 					try {
 
 						//Load the index page from syndetics
-						$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/SUMMARY.XML&client={$settings->syndeticsKey}&type=xw10&upc=$upc";
+						$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/SUMMARY.XML&client=$settings->syndeticsKey&type=xw10&upc=$upc";
 
 						//Get the XML from the service
 						$ctx = stream_context_create([
@@ -327,10 +323,8 @@ class GoDeeperData {
 							$data = new SimpleXMLElement($response);
 
 							$summaryData = [];
-							if (isset($data)) {
-								if (isset($data->VarFlds->VarDFlds->Notes->Fld520->a)) {
-									$summaryData['summary'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520->a;
-								}
+							if (isset($data->VarFlds->VarDFlds->Notes->Fld520->a)) {
+								$summaryData['summary'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520->a;
 							}
 						}
 
@@ -341,7 +335,7 @@ class GoDeeperData {
 								$summaryData['summary'] = $avSummary['summary'];
 							}
 						}
-						if ($summaryData == false) {
+						if (!$summaryData) {
 							$syndeticsData->description = 'no_summary';
 						} else {
 							$syndeticsData->description = $summaryData['summary'];
@@ -366,7 +360,7 @@ class GoDeeperData {
 					}
 				}
 
-				if ($summaryData == false) {
+				if (!$summaryData) {
 					$memCache->set($key, 'no_summary', $configArray['Caching']['enrichment_data']);
 				} else {
 					$memCache->set($key, $summaryData, $configArray['Caching']['enrichment_data']);
@@ -379,6 +373,57 @@ class GoDeeperData {
 			}
 		} else {
 			return [];
+		}
+	}
+
+	static function getLoralSummary(LoralSetting $settings, ?string $isbn, ?string $upc) : array {
+		if (empty($isbn) && empty($upc)) {
+			$summaryData = 'no_summary';
+		}else{
+			/** @var Memcache $memCache */
+			global $memCache;
+			global $configArray;
+			$memCacheKey = "loral_summary_{$isbn}_$upc";
+			$summaryData = $memCache->get($memCacheKey);
+			if (!$summaryData || isset($_REQUEST['reload'])) {
+				$summaryData = [];
+				$url = $settings->loralUrl;
+				$authentication = base64_encode($settings->loralId . ':' . $settings->password);
+				$url .= "/Enrichment/Description?isn=";
+				if (!empty($isbn)) {
+					$url .= "$isbn";
+				}else if (!empty($upc)) {
+					$url .= "$upc";
+				}
+				$headers = "User-Agent: {$configArray['Catalog']['catalogUserAgent']}\r\n";
+				$headers .= "Authorization: Basic $authentication\r\n";
+				$context = stream_context_create([
+					'http' => [
+						'header' => $headers,
+					],
+				]);
+				$response = @file_get_contents($url, false, $context);
+				if ($response) {
+					$jsonResponse = json_decode($response);
+					if ($jsonResponse->success) {
+						$summaryData['summary'] = $jsonResponse->description;
+					}else{
+						$summaryData = 'no_summary';
+					}
+
+					if (!empty($summaryData['summary'])) {
+						$memCache->set($memCacheKey, $summaryData, $configArray['Caching']['enrichment_data']);
+					} else {
+						$memCache->set($memCacheKey, 'no_summary', $configArray['Caching']['enrichment_data']);
+					}
+				}
+			}
+		}
+
+		if ($summaryData == 'no_summary') {
+			return [];
+		} else {
+			return $summaryData;
 		}
 	}
 
@@ -401,16 +446,10 @@ class GoDeeperData {
 		return $tocData;
 	}
 
-	/**
-	 * @param ContentCafeSetting $settings
-	 * @param string $isbn
-	 * @param string $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getContentCafeTableOfContents($settings, $isbn, $upc) {
+	private static function getContentCafeTableOfContents(ContentCafeSetting $settings, ?string $isbn, ?string $upc) {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$memCacheKey = "contentcafe_toc_{$isbn}_{$upc}";
+		$memCacheKey = "contentcafe_toc_{$isbn}_$upc";
 		$tocData = $memCache->get($memCacheKey);
 		if (!$tocData || isset($_REQUEST['reload'])) {
 			$tocData = [];
@@ -426,21 +465,15 @@ class GoDeeperData {
 		return $tocData;
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param string $isbn
-	 * @param string $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getSyndeticsTableOfContents($settings, $isbn, $upc) {
+	private static function getSyndeticsTableOfContents(SyndeticsSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$tocData = $memCache->get("syndetics_toc_{$isbn}_{$upc}");
+		$tocData = $memCache->get("syndetics_toc_{$isbn}_$upc");
 
 		if (!$tocData || isset($_REQUEST['reload'])) {
 			$clientKey = $settings->syndeticsKey;
 			//Load the index page from syndetics
-			$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/TOC.XML&client=$clientKey&type=xw10&upc=$upc";
+			$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/TOC.XML&client=$clientKey&type=xw10&upc=$upc";
 
 			try {
 				//Get the XML from the service
@@ -458,15 +491,13 @@ class GoDeeperData {
 					$data = new SimpleXMLElement($response);
 
 
-					if (isset($data)) {
-						if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld970)) {
-							foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld970 as $field) {
-								$tocData[] = [
-									'label' => (string)$field->l,
-									'title' => (string)$field->t,
-									'page' => (string)$field->p,
-								];
-							}
+					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld970)) {
+						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld970 as $field) {
+							$tocData[] = [
+								'label' => (string)$field->l,
+								'title' => (string)$field->t,
+								'page' => (string)$field->p,
+							];
 						}
 					}
 				}
@@ -482,26 +513,20 @@ class GoDeeperData {
 				$logger->log("Error fetching data from Syndetics $e", Logger::LOG_ERROR);
 				$tocData = [];
 			}
-			$memCache->set("syndetics_toc_{$isbn}_{$upc}", $tocData, $configArray['Caching']['enrichment_data']);
+			$memCache->set("syndetics_toc_{$isbn}_$upc", $tocData, $configArray['Caching']['enrichment_data']);
 		}
 		return $tocData;
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param $isbn
-	 * @param $upc
-	 * @return array|bool|mixed
-	 */
-	static function getSyndeticsFictionProfile($settings, $isbn, $upc) {
+	static function getSyndeticsFictionProfile(SyndeticsSetting $settings, ?string $isbn, ?string $upc) : array {
 		//Load the index page from syndetics
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$fictionData = $memCache->get("syndetics_fiction_profile_{$isbn}_{$upc}");
+		$fictionData = $memCache->get("syndetics_fiction_profile_{$isbn}_$upc");
 
 		if (!$fictionData) {
 			$clientKey = $settings->syndeticsKey;
-			$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/FICTION.XML&client=$clientKey&type=xw10&upc=$upc";
+			$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/FICTION.XML&client=$clientKey&type=xw10&upc=$upc";
 
 			try {
 				//Get the XML from the service
@@ -518,93 +543,85 @@ class GoDeeperData {
 				$data = new SimpleXMLElement($response);
 
 				$fictionData = [];
-				if (isset($data)) {
-					//Load characters
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld920)) {
-						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld920 as $field) {
-							$fictionData['characters'][] = [
-								'name' => (string)$field->b,
-								'gender' => (string)$field->c,
-								'age' => (string)$field->d,
-								'description' => (string)$field->f,
-								'occupation' => (string)$field->g,
-							];
-						}
+				//Load characters
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld920)) {
+					foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld920 as $field) {
+						$fictionData['characters'][] = [
+							'name' => (string)$field->b,
+							'gender' => (string)$field->c,
+							'age' => (string)$field->d,
+							'description' => (string)$field->f,
+							'occupation' => (string)$field->g,
+						];
+					}
 
+				}
+				//Load subjects
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld950)) {
+					foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld950 as $field) {
+						$fictionData['topics'][] = (string)$field->a;
 					}
-					//Load subjects
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld950)) {
-						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld950 as $field) {
-							$fictionData['topics'][] = (string)$field->a;
+				}
+				//Load settings
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld951)) {
+					foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld951 as $field) {
+						if (isset($field->c)) {
+							$fictionData['settings'][] = $field->a . ' -- ' . $field->c;
+						} else {
+							$fictionData['settings'][] = (string)$field->a;
 						}
 					}
-					//Load settings
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld951)) {
-						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld951 as $field) {
-							if (isset($field->c)) {
-								$fictionData['settings'][] = (string)$field->a . ' -- ' . (string)$field->c;
-							} else {
-								$fictionData['settings'][] = (string)$field->a;
+				}
+				//Load additional settings
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld952)) {
+					foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld952 as $field) {
+						if (isset($field->c)) {
+							$fictionData['settings'][] = $field->a . ' -- ' . $field->c;
+						} else {
+							$fictionData['settings'][] = (string)$field->a;
+						}
+					}
+				}
+				//Load genres
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld955)) {
+					foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld955 as $field) {
+						$genre = (string)$field->a;
+						$subGenres = [];
+						if (isset($field->b)) {
+							foreach ($field->b as $subGenre) {
+								$subGenres[] = $subGenre;
 							}
 						}
+						$fictionData['genres'][] = [
+							'name' => $genre,
+							'subGenres' => $subGenres,
+						];
 					}
-					//Load additional settings
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld952)) {
-						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld952 as $field) {
-							if (isset($field->c)) {
-								$fictionData['settings'][] = (string)$field->a . ' -- ' . (string)$field->c;
-							} else {
-								$fictionData['settings'][] = (string)$field->a;
-							}
-						}
+				}
+				//Load awards
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld985)) {
+					foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld985 as $field) {
+						$fictionData['awards'][] = [
+							'name' => (string)$field->a,
+							'year' => (string)$field->y,
+						];
 					}
-					//Load genres
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld955)) {
-						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld955 as $field) {
-							$genre = (string)$field->a;
-							$subGenres = [];
-							if (isset($field->b)) {
-								foreach ($field->b as $subGenre) {
-									$subGenres[] = $subGenre;
-								}
-							}
-							$fictionData['genres'][] = [
-								'name' => $genre,
-								'subGenres' => $subGenres,
-							];
-						}
-					}
-					//Load awards
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld985)) {
-						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld985 as $field) {
-							$fictionData['awards'][] = [
-								'name' => (string)$field->a,
-								'year' => (string)$field->y,
-							];
-						}
 
-					}
 				}
 			} catch (Exception $e) {
 				global $logger;
 				$logger->log("Error fetching data from Syndetics $e", Logger::LOG_ERROR);
 				$fictionData = [];
 			}
-			$memCache->set("syndetics_fiction_profile_{$isbn}_{$upc}", $fictionData, $configArray['Caching']['enrichment_data']);
+			$memCache->set("syndetics_fiction_profile_{$isbn}_$upc", $fictionData, $configArray['Caching']['enrichment_data']);
 		}
 		return $fictionData;
 	}
 
-	/**
-	 * @param ContentCafeSetting $settings
-	 * @param string $isbn
-	 * @param string $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getContentCafeAuthorNotes($settings, $isbn, $upc) {
+	private static function getContentCafeAuthorNotes(ContentCafeSetting $settings, ?string $isbn, ?string $upc) : string {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$memCacheKey = "contentcafe_author_notes_{$isbn}_{$upc}";
+		$memCacheKey = "contentcafe_author_notes_{$isbn}_$upc";
 		$authorData = $memCache->get($memCacheKey);
 		if (!$authorData || isset($_REQUEST['reload'])) {
 			$authorData = [];
@@ -620,22 +637,16 @@ class GoDeeperData {
 		return $authorData;
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param $isbn
-	 * @param $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getSyndeticsAuthorNotes($settings, $isbn, $upc) {
+	private static function getSyndeticsAuthorNotes(SyndeticsSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$summaryData = $memCache->get("syndetics_author_notes_{$isbn}_{$upc}");
+		$summaryData = $memCache->get("syndetics_author_notes_{$isbn}_$upc");
 
 		if (!$summaryData) {
 			$clientKey = $settings->syndeticsKey;
 
 			//Load the index page from syndetics
-			$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/ANOTES.XML&client=$clientKey&type=xw10&upc=$upc";
+			$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/ANOTES.XML&client=$clientKey&type=xw10&upc=$upc";
 
 			try {
 				//Get the XML from the service
@@ -652,10 +663,8 @@ class GoDeeperData {
 				$data = new SimpleXMLElement($response);
 
 				$summaryData = [];
-				if (isset($data)) {
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld980->a)) {
-						$summaryData['summary'] = (string)$data->VarFlds->VarDFlds->SSIFlds->Fld980->a;
-					}
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld980->a)) {
+					$summaryData['summary'] = (string)$data->VarFlds->VarDFlds->SSIFlds->Fld980->a;
 				}
 
 				return $summaryData;
@@ -664,27 +673,21 @@ class GoDeeperData {
 				$logger->log("Error fetching data from Syndetics $e", Logger::LOG_ERROR);
 				$summaryData = [];
 			}
-			$memCache->set("syndetics_author_notes_{$isbn}_{$upc}", $summaryData, $configArray['Caching']['enrichment_data']);
+			$memCache->set("syndetics_author_notes_{$isbn}_$upc", $summaryData, $configArray['Caching']['enrichment_data']);
 		}
 		return $summaryData;
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param $isbn
-	 * @param $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getSyndeticsExcerpt($settings, $isbn, $upc) {
+	private static function getSyndeticsExcerpt(SyndeticsSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$excerptData = $memCache->get("syndetics_excerpt_{$isbn}_{$upc}");
+		$excerptData = $memCache->get("syndetics_excerpt_{$isbn}_$upc");
 
 		if (!$excerptData || isset($_REQUEST['reload'])) {
 			$clientKey = $settings->syndeticsKey;
 
 			//Load the index page from syndetics
-			$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/DBCHAPTER.XML&client=$clientKey&type=xw10&upc=$upc";
+			$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/DBCHAPTER.XML&client=$clientKey&type=xw10&upc=$upc";
 
 			try {
 				//Get the XML from the service
@@ -701,14 +704,12 @@ class GoDeeperData {
 				$data = new SimpleXMLElement($response);
 
 				$excerptData = [];
-				if (isset($data)) {
-					if (isset($data->VarFlds->VarDFlds->Notes->Fld520)) {
-						$excerptData['excerpt'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520;
-						$excerptData['excerpt'] = '<p>' . str_replace(chr(194) . chr(160), '</p><p>', $excerptData['excerpt']) . '</p>';
-					}
+				if (isset($data->VarFlds->VarDFlds->Notes->Fld520)) {
+					$excerptData['excerpt'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520;
+					$excerptData['excerpt'] = '<p>' . str_replace(chr(194) . chr(160), '</p><p>', $excerptData['excerpt']) . '</p>';
 				}
 
-				$memCache->set("syndetics_excerpt_{$isbn}_{$upc}", $excerptData, $configArray['Caching']['enrichment_data']);
+				$memCache->set("syndetics_excerpt_{$isbn}_$upc", $excerptData, $configArray['Caching']['enrichment_data']);
 			} catch (Exception $e) {
 				global $logger;
 				$logger->log("Error fetching data from Syndetics $e", Logger::LOG_ERROR);
@@ -718,16 +719,10 @@ class GoDeeperData {
 		return $excerptData;
 	}
 
-	/**
-	 * @param ContentCafeSetting $settings
-	 * @param $isbn
-	 * @param $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getContentCafeExcerpt($settings, $isbn, $upc) {
+	private static function getContentCafeExcerpt(ContentCafeSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$memCacheKey = "contentcafe_excerpt_{$isbn}_{$upc}";
+		$memCacheKey = "contentcafe_excerpt_{$isbn}_$upc";
 		$excerptData = $memCache->get($memCacheKey);
 
 		if (!$excerptData || isset($_REQUEST['reload'])) {
@@ -743,21 +738,15 @@ class GoDeeperData {
 		return $excerptData;
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param $isbn
-	 * @param $upc
-	 * @return array|bool|mixed
-	 */
-	private static function getVideoClip($settings, $isbn, $upc) {
+	private static function getVideoClip(SyndeticsSetting $settings, ?string $isbn, ?string $upc) {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
-		$summaryData = $memCache->get("syndetics_video_clip_{$isbn}_{$upc}");
+		$summaryData = $memCache->get("syndetics_video_clip_{$isbn}_$upc");
 
 		if (!$summaryData) {
 			$clientKey = $settings->syndeticsKey;
 			//Load the index page from syndetics
-			$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/VIDEOCLIP.XML&client=$clientKey&type=xw10&upc=$upc";
+			$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/VIDEOCLIP.XML&client=$clientKey&type=xw10&upc=$upc";
 
 			try {
 				//Get the XML from the service
@@ -774,13 +763,11 @@ class GoDeeperData {
 				$data = new SimpleXMLElement($response);
 
 				$summaryData = [];
-				if (isset($data)) {
-					if (isset($data->VarFlds->VarDFlds->VideoLink)) {
-						$summaryData['videoClip'] = (string)$data->VarFlds->VarDFlds->VideoLink;
-					}
-					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld997)) {
-						$summaryData['source'] = (string)$data->VarFlds->VarDFlds->SSIFlds->Fld997;
-					}
+				if (isset($data->VarFlds->VarDFlds->VideoLink)) {
+					$summaryData['videoClip'] = (string)$data->VarFlds->VarDFlds->VideoLink;
+				}
+				if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld997)) {
+					$summaryData['source'] = (string)$data->VarFlds->VarDFlds->SSIFlds->Fld997;
 				}
 
 			} catch (Exception $e) {
@@ -788,32 +775,26 @@ class GoDeeperData {
 				$logger->log("Error fetching data from Syndetics $e", Logger::LOG_ERROR);
 				$summaryData = [];
 			}
-			$memCache->set("syndetics_video_clip_{$isbn}_{$upc}", $summaryData, $configArray['Caching']['enrichment_data']);
+			$memCache->set("syndetics_video_clip_{$isbn}_$upc", $summaryData, $configArray['Caching']['enrichment_data']);
 		}
 
 		return $summaryData;
 	}
 
-	/**
-	 * @param SyndeticsSetting $settings
-	 * @param $isbn
-	 * @param $upc
-	 * @return array|bool|mixed
-	 */
-	static function getAVSummary($settings, $isbn, $upc) {
+	static function getAVSummary(SyndeticsSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */
 		if (!$settings->hasAvSummary) {
 			return [];
 		}
 		global $memCache;
-		$avSummaryData = $memCache->get("syndetics_av_summary_{$isbn}_{$upc}");
+		$avSummaryData = $memCache->get("syndetics_av_summary_{$isbn}_$upc");
 
 		if (!$avSummaryData || isset($_REQUEST['reload'])) {
 			$clientKey = $settings->syndeticsKey;
 
 			//Load the index page from syndetics
-			$requestUrl = "http://syndetics.com/index.aspx?isbn=$isbn/AVSUMMARY.XML&client=$clientKey&type=xw10&upc=$upc";
+			$requestUrl = "https://syndetics.com/index.aspx?isbn=$isbn/AVSUMMARY.XML&client=$clientKey&type=xw10&upc=$upc";
 
 			try {
 				//Get the XML from the service
@@ -830,22 +811,20 @@ class GoDeeperData {
 					/** @var stdClass $data */
 					$data = new SimpleXMLElement($response);
 
-					if (isset($data)) {
-						if (isset($data->VarFlds->VarDFlds->Notes->Fld520->a)) {
-							$avSummaryData['summary'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520->a;
-						}
-						if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld970)) {
-							foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld970 as $field) {
-								$avSummaryData['trackListing'][] = [
-									'number' => (string)$field->l,
-									'name' => (string)$field->t,
-								];
-							}
+					if (isset($data->VarFlds->VarDFlds->Notes->Fld520->a)) {
+						$avSummaryData['summary'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520->a;
+					}
+					if (isset($data->VarFlds->VarDFlds->SSIFlds->Fld970)) {
+						foreach ($data->VarFlds->VarDFlds->SSIFlds->Fld970 as $field) {
+							$avSummaryData['trackListing'][] = [
+								'number' => (string)$field->l,
+								'name' => (string)$field->t,
+							];
 						}
 					}
 				}
 
-				$memCache->set("syndetics_av_summary_{$isbn}_{$upc}", $avSummaryData, $configArray['Caching']['enrichment_data']);
+				$memCache->set("syndetics_av_summary_{$isbn}_$upc", $avSummaryData, $configArray['Caching']['enrichment_data']);
 			} catch (Exception $e) {
 				global $logger;
 				$logger->log("Error fetching data from Syndetics $e", Logger::LOG_ERROR);
@@ -855,7 +834,7 @@ class GoDeeperData {
 		return $avSummaryData;
 	}
 
-	static function getHtmlData($dataType, $recordType, $isbn, $upc) {
+	static function getHtmlData(string $dataType, string $recordType, ?string $isbn, ?string $upc) : string {
 		global $interface;
 		global $library;
 

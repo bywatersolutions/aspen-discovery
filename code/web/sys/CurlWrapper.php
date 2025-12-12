@@ -128,9 +128,9 @@ class CurlWrapper {
 	 *
 	 * @param string $url The url to post to
 	 *
-	 * @return string   The response from the web page if any
+	 * @return bool|string   The response from the web page if any
 	 */
-	public function curlGetPage($url) {
+	public function curlGetPage(string $url) : bool|string {
 		$this->curl_connect($url);
 		curl_setopt($this->curl_connection, CURLOPT_HTTPGET, true);
 		$this->responseHeaders = [];

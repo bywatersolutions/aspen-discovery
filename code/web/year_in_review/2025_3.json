@@ -85,9 +85,9 @@
       "overlay_text" : [
         {
           "text": "{topFormat1}",
-          "left": "25%",
-          "top": "265px",
-          "width": "30%",
+          "left": "22%",
+          "top": "445px",
+          "width": "70%",
           "height": "20%",
           "color" : "black",
           "font_size": "2em",
@@ -95,9 +95,9 @@
         },
         {
           "text": "{topFormat2}",
-          "left": "25%",
-          "top": "415px",
-          "width": "30%",
+          "left": "22%",
+          "top": "590px",
+          "width": "70%",
           "height": "20%",
           "color" : "black",
           "font_size": "2em",
@@ -105,9 +105,9 @@
         },
         {
           "text": "{topFormat3}",
-          "left": "25%",
-          "top": "565px",
-          "width": "30%",
+          "left": "22%",
+          "top": "730px",
+          "width": "70%",
           "height": "20%",
           "color" : "black",
           "font_size": "2em",

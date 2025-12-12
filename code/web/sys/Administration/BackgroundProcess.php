@@ -67,7 +67,8 @@ class BackgroundProcess extends DataObject {
 				'label' => 'Notes',
 				'description' => 'Notes for the background process',
 				'readOnly' => true,
-				'hideInLists' => true
+				'hideInLists' => true,
+				'rows' => '25',
 			]
 		];
 

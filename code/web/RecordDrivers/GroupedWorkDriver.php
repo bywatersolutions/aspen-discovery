@@ -955,10 +955,13 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		if ($description == null) {
 			$description = $this->getDescriptionFast();
 		}
-		if ($library->getGroupedWorkDisplaySettings()->preferSyndeticsSummary == 1 || $description == null || strlen($description) == 0) {
-			if ($cleanIsbn != null && strlen($cleanIsbn) > 0) {
+
+		if ($library->getGroupedWorkDisplaySettings()->preferSyndeticsSummary == 1) {
+			$cleanIsbn = $this->getCleanISBN();
+			$cleanUpc = $this->getCleanUPC();
+			if (!empty($cleanIsbn) || !empty($cleanUpc)) {
 				require_once ROOT_DIR . '/Drivers/marmot_inc/GoDeeperData.php';
-				$summaryInfo = GoDeeperData::getSummary($this->getPermanentId(), $cleanIsbn, $this->getCleanUPC());
+				$summaryInfo = GoDeeperData::getSummary($this->getPermanentId(), $cleanIsbn, $cleanUpc);
 				if (isset($summaryInfo['summary'])) {
 					$description = $summaryInfo['summary'];
 				}

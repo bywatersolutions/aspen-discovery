@@ -23,7 +23,7 @@ class NewYorkTimesSetting extends DataObject {
 				'type' => 'storedPassword',
 				'label' => 'Books API Key',
 				'description' => 'The Key for the Books API',
-				'maxLength' => '32',
+				'maxLength' => '48',
 				'hideInLists' => true,
 				'forcesListReindex' => true,
 			],

@@ -56,5 +56,12 @@ function getUpdates25_Q4_06(): array {
 				'ALTER TABLE loral_settings CHANGE COLUMN password password VARCHAR(250)'
 			]
 		], //encrypt_loral_password
+		'increase_new_york_times_key_length' => [
+			'title' => 'Increatese New York Times Key Length',
+			'description' => 'Increase the length of the key for the new NYT API Keys',
+			'sql' => [
+				'ALTER TABLE nyt_api_settings CHANGE COLUMN booksApiKey booksApiKey VARCHAR(48) NOT NULL'
+			]
+		], //increase_new_york_times_key_length
 	];
 }

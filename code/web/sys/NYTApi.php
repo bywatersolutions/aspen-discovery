@@ -11,7 +11,7 @@ require_once ROOT_DIR . '/sys/BaseLogEntry.php';
  */
 class NYTApi {
 	private static ?NYTApi $apiSingleton = null;
-	const BASE_URI = 'http://api.nytimes.com/svc/books/v3/lists/';
+	const BASE_URI = 'https://api.nytimes.com/svc/books/v3/lists/';
 	protected ?string $api_key = null;
 
 	private ?object $rawJSON = null;

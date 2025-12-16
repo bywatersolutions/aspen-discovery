@@ -156,6 +156,49 @@ class GoDeeperData {
 				}
 			}
 
+			// Use Loral Data Data
+			if ($library->loralSettingId > 0) {
+				require_once ROOT_DIR . '/sys/Enrichment/LoralSetting.php';
+				$loralSettings = new LoralSetting();
+				$loralSettings->id = $library->loralSettingId;
+				if ($loralSettings->find(true)) {
+					$enrichmentOptions = self::getLoralEnrichmentOptions($loralSettings, $isbn, $upc);
+					if (!empty($enrichmentOptions)) {
+						if (in_array('excerpt', $enrichmentOptions)) {
+							$validEnrichmentTypes['excerpt'] = 'Excerpt';
+							if (!isset($defaultOption)) {
+								$defaultOption = 'excerpt';
+							}
+						}
+						if (in_array('tableOfContents', $enrichmentOptions)) {
+							$validEnrichmentTypes['tableOfContents'] = 'Table of Contents';
+							if (!isset($defaultOption)) {
+								$defaultOption = 'tableOfContents';
+							}
+						}
+						if (in_array('authorNotes', $enrichmentOptions)) {
+							$validEnrichmentTypes['authorNotes'] = 'Author Notes';
+							if (!isset($defaultOption)) {
+								$defaultOption = 'authorNotes';
+							}
+						}
+						if (in_array('description', $enrichmentOptions)) {
+							$validEnrichmentTypes['summary'] = 'Summary';
+							if (!isset($defaultOption)) {
+								$defaultOption = 'summary';
+							}
+						}
+						if (in_array('allInOne', $enrichmentOptions)) {
+							$validEnrichmentTypes['loralAllInOne'] = 'More about this title';
+							if (!isset($defaultOption)) {
+								$defaultOption = 'loralAllInOne';
+							}
+						}
+						$timer->logTime("Finished processing Loral options");
+					}
+				}
+			}
+
 			$goDeeperOptions = ['options' => $validEnrichmentTypes];
 			if (count($validEnrichmentTypes) > 0 && isset($defaultOption)) {
 				$goDeeperOptions['defaultOption'] = $defaultOption;
@@ -210,6 +253,47 @@ class GoDeeperData {
 		}
 
 		return false;
+	}
+
+	private static function getLoralEnrichmentOptions(LoralSetting $settings, $isbn, $upc, $field = 'AvailableContent') {
+		if (empty($isbn) && empty($upc)) {
+			$summaryData = 'no_summary';
+		}else{
+			/** @var Memcache $memCache */
+			global $memCache;
+			global $configArray;
+			$memCacheKey = "loral_enrichment_options_{$isbn}_$upc";
+			$enrichmentOptions = $memCache->get($memCacheKey);
+			if (!$enrichmentOptions || isset($_REQUEST['reload'])) {
+				$enrichmentOptions = [];
+				$url = $settings->loralUrl;
+				$authentication = base64_encode($settings->loralId . ':' . $settings->password);
+				$url .= "/Enrichment/Options?isn=";
+				if (!empty($isbn)) {
+					$url .= "$isbn";
+				}else if (!empty($upc)) {
+					$url .= "$upc";
+				}
+				$headers = "User-Agent: {$configArray['Catalog']['catalogUserAgent']}\r\n";
+				$headers .= "Authorization: Basic $authentication\r\n";
+				$context = stream_context_create([
+					'http' => [
+						'header' => $headers,
+					],
+				]);
+				$response = @file_get_contents($url, false, $context);
+				if ($response) {
+					$jsonResponse = json_decode($response);
+					if ($jsonResponse->success) {
+						$enrichmentOptions = $jsonResponse->enrichmentOptions;
+					}
+
+					$memCache->set($memCacheKey, $enrichmentOptions, $configArray['Caching']['enrichment_data']);
+				}
+			}
+		}
+
+		return $enrichmentOptions;
 	}
 
 	static function getSummary(?string $workId, ?string $isbn, ?string $upc) : array {
@@ -678,6 +762,41 @@ class GoDeeperData {
 		return $summaryData;
 	}
 
+	private static function getLoralAuthorNotes(LoralSetting $settings, ?string $isbn, ?string $upc) : array {
+		global $configArray;
+		/** @var Memcache $memCache */ global $memCache;
+		$memCacheKey = "loral_author_notes_{$isbn}_$upc";
+		$summaryData = $memCache->get($memCacheKey);
+
+		if (!$summaryData || isset($_REQUEST['reload'])) {
+			$summaryData = [];
+			$url = $settings->loralUrl;
+			$authentication = base64_encode($settings->loralId . ':' . $settings->password);
+			$url .= "/Enrichment/AuthorBio?isn=";
+			if (!empty($isbn)) {
+				$url .= "$isbn";
+			}else if (!empty($upc)) {
+				$url .= "$upc";
+			}
+			$headers = "User-Agent: {$configArray['Catalog']['catalogUserAgent']}\r\n";
+			$headers .= "Authorization: Basic $authentication\r\n";
+			$context = stream_context_create([
+				'http' => [
+					'header' => $headers,
+				],
+			]);
+			$response = @file_get_contents($url, false, $context);
+			if ($response) {
+				$jsonResponse = json_decode($response);
+				if ($jsonResponse->success) {
+					$summaryData['summary'] = $jsonResponse->biography;
+				}
+			}
+			$memCache->set("syndetics_author_notes_{$isbn}_$upc", $summaryData, $configArray['Caching']['enrichment_data']);
+		}
+		return $summaryData;
+	}
+
 	private static function getSyndeticsExcerpt(SyndeticsSetting $settings, ?string $isbn, ?string $upc) : array {
 		global $configArray;
 		/** @var Memcache $memCache */ global $memCache;
@@ -904,6 +1023,31 @@ class GoDeeperData {
 						return $interface->fetch('Record/view-syndetics-excerpt.tpl');
 					default :
 						return "Loading data for Content Cafe $dataType still needs to be handled.";
+				}
+			}
+		}
+
+		// Use Loral Data
+		if ($library->loralSettingId > 0) {
+			require_once ROOT_DIR . '/sys/Enrichment/LoralSetting.php';
+			$loralSettings = new LoralSetting();
+			$loralSettings->id = $library->loralSettingId;
+			if ($loralSettings->find(true)) {
+				switch (strtolower($dataType)) {
+					case 'authornotes' :
+						$data = GoDeeperData::getLoralAuthorNotes($loralSettings, $isbn, $upc);
+						$interface->assign('authorData', $data);
+						return $interface->fetch('Record/view-syndetics-author-notes.tpl');
+//					case 'excerpt' :
+//						$data = GoDeeperData::getLoralExcerpt($loralSettings, $isbn, $upc);
+//						$interface->assign('excerptData', $data);
+//						return $interface->fetch('Record/view-syndetics-excerpt.tpl');
+//					case 'tableofcontents' :
+//						$data = GoDeeperData::getLoralTableOfContents($loralSettings, $isbn, $upc);
+//						$interface->assign('tocData', $data);
+//						return $interface->fetch('Record/view-contentcafe-toc.tpl');
+					default :
+						return "Loading data for Loral $dataType still needs to be handled.";
 				}
 			}
 		}

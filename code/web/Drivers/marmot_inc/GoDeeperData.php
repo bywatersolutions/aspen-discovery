@@ -354,7 +354,7 @@ class GoDeeperData {
 					}
 				} else {
 					if ($syndeticsData->description == 'no_summary') {
-						$summaryData = $syndeticsData->description;
+						$summaryData = [];
 					} else {
 						$summaryData['summary'] = $syndeticsData->description;
 					}

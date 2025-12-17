@@ -122,7 +122,7 @@ abstract class RecordInterface {
 
 	public abstract function getMoreDetailsOptions();
 
-	public function getBaseMoreDetailsOptions($isbn) {
+	public function getBaseMoreDetailsOptions($isbn) : array {
 		global $interface;
 		/** Library $library */
 		global $library;
@@ -138,7 +138,13 @@ abstract class RecordInterface {
 				$hasSyndeticsUnbound = true;
 			}
 		}
-		$interface->assign('hasSyndeticsUnbound');
+		$interface->assign('hasSyndeticsUnbound', $hasSyndeticsUnbound);
+
+		$hasLoral = false;
+		if ($library->loralSettingId > 0) {
+			$hasLoral = true;
+		}
+		$interface->assign('hasLoral', $hasLoral);
 
 		$hasNovelistAllInOne = false;
 		if ($library->novelistSettingId > 0) {
@@ -214,6 +220,17 @@ abstract class RecordInterface {
 				'hideByDefault' => false,
 			];
 		}
+		if ($hasLoral) {
+			if ($this instanceof GroupedWorkDriver || $this instanceof GroupedWorkSubDriver) {
+				$permanentId = $this->getPermanentId();
+				$moreDetailsOptions['loralAllInOne'] = [
+					'label' => 'More About This Title From Loral',
+					'body' => '<div id="loralAllInOnePlaceholder">' . translate(['text'=>"Loading...", 'isPublicFacing'=> true]) . '</div>',
+					'onShow' => "AspenDiscovery.GroupedWork.getGoDeeperData('$permanentId', 'loralAllInOne');",
+					'hideByDefault' => false,
+				];
+			}
+		}
 
 		$moreDetailsOptions['tableOfContents'] = [
 			'label' => 'Table of Contents',
@@ -237,7 +254,7 @@ abstract class RecordInterface {
 				'body' => "<div id='customerReviewPlaceholder'></div>",
 			];
 		}
-		if ($isbn) {
+		if ($isbn ) {
 			$moreDetailsOptions['syndicatedReviews'] = [
 				'label' => 'Published Reviews',
 				'body' => "<div id='syndicatedReviewPlaceholder'></div>",
@@ -331,7 +348,7 @@ abstract class RecordInterface {
 			'shareIt' => 'SHAREit',
 			'tableOfContents' => 'Table of Contents  (MARC/Syndetics/ContentCafe)',
 			'excerpt' => 'Excerpt (Syndetics/ContentCafe)',
-			'authornotes' => 'Author Notes (Syndetics/ContentCafe)',
+			'authornotes' => 'Author Notes (Syndetics/ContentCafe/Loral)',
 			'subjects' => 'Subjects',
 			'moreDetails' => 'More Details',
 			'syndeticsUnbound' => 'Syndetics Unbound',
@@ -340,12 +357,13 @@ abstract class RecordInterface {
 			'similarTitles' => 'Similar Titles From NoveList',
 			'similarAuthors' => 'Similar Authors From NoveList',
 			'borrowerReviews' => 'Borrower Reviews',
-			'syndicatedReviews' => 'Syndicated Reviews (Syndetics/ContentCafe)',
+			'syndicatedReviews' => 'Syndicated Reviews (Syndetics/ContentCafe/Loral)',
 			'goodreadsReviews' => 'GoodReads Reviews',
 			'citations' => 'Citations',
 			'copyDetails' => 'Copy Details (OverDrive)',
 			'staff' => 'Staff View',
 			'accessibilityStatements' => 'Accessibility Statements (OverDrive)',
+			'loralAllInOne' => 'Loral (All in One)'
 		];
 	}
 
@@ -362,6 +380,7 @@ abstract class RecordInterface {
 			'marcHoldings' => 'open',
 			'moreLikeThis' => 'open',
 			'syndeticsUnbound' => 'open',
+			'loralAllInOne' => 'open',
 			'otherEditions' => 'closed',
 			'innReach' => 'closed',
 			'shareIt' => 'closed',

@@ -792,7 +792,42 @@ class GoDeeperData {
 					$summaryData['summary'] = $jsonResponse->biography;
 				}
 			}
-			$memCache->set("syndetics_author_notes_{$isbn}_$upc", $summaryData, $configArray['Caching']['enrichment_data']);
+			$memCache->set("loral_author_notes_{$isbn}_$upc", $summaryData, $configArray['Caching']['enrichment_data']);
+		}
+		return $summaryData;
+	}
+
+	private static function getLoralAllInOne(LoralSetting $settings, ?string $isbn, ?string $upc) : array {
+		global $configArray;
+		/** @var Memcache $memCache */ global $memCache;
+		$memCacheKey = "loral_all_in_one_{$isbn}_$upc";
+		$summaryData = $memCache->get($memCacheKey);
+
+		if (!$summaryData || isset($_REQUEST['reload'])) {
+			$summaryData = [];
+			$url = $settings->loralUrl;
+			$authentication = base64_encode($settings->loralId . ':' . $settings->password);
+			$url .= "/Enrichment/AllInOne?isn=";
+			if (!empty($isbn)) {
+				$url .= "$isbn";
+			}else if (!empty($upc)) {
+				$url .= "$upc";
+			}
+			$headers = "User-Agent: {$configArray['Catalog']['catalogUserAgent']}\r\n";
+			$headers .= "Authorization: Basic $authentication\r\n";
+			$context = stream_context_create([
+				'http' => [
+					'header' => $headers,
+				],
+			]);
+			$response = @file_get_contents($url, false, $context);
+			if ($response) {
+				$jsonResponse = json_decode($response);
+				if ($jsonResponse->success) {
+					$summaryData['allInOneData'] = $jsonResponse->allInOne;
+				}
+			}
+			$memCache->set("loral_all_in_one_{$isbn}_$upc", $summaryData, $configArray['Caching']['enrichment_data']);
 		}
 		return $summaryData;
 	}
@@ -1038,6 +1073,10 @@ class GoDeeperData {
 						$data = GoDeeperData::getLoralAuthorNotes($loralSettings, $isbn, $upc);
 						$interface->assign('authorData', $data);
 						return $interface->fetch('Record/view-syndetics-author-notes.tpl');
+					case 'loralallinone' :
+						$data = GoDeeperData::getLoralAllInOne($loralSettings, $isbn, $upc);
+						$interface->assign('loralAllInOneData', $data);
+						return $interface->fetch('GroupedWork/loralAllInOne.tpl');
 //					case 'excerpt' :
 //						$data = GoDeeperData::getLoralExcerpt($loralSettings, $isbn, $upc);
 //						$interface->assign('excerptData', $data);

@@ -83,6 +83,8 @@ AspenDiscovery.GroupedWork = (function(){
 				placeholder = $("#tableOfContentsPlaceholder");
 			} else if (dataType === 'authornotes') {
 				placeholder = $("#authornotesPlaceholder");
+			} else if (dataType === 'loralAllInOne') {
+				placeholder = $("#loralAllInOnePlaceholder");
 			}
 			if (placeholder.hasClass("loaded")) return;
 			placeholder.show();

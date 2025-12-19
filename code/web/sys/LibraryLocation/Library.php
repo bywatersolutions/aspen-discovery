@@ -230,7 +230,6 @@ class Library extends DataObject {
 	public /** @noinspection PhpUnused */
 		$allowAutomaticSearchReplacements;
 	public $loralSettingId;
-	public $allowAutomaticSearchReplacements;
 
 	public /** @noinspection PhpUnused */
 		$worldCatUrl;

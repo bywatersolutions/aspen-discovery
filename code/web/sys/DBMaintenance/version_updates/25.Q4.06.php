@@ -77,5 +77,21 @@ function getUpdates25_Q4_06(): array {
 				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;'
 			]
 		], //add external request settings table
+		'system_maintenance_permission' => [
+			'title' => 'Add System Maintenance Permission',
+			'description' => 'Add System Maintenance Permission',
+			'continueOnError' => false,
+			'sql' => [
+				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('System Administration', 'Perform System Maintenance', '', 40, 'Allows users to perform system maintenance to keep Aspen running smoothly.')",
+				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Perform System Maintenance'))",
+			]
+		], //system_maintenance_permission
+		'increase_background_process_notes_length' => [
+			'title' => 'Increase Background Process Notes Length',
+			'description' => 'Increase Background Process Notes Length',
+			'sql' => [
+				'ALTER TABLE background_process CHANGE COLUMN notes notes LONGTEXT'
+			]
+		], //increase_background_process_notes_length
 	];
 }

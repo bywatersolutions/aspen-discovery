@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/../logger/DockerLogger.php';
+DockerLogger::init('BACKEND');
+
 // Initialize database
 $aspenAdminPassword = getenv('ASPEN_ADMIN_PASSWORD');
 $supportingCompany = getenv('SUPPORTING_COMPANY') ?? 'ByWater Solutions';
@@ -8,13 +11,21 @@ $databasePort = getenv('DATABASE_PORT') ?? 3306;
 $databaseName = getenv('DATABASE_NAME');
 $databaseUser = getenv('DATABASE_USER');
 $databasePassword = getenv('DATABASE_PASSWORD');
+
+if (!$databaseName || !$databaseUser || !$databasePassword) {
+	DockerLogger::error("Missing required database environment variables");
+}
+
 $databaseDsn = "mysql:host=$databaseHost;port=$databasePort;dbname=$databaseName";
 
 $mysqlConnectionCommand = "mariadb -u$databaseUser -p$databasePassword -h$databaseHost";
-	$databasePort != "3306" ?? $mysqlConnectionCommand .= " --port=$databasePort";
+if ($databasePort != "3306") {
+	$mysqlConnectionCommand .= " --port=$databasePort";
+}
+
+DockerLogger::info("Checking database connection to: {$databaseHost}:{$databasePort}");
 
 //Check if aspen database has already been initialized
-
 $tries = 0;
 $databaseIsDown = true;
 
@@ -25,33 +36,31 @@ while ($databaseIsDown) {
 		$updateUserStmt = $aspenDatabase->prepare($statement);
 		$databaseIsDown = false;
 	} catch (PDOException $e) {
-			if ($tries == 5){
-				echo "%   ERROR MESSAGE : " . $e->getMessage() . "\n";
-				echo "%   IN : " . $e->getFile() . ":" . $e->getLine() . "\n";
-				die(1);
-			}
-			sleep(5);
-			$tries++;
+		if ($tries == 5){
+			DockerLogger::error("Database connection failed: " . $e->getMessage());
+		}
+		DockerLogger::warn("Database not ready, retrying... (attempt " . ($tries + 1) . "/5)");
+		sleep(5);
+		$tries++;
 	}
 }
 
 try {
 	$updateUserStmt->execute();
-	echo "%    --> Aspen database has already been initialized!\n";
-	die(0);
+	DockerLogger::info("Aspen database has already been initialized");
+	exit(0);
 } catch (PDOException $e) {
-	# Aspen database is still empty
+	DockerLogger::info("Database is empty, initializing...");
 }
 
 //Load default database
 $aspenDir = '/usr/local/aspen-discovery/';
-echo "%    --> Loading default database\n";
+DockerLogger::info("Loading default database schema");
 exec("$mysqlConnectionCommand $databaseName < $aspenDir/install/aspen.sql", $output, $errorCode);
 if ($errorCode != 0) {
-	echo "%   ERROR: Database '{$databaseName}' could not be loaded\n";
-	die(1);
+	DockerLogger::error("Database '{$databaseName}' could not be loaded");
 }
-echo "%    --> Default database has been successfully loaded\n";
+DockerLogger::info("Default database schema loaded successfully");
 
 // Connect to the database
 $aspenDatabase = new PDO($databaseDsn, $databaseUser, $databasePassword);
@@ -59,6 +68,11 @@ $updateUserStmt = $aspenDatabase->prepare("UPDATE user set cat_password=" . $asp
 $updateUserStmt->execute();
 
 // Assign supportingCompany in the database
-
 $postSupportingCompanyStmt = $aspenDatabase->prepare("UPDATE system_variables set supportingCompany=" . $aspenDatabase->quote($supportingCompany));
 $postSupportingCompanyStmt->execute();
+
+DockerLogger::info("Database initialization completed successfully");
+
+// Close connection 
+$aspenDatabase = null;
+?>

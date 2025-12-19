@@ -1,53 +1,58 @@
 #!/bin/bash
 set -e
 
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#+*#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*=:::-+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#=-::::::::-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#+::::-=-::=-::::-*#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#+-::::=*%#=::+%#+-::::=*#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%+-::::::#%%%#=::+%%%%+::::::=#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#=::::=#-::=#%%#=::+%%%*-::++-:::-+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#+-:::-*#%%#-::-*%#=::+%%+:::+#%%#=::::-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%#=::::::*%%%%%#=:::=#=::+*-:::*%%%%%%-:::::-*%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%#+:::-*=::-#%%%%%%#-:::-::-:::=#%%%%%%*::-*=-::-*%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%+-::-*#%#-::-#%%%%%%#+:::::::-*%%%%%%%*-:-+%%#=:::=#%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%#=:::-#%%%%#=::-*%%%%%%%#-::::+%%%%%%%%=:::+%%%%%+:::-+%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%*-::-::*%%%%%%+-::=#%%%%%%#-:-=%%%%%%%*-::-#%%%%%#-::-::=#%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%+---+*---*%%%%%%#=---*%%%%%#=--+%%%%%#=---+#%%%%%#=---*----#%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%*---+%%+---+%%%%%%#+---=#%%%#=--+%%%%*----#%%%%%%#=---#%#=--=#%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%#---+%%%%*---=#%%%%%%#=---+%%#=--+%%#=---+%%%%%%%*----#%%%#=--=#%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%---=%%%%%%#=---*%%%%%%#*---=##=--+%*---=#%%%%%%#+---+%%%%%%#---*%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%+---#%%%%%%%#+---=%%%%%%%#=---*=--++---*%%%%%%%#----#%%%%%%%%=---%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%#----+***++=--------*%%%%%%%+----------*%%%%%%#=--------=++***----*%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%*--------------------=#%%%%%%+--------#%%%%%%*--------------------=%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%*--=##########%%%##----*%%%%%%*-----=#%%%%%#=---+##%%%#########*---#%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%+--=#%%%%%%%%%%%%%%%*---=#%%%%%+----#%%%%%*---=#%%%%%%%%%%%%%%%*---#%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%+--=#%%%%%%%%%%%###**+----*%%%%#=--+%%%%#+---=***###%%%%%%%%%%%*---#%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%*---*%%%##*+==-------------+#%%#=--+%%%*=------------===+*#%%%#=---#%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%*=-------------===+***+==---=#%#=--+%%*----=++**++==--------------=%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%#=--=+=+++**#%%%%%%%%%%%%#=--=##=--+#+---*#%%%%%%%%%%%##*+++==+---*%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%*---#%%%%%%%%%%%%%%%%%%%%%+---+=-=++--=#%%%%%%%%%%%%%%%%%%%%%+--=%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%+===#%%%%%%%%%%%%%#+=-===--===-=-=-======-=+*##%%%%%%%%%%%%+=-=#%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%#+===+#####**+===================================++*#####*+===*%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%*==============+*###%%%%##=======+#%%%%%###*+==============#%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%#======+**#%%%%%%%%%%%%%%%+====*%%%%%%%%%%%%%%%#*+======*%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%#+=====+*##%%%%%%%%%%%%%#===+#%%%%%%%%%%%%##*+=====+*#%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%#*========++++++++***#+==*#**++++++++========+*#%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%##+++++++++++++++++++++++++++++++++++*#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#######*++++++*#######%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#*++*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#*++*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#*++*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#*++*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#**%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "%"
-echo "%   Aspen Discovery starting for: ${SITE_NAME}"
-echo "%"
+# Colors for log output
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+log() {
+    local level="${1:-INFO}"
+    local message="$2"
+    local color=""
+
+    case "$level" in
+        ERROR) color="$RED" ;;
+        WARN)  color="$YELLOW" ;;
+    esac
+
+    echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] [BACKEND] [${color}${level}${NC}] ${message}"
+}
+
+log_info()  { log "INFO" "$1"; }
+log_warn()  { log "WARN" "$1"; }
+log_error() { log "ERROR" "$1"; }
+
+echo "       @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@@*%@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@#.....=@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@%...%@.-@=..-@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@:..*..@@.-@#.-=..*@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@%...=@@@:.*.-:.*@@@...-@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@%..#@*.*@@@%...:@@@@:.@@-.=@@@@@@@@@@@@"
+echo " @@@@@@@@@@+...@@@@..@@@@.-@@@*.-@@@-...@@@@@@@@@@@"
+echo " @@@@@@@@@+.*@:.#@@@=.+@@.-@@:.@@@@-.#@:.@@@@@@@@@@"
+echo " @@@@@@@@%.+@@@*.-@@@@.:%.=+.=@@@%.:@@@@:-@@@@@@@@@"
+echo " @@@@@@@@-:::::::::%@@@-::::%@@@-:::::::::%@@@@@@@@"
+echo " @@@@@@@@::@@@@@@@%:-@@@=::@@@%::@@@@@@@@:*@@@@@@@@"
+echo " @@@@@@@@::@@@@%#+--::%@@:-@@=::-=*#@@@@%:*@@@@@@@@"
+echo " @@@@@@@@=::::-*#%@@@+:=@:=@::%@@@%#=:::::%@@@@@@@@"
+echo " @@@@@@@@@:+@@@@@@@@@**:-:-:-*%@@@@@@@@@-=@@@@@@@@@"
+echo " @@@@@@@@@%--==----=+%%=----*%#=----=+--=@@@@@@@@@@"
+echo " @@@@@@@@@@@*--*%@@@@@@@#--@@@@@@@@#=-=@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@%+-----===-====----=*@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@%-+@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@@=*@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@@+%@@@@@@@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+
+log_info "Aspen Discovery starting for: ${SITE_NAME}"
 
 export CONFIG_DIRECTORY="/usr/local/aspen-discovery/sites/$SITE_NAME"
 
@@ -57,32 +62,31 @@ cd "/usr/local/aspen-discovery/docker/files/scripts" || exit
 # Check if site configuration exists
 confSiteFile="$CONFIG_DIRECTORY/conf/config.ini"
 if [ ! -f "$confSiteFile" ] ; then
-	echo "%   * $confSiteFile not found, generating"
+	log_info "$confSiteFile not found. Generating..."
 	mkdir -p "$CONFIG_DIRECTORY"
 	if ! php createConfig.php "$CONFIG_DIRECTORY" ; then
-		echo "%   ERROR: Failed to create instance config"
+		log_error "Failed to create instance config"
 		exit 1
 	fi
 fi
 
-# Initialize Aspen database
-echo "%   * Initializing database";
-if ! php initDatabase.php ; then
-	echo "%   ERROR: Database initialization failed"
-	exit 1
+# Sync environment variables to config files (runs every start)
+log_info "Syncing environment variables to config..."
+if ! php syncEnvToConfig.php ; then
+	log_warn "Environment sync failed, using existing config"
 fi
 
-# Initialize Koha Connection
-echo "%   * Initializing Koha link";
-if ! php initKohaLink.php ; then
-	echo "%   ERROR: Koha link error"
+# Initialize Aspen database
+log_info "Initializing database"
+if ! php initDatabase.php ; then
+	log_error "Database initialization failed"
 	exit 1
 fi
 
 # Create missing dirs and fix ownership and permissions if needed
-echo "%   * Setting up data and log directories";
+log_info "Setting up data and log directories"
 if ! php createDirs.php ; then
-	echo "%   ERROR: Directories creation and permission fixes failed"
+	log_error "Directories creation and permission fixes failed"
 	exit 1
 fi
 
@@ -102,43 +106,28 @@ for dir in "${directories[@]}"; do
     # Ensure persistent target directory exists
     mkdir -p "$dest"
 
-    # Move original data only if target is empty
-    if [ -d "$source" ] && [ "$(ls -A "$dest")" == "" ]; then
-        mv "$source"/* "$dest"/
+    # Move original data only if source is a real directory and target is empty
+    if [ -d "$source" ] && [ ! -L "$source" ] && [ "$(ls -A "$dest")" == "" ]; then
+        mv "$source"/* "$dest"/ 2>/dev/null || true
     fi
 
-    # Remove the source directory or symlink
-	rm -rf "$source"
+    # Remove source only if it's a real directory (not a symlink)
+    # This is required because ln -sfn can't replace a directory
+    if [ -d "$source" ] && [ ! -L "$source" ]; then
+        rm -rf "$source"
+    fi
 
-    # Create symlink
-    ln -s "$dest" "$source"
+    # Create symlink atomically (ln -sfn replaces existing symlink in one operation)
+    ln -sfn "$dest" "$source"
 
-	echo "%   * Created symlink: $source → $dest"
+    log_info "Created symlink: $source → $dest"
 done
 
-# Check if data-alias.conf is enabled 
-file="/etc/apache2/conf-enabled/data-alias.conf"
-if [ ! -f "$file"  ]; then
-	a2enconf data-alias
-fi
+# Run pending database updates
+log_info "Running pending database updates..."
+php updateDatabase.php "$SITE_NAME"
 
-echo "%   * Starting Apache"
-# Start apache
-service apache2 start
+sudo -u www-data php /usr/local/aspen-discovery/docker/files/cron/checkBackgroundProcessesDocker.php $SITE_NAME >/proc/1/fd/1 2>/proc/1/fd/2
 
-# Run any pending database updates
-echo "127.0.0.1    $SITE_NAME" >> /etc/hosts
-echo "%   * Triggering pending database updates"
-curl -k http://"$SITE_NAME"/API/SystemAPI?method=runPendingDatabaseUpdates
-
-sudo -u www-data	php /usr/local/aspen-discovery/docker/files/cron/checkBackgroundProcessesDocker.php $SITE_NAME >/proc/1/fd/1 2>/proc/1/fd/2
-
-echo "%"
-echo "%   Aspen Discovery ready to use!"
-echo "%"
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-
-
-# FIXME: We should probably run Apache in foreground instead. We need to
-#        figure an approach to the curl above in order to do it
-/bin/bash -c "trap : TERM INT; sleep infinity & wait"
+log_info "Starting PHP-FPM in foreground mode..."
+php-fpm8.4 --test && exec php-fpm8.4 -F

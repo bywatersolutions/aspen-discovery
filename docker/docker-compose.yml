@@ -1,5 +1,6 @@
 networks:
   net-aspen:
+
 volumes:
   solr:
 
@@ -8,8 +9,6 @@ services:
     image: ${BACKEND_IMAGE_TAG:-aspendiscovery/aspen}
     env_file:
       - .env
-    ports:
-      - "80:80"
     networks:
       - net-aspen
     tty: true
@@ -18,15 +17,34 @@ services:
       - ${ASPEN_DATA_DIR}/data:/data/aspen-discovery/${SITE_NAME}
       - ${ASPEN_DATA_DIR}/logs:/var/log/aspen-discovery/${SITE_NAME}
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+
+  apache:
+    image: ${BACKEND_IMAGE_TAG:-aspendiscovery/aspen}
+    env_file:
+      - .env
+    ports:
+      - "85:80"
+    networks:
+      - net-aspen
+    volumes:
+      - ${ASPEN_DATA_DIR}/conf:/usr/local/aspen-discovery/sites/${SITE_NAME}
+      - ${ASPEN_DATA_DIR}/data:/data/aspen-discovery/${SITE_NAME}
+      - ${ASPEN_DATA_DIR}/logs:/var/log/aspen-discovery/${SITE_NAME}
+    command:
+      - apache
+    depends_on:
+      - backend
+    tty: true
 
   cron:
     image: ${BACKEND_IMAGE_TAG:-aspendiscovery/aspen}
     env_file:
       - .env
     networks:
-      - net-aspen
+      net-aspen:
+        aliases:
+          - ${SITE_NAME}
     tty: true
     volumes:
       - ${ASPEN_DATA_DIR}/conf:/usr/local/aspen-discovery/sites/${SITE_NAME}
@@ -36,6 +54,8 @@ services:
       - cron
     depends_on:
       - backend
+      - apache
+
 
   db:
     image: ${MARIADB_IMAGE:-mariadb:10.5}
@@ -49,19 +69,9 @@ services:
       - MARIADB_DATABASE=${DATABASE_NAME:-aspen}
     volumes:
       - ${ASPEN_DATA_DIR}/database:/var/lib/mysql
+      - ${ASPEN_DATA_DIR}/my.cnf:/etc/mysql/my.cnf
     networks:
       - net-aspen
-    healthcheck:
-      interval: 10s
-      retries: 10
-      test:
-        [
-          "CMD",
-          "healthcheck.sh",
-          "--su-mysql",
-          "--connect",
-          "--innodb_initialized"
-        ]
 
   solr:
     image: ${SOLR_IMAGE_TAG:-aspendiscovery/solr}
@@ -77,3 +87,43 @@ services:
       - net-aspen
     depends_on:
       - backend
+    entrypoint:
+    - /bin/bash
+    - '-c'
+    - |
+      init-var-solr
+      # Series core
+      precreate-core series /opt/solr/server/solr/configsets/series
+      cp -r /opt/solr/server/solr/configsets/series/* series
+
+      # Genealogy core
+      precreate-core genealogy /opt/solr/server/solr/configsets/genealogy
+      cp -r /opt/solr/server/solr/configsets/genealogy/* genealogy
+
+      # Grouped Works v2 core
+      precreate-core grouped_works_v2 /opt/solr/server/solr/configsets/grouped_works_v2
+      cp -r /opt/solr/server/solr/configsets/grouped_works_v2/* grouped_works_v2
+
+      # Lists core
+      precreate-core lists /opt/solr/server/solr/configsets/lists
+      cp -r /opt/solr/server/solr/configsets/lists/* lists
+
+      # Course Reserves core
+      precreate-core course_reserves /opt/solr/server/solr/configsets/course_reserves
+      cp -r /opt/solr/server/solr/configsets/course_reserves/* course_reserves
+
+      # Open Archives core
+      precreate-core open_archives /opt/solr/server/solr/configsets/open_archives
+      cp -r /opt/solr/server/solr/configsets/open_archives/* open_archives
+
+      # Website Pages core
+      precreate-core website_pages /opt/solr/server/solr/configsets/website_pages
+      cp -r /opt/solr/server/solr/configsets/website_pages/* website_pages
+
+      # Events core
+      precreate-core events /opt/solr/server/solr/configsets/events
+      cp -r /opt/solr/server/solr/configsets/events/* events
+
+
+      chown -R solr:solr /var/solr
+      runuser -u solr -- solr-foreground

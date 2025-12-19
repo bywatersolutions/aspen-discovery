@@ -1,39 +1,47 @@
 <?php
 
+require_once __DIR__ . '/../logger/DockerLogger.php';
+DockerLogger::init('BACKEND');
+
+// =============================================================================
+// Argument Validation
+// =============================================================================
 
 if (count($argv) < 2) {
-	echo "To create new configuration files, a directory (where the files will be stored) will be necessary as argument.\n";
-	die();
+	DockerLogger::error("Configuration directory required as argument");
 } elseif (count($argv) > 2) {
-	echo "Too many arguments have been passed. The script just needs a directory to start\n";
-	die(1);
+	DockerLogger::error("Too many arguments provided");
 }
 
 $siteDir = $argv[1];
 
 if (!file_exists($siteDir)) {
-	echo "The directory '$siteDir' does not exist.\n";
-	die(1);
+	DockerLogger::error("Directory does not exist: {$siteDir}");
 }
 
 if (!is_dir($siteDir)) {
-	echo "'$siteDir' is not a directory.\n";
-	die(1);
+	DockerLogger::error("Path is not a directory: {$siteDir}");
 }
 
-echo "--> Creating new configuration files...\n";
+DockerLogger::info("Creating configuration files for site directory: {$siteDir}");
+
+// =============================================================================
+// Environment Variables Collection
+// =============================================================================
 
 $variables = [
 	//ASPEN
 	'sitename' => getenv('SITE_NAME'),
 	'servername' => preg_replace('~https?://~', '', getenv('URL')),
-	'supportingCompany' => getenv('SUPPORTING COMPANY') ?? 'ByWater Solutions',
+	'supportingCompany' => getenv('SUPPORTING_COMPANY') ?? 'ByWater Solutions',
 	'library' => getenv('LIBRARY'),
 	'title' => getenv('TITLE'),
 	'url' => getenv('URL'),
 	'configDir' => $siteDir,
 	'solrHost' => getenv('SOLR_HOST') ?? 'localhost',
 	'solrPort' => getenv('SOLR_PORT') ?? 8983,
+	'phpFpmHost' => getenv('PHP_FPM_HOST') ?? 'localhost',
+	'phpFpmPort' => getenv('PHP_FPM_PORT') ?? '9000',
 	'timezone' => getenv('TIMEZONE') ?? 'US/Central',
 	'aspenAdminPassword' => getenv('ASPEN_ADMIN_PASSWORD'),
 	'databaseHost' => getenv('DATABASE_HOST') ?? 'localhost',
@@ -41,110 +49,120 @@ $variables = [
 	'databaseName' => getenv('DATABASE_NAME'),
 	'databaseUser' => getenv('DATABASE_USER'),
 	'databasePassword' => getenv('DATABASE_PASSWORD'),
-
-	'enableKoha' => strtolower(getenv('ENABLE_KOHA')),
 ];
 
-if ($variables['enableKoha'] === "yes") {
-	$variables['ilsDriver'] = 'Koha';
-	$variables['ilsUrl'] = getenv('KOHA_OPAC_URL');
-	$variables['ilsStaffUrl'] = getenv('KOHA_STAFF_URL');
-	$variables['ilsDatabaseName'] = getenv('KOHA_DATABASE_NAME');
-	$variables['ilsDatabaseHost'] = getenv('KOHA_DATABASE_HOST');
-	$variables['ilsDatabasePort'] = getenv('KOHA_DATABASE_PORT');
-	$variables['ilsDatabaseUser'] = getenv('KOHA_DATABASE_USER');
-	$variables['ilsDatabasePassword'] = getenv('KOHA_DATABASE_PASSWORD');
-	$variables['ilsDatabaseTimeZone'] = getenv('KOHA_DATABASE_TIMEZONE') ?? 'US/Central';
-	$variables['ilsClientId'] = getenv('KOHA_CLIENT_ID');
-	$variables['ilsClientSecret'] = getenv('KOHA_CLIENT_SECRET');
-} else {
-	$variables['ilsDriver'] = ucfirst(getenv('ILS_DRIVER'));
-}
+// =============================================================================
+// Variable Validation
+// =============================================================================
 
-$mandatory = ['sitename', 'servername', 'solrHost', 'solrPort', 'configDir', 'timezone', 'aspenAdminPassword', 'databaseHost', 'databasePort', 'databaseName', 'databaseUser', 'databasePassword'];
+$mandatory = [
+	'sitename', 'servername', 'solrHost', 'solrPort', 'phpFpmHost', 'phpFpmPort',
+	'configDir', 'timezone', 'aspenAdminPassword', 'databaseHost', 'databasePort',
+	'databaseName', 'databaseUser', 'databasePassword'
+];
 
-if ($variables['enableKoha'] === "yes") {
-	$kohaKeys = ['ilsDriver', 'ilsUrl', 'ilsStaffUrl', 'ilsDatabaseName', 'ilsDatabaseHost', 'ilsDatabasePort', 'ilsDatabaseUser', 'ilsDatabasePassword', 'ilsDatabaseTimeZone'];
-	$mandatory = array_merge($mandatory, $kohaKeys);
-}
-
-$emptyVariables = 0;
-
+$missingVars = [];
 foreach ($variables as $key => $value) {
 	if (in_array($key, $mandatory) && empty($value)) {
-		echo "WARNING: Mandatory variable '" . $key . "' is empty.\n";
-		$emptyVariables++;
+		$missingVars[] = $key;
 	}
 }
 
-if ($emptyVariables > 0) {
-	die(1);
+if (!empty($missingVars)) {
+	DockerLogger::error("Missing mandatory variables: " . implode(', ', $missingVars));
 }
 
-$templateDir = "/usr/local/aspen-discovery/sites/template.linux";
-$defaultDir = "/usr/local/aspen-discovery/sites/default";
-$dockerDir = "/usr/local/aspen-discovery/docker";
-$apacheDir = "/etc/apache2";
+DockerLogger::info("Environment variables validated successfully");
 
-if (!file_exists($templateDir)) {
-	echo "ERROR: The template directory '" . $templateDir . "' does not exists.\n";
-	die(1);
-}
-if (!file_exists($defaultDir)) {
-	echo "ERROR: The default site directory '" . $defaultDir . "' does not exists.\n";
-	die(1);
-}
-if (!file_exists($dockerDir)) {
-	echo "ERROR: The docker directory '" . $dockerDir . "' does not exists.\n";
-	die(1);
+// =============================================================================
+// Directory Validation
+// =============================================================================
+
+$requiredDirs = [
+	'templateDir' => "/usr/local/aspen-discovery/sites/template.linux",
+	'defaultDir' => "/usr/local/aspen-discovery/sites/default",
+	'dockerDir' => "/usr/local/aspen-discovery/docker"
+];
+
+foreach ($requiredDirs as $name => $dir) {
+	if (!file_exists($dir)) {
+		DockerLogger::error("Required directory does not exist: {$dir}");
+	}
+	if (!is_dir($dir)) {
+		DockerLogger::error("Path is not a directory: {$dir}");
+	}
 }
 
-//Capture any error as ErrorException
+DockerLogger::info("Required directories validated successfully");
+
+// =============================================================================
+// Configuration File Creation
+// =============================================================================
+
 set_error_handler("customErrorHandler");
 
 try {
-//Copy from template and replace variables
-	copy($templateDir . '/httpd-{sitename}.conf', "$siteDir/httpd-{$variables['sitename']}.conf");
-	recursive_copy($templateDir . '/conf', $siteDir . '/conf');
+	DockerLogger::info("Copying configuration templates");
+	
+	// Copy from template and replace variables
+	copy($requiredDirs['templateDir'] . '/httpd-{sitename}.conf', "$siteDir/httpd-{$variables['sitename']}.conf");
+	recursive_copy($requiredDirs['templateDir'] . '/conf', $siteDir . '/conf');
 	rename($siteDir . '/conf/config.pwd.ini.template', $siteDir . "/conf/config.pwd.ini");
 
-	replaceVariables($siteDir . "/httpd-{$variables['sitename']}.conf", $variables);
-	replaceVariables($siteDir . '/conf/config.ini', $variables);
-	replaceVariables($siteDir . '/conf/config.cron.ini', $variables);
-	replaceVariables($siteDir . '/conf/config.pwd.ini', $variables);
-	replaceVariables($siteDir . "/conf/crontab_settings.txt", $variables);
+	DockerLogger::info("Replacing template variables");
+	
+	// Replace variables in configuration files
+	$configFiles = [
+		"$siteDir/httpd-{$variables['sitename']}.conf",
+		"$siteDir/conf/config.ini",
+		"$siteDir/conf/config.cron.ini", 
+		"$siteDir/conf/config.pwd.ini",
+		"$siteDir/conf/crontab_settings.txt"
+	];
+	
+	foreach ($configFiles as $file) {
+		replaceVariables($file, $variables);
+	}
 
-//Copy from default site directory
-	copy($defaultDir . "/conf/badBotsLocal.conf", $siteDir . "/conf/badBotsLocal.conf");
-	copy($defaultDir . "/conf/badBotsDefault.conf", $siteDir . "/conf/badBotsDefault.conf");
+	DockerLogger::info("Copying additional configuration files");
+	
+	// Copy from default site directory
+	copy($requiredDirs['defaultDir'] . "/conf/badBotsLocal.conf", $siteDir . "/conf/badBotsLocal.conf");
+	copy($requiredDirs['defaultDir'] . "/conf/badBotsDefault.conf", $siteDir . "/conf/badBotsDefault.conf");
 
-//Copy from docker directory
-	copy("$dockerDir/files/cron/crontab", "$siteDir/conf/crontab");
-	copy("$dockerDir/files/apache/data-alias.conf", "$apacheDir/conf-available/data-alias.conf");
+	// Copy from docker directory
+	copy($requiredDirs['dockerDir'] . "/files/php_fpm/php-fpm.conf", $siteDir . "/conf/php-fpm.conf");
+	copy($requiredDirs['dockerDir'] . "/files/cron/crontab", "$siteDir/conf/crontab");
+
+	// Replace variables in docker files
+	replaceVariables($siteDir . "/conf/php-fpm.conf", $variables);
 	replaceVariables($siteDir . "/conf/crontab", $variables);
-	replaceVariables($apacheDir . "/conf-available/data-alias.conf", $variables);
 
-//Set timezone
+	DockerLogger::info("Setting system timezone: {$variables['timezone']}");
+	
+	// Set timezone
 	exec('sudo timedatectl set-timezone "' . $variables['timezone'] . '"');
-//Create temp directory
-		!file_exists('/tmp') ?? mkdir('/tmp');
+	
+	// Create temp directory
+	if (!file_exists('/tmp')) {
+		mkdir('/tmp');
+	}
 
 } catch (ErrorException $e) {
-	echo "ERROR MESSAGE : " . $e->getMessage() . "\n";
-	echo "IN : " . $e->getFile() . ":" . $e->getLine() . "\n";
-	die(1);
+	DockerLogger::error("Configuration creation failed: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
 }
 
-echo "--> Configurations have been set successfully\n";
+DockerLogger::info("Configuration files created successfully");
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 function customErrorHandler(int $errno, string $errstr, string $errfile, int $errline): void {
 	if (!(error_reporting() & $errno)) {
-		// This error code is not included in error_reporting.
 		return;
 	}
 	if ($errno === E_DEPRECATED || $errno === E_USER_DEPRECATED) {
-		// Do not throw an Exception for deprecation warnings as new or unexpected
-		// deprecations would break the application.
 		return;
 	}
 	throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
@@ -176,4 +194,4 @@ function recursive_copy($src, $dst): void {
 	}
 	closedir($dir);
 }
-
+?>

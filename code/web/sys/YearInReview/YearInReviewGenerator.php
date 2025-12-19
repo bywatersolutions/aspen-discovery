@@ -74,7 +74,7 @@ function generateYearInReview(User $patron) : void {
 							$slidesToShow[] = match ($yearInReviewSetting->style) {
 								0 => 3,
 								1 => 4,
-								2, 3 => 2
+								2, 3 => 3
 							};
 						}
 

@@ -3346,27 +3346,6 @@ class Library extends DataObject {
 				],
 			],
 
-			//Event Display
-			'eventSection' => [
-				'property' => 'eventSection',
-				'type' => 'section',
-				'label' => 'Events',
-				'hideInLists' => true,
-				'properties' => [
-					'aspenEventsToInclude' => [
-						'property' => 'aspenEventsToInclude',
-						'type' => 'enum',
-						'label' => 'Aspen Events to Include',
-						'description' => 'Which events to include when searching this library',
-						'values' => [
-							'1' => 'All events at all locations',
-							'2' => "Events that occur at one of this library's locations",
-						],
-						'default' => '2',
-					]
-				],
-			],
-
 			// Full Record Display //
 			'fullRecordSection' => [
 				'property' => 'fullRecordSection',

@@ -401,12 +401,12 @@ class GoDeeperData {
 
 						$response = @file_get_contents($requestUrl, 0, $ctx);
 						ExternalRequestLogEntry::logRequest('syndetics.getSummary', 'GET', $requestUrl, [], '', 0, $response, []);
+						$summaryData = [];
 						if (!preg_match('/Error in Query Selection|The page you are looking for could not be found/', $response)) {
 							//Parse the XML
 							/** @var stdClass $data */
 							$data = new SimpleXMLElement($response);
 
-							$summaryData = [];
 							if (isset($data->VarFlds->VarDFlds->Notes->Fld520->a)) {
 								$summaryData['summary'] = (string)$data->VarFlds->VarDFlds->Notes->Fld520->a;
 							}

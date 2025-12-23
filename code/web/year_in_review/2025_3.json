@@ -64,6 +64,22 @@
       ]
     },
     {
+      "title": "Your Hot Month",
+      "background" : "perennial_3_3.gif",
+      "overlay_text" : [
+        {
+          "text": "You were a steady user of the library this year with a checkout average of {averageCheckouts} per month.",
+          "left": "22%",
+          "top": "60%",
+          "width": "65%",
+          "height": "30%",
+          "color" : "green",
+          "font_size": "2.5em",
+          "align": "left"
+        }
+      ]
+    },
+    {
       "title": "Top Formats",
       "background" : "perennial_3_4.gif",
       "overlay_text" : [

@@ -4,7 +4,7 @@ require_once ROOT_DIR . '/sys/Grouping/StatusInformation.php';
 
 class Grouping_Variation {
 	public string $id;
-	public null|string|int $databaseId;
+	public null|string|int $databaseId = null;
 	public string $label;
 	public string $language;
 	public bool $isEContent = false;

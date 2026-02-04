@@ -112,10 +112,8 @@
 	$(document).ready(function () {
 		$('#addUserByBarcodeModal').on('show.bs.modal', function () {
 			$('#newUserBarcode').val('');
-			$('#addUserByBarcodeModalBody').html('<input type="text" id="newUserBarcode" class="form-control" placeholder="Enter Barcode">');
-
 		});
-	});
+});
 
 	document.addEventListener('click', function(e) {
 		if (!e.target.closest('#userDropdown')) {

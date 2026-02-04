@@ -1573,15 +1573,13 @@ AspenDiscovery.Account = (function () {
 		},
 
 		initiateMasquerade: function () {
-			var url = Globals.path + "/MyAccount/AJAX";
-			var usernameField = $("#username");
-			var username = '';
-			if (usernameField !== undefined) {
-				username = usernameField.val();
-			}
+			var url = Globals.path + "/MyAccount/AJAX";	
+			// Get the visible cardNumber field using filter
+			var cardNumber = $('[id="cardNumber"]').filter(':visible').val() || '';
+			var username = $('[id="username"]').filter(':visible').val() || '';
 			var params = {
 				method: "initiateMasquerade",
-				cardNumber: $('#cardNumber').val(),
+				cardNumber: cardNumber,
 				username: username
 			};
 			$('#masqueradeAsError').hide();

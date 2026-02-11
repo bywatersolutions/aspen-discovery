@@ -7,6 +7,7 @@ class PalaceProjectSetting extends DataObject {
 	public $id;
 	public $apiUrl;
 	public $libraryId;
+	public $requirePin;
 	public $runFullUpdate;
 	/** @noinspection PhpUnused */
 	public $lastUpdateOfChangedRecords;
@@ -48,6 +49,13 @@ class PalaceProjectSetting extends DataObject {
 				'type' => 'text',
 				'label' => 'Library ID / Short name',
 				'description' => 'The Library Identifier or Short name ',
+			],
+			'requirePin' => [
+				'property' => 'requirePin',
+				'type' => 'checkbox',
+				'label' => 'Require PIN for Palace Project',
+				'description' => 'Whether or not to require a PIN for Palace Project',
+				'default' => 1,
 			],
 			'runFullUpdate' => [
 				'property' => 'runFullUpdate',

@@ -1176,7 +1176,7 @@ public class RecordGroupingProcessor {
 			if (authorInfo instanceof JSONArray){
 				JSONArray authors = titleMetadata.getJSONArray("author");
 				if (!authors.isEmpty()){
-					author = authors.getJSONObject(0).getString("name");
+					author = AspenStringUtils.swapFirstLastNames(authors.getJSONObject(0).getString("name"));
 				}
 			}else if (authorInfo instanceof JSONObject){
 				JSONObject authorInfoObj = titleMetadata.getJSONObject("author");

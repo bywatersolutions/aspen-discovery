@@ -136,9 +136,16 @@ public class PalaceProjectProcessor {
 
 				String primaryAuthor = "";
 				if (metadata.has("author")){
-					JSONObject authorObject = metadata.getJSONObject("author");
-					primaryAuthor = authorObject.getString("name");
-					primaryAuthor = AspenStringUtils.swapFirstLastNames(primaryAuthor);
+					Object authorInfo = metadata.get("author");
+					if (authorInfo instanceof JSONArray){
+						JSONArray authors = metadata.getJSONArray("author");
+						if (!authors.isEmpty()){
+							primaryAuthor = AspenStringUtils.swapFirstLastNames(authors.getJSONObject(0).getString("name"));
+						}
+					}else if (authorInfo instanceof JSONObject){
+						JSONObject authorInfoObj = metadata.getJSONObject("author");
+						primaryAuthor = AspenStringUtils.swapFirstLastNames(authorInfoObj.getString("name"));
+					}
 				}else if (metadata.has("publisher")){
 					JSONObject publisherObject = metadata.getJSONObject("publisher");
 					primaryAuthor = publisherObject.getString("name");

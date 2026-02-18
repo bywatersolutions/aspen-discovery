@@ -1172,8 +1172,16 @@ public class RecordGroupingProcessor {
 		}
 		String author = "";
 		if (titleMetadata.has("author")) {
-			JSONObject authorInfo = titleMetadata.getJSONObject("author");
-			author = AspenStringUtils.swapFirstLastNames(authorInfo.getString("name"));
+			Object authorInfo = titleMetadata.get("author");
+			if (authorInfo instanceof JSONArray){
+				JSONArray authors = titleMetadata.getJSONArray("author");
+				if (!authors.isEmpty()){
+					author = authors.getJSONObject(0).getString("name");
+				}
+			}else if (authorInfo instanceof JSONObject){
+				JSONObject authorInfoObj = titleMetadata.getJSONObject("author");
+				author = AspenStringUtils.swapFirstLastNames(authorInfoObj.getString("name"));
+			}
 		} else if (titleMetadata.has("publisher")) {
 			JSONObject publisherInfo = titleMetadata.getJSONObject("publisher");
 			author = publisherInfo.getString("name");

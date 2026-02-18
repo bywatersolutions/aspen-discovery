@@ -59,8 +59,14 @@ class SideFacets implements RecommendationInterface {
 	 * @access private
 	 */
 
-	private function getEventSettings(?LibraryEventsFacetSetting $facetSettings) : ?DataObject {
-		switch ($facetSettings->settingSource) {
+	private function getEventSettings(?LibraryEventsFacetSetting $facetSettings) : DataObject {
+		global $library;
+		$eventSettings = new LibraryEventsSetting();
+		$eventSettings->libraryId = $library->libraryId;
+		
+		// Load eventSettings
+		$eventSettings->find(true);
+		switch ($eventSettings->settingSource) {
 			case 'communico':
 				require_once ROOT_DIR . '/sys/Events/CommunicoSetting.php';
 				$eventSettings = new CommunicoSetting;
@@ -81,7 +87,7 @@ class SideFacets implements RecommendationInterface {
 		
 		$eventSettings->id = $facetSettings->settingId;
 		
-		return $eventSettings->find(true) ? $eventSettings : null;
+		return $eventSettings;
 	}
 
 	/* process

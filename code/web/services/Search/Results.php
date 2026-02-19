@@ -616,6 +616,7 @@ class Search_Results extends ResultsAction {
 					'totalItems' => $summary['resultTotal'],
 					'fileName' => $link,
 					'perPage' => $summary['perPage'],
+					'canJumpToPage' => true
 				];
 				$pager = new Pager($options);
 				$interface->assign('pageLinks', $pager->getLinks());

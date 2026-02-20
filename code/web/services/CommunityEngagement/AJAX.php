@@ -7,7 +7,21 @@ require_once ROOT_DIR . '/sys/UserAccount.php';
 
 
 class CommunityEngagement_AJAX extends JSON_Action {
+	function launch($method = null) : void {
+		global $enabledModules;
+		if (!in_array('Community Engagment', $enabledModules)) {
+			$this->outputEncodedResult(['error' => 'Community Engagement not enabled']);
+			return;
+		}
+		parent::launch($method);
+	}
 	function campaignRewardGivenUpdate() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
+		if (empty($_GET['userId']) || empty($_GET['campaignId'])) {
+			return ['error' => "User ID and Campaign ID are required"];
+		}
 		$userId = $_GET['userId'];
 		$campaignId = $_GET['campaignId'];
 		$userCampaign = new UserCampaign();
@@ -28,6 +42,12 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	}
 
 	function milestoneRewardGivenUpdate() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
+		if (empty($_GET['userId']) || empty($_GET['campaignId']) || empty($_GET['milestoneId'])) {
+			return ['error' => "User ID, Campaign ID, and Milestone ID are required"];
+		}
 		ob_start();
 
 		try {
@@ -61,6 +81,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	}
 
 	function filterCampaigns() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
+
 		global $library;
 
 		$campaignId = isset($_REQUEST['campaignId']) ? intval($_REQUEST['campaignId']) : 0;
@@ -372,6 +396,9 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	
 
 	public function filterLeaderboardCampaigns() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 		$campaignId = $_GET['campaignId'] ?? null;
 		$response = [];
@@ -430,6 +457,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	}
 
 	public function filterBranchLeaderboardCampaigns() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
+
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 		$campaignId = $_GET['campaignId'] ?? null;
 		$response = [];
@@ -1165,13 +1196,15 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	}
 
 	public function fetchLibraryUsers($enrolledOnly = false) {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return [];
+		}
+
 		global $library;
-		global $logger;
 
 		require_once ROOT_DIR . '/sys/Account/User.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 
-		$users = [];
 		$libraryId = $library->libraryId;
 		$user = new User();
 
@@ -1196,6 +1229,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	}
 
 	public function getLibraryUsers() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
+
 		global $library;
 		try {
 			$users = $this->fetchLibraryUsers();
@@ -1232,6 +1269,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 
 
 	public function addUserByBarcode() {
+		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
+			return ['error' => "You don't have permission to access this page"];
+		}
+
 		$barcode = $_POST['barcode'] ?? '';
 		
 		if (empty($barcode)) {

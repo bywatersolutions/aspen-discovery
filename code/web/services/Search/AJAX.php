@@ -1092,7 +1092,14 @@ class AJAX extends Action {
 		// For form-based facets, pass search parameters to preserve search state.
 		// Needed because GET form submissions discard the action URL's query string.
 		if ($isFormBasedFacet) {
-			$interface->assign('fullPath', $restoredSearch->renderSearchUrl());
+			$searchUrl = $restoredSearch->renderSearchUrl();
+			$interface->assign('fullPath', $searchUrl);
+			$facetFormQueryParams = [];
+			$queryString = parse_url($searchUrl, PHP_URL_QUERY);
+			if (!empty($queryString)) {
+				parse_str($queryString, $facetFormQueryParams);
+			}
+			$interface->assign('facetFormQueryParams', $facetFormQueryParams);
 			$interface->assign('searchTerms', $restoredSearch->getSearchTerms() ?? []);
 			$interface->assign('restoredFilters', $restoredSearch->getFilterList() ?? []);
 			$interface->assign('searchSource', $restoredSearch->getSearchSource());

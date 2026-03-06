@@ -13,149 +13,149 @@ class Union_Search extends ResultsAction {
 	private $searchResultsAction;
 
 	function launch() {
-		global $module;
-		global $action;
-		global $interface;
-		//Get the search source and determine what to show.
-		$searchSource = !empty($_REQUEST['searchSource']) ? $_REQUEST['searchSource'] : 'local';
+
+		$searchSource = $_REQUEST['searchSource'] ?? 'local';
+
 		$searchSources = new SearchSources();
 		$searches = $searchSources->getSearchSources();
-		if (!isset($searches[$searchSource]) && $searchSource == 'marmot') {
+
+		if (!isset($searches[$searchSource]) && $searchSource === 'marmot') {
 			$searchSource = 'local';
 		}
-		$searchInfo = $searches[$searchSource];
-		if (isset($searchInfo['external']) && $searchInfo['external'] == true) {
-			//Reset to a local search source so the external search isn't remembered
+
+		$searchInfo = $searches[$searchSource] ?? [];
+
+		// External redirect
+		if (!empty($searchInfo['external'])) {
 			$_SESSION['searchSource'] = 'local';
-			//Need to redirect to the appropriate search location with the new value for look for
-			$type = isset($_REQUEST['searchIndex']) ? $_REQUEST['searchIndex'] : 'Keyword';
-			$lookfor = isset($_REQUEST['lookfor']) ? $_REQUEST['lookfor'] : '';
+
+			$type = $_REQUEST['searchIndex'] ?? 'Keyword';
+			$lookfor = $_REQUEST['lookfor'] ?? '';
+
 			$link = $searchSources->getExternalLink($searchSource, $type, $lookfor);
-			header('Location: ' . $link);
-			die();
-		} elseif ($searchSource == 'genealogy') {
-			require_once(ROOT_DIR . '/services/Genealogy/Results.php');
-			$module = 'Genealogy';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Genealogy_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'open_archives') {
-			require_once(ROOT_DIR . '/services/OpenArchives/Results.php');
-			$module = 'OpenArchives';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new OpenArchives_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'lists') {
-			require_once(ROOT_DIR . '/services/Lists/Results.php');
-			$module = 'Lists';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Lists_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'course_reserves') {
-			require_once(ROOT_DIR . '/services/CourseReserves/Results.php');
-			$module = 'CourseReserves';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new CourseReserves_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'websites') {
-			require_once(ROOT_DIR . '/services/Websites/Results.php');
-			$module = 'Websites';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Websites_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'events') {
-			require_once(ROOT_DIR . '/services/Events/Results.php');
-			$module = 'Events';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Events_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'ebsco_eds') {
-			require_once(ROOT_DIR . '/services/EBSCO/Results.php');
-			$module = 'EBSCO';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new EBSCO_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'ebscohost') {
-			require_once(ROOT_DIR . '/services/EBSCOhost/Results.php');
-			$module = 'EBSCOhost';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new EBSCOhost_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'summon') {
-			require_once(ROOT_DIR . '/services/Summon/Results.php');
-			$module = 'Summon';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Summon_Results();
-			$this->searchResultsAction->launch();
-		} elseif ($searchSource == 'combined') {
-			require_once(ROOT_DIR . '/services/Union/CombinedResults.php');
-			$module = 'Union';
-			$interface->assign('module', $module);
-			$action = 'CombinedResults';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Union_CombinedResults();
-			$this->searchResultsAction->launch();
+			header("Location: $link");
+			exit;
 		}
-		elseif ($searchSource == 'talpa') {
-			require_once(ROOT_DIR . '/services/Talpa/Results.php');
-			$module = 'Talpa';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Talpa_Results();
-			$this->searchResultsAction->launch();
+
+		$routes = $this->getRoutes();
+
+		// If we have a defined route
+		if (isset($routes[$searchSource])) {
+			$this->dispatch($routes[$searchSource]);
+			return;
 		}
-		elseif ($searchSource == 'series') {
-			require_once(ROOT_DIR . '/services/Series/Results.php');
-			$module = 'Series';
-			$interface->assign('module', $module);
-			$action = 'Results';
-			$interface->assign('action', $action);
-			$this->searchResultsAction = new Series_Results();
-			$this->searchResultsAction->launch();
+
+		// Default search behavior
+		$searchIndex = $_REQUEST['searchIndex'] ?? 'Keyword';
+
+		if ($searchIndex === 'advanced' || $searchIndex === 'editAdvanced') {
+			$this->dispatch([
+				'file' => '/services/Search/Advanced.php',
+				'module' => 'Search',
+				'action' => 'Advanced',
+				'class' => 'Search_Advanced',
+			]);
+		} else {
+			$this->dispatch([
+				'file' => '/services/Search/Results.php',
+				'module' => 'Search',
+				'action' => 'Results',
+				'class' => 'Search_Results',
+			]);
 		}
-		else {
-			if (isset($_REQUEST['searchIndex'])) {
-				$searchIndex = $_REQUEST['searchIndex'];
-			} else {
-				$searchIndex = 'Keyword';
-			}
-			if ($searchIndex == 'advanced' || $searchIndex == 'editAdvanced') {
-				require_once(ROOT_DIR . '/services/Search/Advanced.php');
-				$module = 'Search';
-				$interface->assign('module', $module);
-				$action = 'Advanced';
-				$interface->assign('action', $action);
-				$this->searchResultsAction = new Search_Advanced();
-				$this->searchResultsAction->launch();
-			} else {
-				require_once(ROOT_DIR . '/services/Search/Results.php');
-				$module = 'Search';
-				$interface->assign('module', $module);
-				$action = 'Results';
-				$interface->assign('action', $action);
-				$this->searchResultsAction = new Search_Results();
-				$this->searchResultsAction->launch();
-			}
-		}
+	}
+
+	private function getRoutes(): array {
+		return [
+			'genealogy' => [
+				'file' => '/services/Genealogy/Results.php',
+				'module' => 'Genealogy',
+				'action' => 'Results',
+				'class' => 'Genealogy_Results',
+			],
+			'open_archives' => [
+				'file' => '/services/OpenArchives/Results.php',
+				'module' => 'OpenArchives',
+				'action' => 'Results',
+				'class' => 'OpenArchives_Results',
+			],
+			'lists' => [
+				'file' => '/services/Lists/Results.php',
+				'module' => 'Lists',
+				'action' => 'Results',
+				'class' => 'Lists_Results',
+			],
+			'course_reserves' => [
+				'file' => '/services/CourseReserves/Results.php',
+				'module' => 'CourseReserves',
+				'action' => 'Results',
+				'class' => 'CourseReserves_Results',
+			],
+			'websites' => [
+				'file' => '/services/Websites/Results.php',
+				'module' => 'Websites',
+				'action' => 'Results',
+				'class' => 'Websites_Results',
+			],
+			'events' => [
+				'file' => '/services/Events/Results.php',
+				'module' => 'Events',
+				'action' => 'Results',
+				'class' => 'Events_Results',
+			],
+			'ebsco_eds' => [
+				'file' => '/services/EBSCO/Results.php',
+				'module' => 'EBSCO',
+				'action' => 'Results',
+				'class' => 'EBSCO_Results',
+			],
+			'ebscohost' => [
+				'file' => '/services/EBSCOhost/Results.php',
+				'module' => 'EBSCOhost',
+				'action' => 'Results',
+				'class' => 'EBSCOhost_Results',
+			],
+			'summon' => [
+				'file' => '/services/Summon/Results.php',
+				'module' => 'Summon',
+				'action' => 'Results',
+				'class' => 'Summon_Results',
+			],
+			'combined' => [
+				'file' => '/services/Union/CombinedResults.php',
+				'module' => 'Union',
+				'action' => 'CombinedResults',
+				'class' => 'Union_CombinedResults',
+			],
+			'talpa' => [
+				'file' => '/services/Talpa/Results.php',
+				'module' => 'Talpa',
+				'action' => 'Results',
+				'class' => 'Talpa_Results',
+			],
+			'series' => [
+				'file' => '/services/Series/Results.php',
+				'module' => 'Series',
+				'action' => 'Results',
+				'class' => 'Series_Results',
+			],
+		];
+	}
+
+	private function dispatch(array $route) {
+		global $module, $action, $interface;
+
+		require_once(ROOT_DIR . $route['file']);
+
+		$module = $route['module'];
+		$action = $route['action'];
+
+		$interface->assign('module', $module);
+		$interface->assign('action', $action);
+
+		$class = $route['class'];
+		$this->searchResultsAction = new $class();
+		$this->searchResultsAction->launch();
 	}
 
 	function getBreadcrumbs(): array {

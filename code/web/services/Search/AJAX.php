@@ -638,6 +638,10 @@ class AJAX extends Action {
 			$restoredSearch = $searchAPI->restoreSearch($searchId);
 			if (!empty($restoredSearch)) {
 				if (array_key_exists($facetName, $restoredSearch->getFacetConfig())) {
+					if (method_exists($restoredSearch, 'setBypassAsyncFacetLogic')) {
+						$restoredSearch->setBypassAsyncFacetLogic(true);
+						$restoredSearch->processSearch(false, true);
+					}
 					$facetConfig = $restoredSearch->getFacetConfig()[$facetName];
 					if (is_object($facetConfig)) {
 						$facetTitle = $facetConfig->displayName;
@@ -656,14 +660,23 @@ class AJAX extends Action {
 					$appliedFacetValues = [];
 					if (array_key_exists($facetTitle, $appliedFacets)) {
 						$appliedFacetValues = $appliedFacets[$facetTitle];
-						ksort($appliedFacetValues);
+						if (is_array($appliedFacetValues)) {
+							ksort($appliedFacetValues);
+						} else {
+							$appliedFacetValues = [];
+						}
 					}
 					$interface->assign('appliedFacetValues', $appliedFacetValues);
 
 					$allFacets = $restoredSearch->getFacetList();
-					$topResults = $allFacets[$facetName];
-					ksort($topResults['list'], SORT_NATURAL | SORT_FLAG_CASE);
-					$interface->assign('topResults', $topResults['list']);
+					$topResults = $allFacets[$facetName] ?? [];
+					$topResultList = $topResults['list'] ?? [];
+					if (is_array($topResultList)) {
+						ksort($topResultList, SORT_NATURAL | SORT_FLAG_CASE);
+					} else {
+						$topResultList = [];
+					}
+					$interface->assign('topResults', $topResultList);
 					$buttons = '';
 					if ($isMultiSelect) {
 						$buttons = '<button class="btn btn-primary" type="submit" name="submit" onclick="$(\'#searchFacetPopup\').submit()">' . translate([
@@ -739,6 +752,9 @@ class AJAX extends Action {
 				if (array_key_exists($facetName, $restoredSearch->getFacetConfig())) {
 					/** @var SearchObject_SolrSearcher $newSearch */
 					$newSearch = clone $restoredSearch;
+					if (method_exists($newSearch, 'setBypassAsyncFacetLogic')) {
+						$newSearch->setBypassAsyncFacetLogic(true);
+					}
 					$newSearch->addFacetSearch($facetName, $searchTerm);
 					$newSearchResult = $newSearch->processSearch(false, true);
 
@@ -760,15 +776,24 @@ class AJAX extends Action {
 					$appliedFacetValues = [];
 					if (array_key_exists($facetTitle, $appliedFacets)) {
 						$appliedFacetValues = $appliedFacets[$facetTitle];
-						ksort($appliedFacetValues, SORT_NATURAL | SORT_FLAG_CASE);
+						if (is_array($appliedFacetValues)) {
+							ksort($appliedFacetValues, SORT_NATURAL | SORT_FLAG_CASE);
+						} else {
+							$appliedFacetValues = [];
+						}
 					}
 					$interface->assign('appliedFacetValues', $appliedFacetValues);
 
 					$allFacets = $newSearch->getFacetList();
 					if (isset($allFacets[$facetName])) {
 						$facetSearchResults = $allFacets[$facetName];
-						ksort($facetSearchResults['list'], SORT_NATURAL | SORT_FLAG_CASE);
-						$interface->assign('facetSearchResults', $facetSearchResults['list']);
+						$facetSearchResultList = $facetSearchResults['list'] ?? [];
+						if (is_array($facetSearchResultList)) {
+							ksort($facetSearchResultList, SORT_NATURAL | SORT_FLAG_CASE);
+						} else {
+							$facetSearchResultList = [];
+						}
+						$interface->assign('facetSearchResults', $facetSearchResultList);
 						return [
 							'success' => true,
 							'facetResults' => $interface->fetch('Search/searchFacetResults.tpl'),
@@ -997,15 +1022,7 @@ class AJAX extends Action {
 		$interface->assign('title', $facetName);
 		$interface->assign('searchId', $searchId);
 
-		$searchLibrary = Library::getActiveLibrary();
-		$location = Location::getSearchLocation();
-		if ($location != null) {
-			$groupedWorkDisplaySettings = $location->getGroupedWorkDisplaySettings();
-		} else {
-			$groupedWorkDisplaySettings = $searchLibrary->getGroupedWorkDisplaySettings();
-		}
-		$hasSearchableFacets = !empty($groupedWorkDisplaySettings->hasSearchableFacets);
-		$interface->assign('hasSearchableFacets', $hasSearchableFacets);
+		$interface->assign('hasSearchableFacets', $restoredSearch->hasSearchableFacets());
 
 		// Determine which template to use based on facet configuration.
 		$template = 'Search/Recommend/standardFacet.tpl';
@@ -1036,7 +1053,14 @@ class AJAX extends Action {
 		// For form-based facets, pass search parameters to preserve search state.
 		// Needed because GET form submissions discard the action URL's query string.
 		if ($isFormBasedFacet) {
-			$interface->assign('fullPath', $restoredSearch->renderSearchUrl());
+			$searchUrl = $restoredSearch->renderSearchUrl();
+			$interface->assign('fullPath', $searchUrl);
+			$facetFormQueryParams = [];
+			$queryString = parse_url($searchUrl, PHP_URL_QUERY);
+			if (!empty($queryString)) {
+				parse_str($queryString, $facetFormQueryParams);
+			}
+			$interface->assign('facetFormQueryParams', $facetFormQueryParams);
 			$interface->assign('searchTerms', $restoredSearch->getSearchTerms() ?? []);
 			$interface->assign('restoredFilters', $restoredSearch->getFilterList() ?? []);
 			$interface->assign('searchSource', $restoredSearch->getSearchSource());

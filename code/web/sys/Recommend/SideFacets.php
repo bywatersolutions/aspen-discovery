@@ -139,22 +139,31 @@ class SideFacets implements RecommendationInterface {
 	}
 	
 	private function initializeSideFacets(array $sideFacets): array {	
+		$orderedSideFacets = [];
 		foreach ($this->facetSettings as $facetKey => $facetSetting) {
 			if ($facetSetting->showAboveResults) {
 				continue;
 			}
 	
 			if (isset($sideFacets[$facetKey])) {
-				$sideFacets[$facetKey]['loadedValues'] = true;
-				if (!isset($sideFacets[$facetKey]['field'])) {
-					$sideFacets[$facetKey]['field'] = $facetKey;
+				$orderedSideFacets[$facetKey] = $sideFacets[$facetKey];
+				$orderedSideFacets[$facetKey]['loadedValues'] = true;
+				if (!isset($orderedSideFacets[$facetKey]['field'])) {
+					$orderedSideFacets[$facetKey]['field'] = $facetKey;
 				}
 			} else {
-				$sideFacets[$facetKey] = $this->createPlaceholderFacet($facetKey, $facetSetting);
+				$orderedSideFacets[$facetKey] = $this->createPlaceholderFacet($facetKey, $facetSetting);
 			}
 		}
-		
-		return $sideFacets;
+
+		// Preserve any facets not present in configured settings by appending them at the end.
+		foreach ($sideFacets as $facetKey => $facet) {
+			if (!isset($orderedSideFacets[$facetKey])) {
+				$orderedSideFacets[$facetKey] = $facet;
+			}
+		}
+
+		return $orderedSideFacets;
 	}
 	
 	private function createPlaceholderFacet(string $facetKey, $facetSetting): array {

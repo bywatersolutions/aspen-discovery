@@ -119,6 +119,183 @@ class SideFacets implements RecommendationInterface {
 		$interface->assign('searchId', $this->searchObject->getSearchId());
 	}
 
+	private function getFilterList(): array {
+		$filterList = $this->searchObject->getFilterList();
+
+		$isNotTopFacet = fn($facet) => strpos($facet[0]['field'], 'availability_toggle') !== 0;
+		
+		return array_filter(
+			$filterList,
+			$isNotTopFacet
+		);
+	}
+	
+	private function initializeSideFacets(array $sideFacets): array {	
+		$orderedSideFacets = [];
+		foreach ($this->facetSettings as $facetKey => $facetSetting) {
+			if ($facetSetting->showAboveResults) {
+				continue;
+			}
+	
+			if (isset($sideFacets[$facetKey])) {
+				$orderedSideFacets[$facetKey] = $sideFacets[$facetKey];
+				$orderedSideFacets[$facetKey]['loadedValues'] = true;
+				if (!isset($orderedSideFacets[$facetKey]['field'])) {
+					$orderedSideFacets[$facetKey]['field'] = $facetKey;
+				}
+			} else {
+				$orderedSideFacets[$facetKey] = $this->createPlaceholderFacet($facetKey, $facetSetting);
+			}
+		}
+
+		// Preserve any facets not present in configured settings by appending them at the end.
+		foreach ($sideFacets as $facetKey => $facet) {
+			if (!isset($orderedSideFacets[$facetKey])) {
+				$orderedSideFacets[$facetKey] = $facet;
+			}
+		}
+
+		return $orderedSideFacets;
+	}
+	
+	private function createPlaceholderFacet(string $facetKey, $facetSetting): array {
+		return [
+			'field' => $facetKey,
+			'field_name' => $facetKey,
+			'label' => $facetSetting->displayName,
+			'displayNamePlural' => $facetSetting->displayNamePlural,
+			'list' => [],
+			'hasApplied' => false,
+			'loadedValues' => false,
+			'multiSelect' => $facetSetting->multiSelect,
+		];
+	}
+
+	private function getLockedFacets(): array {
+		$lockSection = $this->searchObject->getSearchName();
+		
+		if (UserAccount::isLoggedIn()) {
+			$user = UserAccount::getActiveUserObj();
+			$lockedFacets = !empty($user->lockedFacets) ? json_decode($user->lockedFacets, true) : [];
+		} else {
+			$lockedFacets = isset($_SESSION['lockedFilters']) ? $_SESSION['lockedFilters'] : [];
+		}
+		
+		return $lockedFacets[$lockSection] ?? [];
+	}
+	
+	private function processFacetCounts(): void {
+		global $interface;
+		global $library;
+		
+		$searchSource = $_REQUEST['searchSource'] ?? '';
+		
+		match ($searchSource) {
+			'events' => $this->processFacetCountsForEvents($interface, $library),
+			default => $this->processFacetCountsForDefault($interface, $library),
+		};
+	}
+	
+	private function processFacetCountsForEvents(object $interface, object $library): void {
+		$facetSettings = $library->getEventFacetSettings();
+		if ($facetSettings) {
+			$interface->assign('facetCountsToShow', $facetSettings->getFacetGroup()->eventFacetCountsToShow);
+	
+			$eventSettings = $this->getEventSettings($facetSettings);
+			if ($eventSettings->find(true)) {
+				$interface->assign('maxEventDate', strtotime("+" . $eventSettings->numberOfDaysToIndex . " days"));
+			}
+		}
+	}
+	
+	private function processFacetCountsForDefault(object $interface, object $library): void {
+		global $library;
+		$facetCountsToShow = $library->getGroupedWorkDisplaySettings()->facetCountsToShow;
+		$interface->assign('facetCountsToShow', $facetCountsToShow);
+	}
+
+	private function processFacetsBySearchType(array $sideFacets, array $lockedFacets): array {
+		return match (true) {
+			$this->searchObject instanceof SearchObject_AbstractGroupedWorkSearcher 
+				=> $this->processFacetsForGroupedWork($sideFacets, $lockedFacets),
+			
+			$this->searchObject instanceof SearchObject_EventsSearcher 
+				=> $this->processFacetsForEvents($sideFacets, $lockedFacets),
+			
+			$this->searchObject instanceof SearchObject_ListsSearcher 
+				=> $this->processFacetsForLists($sideFacets, $lockedFacets),
+			
+			default 
+				=> $this->processFacetsForDefault($sideFacets, $lockedFacets),
+		};
+	}
+
+	private function processFacetsForGroupedWork(array $sideFacets, array $lockedFacets): array {
+		foreach ($sideFacets as $facetKey => $facet) {
+			$facetSetting = $this->facetSettings[$facetKey];
+	
+			$sideFacets[$facetKey] = match (true) {
+				preg_match('/time_since_added/i', $facetKey) 
+					=> $this->updateTimeSinceAddedFacet($facet),
+				
+				$facetKey === 'rating_facet' 
+					=> $this->updateUserRatingsFacet($facet),
+				
+				default 
+					=> $this->applyFacetSettings($facetKey, $sideFacets, $facetSetting, $lockedFacets)[$facetKey] ?? $facet,
+			};
+	
+			$this->applyCommonFacetSettings($sideFacets, $facetKey, $facetSetting, $lockedFacets);
+		}
+		
+		return $sideFacets;
+	}
+	
+	private function processFacetsForEvents(array $sideFacets, array $lockedFacets): array {
+		foreach ($sideFacets as $facetKey => $facet) {
+			$facetSetting = $this->facetSettings[$facetKey];
+	
+			if ($facetKey === 'start_date') {
+				$startDateFacet = $this->updateStartDateRatingsFacet($facet);
+				$sideFacets[$facetKey] = $startDateFacet;
+				$sideFacets[$facetKey]['hasApplied'] = isset($startDateFacet['start']) || isset($startDateFacet['end']);
+			} else {
+				$sideFacets = $this->applyFacetSettings($facetKey, $sideFacets, $facetSetting, $lockedFacets);
+			}
+	
+			$this->applyCommonFacetSettings($sideFacets, $facetKey, $facetSetting, $lockedFacets);
+		}
+		
+		return $sideFacets;
+	}
+	
+	private function processFacetsForLists(array $sideFacets, array $lockedFacets): array {
+		foreach ($sideFacets as $facetKey => $facet) {
+			if (preg_match('/local_time_since_(added|updated)/i', $facetKey)) {
+				$sideFacets[$facetKey] = $this->updateTimeSinceAddedFacet($facet);
+			}
+		}
+		
+		return $sideFacets;
+	}
+	
+	private function processFacetsForDefault(array $sideFacets, array $lockedFacets): array {
+		foreach ($sideFacets as $facetKey => $facet) {
+			$facetSetting = $this->facetSettings[$facetKey];
+			$sideFacets = $this->applyFacetSettings($facetKey, $sideFacets, $facetSetting, $lockedFacets);
+		}
+		
+		return $sideFacets;
+	}
+	
+	private function applyCommonFacetSettings(array &$sideFacets, string $facetKey, FacetSetting $facetSetting, array $lockedFacets): void {
+		$sideFacets[$facetKey]['collapseByDefault'] = $facetSetting->collapseByDefault;
+		$sideFacets[$facetKey]['locked'] = array_key_exists($facetKey, $lockedFacets);
+		$sideFacets[$facetKey]['canLock'] = $facetSetting->canLock;
+	}
+	
+	
+
 	public function updateTimeSinceAddedFacet(array $timeSinceAddedFacet): array {
 		//See if there is a value selected
 		$valueSelected = false;

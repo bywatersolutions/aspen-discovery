@@ -664,7 +664,11 @@ class AJAX extends Action {
 					$appliedFacetValues = [];
 					if (array_key_exists($facetTitle, $appliedFacets)) {
 						$appliedFacetValues = $appliedFacets[$facetTitle];
-						ksort($appliedFacetValues);
+						if (is_array($appliedFacetValues)) {
+							ksort($appliedFacetValues);
+						} else {
+							$appliedFacetValues = [];
+						}
 					}
 					$lockSection = $restoredSearch->getSearchName();
 					if (UserAccount::isLoggedIn()) {
@@ -685,17 +689,14 @@ class AJAX extends Action {
 					$interface->assign('appliedFacetValues', $appliedFacetValues);
 
 					$allFacets = $restoredSearch->getFacetList();
-					$topResults = $allFacets[$facetName];
-					ksort($topResults['list'], SORT_NATURAL | SORT_FLAG_CASE);
-					if (!empty($lockedValues)) {
-						foreach ($topResults['list'] as &$facetValue) {
-							if (!empty($facetValue['value']) && in_array($facetValue['value'], $lockedValues, true)) {
-								$facetValue['isLocked'] = true;
-							}
-						}
-						unset($facetValue);
+					$topResults = $allFacets[$facetName] ?? [];
+					$topResultList = $topResults['list'] ?? [];
+					if (is_array($topResultList)) {
+						ksort($topResultList, SORT_NATURAL | SORT_FLAG_CASE);
+					} else {
+						$topResultList = [];
 					}
-					$interface->assign('topResults', $topResults['list']);
+					$interface->assign('topResults', $topResultList);
 					$buttons = '';
 					if ($isMultiSelect) {
 						$buttons = '<button class="btn btn-primary" type="submit" name="submit" onclick="$(\'#searchFacetPopup\').submit()">' . translate([
@@ -792,7 +793,11 @@ class AJAX extends Action {
 					$appliedFacetValues = [];
 					if (array_key_exists($facetTitle, $appliedFacets)) {
 						$appliedFacetValues = $appliedFacets[$facetTitle];
-						ksort($appliedFacetValues, SORT_NATURAL | SORT_FLAG_CASE);
+						if (is_array($appliedFacetValues)) {
+							ksort($appliedFacetValues, SORT_NATURAL | SORT_FLAG_CASE);
+						} else {
+							$appliedFacetValues = [];
+						}
 					}
 					$lockSection = $restoredSearch->getSearchName();
 					if (UserAccount::isLoggedIn()) {
@@ -815,16 +820,13 @@ class AJAX extends Action {
 					$allFacets = $newSearch->getFacetList();
 					if (isset($allFacets[$facetName])) {
 						$facetSearchResults = $allFacets[$facetName];
-						ksort($facetSearchResults['list'], SORT_NATURAL | SORT_FLAG_CASE);
-						if (!empty($lockedValues)) {
-							foreach ($facetSearchResults['list'] as &$facetValue) {
-								if (!empty($facetValue['value']) && in_array($facetValue['value'], $lockedValues, true)) {
-									$facetValue['isLocked'] = true;
-								}
-							}
-							unset($facetValue);
+						$facetSearchResultList = $facetSearchResults['list'] ?? [];
+						if (is_array($facetSearchResultList)) {
+							ksort($facetSearchResultList, SORT_NATURAL | SORT_FLAG_CASE);
+						} else {
+							$facetSearchResultList = [];
 						}
-						$interface->assign('facetSearchResults', $facetSearchResults['list']);
+						$interface->assign('facetSearchResults', $facetSearchResultList);
 						return [
 							'success' => true,
 							'facetResults' => $interface->fetch('Search/searchFacetResults.tpl'),
@@ -1053,15 +1055,7 @@ class AJAX extends Action {
 		$interface->assign('title', $facetName);
 		$interface->assign('searchId', $searchId);
 
-		$searchLibrary = Library::getActiveLibrary();
-		$location = Location::getSearchLocation();
-		if ($location != null) {
-			$groupedWorkDisplaySettings = $location->getGroupedWorkDisplaySettings();
-		} else {
-			$groupedWorkDisplaySettings = $searchLibrary->getGroupedWorkDisplaySettings();
-		}
-		$hasSearchableFacets = !empty($groupedWorkDisplaySettings->hasSearchableFacets);
-		$interface->assign('hasSearchableFacets', $hasSearchableFacets);
+		$interface->assign('hasSearchableFacets', $restoredSearch->hasSearchableFacets());
 
 		// Determine which template to use based on facet configuration.
 		$template = 'Search/Recommend/standardFacet.tpl';

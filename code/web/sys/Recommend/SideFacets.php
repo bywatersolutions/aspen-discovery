@@ -103,6 +103,7 @@ class SideFacets implements RecommendationInterface {
 		global $interface;
 	
 		$interface->assign('hasSearchableFacets', $this->searchObject->hasSearchableFacets());
+		$interface->assign('facetFormQueryParams', $_GET);
 	
 		// Get applied facets
 		$filterList = $this->getFilterList();

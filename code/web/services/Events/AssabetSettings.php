@@ -81,11 +81,15 @@ class Events_AssabetSettings extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Assabet Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Assabet Settings'];
 	}
 
 	function getActiveAdminSection(): string {
 		return 'events';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

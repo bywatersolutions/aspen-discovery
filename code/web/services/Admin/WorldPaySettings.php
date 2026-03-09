@@ -61,7 +61,7 @@ class Admin_WorldPaySettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer WorldPay');
+	public function getViewPermissions() : array {
+		return ['Administer WorldPay'];
 	}
 }

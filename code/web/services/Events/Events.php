@@ -102,12 +102,12 @@ class Events_Events extends ObjectEditor {
 		return 'events';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer Events for All Locations',
 			'Administer Events for Home Library Locations',
 			'Administer Events for Home Location'
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -120,5 +120,9 @@ class Events_Events extends ObjectEditor {
 
 	public function hasMultiStepAddNew() : bool {
 		return false;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

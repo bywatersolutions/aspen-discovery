@@ -107,11 +107,11 @@ class Admin_GroupedWorkDisplay extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Grouped Work Display Settings',
 			'Administer Library Grouped Work Display Settings',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

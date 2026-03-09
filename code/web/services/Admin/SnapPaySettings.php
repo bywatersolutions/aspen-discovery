@@ -65,7 +65,7 @@ class Admin_SnapPaySettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer SnapPay');
+	public function getViewPermissions() : array {
+		return ['Administer SnapPay'];
 	}
 }

@@ -61,7 +61,7 @@ class Admin_CompriseSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Comprise');
+	public function getViewPermissions() : array {
+		return ['Administer Comprise'];
 	}
 }

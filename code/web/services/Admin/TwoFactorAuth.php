@@ -90,8 +90,8 @@ class Admin_TwoFactorAuth extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Two-Factor Authentication');
+	public function getViewPermissions() : array {
+		return ['Administer Two-Factor Authentication'];
 	}
 
 	public function hasMultiStepAddNew() : bool {

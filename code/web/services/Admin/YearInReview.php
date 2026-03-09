@@ -88,11 +88,11 @@ class Admin_YearInReview extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer Year in Review for All Libraries',
 			'Administer Year in Review for Home Library',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

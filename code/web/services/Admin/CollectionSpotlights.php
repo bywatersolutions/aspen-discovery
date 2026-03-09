@@ -189,11 +189,11 @@ class Admin_CollectionSpotlights extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Collection Spotlights',
 			'Administer Library Collection Spotlights',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

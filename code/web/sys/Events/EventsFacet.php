@@ -1,5 +1,6 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
 
+require_once ROOT_DIR . '/sys/LibraryLocation/FacetSetting.php';
 class EventsFacet extends FacetSetting {
 	public $__table = 'events_facet';
 	public $facetGroupId;

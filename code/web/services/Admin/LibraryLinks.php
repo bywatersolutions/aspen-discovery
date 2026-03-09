@@ -77,10 +77,10 @@ class Admin_LibraryLinks extends ObjectEditor {
 		return 'AspenDiscovery.Admin.updateLibraryLinksFields()';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Libraries',
 			'Administer Home Library',
-		]);
+		];
 	}
 }

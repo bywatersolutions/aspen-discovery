@@ -53,8 +53,8 @@ class Admin_RecordGroupingOverrides extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Manually Group and Ungroup Works');
+	public function getViewPermissions() : array {
+		return ['Manually Group and Ungroup Works'];
 	}
 
 	function getActiveAdminSection(): string {

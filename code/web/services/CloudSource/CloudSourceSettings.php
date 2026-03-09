@@ -70,7 +70,11 @@ class CloudSource_CloudSourceSettings extends ObjectEditor {
 		return 'cloudsource';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer CloudSource OA');
+	public function getViewPermissions() : array {
+		return ['Administer CloudSource OA'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'CloudSource';
 	}
 }

@@ -82,6 +82,10 @@ class Admin_UsageGraphs extends Admin_AbstractUsageGraphs {
 			$dataSeries['EBSCOhost Searches'] = GraphingUtils::getDataSeriesArray(count($dataSeries));
 			$userUsage->selectAdd('SUM(ebscohostSearches) as sumEbscohostSearches');
 		}
+		if (array_key_exists('Gale', $enabledModules) && ($stat == 'galeSearches' || $stat == 'searches')) {
+			$dataSeries['Gale Searches'] = GraphingUtils::getDataSeriesArray(count($dataSeries));
+			$userUsage->selectAdd('SUM(galeSearches) as sumGaleSearches');
+		}
 		if (array_key_exists('Events', $enabledModules) && ($stat == 'eventSearches' || $stat == 'searches')) {
 			$dataSeries['Events Searches'] = GraphingUtils::getDataSeriesArray(count($dataSeries));
 			$userUsage->selectAdd('SUM(eventsSearches) as sumEventsSearches');
@@ -178,6 +182,10 @@ class Admin_UsageGraphs extends Admin_AbstractUsageGraphs {
 			if (array_key_exists('EBSCOhost', $enabledModules) && ($stat == 'ebscohostSearches' || $stat == 'searches')) {
 				/** @noinspection PhpUndefinedFieldInspection */
 				$dataSeries['EBSCOhost Searches']['data'][$curPeriod] = $userUsage->sumEbscohostSearches;
+			}
+			if (array_key_exists('Gale', $enabledModules) && ($stat == 'galeSearches' || $stat == 'searches')) {
+				/** @noinspection PhpUndefinedFieldInspection */
+				$dataSeries['Gale Searches']['data'][$curPeriod] = $userUsage->sumGaleSearches;
 			}
 			if (array_key_exists('Events', $enabledModules) && ($stat == 'eventSearches' || $stat == 'searches')) {
 				/** @noinspection PhpUndefinedFieldInspection */

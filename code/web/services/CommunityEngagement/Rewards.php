@@ -71,10 +71,10 @@ class CommunityEngagement_Rewards extends ObjectEditor {
 		return 'communityEngagement';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer Community Engagement Module',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -87,4 +87,7 @@ class CommunityEngagement_Rewards extends ObjectEditor {
 		return 'AspenDiscovery.CommunityEngagement.updateRewardFields();';
 	}
 
+	public function getRequiredModule(): ?string {
+		return 'Community Engagement';
+	}
 }

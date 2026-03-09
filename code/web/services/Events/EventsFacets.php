@@ -72,11 +72,15 @@ class Events_EventsFacets extends ObjectEditor {
 		return 'events';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Events Facet Settings']);
+	public function getViewPermissions() : array {
+		return ['Administer Events Facet Settings'];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission(['Administer Events Facet Settings']);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

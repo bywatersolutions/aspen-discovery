@@ -61,7 +61,7 @@ class Admin_XpressPaySettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Xpress-pay');
+	public function getViewPermissions() : array {
+		return ['Administer Xpress-pay'];
 	}
 }

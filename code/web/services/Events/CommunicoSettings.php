@@ -81,11 +81,15 @@ class Events_CommunicoSettings extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Communico Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Communico Settings'];
 	}
 
 	function getActiveAdminSection(): string {
 		return 'events';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

@@ -94,7 +94,7 @@ class Admin_HeroSliderPlaylists extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer All Hero Sliders', 'Administer Library Hero Sliders']);
+	public function getViewPermissions() : array {
+		return ['Administer All Hero Sliders', 'Administer Library Hero Sliders'];
 	}
 }

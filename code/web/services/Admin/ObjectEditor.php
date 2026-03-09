@@ -338,7 +338,6 @@ abstract class ObjectEditor extends Admin_Admin {
 					'totalItems' => $numObjects,
 					'perPage' => $recordsPerPage,
 					'canChangeRecordsPerPage' => true,
-					'canJumpToPage' => true,
 					'fileName' => $cleanUrl,
 				];
 				$pager = new Pager($options);
@@ -1785,4 +1784,14 @@ abstract class ObjectEditor extends Admin_Admin {
 
 		$this->viewIndividualObject($structure);
 	}
+
+	public function getRequiredModule() : ?string {
+		return null;
+	}
+
+	function canView(): bool {
+		return UserAccount::userHasPermission($this->getViewPermissions());
+	}
+
+	abstract function getViewPermissions() : array;
 }

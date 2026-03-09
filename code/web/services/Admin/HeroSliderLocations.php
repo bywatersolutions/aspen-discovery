@@ -114,11 +114,11 @@ class Admin_HeroSliderLocations extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Hero Sliders',
 			'Administer Library Hero Sliders',
-		]);
+		];
 	}
 
 	function getInitializationJs(): string {
@@ -126,11 +126,13 @@ class Admin_HeroSliderLocations extends ObjectEditor {
 	}
 
 	function updateFromUI($object, $structure, $fieldLocks): array {
-		if (!empty($object->aspectRatioPreset) && $object->aspectRatioPreset !== 'custom') {
-			$parts = explode(':', $object->aspectRatioPreset);
-			if (count($parts) === 2) {
-				$object->aspectRatioWidth = (int)$parts[0];
-				$object->aspectRatioHeight = (int)$parts[1];
+		if ($object instanceof HeroSliderLocation) {
+			if (!empty($object->aspectRatioPreset) && $object->aspectRatioPreset !== 'custom') {
+				$parts = explode(':', $object->aspectRatioPreset);
+				if (count($parts) === 2) {
+					$object->aspectRatioWidth = (int)$parts[0];
+					$object->aspectRatioHeight = (int)$parts[1];
+				}
 			}
 		}
 		$validationResults = parent::updateFromUI($object, $structure, $fieldLocks);

@@ -9,6 +9,7 @@ class SystemVariables extends DataObject {
 	public $loadCoversFrom020z;
 	public $currencyCode;
 	public $runNightlyFullIndex;
+	public $nightlyIndexTrigger;
 	public $regroupAllRecordsDuringNightlyIndex;
 	/** @noinspection PhpUnused */
 	public $processEmptyGroupedWorks;
@@ -449,7 +450,7 @@ class SystemVariables extends DataObject {
 			],
 		];
 
-		if (!UserAccount::getActiveUserObj()->isAspenAdminUser()) {
+		if (!UserAccount::isLoggedIn() || !UserAccount::getActiveUserObj()->isAspenAdminUser()) {
 			$objectStructure['indexingSection']['properties']['storeRecordDetailsInSolr']['type'] = 'hidden';
 			$objectStructure['indexingSection']['properties']['storeRecordDetailsInDatabase']['type'] = 'hidden';
 			$objectStructure['indexingSection']['properties']['indexVersion']['type'] = 'hidden';
@@ -466,13 +467,18 @@ class SystemVariables extends DataObject {
 		return self::$_objectStructure[$context];
 	}
 
-	public static function forceNightlyIndex() : void {
+	public static function forceNightlyIndex(string $triggerSource = 'unknown') : void {
 		$variables = new SystemVariables();
 		if ($variables->find(true)) {
-			if ($variables->runNightlyFullIndex == 0) {
-				$variables->runNightlyFullIndex = 1;
-				$variables->update();
+			$variables->__set('runNightlyFullIndex', 1);
+			$timestamp = date('Y-m-d H:i:s');
+			$newTrigger = "$triggerSource (Triggered at $timestamp)";
+			if (!empty($variables->nightlyIndexTrigger)) {
+				$variables->__set('nightlyIndexTrigger', $variables->nightlyIndexTrigger . "\n" . $newTrigger);
+			} else {
+				$variables->__set('nightlyIndexTrigger', $newTrigger);
 			}
+			$variables->update();
 		}
 	}
 
@@ -535,11 +541,33 @@ class SystemVariables extends DataObject {
 			$userAgent = new UserAgent();
 			$userAgent->delete(true);
 		}
-		if ($this->hooplaVersion == 2) {
-			$existingSystemVariables = new SystemVariables();
-			if ($existingSystemVariables->find(true)) {
-				if ($existingSystemVariables->hooplaVersion != 2) {
-					$this->__set('runNightlyFullIndex', 1);
+		$existingSystemVariables = new SystemVariables();
+		if ($existingSystemVariables->find(true)) {
+			if ($this->hooplaVersion == 2 && $existingSystemVariables->hooplaVersion != 2) {
+				$this->__set('runNightlyFullIndex', 1);
+				$this->_changedFields[] = 'runNightlyFullIndex';
+				$timestamp = date('Y-m-d H:i:s');
+				$newTrigger = "Hoopla V2 Migration (Triggered at $timestamp)";
+				if (!empty($this->nightlyIndexTrigger)) {
+					$this->__set('nightlyIndexTrigger', $this->nightlyIndexTrigger . "\n" . $newTrigger);
+				} else {
+					$this->__set('nightlyIndexTrigger', $newTrigger);
+				}
+				$this->_changedFields[] = 'nightlyIndexTrigger';
+			}
+			if ($this->runNightlyFullIndex == 1 && $existingSystemVariables->runNightlyFullIndex == 0) {
+				// Only add "Admin UI" trigger if nightlyIndexTrigger wasn't already modified
+				// by forceNightlyIndex() — which would mean the 0→1 transition was programmatic, not from the UI
+				$triggerUnchanged = ($this->nightlyIndexTrigger ?? '') === ($existingSystemVariables->nightlyIndexTrigger ?? '');
+				if ($triggerUnchanged) {
+					$timestamp = date('Y-m-d H:i:s');
+					$newTrigger = "Admin UI (Triggered at $timestamp)";
+					if (!empty($this->nightlyIndexTrigger)) {
+						$this->__set('nightlyIndexTrigger', $this->nightlyIndexTrigger . "\n" . $newTrigger);
+					} else {
+						$this->__set('nightlyIndexTrigger', $newTrigger);
+					}
+					$this->_changedFields[] = 'nightlyIndexTrigger';
 				}
 			}
 		}

@@ -61,8 +61,10 @@ class Admin_AccountProfiles extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Account Profiles');
+	public function getViewPermissions() : array {
+		return [
+			'Administer Account Profiles'
+		];
 	}
 
 	function getInitializationJs(): string {

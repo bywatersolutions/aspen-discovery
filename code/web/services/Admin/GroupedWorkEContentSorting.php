@@ -68,11 +68,11 @@ class Admin_GroupedWorkEContentSorting extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All eContent Sorting',
 			'Administer Library eContent Sorting',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

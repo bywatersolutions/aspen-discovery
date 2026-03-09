@@ -70,8 +70,8 @@ class Events_IndexingSettings extends ObjectEditor {
 		return 'events';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Events for All Locations']);
+	public function getViewPermissions() : array {
+		return ['Administer Events for All Locations'];
 	}
 
 	function canBatchEdit(): bool {
@@ -80,5 +80,9 @@ class Events_IndexingSettings extends ObjectEditor {
 
 	function canAddNew(): bool {
 		return $this->getNumObjects() == 0;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

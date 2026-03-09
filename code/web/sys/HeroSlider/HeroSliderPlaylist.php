@@ -32,7 +32,9 @@ class HeroSliderPlaylist extends DataObject {
 			}
 		} else {
 			$homeLibrary = Library::getPatronHomeLibrary();
-			$libraryList[$homeLibrary->libraryId] = $homeLibrary->displayName;
+			if (!empty($homeLibrary)) {
+				$libraryList[$homeLibrary->libraryId] = $homeLibrary->displayName;
+			}
 		}
 
 		$playlistImageStructure = HeroSliderPlaylistImage::getObjectStructure($context);

@@ -81,11 +81,11 @@ class WebBuilder_CustomWebResourcePages extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Custom Web Resource Pages',
 			'Administer Library Custom Web Resource Pages',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -104,5 +104,9 @@ class WebBuilder_CustomWebResourcePages extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

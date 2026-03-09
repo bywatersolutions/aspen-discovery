@@ -482,6 +482,7 @@ public class DatabaseCleanup implements IProcessHandler {
 			PreparedStatement removePalaceProjectUsageStmt = dbConn.prepareStatement("DELETE FROM user_palace_project_usage WHERE userId = ?");
 			PreparedStatement removeSideloadUsageStmt = dbConn.prepareStatement("DELETE FROM user_sideload_usage WHERE userId = ?");
 			PreparedStatement removeSummonUsageStmt = dbConn.prepareStatement("DELETE FROM user_summon_usage WHERE userId = ?");
+			PreparedStatement removeGaleUsageStmt = dbConn.prepareStatement("DELETE FROM user_gale_usage WHERE userId = ?");
 			PreparedStatement removeWebIndexerUsageStmt = dbConn.prepareStatement("DELETE FROM user_website_usage WHERE userId = ?");
 			PreparedStatement removeEventsUsageStmt = dbConn.prepareStatement("DELETE FROM user_events_usage WHERE userId = ?");
 			PreparedStatement removeOpenArchivesUsageStmt = dbConn.prepareStatement("DELETE FROM user_open_archives_usage WHERE userId = ?");
@@ -497,6 +498,7 @@ public class DatabaseCleanup implements IProcessHandler {
 			int totalRowsRemovedPalaceProject = 0;
 			int totalRowsRemovedSideload = 0;
 			int totalRowsRemovedSummon = 0;
+			int totalRowsRemovedGale = 0;
 			int totalRowsRemovedWebIndexer = 0;
 			int totalRowsRemovedEvents = 0;
 			int totalRowsRemovedOpenArchives = 0;
@@ -532,6 +534,9 @@ public class DatabaseCleanup implements IProcessHandler {
 	
 					removeSummonUsageStmt.setInt(1, userId);
 					totalRowsRemovedSummon += removeSummonUsageStmt.executeUpdate();
+
+					removeGaleUsageStmt.setInt(1, userId);
+					totalRowsRemovedGale += removeGaleUsageStmt.executeUpdate();
 	
 					removeWebIndexerUsageStmt.setInt(1, userId);
 					totalRowsRemovedWebIndexer += removeWebIndexerUsageStmt.executeUpdate();
@@ -561,6 +566,7 @@ public class DatabaseCleanup implements IProcessHandler {
 			processLog.addNote("Removed " + totalRowsRemovedPalaceProject + " Palace Project usage records for users with localAnalytics set to 0");
 			processLog.addNote("Removed " + totalRowsRemovedSideload + " Sideload usage records for users with localAnalytics set to 0");
 			processLog.addNote("Removed " + totalRowsRemovedSummon + " Summon usage records for users with localAnalytics set to 0");
+			processLog.addNote("Removed " + totalRowsRemovedGale + " Gale usage records for users with localAnalytics set to 0");
 			processLog.addNote("Removed " + totalRowsRemovedWebIndexer + " Web Indexer usage records for users with localAnalytics set to 0");
 			processLog.addNote("Removed " + totalRowsRemovedEvents + " Events usage records for users with localAnalytics set to 0");
 			processLog.addNote("Removed " + totalRowsRemovedOpenArchives + " Open Archives usage records for users with localAnalytics set to 0");
@@ -580,6 +586,7 @@ public class DatabaseCleanup implements IProcessHandler {
 			removePalaceProjectUsageStmt.close();
 			removeSideloadUsageStmt.close();
 			removeSummonUsageStmt.close();
+			removeGaleUsageStmt.close();
 			removeWebIndexerUsageStmt.close();
 			removeEventsUsageStmt.close();
 			removeOpenArchivesUsageStmt.close();

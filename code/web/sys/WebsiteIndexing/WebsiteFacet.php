@@ -1,5 +1,5 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
-
+require_once ROOT_DIR . '/sys/LibraryLocation/FacetSetting.php';
 class WebsiteFacet extends FacetSetting
 {
     public $__table = 'website_facets';

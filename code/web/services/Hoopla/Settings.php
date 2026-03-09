@@ -82,7 +82,11 @@ class Hoopla_Settings extends ObjectEditor {
 		return 'hoopla';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Hoopla');
+	public function getViewPermissions() : array {
+		return ['Administer Hoopla'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Hoopla';
 	}
 }

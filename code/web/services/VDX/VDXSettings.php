@@ -70,8 +70,8 @@ class VDX_VDXSettings extends ObjectEditor {
 		return 'ill_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer VDX Settings');
+	public function getViewPermissions() : array {
+		return ['Administer VDX Settings'];
 	}
 
 	function canAddNew() : bool {

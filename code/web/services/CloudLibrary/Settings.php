@@ -69,7 +69,11 @@ class CloudLibrary_Settings extends ObjectEditor {
 		return 'cloud_library';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Cloud Library');
+	public function getViewPermissions() : array {
+		return ['Administer Cloud Library'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Cloud Library';
 	}
 }

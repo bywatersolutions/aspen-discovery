@@ -62,7 +62,7 @@ class Admin_Hosting extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Host Information');
+	public function getViewPermissions() : array {
+		return ['Administer Host Information'];
 	}
 }

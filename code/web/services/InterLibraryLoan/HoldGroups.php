@@ -70,8 +70,8 @@ class InterLibraryLoan_HoldGroups extends ObjectEditor {
 		return 'ill_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Hold Groups');
+	public function getViewPermissions() : array {
+		return ['Administer Hold Groups'];
 	}
 
 	function customListActions() : array {

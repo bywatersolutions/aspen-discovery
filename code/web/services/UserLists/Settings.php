@@ -70,7 +70,11 @@ class UserLists_Settings extends ObjectEditor {
 		return 'user_lists';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer List Indexing Settings');
+	public function getViewPermissions() : array {
+		return ['Administer List Indexing Settings'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'User Lists';
 	}
 }

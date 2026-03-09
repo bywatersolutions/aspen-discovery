@@ -695,6 +695,7 @@ class AJAX_JSON extends Action {
 		require_once ROOT_DIR . '/sys/Indexing/UserSideLoadUsage.php';
 		require_once ROOT_DIR . '/sys/WebsiteIndexing/UserWebsiteUsage.php';
 		require_once ROOT_DIR . '/sys/Events/UserEventsUsage.php';
+		require_once ROOT_DIR . '/sys/Gale/UserGaleUsage.php';
 
 		$userId = UserAccount::getActiveUserId();
 
@@ -746,6 +747,10 @@ class AJAX_JSON extends Action {
 			$userEventsUsage = new UserEventsUsage();
 			$userEventsUsage->userId = $userId;
 			$userEventsUsage->delete(true);
+
+			$userGaleUsage = new UserGaleUsage();
+			$userGaleUsage->userId = $userId;
+			$userGaleUsage->delete(true);
 		}
 	}
 

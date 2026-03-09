@@ -81,11 +81,11 @@ class WebBuilder_CustomForms extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Custom Forms',
 			'Administer Library Custom Forms',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -100,5 +100,9 @@ class WebBuilder_CustomForms extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

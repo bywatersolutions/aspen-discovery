@@ -101,7 +101,7 @@ class Admin_BlockPatronAccountLinks extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Block Patron Account Linking');
+	public function getViewPermissions() : array {
+		return ['Block Patron Account Linking'];
 	}
 }

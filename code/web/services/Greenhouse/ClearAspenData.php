@@ -107,7 +107,7 @@ class Greenhouse_ClearAspenData extends Admin_Admin {
 
 						//Also force a nightly index
 						require_once ROOT_DIR . '/sys/SystemVariables.php';
-						SystemVariables::forceNightlyIndex();
+						SystemVariables::forceNightlyIndex('Greenhouse Clear Data');
 
 						$indexingProfile = new IndexingProfile();
 						$allIndexingProfiles = $indexingProfile->fetchAll();
@@ -233,6 +233,12 @@ class Greenhouse_ClearAspenData extends Admin_Admin {
 
 						require_once ROOT_DIR . '/sys/Summon/UserSummonUsage.php';
 						$message .= $this->deleteAll('UserSummonUsage');
+
+						require_once ROOT_DIR . '/sys/Gale/GaleRecordUsage.php';
+						$message .= $this->deleteAll('GaleRecordUsage');
+
+						require_once ROOT_DIR . '/sys/Gale/UserGaleUsage.php';
+						$message .= $this->deleteAll('UserGaleUsage');
 
 						require_once ROOT_DIR . '/sys/Events/EventsUsage.php';
 						$message .= $this->deleteAll('EventsUsage');

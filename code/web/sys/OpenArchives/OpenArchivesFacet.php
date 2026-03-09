@@ -1,5 +1,6 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
 
+require_once ROOT_DIR . '/sys/LibraryLocation/FacetSetting.php';
 class OpenArchivesFacet extends FacetSetting {
 	public $__table = 'open_archives_facets';
 	public $facetGroupId;

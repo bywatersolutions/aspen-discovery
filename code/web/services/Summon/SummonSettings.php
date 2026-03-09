@@ -71,7 +71,7 @@ class Summon_SummonSettings extends ObjectEditor {
 		return 'summon';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('View Dashboards');
+	public function getViewPermissions() : array {
+		return ['View Dashboards'];
 	}
 }

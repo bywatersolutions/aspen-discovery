@@ -74,16 +74,20 @@ class Websites_WebsiteFacets extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Website Facet Settings',
 			'Administer Library Website Facet Settings',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission([
 			'Administer All Website Facet Settings',
 		]);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Indexer';
 	}
 }

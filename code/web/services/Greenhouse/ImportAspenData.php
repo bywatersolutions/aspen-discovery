@@ -172,6 +172,16 @@ class Greenhouse_ImportAspenData extends Admin_Admin {
 				'className' => 'UserSummonUsage',
 				'name' => 'User Summon Usage',
 			],
+			'gale_record_usage' => [
+				'classFile' => ROOT_DIR . '/sys/Gale/GaleRecordUsage.php',
+				'className' => 'GaleRecordUsage',
+				'name' => 'Gale Record Usage',
+			],
+			'user_gale_usage' => [
+				'classFile' => ROOT_DIR . '/sys/Gale/UserGaleUsage.php',
+				'className' => 'UserGaleUsage',
+				'name' => 'User Gale Usage',
+			],
 			'events_usage' => [
 				'classFile' => ROOT_DIR . '/sys/Events/EventsUsage.php',
 				'className' => 'EventsUsage',

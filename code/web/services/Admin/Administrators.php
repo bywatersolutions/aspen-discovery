@@ -202,8 +202,8 @@ class Admin_Administrators extends ObjectEditor {
 		return 'system_admin';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Users');
+	public function getViewPermissions() : array {
+		return ['Administer Users'];
 	}
 
 	function canDelete() : bool {

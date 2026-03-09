@@ -28,6 +28,7 @@ class MyAccount_MyCookiePreferences extends MyAccount_MyPrivacySettings {
 
 	public function removeLocalAnalyticsTrackingForUser($userId) {
 		require_once ROOT_DIR . '/sys/Summon/UserSummonUsage.php';
+		require_once ROOT_DIR . '/sys/Gale/UserGaleUsage.php';
 		require_once ROOT_DIR . '/sys/Axis360/UserAxis360Usage.php';
 		require_once ROOT_DIR . '/sys/CloudLibrary/UserCloudLibraryUsage.php';
 		require_once ROOT_DIR . '/sys/Ebsco/UserEbscoEdsUsage.php';
@@ -90,6 +91,10 @@ class MyAccount_MyCookiePreferences extends MyAccount_MyPrivacySettings {
 			$userEventsUsage = new UserEventsUsage();
 			$userEventsUsage->userId = $userId;
 			$userEventsUsage->delete(true);
+
+			$userGaleUsage = new UserGaleUsage();
+			$userGaleUsage->userId = $userId;
+			$userGaleUsage->delete(true);
 		}
 	}
 }

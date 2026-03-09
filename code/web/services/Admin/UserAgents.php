@@ -62,8 +62,8 @@ class Admin_UserAgents extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer User Agents');
+	public function getViewPermissions() : array {
+		return ['Administer User Agents'];
 	}
 
 	function canDelete() : bool {

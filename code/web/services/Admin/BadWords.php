@@ -67,7 +67,7 @@ class Admin_BadWords extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Bad Words']);
+	public function getViewPermissions() : array {
+		return ['Administer Bad Words'];
 	}
 }

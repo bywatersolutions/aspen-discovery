@@ -70,7 +70,11 @@ class OpenArchives_Collections extends ObjectEditor {
 		return 'open_archives';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Open Archives');
+	public function getViewPermissions() : array {
+		return ['Administer Open Archives'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Open Archives';
 	}
 }

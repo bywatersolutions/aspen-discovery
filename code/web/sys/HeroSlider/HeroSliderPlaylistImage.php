@@ -23,7 +23,9 @@ class HeroSliderPlaylistImage extends DataObject {
 		$image->orderBy('title ASC');
 		if (!UserAccount::userHasPermission('Administer All Hero Sliders')) {
 			$homeLibrary = Library::getPatronHomeLibrary();
-			$image->whereAdd("owningLibrary = {$homeLibrary->libraryId} OR sharing = 2");
+			if (!empty($homeLibrary)) {
+				$image->whereAdd("owningLibrary = $homeLibrary->libraryId OR sharing = 2");
+			}
 		}
 		$image->find();
 		while ($image->fetch()) {

@@ -99,11 +99,11 @@ class Admin_JavaScriptSnippets extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All JavaScript Snippets',
 			'Administer Library JavaScript Snippets',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

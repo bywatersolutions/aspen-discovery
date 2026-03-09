@@ -16,6 +16,7 @@ class OverDriveSetting extends DataObject {
 	public $productsKey;
 	public $runFullUpdate;
 	public $showLibbyPromo;
+	public $enableQRCodeAuth;
 	/** @noinspection PhpUnused */
 	public $allowLargeDeletes;
 	/** @noinspection PhpUnused */
@@ -149,6 +150,14 @@ class OverDriveSetting extends DataObject {
 				'description' => 'Whether or not to show the Libby promo ad in the fulfillment interface',
 				'default' => 1,
 			],
+			'enableQRCodeAuth' => [
+				'property' => 'enableQRCodeAuth',
+				'type' => 'checkbox',
+				'label' => 'Enable Single Sign On with QR Code Authentication',
+				'description' => 'Allow Aspen to use OverDrive\'s QR code authentication flow for this setting.',
+				'note' => 'When enabled, no fallback ILS authentication is performed. Disable "Circulation Enabled" for any libraries to which this should apply.',
+				'default' => 0,
+			],
 			'numExtractionThreads' => [
 				'property' => 'numExtractionThreads',
 				'type' => 'integer',
@@ -261,7 +270,7 @@ class OverDriveSetting extends DataObject {
 				],
 			],
 		];
-		if (!(UserAccount::getActiveUserObj()->isAspenAdminUser())) {
+		if (!UserAccount::isLoggedIn() || !(UserAccount::getActiveUserObj()->isAspenAdminUser())) {
 			unset($objectStructure['enableRequestLogging']);
 		}
 

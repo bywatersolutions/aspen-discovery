@@ -77,6 +77,10 @@ class Greenhouse_ScheduledUpdates extends ObjectEditor {
 		return false;
 	}
 
+	public function getViewPermissions() : array {
+		return ['Aspen Admin'];
+	}
+
 	function canAddNew() : bool {
 		if (UserAccount::isLoggedIn()) {
 			if (UserAccount::getActiveUserObj()->isAspenAdminUser()) {
@@ -96,5 +100,9 @@ class Greenhouse_ScheduledUpdates extends ObjectEditor {
 
 	public function display($mainContentTemplate, $pageTitle, $sidebarTemplate = 'Greenhouse/greenhouse-sidebar.tpl', $translateTitle = true): void {
 		parent::display($mainContentTemplate, $pageTitle, $sidebarTemplate, $translateTitle);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Greenhouse';
 	}
 }

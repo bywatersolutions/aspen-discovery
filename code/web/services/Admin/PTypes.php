@@ -65,7 +65,7 @@ class Admin_PTypes extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Patron Types');
+	public function getViewPermissions() : array {
+		return ['Administer Patron Types'];
 	}
 }

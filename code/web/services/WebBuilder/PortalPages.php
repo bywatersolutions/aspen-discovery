@@ -87,11 +87,11 @@ class WebBuilder_PortalPages extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Custom Pages',
 			'Administer Library Custom Pages',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -120,5 +120,9 @@ class WebBuilder_PortalPages extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

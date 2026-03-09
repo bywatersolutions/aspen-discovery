@@ -61,8 +61,11 @@ class WebBuilder_Templates  extends ObjectEditor{
     	$template->insert();
 	}
 
-	function canView(): bool {
-    	return true;
+	public function getViewPermissions() : array {
+		return [
+			'Administer All Grapes Pages',
+			'Administer Library Grapes Pages',
+		];
 	}
 
 	public function canAddNew() : bool {
@@ -102,5 +105,9 @@ class WebBuilder_Templates  extends ObjectEditor{
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home#web_builder', 'Web Builder');
 		$breadcrumbs[] = new Breadcrumb('/WebBuilder/Templates', 'Templates');
 		return $breadcrumbs;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

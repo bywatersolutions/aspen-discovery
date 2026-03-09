@@ -73,11 +73,15 @@ class EBSCO_EBSCOhostDatabases extends ObjectEditor {
 		return 'ebscohost';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer EBSCOhost Settings');
+	public function getViewPermissions() : array {
+		return ['Administer EBSCOhost Settings'];
 	}
 
 	function canDelete() : bool {
 		return false;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'EBSCOhost';
 	}
 }

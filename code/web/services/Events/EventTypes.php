@@ -70,11 +70,15 @@ class Events_EventTypes extends ObjectEditor {
 		return 'events';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Event Types']);
+	public function getViewPermissions() : array {
+		return ['Administer Event Types'];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission(['Administer Event Types']);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

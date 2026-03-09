@@ -81,11 +81,11 @@ class WebBuilder_QuickPolls extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Quick Polls',
 			'Administer Library Quick Polls',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -100,5 +100,9 @@ class WebBuilder_QuickPolls extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

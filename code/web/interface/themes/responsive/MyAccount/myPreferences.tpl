@@ -105,7 +105,7 @@
 							</div>
 						</div>
 
-						{if !empty($showEdsPreferences) || !empty($validEdsSorts) || !empty($validEbscohostSorts) || !empty($validSummonSorts)}
+						{if !empty($showEdsPreferences) || !empty($validEdsSorts) || !empty($validEbscohostSorts) || !empty($validSummonSorts) || !empty($validGaleSorts)}
 							<div class="panel" id="articlesAndDatabasesPreferencesPanel">
 								<a data-toggle="collapse" href="#articlesAndDatabasesPreferencesPanelBody">
 									<div class="panel-heading">
@@ -154,6 +154,16 @@
 												{else}
 													&nbsp;{if $profile->hideResearchStarters==0} {translate text='No' isPublicFacing=true}{else} {translate text='Yes' isPublicFacing=true}{/if}
 												{/if}
+											</div>
+										{/if}
+										{if !empty($validGaleSorts)}
+											<div class="form-group propertyRow">
+												<label for="defaultGaleSort" class="control-label">{translate text='Default Sort For New Searches' isPublicFacing=true}</label>&nbsp;
+												<select name="defaultGaleSort" id="defaultGaleSort" class="form-control">
+													{foreach from=$validGaleSorts key="sortValue" item="sortName"}
+														<option value="{$sortValue}" {if $defaultGaleSort == $sortValue}selected{/if}>{translate text=$sortName isPublicFacing=true inAttribuge=true}</option>
+													{/foreach}
+												</select>
 											</div>
 										{/if}
 									</div>
@@ -430,6 +440,14 @@
 											<option value="2" {if $profile->searchPreferenceLanguage == 2}selected{/if}>{translate text="Yes, only show my preferred language" isPublicFacing=true}</option>
 										</select>
 									</div>
+									<div class="form-group propertyRow">
+										<label for="notifySavedSearches" class="control-label">{translate text='Notify me by email when new titles are added to my saved searches' isPublicFacing=true}</label>&nbsp;
+											{if $edit == true}
+												<input type="checkbox" class="form-control" name="notifySavedSearches" id="notifySavedSearches" {if $profile->notifySavedSearches==1}checked='checked'{/if} data-switch="">
+											{else}
+												&nbsp;{if $profile->notifySavedSearches==0} {translate text='No' isPublicFacing=true}{else} {translate text='Yes' isPublicFacing=true}{/if}
+											{/if}
+									</div> 
 
 									{* Course Reserves *}
 									{if !empty($validCourseReservesSorts)}

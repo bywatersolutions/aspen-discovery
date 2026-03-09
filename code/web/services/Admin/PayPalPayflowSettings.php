@@ -61,7 +61,7 @@ class Admin_PayPalPayflowSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer PayPal Payflow');
+	public function getViewPermissions() : array {
+		return ['Administer PayPal Payflow'];
 	}
 }

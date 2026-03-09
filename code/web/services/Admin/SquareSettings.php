@@ -65,7 +65,7 @@ class Admin_SquareSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Square');
+	public function getViewPermissions() : array {
+		return ['Administer Square'];
 	}
 }

@@ -71,7 +71,11 @@ class Websites_Settings extends ObjectEditor {
 		return 'web_indexer';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Website Indexing Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Website Indexing Settings'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Indexer';
 	}
 }

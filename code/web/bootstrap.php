@@ -13,6 +13,7 @@ require_once ROOT_DIR . '/sys/DB/DataObject.php';
 require_once ROOT_DIR . '/sys/Interface.php';
 require_once ROOT_DIR . '/sys/AspenError.php';
 require_once ROOT_DIR . '/sys/Module.php';
+require_once ROOT_DIR . '/sys/Administration/Permission.php';
 require_once ROOT_DIR . '/sys/SystemLogging/AspenUsage.php';
 require_once ROOT_DIR . '/sys/SystemVariables.php';
 require_once ROOT_DIR . '/sys/SystemLogging/UsageByIPAddress.php';
@@ -24,6 +25,7 @@ require_once ROOT_DIR . '/sys/SystemLogging/ExternalRequestLogEntry.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/Library.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 require_once ROOT_DIR . '/sys/LibraryLocation/HostInformation.php';
+require_once ROOT_DIR . '/sys/LibraryLocation/LibraryFacetSetting.php';
 require_once ROOT_DIR . '/Action.php';
 
 global $aspenUsage;

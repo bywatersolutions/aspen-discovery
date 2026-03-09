@@ -64,8 +64,8 @@ class Admin_Modules extends ObjectEditor {
 		return 'id';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Modules');
+	public function getViewPermissions() : array {
+		return ['Administer Modules'];
 	}
 
 	function canAddNew() : bool {

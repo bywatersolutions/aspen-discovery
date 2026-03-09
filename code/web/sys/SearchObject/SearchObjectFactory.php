@@ -68,6 +68,9 @@ class SearchObjectFactory {
 			case 'ebsco_eds' :
 				$engine = 'EbscoEds';
 				break;
+			case 'gale' :
+				$engine = 'Gale';
+				break;
 			case 'summon' :
 				$engine = 'Summon';
 				break;
@@ -143,8 +146,14 @@ class SearchObjectFactory {
 			case 'ebscohost' :
 				$source = 'Ebscohost';
 				break;
+			case 'gale' :
+				$source = 'Gale';
+				break;
 			case 'summon':
 				$source = 'Summon';
+				break;
+			case 'cloudsource':
+				$source = 'CloudSource';
 				break;
 			case 'series' :
 				$source = 'Series';

@@ -64,7 +64,7 @@ class ILS_CurbsidePickupSettings extends ObjectEditor {
 		return 'ils_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Curbside Pickup');
+	public function getViewPermissions() : array {
+		return ['Administer Curbside Pickup'];
 	}
 }

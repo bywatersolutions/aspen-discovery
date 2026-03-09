@@ -536,7 +536,8 @@ abstract class SearchObject_BaseSearcher {
 				if (
 					$this->searchType == 'basic' ||
 					$this->searchType == 'ebsco_eds' ||
-					$this->searchType == 'summon'
+					$this->searchType == 'summon' ||
+					$this->searchType == 'gale'
 				) {
 					$params[] = "searchIndex=" . urlencode($this->searchTerms[0]['index']);
 				} else {

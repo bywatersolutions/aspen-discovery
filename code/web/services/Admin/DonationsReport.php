@@ -95,11 +95,11 @@ class Admin_DonationsReport extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
-            'View Donations Reports for All Libraries',
-            'View Donations Reports for Home Library'
-        ]);
+	public function getViewPermissions() : array {
+		return [
+			'View Donations Reports for All Libraries',
+			'View Donations Reports for Home Library'
+		];
 	}
 
 	function applyFilter(DataObject $object, string $fieldName, array $filter) : void {

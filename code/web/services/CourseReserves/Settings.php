@@ -70,11 +70,15 @@ class CourseReserves_Settings extends ObjectEditor {
 		return 'course_reserves';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Course Reserves');
+	public function getViewPermissions() : array {
+		return ['Administer Course Reserves'];
 	}
 
 	function canAddNew() : bool {
 		return $this->getNumObjects() == 0;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Course Reserves';
 	}
 }

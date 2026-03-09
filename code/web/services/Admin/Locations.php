@@ -82,12 +82,12 @@ class Admin_Locations extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Locations',
 			'Administer Home Library Locations',
 			'Administer Home Location',
-		]);
+		];
 	}
 
 	function canAddNew() : bool {
@@ -219,6 +219,12 @@ class Admin_Locations extends ObjectEditor {
 			$actions[] = [
 				'label' => 'Update From ILS',
 				'action' => 'loadLocationsFromILS',
+			];
+		}
+		if ($sierraActive) {
+			$actions[] = [
+				'label' => 'Batch Update Holidays',
+				'action' => 'return AspenDiscovery.Admin.getBatchUpdateHolidayForm("location")',
 			];
 		}
 		return $actions;

@@ -74,8 +74,8 @@ class ILS_ReviewLibraryRegistrations extends ObjectEditor {
 		return 'ils_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Review Self Registrations for All Libraries') || UserAccount::userHasPermission('Review Self Registrations for Home Library Only');
+	public function getViewPermissions() : array {
+		return ['Review Self Registrations for All Libraries','Review Self Registrations for Home Library Only'];
 	}
 
 	function canAddNew(): bool {

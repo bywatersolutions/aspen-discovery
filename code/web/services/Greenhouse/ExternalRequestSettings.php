@@ -81,7 +81,15 @@ class Greenhouse_ExternalRequestSettings extends ObjectEditor {
 		return false;
 	}
 
+	public function getViewPermissions() : array {
+		return ['Aspen Admin'];
+	}
+
 	public function display($mainContentTemplate, $pageTitle, $sidebarTemplate = 'Greenhouse/greenhouse-sidebar.tpl', $translateTitle = true) {
 		parent::display($mainContentTemplate, $pageTitle, $sidebarTemplate, $translateTitle);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Greenhouse';
 	}
 }

@@ -73,7 +73,11 @@ class Axis360_Scopes extends ObjectEditor {
 		return 'boundless';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Boundless');
+	public function getViewPermissions() : array {
+		return ['Administer Boundless'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Axis 360';
 	}
 }

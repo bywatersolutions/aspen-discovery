@@ -73,8 +73,8 @@ class Admin_SendGridSettings extends ObjectEditor {
 		return 'email';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer SendGrid');
+	public function getViewPermissions() : array {
+		return ['Administer SendGrid'];
 	}
 
 

@@ -80,8 +80,8 @@ class admin_LocalAdministrators extends ObjectEditor {
 		return 'admin';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Manage Local Administrators');
+	public function getViewPermissions() : array {
+		return ['Manage Local Administrators'];
 	}
 
 	public function getContext(): string {

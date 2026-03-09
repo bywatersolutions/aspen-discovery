@@ -6,27 +6,36 @@
 			{translate text=$error isAdminFacing=true}
 		</div>
 	{else}
-		<form role="form">
-			<div class="form-group">
-				<label for="settingsSearch">{translate text="Search for a Setting" isAdminFacing=true}</label>
-				<div class="input-group">
-					<input  type="text" name="settingsSearch" id="settingsSearch"
-							onkeyup="return AspenDiscovery.Admin.searchSettings();" class="form-control" />
-					<span class="input-group-btn"><button class="btn btn-default" type="button" onclick="$('#settingsSearch').val('');return AspenDiscovery.Admin.searchSettings();" title="{translate text="Clear" inAttribute=true isAdminFacing=true}"><i class="fas fa-times-circle" role="presentation"></i></button></span>
-					<script type="text/javascript">
-						{literal}
-						$(document).ready(function() {
-							$("#settingsSearch").on('keydown', function (e) {
-								if (e.which === 13) {
-									e.preventDefault();
-								}
-							});
-						});
-						{/literal}
-					</script>
+		<form role="form" class="form-inline">
+			<div class="row">
+				<div class="col-xs-4 col-sm-2">
+					<select id="settingsSearchType" aria-label="Search for" class="form-control" style="width: 100%;" onchange="return AspenDiscovery.Admin.searchSettings();">
+						<option value="page">{translate text="Page" isAdminFacing=true inAttribute=true}</option>
+						<option value="property">{translate text="Setting" isAdminFacing=true inAttribute=true}</option>
+					</select>
+				</div>
+				<div class="col-xs-8 col-sm-10">
+					<div class="input-group">
+						<input  type="text" name="settingsSearch" id="settingsSearch" onkeyup="return AspenDiscovery.Admin.searchSettings();" class="form-control" aria-label="Search For" />
+						<span class="input-group-btn"><button class="btn btn-default" type="button" onclick="$('#settingsSearch').val('');return AspenDiscovery.Admin.searchSettings();" title="{translate text="Clear" inAttribute=true isAdminFacing=true}"><i class="fas fa-times-circle" role="presentation"></i></button></span>
+					</div>
 				</div>
 			</div>
+			<script type="text/javascript">
+				{literal}
+				$(document).ready(function() {
+					$("#settingsSearch").on('keydown', function (e) {
+						if (e.which === 13) {
+							e.preventDefault();
+						}
+					});
+				});
+				{/literal}
+			</script>
 		</form>
+		<div id="settingSearchSection" style="display:none">
+
+		</div>
 		<div id="adminSections" class="grid" data-colcade="columns: .grid-col, items: .grid-item">
 			<!-- columns -->
 			<div class="grid-col grid-col--1"></div>

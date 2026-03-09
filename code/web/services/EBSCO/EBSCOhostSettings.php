@@ -70,8 +70,8 @@ class EBSCO_EBSCOhostSettings extends ObjectEditor {
 		return 'ebscohost';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer EBSCOhost Settings');
+	public function getViewPermissions() : array {
+		return ['Administer EBSCOhost Settings'];
 	}
 
 	function viewIndividualObject($structure): void {
@@ -86,5 +86,9 @@ class EBSCO_EBSCOhostSettings extends ObjectEditor {
 			}
 		}
 		parent::viewIndividualObject($structure);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'EBSCOhost';
 	}
 }

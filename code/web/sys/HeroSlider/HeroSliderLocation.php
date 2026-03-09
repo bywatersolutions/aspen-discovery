@@ -13,6 +13,7 @@ class HeroSliderLocation extends DataObject {
 	public $aspectRatioWidth;
 	public $aspectRatioHeight;
 	public $autoRotate;
+	/** @noinspection PhpUnused */
 	public $rotationInterval;
 	public $playlistId;
 	public $libraryId;
@@ -39,7 +40,9 @@ class HeroSliderLocation extends DataObject {
 			}
 		} else {
 			$homeLibrary = Library::getPatronHomeLibrary();
-			$libraryList[$homeLibrary->libraryId] = $homeLibrary->displayName;
+			if (!empty($homeLibrary)) {
+				$libraryList[$homeLibrary->libraryId] = $homeLibrary->displayName;
+			}
 		}
 
 		// Playlist list
@@ -49,7 +52,9 @@ class HeroSliderLocation extends DataObject {
 		$playlist->orderBy('name ASC');
 		if (!UserAccount::userHasPermission('Administer All Hero Sliders')) {
 			$homeLibrary = Library::getPatronHomeLibrary();
-			$playlist->whereAdd("libraryId = {$homeLibrary->libraryId} OR libraryId = -1");
+			if (!empty($homeLibrary)) {
+				$playlist->whereAdd("libraryId = $homeLibrary->libraryId OR libraryId = -1");
+			}
 		}
 		$playlist->find();
 		while ($playlist->fetch()) {

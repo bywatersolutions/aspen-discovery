@@ -71,8 +71,8 @@ class WebBuilder_Audiences extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer All Web Categories']);
+	public function getViewPermissions() : array {
+		return ['Administer All Web Categories'];
 	}
 
 	function getActiveAdminSection(): string {
@@ -81,5 +81,9 @@ class WebBuilder_Audiences extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

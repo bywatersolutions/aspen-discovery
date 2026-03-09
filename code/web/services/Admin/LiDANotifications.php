@@ -93,14 +93,14 @@ class Admin_LiDANotifications extends ObjectEditor {
 		return 'aspen_lida';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Send Notifications to All Libraries',
 			'Send Notifications to All Locations',
 			'Send Notifications to Home Library',
 			'Send Notifications to Home Location',
 			'Send Notifications to Home Library Locations',
-		]);
+		];
 	}
 
 	function getInitializationJs(): string {

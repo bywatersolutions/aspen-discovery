@@ -98,11 +98,11 @@ class WebBuilder_PortalCells extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Custom Pages',
 			'Administer Library Custom Pages',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -113,5 +113,9 @@ class WebBuilder_PortalCells extends ObjectEditor {
 
 	function getActiveAdminSection(): string {
 		return 'web_builder';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

@@ -54,6 +54,10 @@ class Events_EventFields extends ObjectEditor {
 		return 'https://help.aspendiscovery.org/help/catalog/events';
 	}
 
+	function getInitializationJs(): string {
+		return 'AspenDiscovery.Events.toggleEventFieldAllowableValues();';
+	}
+
 	function getBreadcrumbs(): array {
 		$breadcrumbs = [];
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home', 'Administration Home');
@@ -66,11 +70,15 @@ class Events_EventFields extends ObjectEditor {
 		return 'events';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Field Sets']);
+	public function getViewPermissions() : array {
+		return ['Administer Field Sets'];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission(['Administer Field Sets']);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

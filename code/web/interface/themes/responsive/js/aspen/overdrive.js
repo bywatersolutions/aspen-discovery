@@ -337,6 +337,33 @@ AspenDiscovery.OverDrive = (function(){
 				}
 			);
 			return false;
+		},
+
+		checkAutoAction() {
+			const urlParams = new URLSearchParams(window.location.search);
+			const autoAction = urlParams.get('autoAction');
+			const autoRecordId = urlParams.get('autoRecordId');
+
+			if (autoAction && autoRecordId) {
+				// Remove parameters from URL to prevent re-triggering on refresh.
+				const cleanUrl = window.location.pathname + window.location.search
+					.replace(/[?&]autoAction=[^&]*/g, '')
+					.replace(/[?&]autoRecordId=[^&]*/g, '')
+					.replace(/^\?&/, '?')
+					.replace(/^&/, '?')
+					.replace(/\?$/, '');
+				if (window.history?.replaceState) {
+					window.history.replaceState({}, '', cleanUrl);
+				}
+
+				setTimeout(() => {
+					if (autoAction === 'checkout') {
+						AspenDiscovery.OverDrive.checkOutTitle(autoRecordId, null);
+					} else if (autoAction === 'hold') {
+						AspenDiscovery.OverDrive.placeHold(autoRecordId, null);
+					}
+				}, 500); // Small delay to ensure page is fully loaded.
+			}
 		}
 	}
 }(AspenDiscovery.OverDrive || {}));

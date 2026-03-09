@@ -13,8 +13,8 @@ class Websites_WebsitePages extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView() {
-		return UserAccount::userHasPermission('Administer Website Indexing Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Website Indexing Settings'];
 	}
 
 	function canEdit() : bool {
@@ -85,5 +85,9 @@ class Websites_WebsitePages extends ObjectEditor {
 
 	function getDefaultSort(): string {
 		return 'url asc';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Indexer';
 	}
 }

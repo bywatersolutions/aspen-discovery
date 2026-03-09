@@ -65,8 +65,8 @@ class MaterialsRequest_RequestsNeedingHolds extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView() : bool {
-		return UserAccount::userHasPermission('Place Holds For Materials Requests');
+	public function getViewPermissions() : array {
+		return ['Place Holds For Materials Requests'];
 	}
 
 	function getActiveAdminSection(): string {

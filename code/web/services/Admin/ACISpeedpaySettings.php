@@ -65,7 +65,9 @@ class Admin_ACISpeedpaySettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer ACI Speedpay');
+	public function getViewPermissions() : array {
+		return [
+			'Administer ACI Speedpay'
+		];
 	}
 }

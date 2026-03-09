@@ -383,6 +383,19 @@ class UserListIndexer {
 							} else {
 								logEntry.incErrors("Unhandled source " + source);
 							}
+						} else if (source.equals("Gale")) {
+							//Get title and author with a JSON request
+							URL getTitleAuthorUrl = new URL(baseUrl + "/Gale/JSON?method=getTitleAuthor&id=" + sourceId);
+              Object titleAuthorRaw = getTitleAuthorUrl.getContent();
+							if (titleAuthorRaw instanceof InputStream) {
+								String titleAuthorJson = AspenStringUtils.convertStreamToString((InputStream) titleAuthorRaw);
+								JSONObject titleAuthorResult = new JSONObject(titleAuthorJson);
+								if (titleAuthorResult.getBoolean("success")) {
+									userListSolr.addListTitle(source, sourceId, titleAuthorResult.getString("title"), titleAuthorResult.getString("author"));
+								}
+							} else {
+								logEntry.incErrors("Unhandled source " + source);
+							}
 						} else if (source.equals("CloudSource")) {
 							//Get title and author with a JSON request
 							URL getTitleAuthorUrl = new URL(baseUrl + "/CloudSource/JSON?method=getTitleAuthor&id=" + sourceId);

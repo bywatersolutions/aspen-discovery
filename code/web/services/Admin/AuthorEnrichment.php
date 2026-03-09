@@ -62,7 +62,7 @@ class Admin_AuthorEnrichment extends ObjectEditor {
 		return 'third_party_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Wikipedia Integration');
+	public function getViewPermissions() : array {
+		return ['Administer Wikipedia Integration'];
 	}
 }

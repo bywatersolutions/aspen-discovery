@@ -21,7 +21,9 @@ class LocationRecordToInclude extends RecordToInclude {
 		$location->orderBy('displayName');
 		if (!UserAccount::userHasPermission('Administer All Locations')) {
 			$homeLibrary = Library::getPatronHomeLibrary();
-			$location->libraryId = $homeLibrary->libraryId;
+			if (!empty($homeLibrary)) {
+				$location->libraryId = $homeLibrary->libraryId;
+			}
 		}
 		$location->find();
 		$locationList = [];

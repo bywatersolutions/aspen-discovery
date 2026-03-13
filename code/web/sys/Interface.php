@@ -318,6 +318,7 @@ class UInterface extends Smarty {
 		global $library;
 		global $locationSingleton;
 		global $configArray;
+		global $activeLanguage;
 
 		$allAppliedThemes = [];
 		$primaryTheme = null;
@@ -341,6 +342,13 @@ class UInterface extends Smarty {
 		}
 		$this->assign('hasOptionalUpdates', $hasOptionalUpdates);
 		$this->assign('shouldShowAdminAlert', $hasSqlUpdates || $hasOptionalUpdates);
+
+		if (empty($activeLanguage)) {
+			$isRTL = false;
+		}else {
+			$isRTL = $activeLanguage->isRTL();
+		}
+		$this->assign('isRTL', $isRTL);
 
 		$this->assign('allActiveThemes', []);
 
@@ -485,7 +493,9 @@ class UInterface extends Smarty {
 
 			if ($primaryTheme != null) {
 				$themeCss = $primaryTheme->generatedCss;
+				$themeRTLCss = $primaryTheme->generatedRTLCss;
 				$this->assign('themeCss', $themeCss);
+				$this->assign('themeRTLCss', $themeRTLCss);
 				$this->assign('primaryThemeObject', $primaryTheme);
 				$this->assign('bodyBackgroundColor', $primaryTheme->bodyBackgroundColor);
 				$this->assign('bodyTextColor', $primaryTheme->bodyTextColor);
@@ -782,6 +792,7 @@ class UInterface extends Smarty {
 		$this->assign('displayExploreMoreBarInEbscoEds', $library->displayExploreMoreBarInEbscoEds);
 		$this->assign('displayExploreMoreBarInCatalogSearch', $library->displayExploreMoreBarInCatalogSearch);
 		$this->assign('displayExploreMoreBarInEbscoHost', $library->displayExploreMoreBarInEbscoHost);
+		$this->assign('displayExploreMoreBarInGale', $library->displayExploreMoreBarInGale);
 
 		if ($location != null) {
 			$this->assign('showDisplayNameInHeader', $location->showDisplayNameInHeader);
@@ -791,6 +802,7 @@ class UInterface extends Smarty {
 			$this->assign('displayExploreMoreBarInEbscoEds', $location->displayExploreMoreBarInEbscoEds);
 			$this->assign('displayExploreMoreBarInCatalogSearch', $location->displayExploreMoreBarInCatalogSearch);
 			$this->assign('displayExploreMoreBarInEbscoHost', $location->displayExploreMoreBarInEbscoHost);
+			$this->assign('displayExploreMoreBarInGale', $location->displayExploreMoreBarInGale);
 		}
 
 		if (!$fromBookCoverProcessing) {
@@ -1146,7 +1158,9 @@ class UInterface extends Smarty {
 			}
 
 			$themeCss = $primaryTheme->generatedCss;
+			$themeRTLCss = $primaryTheme->generatedRTLCss;
 			$this->assign('themeCss', $themeCss);
+			$this->assign('themeRTLCss', $themeRTLCss);
 			$this->assign('primaryThemeObject', $primaryTheme);
 			$this->assign('bodyBackgroundColor', $primaryTheme->bodyBackgroundColor);
 			$this->assign('bodyTextColor', $primaryTheme->bodyTextColor);

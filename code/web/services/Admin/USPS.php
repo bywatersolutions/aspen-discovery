@@ -73,7 +73,7 @@ class Admin_USPS extends ObjectEditor {
 		return 'system_admin';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer System Variables');
+	public function getViewPermissions() : array {
+		return ['Administer System Variables'];
 	}
 }

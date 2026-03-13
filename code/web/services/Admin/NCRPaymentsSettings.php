@@ -61,7 +61,7 @@ class Admin_NCRPaymentsSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer NCR');
+	public function getViewPermissions() : array {
+		return ['Administer NCR'];
 	}
 }

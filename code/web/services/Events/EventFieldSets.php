@@ -67,11 +67,15 @@ class Events_EventFieldSets extends ObjectEditor {
 		return 'events';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer Field Sets']);
+	public function getViewPermissions() : array {
+		return ['Administer Field Sets'];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission(['Administer Field Sets']);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

@@ -74,16 +74,20 @@ class OpenArchives_OpenArchivesFacets extends ObjectEditor {
 		return 'open_archives';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Open Archives Facet Settings',
 			'Administer Library Open Archives Facet Settings',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission([
             'Administer All Open Archives Facet Settings',
 		]);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Open Archives';
 	}
 }

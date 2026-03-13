@@ -65,7 +65,7 @@ class Admin_PayPalSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer PayPal');
+	public function getViewPermissions() : array {
+		return ['Administer PayPal'];
 	}
 }

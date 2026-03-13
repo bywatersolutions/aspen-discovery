@@ -140,6 +140,14 @@ class MyAccount_MyPreferences extends MyAccount {
 				$interface->assign('defaultSummonSort', $summonPageDefaults == null ? '' : $summonPageDefaults->pageSort);
 			}
 
+			if (array_key_exists('gale', $validSearchSources)){
+				$galeSearchObject = SearchSources::getSearcherForSource('gale');
+				$validGaleSorts = $galeSearchObject->getSortOptions();
+				$interface->assign('validGaleSorts', $validGaleSorts);
+				$galePageDefaults = PageDefaults::getPageDefaultsForUser($user->id, 'Gale', 'Results', null);
+				$interface->assign('defaultGaleSort', $galePageDefaults == null ? '' : $galePageDefaults->pageSort);
+			}
+
 			if (array_key_exists('course_reserves', $validSearchSources)){
 				$courseReservesSearchObject = SearchSources::getSearcherForSource('course_reserves');
 				$validCourseReservesSorts = $courseReservesSearchObject->getSortOptions();
@@ -249,6 +257,13 @@ class MyAccount_MyPreferences extends MyAccount {
 							PageDefaults::updatePageDefaultsForUser($user->id, 'Summon', 'Results', null, null, $_REQUEST['defaultSummonSort']);
 						} else {
 							PageDefaults::updatePageDefaultsForUser($user->id, 'Summon', 'Results', null, null, '');
+						}
+					}
+					if (!empty($validGaleSorts)) {
+						if (!empty($_REQUEST['defaultGaleSort']) && array_key_exists($_REQUEST['defaultGaleSort'], $validGaleSorts)) {
+							PageDefaults::updatePageDefaultsForUser($user->id, 'Gale', 'Results', null, null, $_REQUEST['defaultGaleSort']);
+						} else {
+							PageDefaults::updatePageDefaultsForUser($user->id, 'Gale', 'Results', null, null, '');
 						}
 					}
 					if (!empty($validCourseReservesSorts)) {

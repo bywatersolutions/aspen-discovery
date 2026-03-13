@@ -118,6 +118,10 @@ class BookCoverProcessor {
 			if ($this->getSummonCover($this->id)) {
 				return true;
 			}
+		} elseif ($this->type == 'gale') {
+			if ($this->getGaleCover($this->id)) {
+        return true;
+      }
 		} elseif ($this->type == 'cloudsource') {
 			if ($this->getCloudSourceCover($this->id)) {
 				return true;
@@ -491,7 +495,7 @@ class BookCoverProcessor {
 				$this->type = 'ils';
 			}
 		}
-		if (strpos($this->id, ':') > 0 && $this->type != 'ebsco_eds' && $this->type != 'ebscohost' && $this->type !='summon') {
+		if (strpos($this->id, ':') > 0 && $this->type != 'ebsco_eds' && $this->type != 'ebscohost' && $this->type !='summon' && $this->type != 'gale') {
 			[
 				$this->type,
 				$this->id,
@@ -1700,7 +1704,7 @@ class BookCoverProcessor {
 				return true;
 			} else {
 				$title = $series->displayName;
-				$seriesTitles = $series->getSeriesMembers();
+				$seriesTitles = $series->getSeriesMembers(null, false, false);
 				$coverBuilder->getCover($title, $seriesTitles, $this->cacheFile);
 				return $this->processImageURL('default', $this->cacheFile, false);
 			}
@@ -1960,12 +1964,16 @@ class BookCoverProcessor {
 				$props = [
 					'eventDate' => $startDate,
 					'isPastEvent' => true,
+					'branch' => $userEntry->location,
+					'displayBranchOnThumbnail' => $userEntry->displayEventBranchOnThumbnail,
 				];
 				$title = $userEntry->title;
 			} else{
 				$props = [
 					'eventDate' => $driver->getStartDateFromDB($id),
 					'isPastEvent' => true,
+					'branch' => $driver->getBranchFromDB($id),
+					'displayBranchOnThumbnail' => $driver->getDisplayBranchOnThumbnailFromDB($id),
 				];
 				$title = $driver->getTitleFromDB($id);
 			}
@@ -1979,6 +1987,9 @@ class BookCoverProcessor {
 			$props = [
 				'eventDate' => $driver->getStartDate(),
 				'isPastEvent' => $isPast,
+				'branch' => $driver->getBranch(),
+				'displayBranchOnThumbnail' => $driver->getDisplayBranchOnThumbnail(),
+
 			];
 			$coverBuilder->getCover($driver->getTitle(), $this->cacheFile, $props);
 		}
@@ -2225,6 +2236,23 @@ class BookCoverProcessor {
 		} else {
 			return false;
 		}
+	}
+	private function getGaleCover($id): bool {
+		require_once ROOT_DIR . '/sys/Covers/GaleCoverBuilder.php';
+		$coverBuilder = new GaleCoverBuilder();
+
+		require_once ROOT_DIR . '/RecordDrivers/GaleRecordDriver.php';
+		$galeRecordDriver = new GaleRecordDriver($id);
+
+		if ($galeRecordDriver->isValid()) {
+			$title = $galeRecordDriver->getTitle();
+			$props = [
+				'format' => $galeRecordDriver->getFormats(),
+			];
+			$coverBuilder->getCover($title, $this->cacheFile, $props);
+			return $this->processImageURL('default_gale', $this->cacheFile, false);
+		}
+		return false;
 	}
 
 	private function getCloudSourceCover($id) : bool {

@@ -63,7 +63,7 @@ class ILS_SelfRegistrationTOS extends ObjectEditor {
 		return 'ils_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Self Registration Forms');
+	public function getViewPermissions() : array {
+		return ['Administer Self Registration Forms'];
 	}
 }

@@ -7,7 +7,7 @@ loadSearchInformation();
 
 spl_autoload_register('aspen_autoloader', true, false);
 
-function requireSystemLibrariesAspen() {
+function requireSystemLibrariesAspen() : void {
 	// Require System Libraries
 	require_once ROOT_DIR . '/sys/SearchObject/SearchObjectFactory.php';
 	require_once ROOT_DIR . '/RecordDrivers/RecordDriverFactory.php';

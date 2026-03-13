@@ -25,11 +25,6 @@ class LibraryFacetSetting extends FacetSetting {
 		return self::$_objectStructure[$context];
 	}
 
-	/** @noinspection PhpUnusedParameterInspection */
-	public function getEditLink(string $context): string {
-		return '/Admin/LibraryFacetSettings?objectAction=edit&id=' . $this->id;
-	}
-
 	/** @return string[] */
 	public static function getAvailableFacets() : array {
 		return [];

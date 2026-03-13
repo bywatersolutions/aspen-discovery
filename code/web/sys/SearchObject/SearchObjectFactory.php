@@ -13,7 +13,8 @@ class SearchObjectFactory {
 	 */
 	static function initSearchObject(string $engine = 'GroupedWork') : mixed{
 		global $configArray;
-		if ($engine == 'GroupedWork') {
+		$path = "{$configArray['Site']['local']}/sys/SearchObject/{$engine}Searcher.php";
+		if ($engine == 'GroupedWork' || !is_readable($path)) {
 			require_once ROOT_DIR . '/sys/SystemVariables.php';
 			$systemVariables = SystemVariables::getSystemVariables();
 			if ($systemVariables->searchVersion == 1) {
@@ -24,14 +25,11 @@ class SearchObjectFactory {
 				return new SearchObject_GroupedWorkSearcher2();
 			}
 		} else {
-			$path = "{$configArray['Site']['local']}/sys/SearchObject/{$engine}Searcher.php";
-			if (is_readable($path)) {
-				require_once $path;
-				$class = 'SearchObject_' . $engine . 'Searcher';
-				if (class_exists($class)) {
-					/** @var SearchObject_BaseSearcher $searchObject */
-					return new $class();
-				}
+			require_once $path;
+			$class = 'SearchObject_' . $engine . 'Searcher';
+			if (class_exists($class)) {
+				/** @var SearchObject_BaseSearcher $searchObject */
+				return new $class();
 			}
 		}
 
@@ -67,6 +65,9 @@ class SearchObjectFactory {
 				break;
 			case 'ebsco_eds' :
 				$engine = 'EbscoEds';
+				break;
+			case 'gale' :
+				$engine = 'Gale';
 				break;
 			case 'summon' :
 				$engine = 'Summon';
@@ -143,8 +144,14 @@ class SearchObjectFactory {
 			case 'ebscohost' :
 				$source = 'Ebscohost';
 				break;
+			case 'gale' :
+				$source = 'Gale';
+				break;
 			case 'summon':
 				$source = 'Summon';
+				break;
+			case 'cloudsource':
+				$source = 'CloudSource';
 				break;
 			case 'series' :
 				$source = 'Series';

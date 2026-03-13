@@ -70,8 +70,8 @@ class Enrichment_MessageBeeSettings extends ObjectEditor {
 		return 'third_party_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer MessageBee Keys');
+	public function getViewPermissions() : array {
+		return ['Administer MessageBee Keys'];
 	}
 
 	function canAddNew(): bool {

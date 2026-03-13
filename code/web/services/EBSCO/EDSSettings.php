@@ -70,7 +70,11 @@ class EBSCO_EDSSettings extends ObjectEditor {
 		return 'ebsco';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer EBSCO EDS');
+	public function getViewPermissions() : array {
+		return ['Administer EBSCO EDS'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'EBSCO EDS';
 	}
 }

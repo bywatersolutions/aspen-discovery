@@ -69,7 +69,7 @@ class Admin_TwilioSettings extends ObjectEditor {
 		return 'system_admin';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Twilio');
+	public function getViewPermissions() : array {
+		return ['Administer Twilio'];
 	}
 }

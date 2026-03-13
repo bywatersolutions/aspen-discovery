@@ -70,7 +70,7 @@ class Admin_LibKeySettings extends ObjectEditor {
 		return 'third_party_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer LibKey Settings');
+	public function getViewPermissions() : array {
+		return ['Administer LibKey Settings'];
 	}
 }

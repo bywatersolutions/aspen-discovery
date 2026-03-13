@@ -65,7 +65,7 @@ class Admin_Pay360Settings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Pay360');
+	public function getViewPermissions() : array {
+		return ['Administer Pay360'];
 	}
 }

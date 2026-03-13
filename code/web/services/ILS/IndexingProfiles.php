@@ -170,8 +170,8 @@ class ILS_IndexingProfiles extends ObjectEditor {
 		return 'ils_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Indexing Profiles');
+	public function getViewPermissions() : array {
+		return ['Administer Indexing Profiles'];
 	}
 
 	public function hasMultiStepAddNew() : bool {

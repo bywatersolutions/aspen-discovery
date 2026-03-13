@@ -13,8 +13,8 @@ class MaterialsRequest_HoldCandidateGenerationLog extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView() : bool {
-		return UserAccount::userHasPermission('View Materials Requests Reports');
+	public function getViewPermissions() : array {
+		return ['View Materials Requests Reports'];
 	}
 
 	function getActiveAdminSection(): string {

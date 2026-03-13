@@ -255,9 +255,6 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
 .browse-category-feed-item .btn-group > .btn:focus{ldelim}
 	border-color: {$primaryForegroundColor};
 	--webkit-box-shadow: inset 0 1px 1px {$primaryForegroundColor}, 0 0 8px {$primaryForegroundColor};
-	outline: thin dotted;
-	outline: 5px auto -webkit-focus-ring-color;
-	outline-offset: -2px;
 {rdelim}
 
 .swiper-button-next, .swiper-button-prev {ldelim}
@@ -391,6 +388,17 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
 {rdelim}
 
 {* Alerts *}
+.alert-success{ldelim}
+	background-color: {$successButtonBackgroundColor};
+	border-color: {$successButtonBorderColor};
+	color: {$successButtonForegroundColor};
+{rdelim}
+
+.alert-success a{ldelim}
+	color: {$successButtonForegroundColor} !important;
+	text-decoration: underline;
+{rdelim}
+
 .alert-info{ldelim}
     background-color: {$infoButtonBackgroundColor};
     border-color: {$infoButtonBorderColor};
@@ -448,7 +456,7 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
     border-color: {$defaultButtonBorderColor};
 {rdelim}
 
-.btn-default:hover, .btn-default:focus, .btn-default a:hover, .btn-default a:focus{ldelim}
+.btn-default:hover, .btn-default:focus, .btn-default a:hover, a.btn-default:hover, .btn-default a:focus, a.btn-default:focus{ldelim}
     background-color: {$defaultButtonHoverBackgroundColor} !important;
     color: {$defaultButtonHoverForegroundColor} !important;
     border-color: {$defaultButtonHoverBorderColor};
@@ -490,6 +498,18 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
     background-color: {$actionButtonHoverBackgroundColor} !important;
     color: {$actionButtonHoverForegroundColor} !important;
     border-color: {$actionButtonHoverBorderColor};
+{rdelim}
+
+.btn-success,.btn-success:visited,a.btn-success,a.btn-success:visited{ldelim}
+	background-color: {$successButtonBackgroundColor} !important;
+	color: {$successButtonForegroundColor} !important;
+	border-color: {$successButtonBorderColor};
+{rdelim}
+
+.btn-success:hover, .btn-success:focus, .btn-success:active, .btn-success.active, .open .dropdown-toggle.btn-success{ldelim}
+	background-color: {$successButtonHoverBackgroundColor} !important;
+	color: {$successButtonHoverForegroundColor} !important;
+	border-color: {$successButtonHoverBorderColor};
 {rdelim}
 
 .btn-info,.btn-info:visited,a.btn-info,a.btn-info:visited{ldelim}
@@ -597,8 +617,14 @@ div.striped > div:nth-child(odd), div.striped > div:nth-child(odd){ldelim}
 	color: {$bodyTextColor};
 	border-color: {$primaryForegroundColor};
 	--webkit-box-shadow: inset 0 1px 1px {$primaryForegroundColor}, 0 0 8px {$primaryForegroundColor};
-	outline: thin dotted;
-	outline: 5px auto -webkit-focus-ring-color;
+{rdelim}
+
+:focus {ldelim}
+    {if !empty($focusBorderWidth)}
+        outline: {$focusBorderWidth} solid {$focusColor} !important;
+    {else}
+        outline: 2px solid {$focusColor} !important;
+    {/if}
 	outline-offset: -2px;
 {rdelim}
 
@@ -913,6 +939,10 @@ pre a{ldelim}
 {rdelim}
 
 .calendar-event-time, .calendar-event-field{ldelim}
+    color: {$primaryForegroundColor};
+{rdelim}
+
+.calendar-event-location{ldelim}
     color: {$primaryForegroundColor};
 {rdelim}
 

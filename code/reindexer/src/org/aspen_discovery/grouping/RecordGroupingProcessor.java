@@ -1079,8 +1079,14 @@ public class RecordGroupingProcessor {
 		String title;
 		String subTitle;
 		title = itemDetails.getString("title");
-		if (itemDetails.has("subtitle")){
+		if (itemDetails.has("titleTitle")){
+			title = itemDetails.getString("titleTitle");
+			subTitle = itemDetails.getString("title");
+		}else if (itemDetails.has("subtitle")) {
 			subTitle = itemDetails.getString("subtitle");
+		}else if (itemDetails.has("seasonNumber")){
+			title = itemDetails.getString("seriesName") + " - Season " + itemDetails.get("seasonNumber").toString();
+			subTitle = "Episode " + itemDetails.get("episodeNumber").toString();
 		}else{
 			subTitle = "";
 		}
@@ -1172,8 +1178,16 @@ public class RecordGroupingProcessor {
 		}
 		String author = "";
 		if (titleMetadata.has("author")) {
-			JSONObject authorInfo = titleMetadata.getJSONObject("author");
-			author = AspenStringUtils.swapFirstLastNames(authorInfo.getString("name"));
+			Object authorInfo = titleMetadata.get("author");
+			if (authorInfo instanceof JSONArray){
+				JSONArray authors = titleMetadata.getJSONArray("author");
+				if (!authors.isEmpty()){
+					author = AspenStringUtils.swapFirstLastNames(authors.getJSONObject(0).getString("name"));
+				}
+			}else if (authorInfo instanceof JSONObject){
+				JSONObject authorInfoObj = titleMetadata.getJSONObject("author");
+				author = AspenStringUtils.swapFirstLastNames(authorInfoObj.getString("name"));
+			}
 		} else if (titleMetadata.has("publisher")) {
 			JSONObject publisherInfo = titleMetadata.getJSONObject("publisher");
 			author = publisherInfo.getString("name");

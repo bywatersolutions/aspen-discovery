@@ -62,8 +62,8 @@ class Admin_ManualGroupedWorks extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Manually Group and Ungroup Works');
+	public function getViewPermissions() : array {
+		return ['Manually Group and Ungroup Works'];
 	}
 
 	function canAddNew(): bool {

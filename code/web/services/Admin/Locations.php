@@ -24,13 +24,17 @@ class Admin_Locations extends ObjectEditor {
 		$object = new Location();
 		$object->orderBy($this->getSort());
 		if (!UserAccount::userHasPermission('Administer All Locations')) {
-			if (!UserAccount::userHasPermission('Administer Home Library Locations')) {
-				//Need to use where add here so the where add in below works properly
-				$object->whereAdd("locationId = $user->homeLocationId");
-			} else {
-				//Scope to just locations for the user based on their home library
-				$patronLibrary = Library::getLibraryForLocation($user->homeLocationId);
-				$object->whereAdd("libraryId = $patronLibrary->libraryId");
+			if (!empty($user->homeLocationId)) {
+				if (!UserAccount::userHasPermission('Administer Home Library Locations')) {
+					//Need to use where add here so the where add in below works properly
+					$object->whereAdd("locationId = $user->homeLocationId");
+				} else {
+					//Scope to just locations for the user based on their home library
+					$patronLibrary = Library::getLibraryForLocation($user->homeLocationId);
+					if (!empty($patronLibrary)) {
+						$object->whereAdd("libraryId = $patronLibrary->libraryId");
+					}
+				}
 			}
 			$additionalAdministrationLocations = $user->getAdditionalAdministrationLocations();
 			if (!empty($additionalAdministrationLocations)) {
@@ -82,12 +86,12 @@ class Admin_Locations extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Locations',
 			'Administer Home Library Locations',
 			'Administer Home Location',
-		]);
+		];
 	}
 
 	function canAddNew() : bool {
@@ -219,6 +223,12 @@ class Admin_Locations extends ObjectEditor {
 			$actions[] = [
 				'label' => 'Update From ILS',
 				'action' => 'loadLocationsFromILS',
+			];
+		}
+		if ($sierraActive) {
+			$actions[] = [
+				'label' => 'Batch Update Holidays',
+				'action' => 'return AspenDiscovery.Admin.getBatchUpdateHolidayForm("location")',
 			];
 		}
 		return $actions;

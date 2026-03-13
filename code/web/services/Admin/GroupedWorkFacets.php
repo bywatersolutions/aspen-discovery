@@ -68,11 +68,11 @@ class Admin_GroupedWorkFacets extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Grouped Work Facets',
 			'Administer Library Grouped Work Facets',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

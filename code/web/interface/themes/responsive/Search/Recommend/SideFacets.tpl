@@ -8,9 +8,15 @@
 			<div class="applied-filters">
 				{foreach from=$filterList item=filters key=field }
 					{foreach from=$filters item=filter}
-						<a class="btn btn-default btn-sm facetValueBadge" href="{$filter.removalUrl|escape}" aria-label="{translate text="Remove Filter" inAttribute=true isPublicFacing=true}">
+					{if !empty($filter.isLocked)}
+						<a class="btn btn-default btn-sm facetValueBadge" href="{$filter.removalUrl|escape}" onclick="return AspenDiscovery.Searches.unlockFacetAndRemove('{$filter.field}', '{$filter.removalUrl|escape}', '{$filter.value|escape:'javascript'}');" aria-label="{translate text="Unlock and remove Filter" inAttribute=true isPublicFacing=true}" data-filter-field="{$filter.field|escape}" data-filter-unscoped="{$filter.unscopedField|escape}" data-filter-value="{$filter.value|escape}" data-filter-display="{$filter.display|escape}" data-removal-url="{$filter.removalUrl|escape}">
+							<i class="fas fa-lock fa-lg fa-fw" style="display:inline; vertical-align: middle"></i> {$filter.display}
+						</a>
+					{else}
+						<a class="btn btn-default btn-sm facetValueBadge" href="{$filter.removalUrl|escape}" aria-label="{translate text="Remove Filter" inAttribute=true isPublicFacing=true}" data-filter-field="{$filter.field|escape}" data-filter-unscoped="{$filter.unscopedField|escape}" data-filter-value="{$filter.value|escape}" data-filter-display="{$filter.display|escape}" data-removal-url="{$filter.removalUrl|escape}">
 							<i class="fas fa-xmark text-danger remove-filter-icon" style="display:inline; vertical-align: middle"></i> {$filter.display}
 						</a>
+					{/if}
 					{/foreach}
 				{/foreach}
 			</div>
@@ -27,20 +33,20 @@
 			<div id="facet-accordion" class="accordion">
 				{foreach from=$sideFacetSet item=cluster key=title name=facetSet}
 					{* Show facets that have values loaded OR are placeholders for async loading *}
-					{if count($cluster.list) > 0 || (isset($cluster.loadedValues) && $cluster.loadedValues === false)}
+					{if count($cluster.list) > 0 || (isset($cluster.loadedValues) && $cluster.loadedValues === false) || !empty($cluster.locked)}
 						<div class="facetList">
-							<div id="facetToggle_{$title}" aria-controls="facetDetails_{$title}" class="facetTitle panel-title {if !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}collapsed{else}expanded{/if}" tabindex="0" role="button" aria-expanded="{if !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}false{else}true{/if}" data-facet-loaded="{if !empty($cluster.loadedValues) || count($cluster.list) > 0}true{else}false{/if}" data-search-id="{$searchId}" data-facet-name="{if !empty($cluster.field)}{$cluster.field}{else}{$title}{/if}">
+							<div id="facetToggle_{$title}" aria-controls="facetDetails_{$title}" class="facetTitle panel-title {if !empty($cluster.locked)}expanded{elseif !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}collapsed{else}expanded{/if}" tabindex="0" role="button" aria-expanded="{if !empty($cluster.locked)}true{elseif !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}false{else}true{/if}" data-facet-loaded="{if !empty($cluster.loadedValues) || count($cluster.list) > 0}true{else}false{/if}" data-search-id="{$searchId}" data-facet-name="{if !empty($cluster.field)}{$cluster.field}{else}{$title}{/if}">
 								{translate text=$cluster.label isPublicFacing=true}
 
 								{if !empty($cluster.canLock)}
-									<span class="facetLock pull-right" id="facetLock_{$title}" {if empty($cluster.hasApplied)}style="display: none"{/if} title="{translate text="Locking a facet will retain the selected filters in new searches until they are cleared" inAttribute=true isPublicFacing=true}">
+									<span class="facetLock pull-right" id="facetLock_{$title}" {if empty($cluster.hasApplied) && empty($cluster.locked)}style="display: none"{/if} title="{translate text="Locking a facet will retain the selected filters in new searches until they are cleared" inAttribute=true isPublicFacing=true}">
 										<a id="facetLock_lockIcon_{$title}" {if !empty($cluster.locked)}style="display: none"{/if} onclick="return AspenDiscovery.Searches.lockFacet('{$title}');"><i class="fas fa-lock-open fa-lg fa-fw" style="vertical-align: middle"></i></a>
 										<a id="facetLock_unlockIcon_{$title}" {if empty($cluster.locked)}style="display: none"{/if} onclick="return AspenDiscovery.Searches.unlockFacet('{$title}');"><i class="fas fa-lock fa-lg fa-fw" style="vertical-align: middle"></i></a>
 									</span>
 								{/if}
 
 							</div>
-							<div id="facetDetails_{$title}" class="facetDetails" {if !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}style="display:none"{/if} role="region" aria-labelledby="facetToggle_{$title}">
+							<div id="facetDetails_{$title}" class="facetDetails" {if !empty($cluster.locked)}style="display:block"{elseif !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}style="display:none"{/if} role="region" aria-labelledby="facetToggle_{$title}">
 								{* Loading spinner for async facet loading *}
 								<div class="facet-loading-spinner" style="display:none; padding:15px; text-align:center;">
 									<i class="fas fa-spinner fa-spin"></i> {translate text="Loading..." isPublicFacing=true}

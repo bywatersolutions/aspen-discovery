@@ -3,7 +3,7 @@ require_once ROOT_DIR . '/Action.php';
 require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
 require_once ROOT_DIR . '/sys/Enrichment/QuipuECardSetting.php';
 
-class QuipuECardSettings extends ObjectEditor {
+class Enrichment_QuipuECardSettings extends ObjectEditor {
 	function getObjectType(): string {
 		return 'QuipuECardSetting';
 	}
@@ -69,8 +69,8 @@ class QuipuECardSettings extends ObjectEditor {
 		return 'third_party_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Third Party Enrichment API Keys');
+	public function getViewPermissions() : array {
+		return ['Administer Third Party Enrichment API Keys'];
 	}
 
 	function canAddNew() : bool {

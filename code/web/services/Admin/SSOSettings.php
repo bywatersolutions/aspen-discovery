@@ -6,7 +6,7 @@ require_once ROOT_DIR . '/Action.php';
 require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
 require_once ROOT_DIR . '/sys/Authentication/SSOSetting.php';
 
-class SSOSettings extends ObjectEditor {
+class Admin_SSOSettings extends ObjectEditor {
 	function getObjectType(): string {
 		return 'SSOSetting';
 	}
@@ -82,11 +82,15 @@ class SSOSettings extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Single Sign-on');
+	public function getViewPermissions() : array {
+		return ['Administer Single Sign-on'];
 	}
 
 	function getInitializationJs(): string {
 		return 'AspenDiscovery.Admin.getSSOFields(); AspenDiscovery.Admin.checkSSOAuthOnlyPatronTypes();';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Single sign-on';
 	}
 }

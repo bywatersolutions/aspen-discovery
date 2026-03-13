@@ -61,8 +61,8 @@ class Admin_HideSeriess extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Hide Metadata');
+	public function getViewPermissions() : array {
+		return ['Hide Metadata'];
 	}
 
 	function getInitializationJs(): string {

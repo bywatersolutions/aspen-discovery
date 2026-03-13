@@ -65,7 +65,7 @@ class Admin_DonationsSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Donations');
+	public function getViewPermissions() : array {
+		return ['Administer Donations'];
 	}
 }

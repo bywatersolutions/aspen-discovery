@@ -29,6 +29,8 @@ class SierraSelfRegistrationForm extends DataObject {
 	public $selfRegUsePatronIdBarcode;
 	public $selfRegNoticePrefOptions;
 	public $addSelfRegNote;
+	public $cityDropdown;
+	public $noCommaInAddress;
 
 
 	private $_fields;
@@ -253,6 +255,22 @@ class SierraSelfRegistrationForm extends DataObject {
 				'description' => 'Automatically add a dated Circ Note in Sierra when patrons self register.',
 				'hideInLists' => true,
 				'default' => 1,
+			],
+			'cityDropdown' => [
+				'property' => 'cityDropdown',
+				'type' => 'checkbox',
+				'label' => 'City Dropdown',
+				'description' => 'Use a dropdown select option for city using municipalities defined below.',
+        'hideInLists' => true,
+				'default' => 0,
+			],
+			'noCommaInAddress' => [
+				'property' => 'noCommaInAddress',
+				'type' => 'checkbox',
+				'label' => 'Disable City/State Comma Separation',
+				'description' => 'Do not add a comma between city and state for patron address',
+				'hideInLists' => true,
+				'default' => 0,
 			],
 			'municipalities' => [
 				'property' => 'municipalities',

@@ -212,7 +212,7 @@ class ILS_TranslationMaps extends ObjectEditor {
 		return 'ils_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Translation Maps');
+	public function getViewPermissions() : array {
+		return ['Administer Translation Maps'];
 	}
 }

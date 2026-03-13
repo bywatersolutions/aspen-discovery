@@ -65,8 +65,8 @@ class AspenLiDA_NotificationsReport extends ObjectEditor {
 		return 'aspen_lida';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('View Notifications Reports');
+	public function getViewPermissions() : array {
+		return ['View Notifications Reports'];
 	}
 
 	function canBatchEdit() : bool {
@@ -111,5 +111,9 @@ class AspenLiDA_NotificationsReport extends ObjectEditor {
 		} else {
 			parent::applyFilter($object, $fieldName, $filter);
 		}
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Aspen LiDA';
 	}
 }

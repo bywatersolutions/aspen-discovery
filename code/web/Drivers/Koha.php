@@ -529,7 +529,7 @@ class Koha extends AbstractIlsDriver {
 			$curCheckout = new Checkout();
 			$curCheckout->type = 'ils';
 			$curCheckout->source = $this->getIndexingProfile()->name;
-			$curCheckout->sourceId = $curRow['biblionumber'];
+			$curCheckout->sourceId = $curRow['issue_id'];
 			$allIssueIds[] = $curRow['issue_id'];
 			$curCheckout->userId = $patron->id;
 			$curCheckout->checkoutDate = strtotime($curRow['issuedate']);

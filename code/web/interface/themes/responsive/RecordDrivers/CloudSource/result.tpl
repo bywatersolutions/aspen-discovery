@@ -3,7 +3,7 @@
 	{if !empty($showCovers)}
 		<div class="coversColumn col-xs-3 col-sm-3{if empty($viewingCombinedResults)} col-md-3 col-lg-2{/if} text-center" aria-hidden="true" role="presentation">
 			{if $disableCoverArt != 1 && !empty($bookCoverUrlMedium)}
-				<a href="{$summUrl}" onclick="AspenDiscovery.CloudSource.trackCloudSourceUsage('{$summId}')" target="_blank" aria-hidden="true">
+				<a href="{$summUrl}" onclick="AspenDiscovery.CloudSource.trackCloudSourceUsage('{$summId}')" aria-hidden="true">
 					<img src="{$bookCoverUrlMedium}" class="listResultImage img-thumbnail{if $useOriginalCoverUrls} use-original-covers{/if} {$coverStyle}" alt="{translate text='Cover Image' inAttribute=true isPublicFacing=true}">
 				</a>
 			{/if}
@@ -14,7 +14,7 @@
 		<div class="row">
 			<div class="col-xs-12">
 				<span class="result-index">{$resultIndex})</span>&nbsp;
-				<a href="{$summUrl}" class="result-title notranslate" onclick="AspenDiscovery.CloudSource.trackCloudSourceUsage('{$summId}')" target="_blank">
+				<a href="{$summUrl}" class="result-title notranslate" onclick="AspenDiscovery.CloudSource.trackCloudSourceUsage('{$summId}')">
 					{if !$summTitle|removeTrailingPunctuation} {translate text='Title not available' isPublicFacing=true}{else}{$summTitle|removeTrailingPunctuation|truncate:180:"..."|highlight}{/if}
 				</a>
 			</div>

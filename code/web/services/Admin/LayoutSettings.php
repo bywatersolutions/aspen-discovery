@@ -75,11 +75,11 @@ class Admin_LayoutSettings extends ObjectEditor {
 		return 'theme_and_layout';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Layout Settings',
 			'Administer Library Layout Settings',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

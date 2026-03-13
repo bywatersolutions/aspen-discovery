@@ -62,8 +62,8 @@ class Admin_IPAddresses extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer IP Addresses');
+	public function getViewPermissions() : array {
+		return ['Administer IP Addresses'];
 	}
 
 	protected function getDefaultRecordsPerPage() : int {

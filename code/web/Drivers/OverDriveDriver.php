@@ -169,19 +169,30 @@ class OverDriveDriver extends AbstractEContentDriver {
 		return $baseUrl;
 	}
 
-	public function isCirculationEnabled(Library $activeLibrary, OverDriveSetting $settings) : bool {
+	public function isCirculationEnabled(Library $activeLibrary, OverDriveSetting $settings, ?User $user = null) : bool {
 		$librarySettings = $activeLibrary->getLibraryOverdriveSetting($settings->id);
 		if ($librarySettings == null) {
 			return false;
-		}else{
-			return (bool) $librarySettings->circulationEnabled;
 		}
+
+		if ($librarySettings->circulationEnabled) {
+			return true;
+		}
+
+		// If circulation is disabled but QR code auth is enabled, check if user has valid QR token.
+		// This will attempt to refresh the token if it's expired but has a refresh token.
+		if (!empty($settings->enableQRCodeAuth) && $user !== null) {
+			$qrTokenData = $this->getQRCodePatronToken($activeLibrary, $settings, $user);
+			return $qrTokenData !== null;
+		}
+
+		return false;
 	}
 	public function getTokenData(Library $activeLibrary, OverDriveSetting $settings) : false|stdClass|null {
 		return $this->_connectToAPI($activeLibrary, $settings, true, "getTokenData");
 	}
 
-	public function getPatronTokenData(OverDriveSetting $settings, User $user, bool $forceNewConnection = false) : bool|stdClass {
+	public function getPatronTokenData(OverDriveSetting $settings, User $user, bool $forceNewConnection = false) : bool|stdClass|null {
 		$userBarcode = $user->getBarcode();
 		if ($this->getRequirePin($settings, $user)) {
 			$userPin = $user->getPasswordOrPin();
@@ -255,6 +266,19 @@ class OverDriveDriver extends AbstractEContentDriver {
 			return false;
 		}
 		$patronTokenData = $memCache->get("overdrive_patron_token_{$settings->id}_{$homeLibrary->libraryId}_$patronBarcode");
+		if (!$forceNewConnection && $patronTokenData) {
+			return $patronTokenData;
+		}
+
+		if (!empty($settings->enableQRCodeAuth)) {
+			$qrTokenData = $this->getQRCodePatronToken($homeLibrary, $settings, $user, $forceNewConnection);
+			if ($qrTokenData) {
+				return $qrTokenData;
+			} else {
+				return false;
+			}
+		}
+
 		if ($forceNewConnection || !$patronTokenData) {
 			$tokenData = $this->_connectToAPI($user->getHomeLibrary(), $settings, $forceNewConnection, "connectToPatronAPI");
 			$timer->logTime("Connected to OverDrive API");
@@ -1995,15 +2019,157 @@ class OverDriveDriver extends AbstractEContentDriver {
 		return $this->overdriveApiHost[$settings->id];
 	}
 
-	private function getClientAuthString(OverDriveSetting $settings, ?LibraryOverDriveSettings $librarySettings) : ?string {
-		if (empty($librarySettings->clientKey) || empty($librarySettings->clientSecret)) {
-			if (empty($settings->clientSecret) || empty($settings->clientKey)) {
-				return null;
-			}else{
-				return $settings->clientKey . ':' . $settings->clientSecret;
-			}
-		}else{
-			return $librarySettings->clientKey . ':' . $librarySettings->clientSecret;
+	public function getClientCredentials(OverDriveSetting $settings, ?LibraryOverDriveSettings $librarySettings) : array {
+		$clientKey = null;
+		$clientSecret = null;
+		if ($librarySettings != null && !empty($librarySettings->clientKey) && !empty($librarySettings->clientSecret)) {
+			$clientKey = $librarySettings->clientKey;
+			$clientSecret = $librarySettings->clientSecret;
+		} elseif (!empty($settings->clientKey) && !empty($settings->clientSecret)) {
+			$clientKey = $settings->clientKey;
+			$clientSecret = $settings->clientSecret;
 		}
+		return [
+			'clientKey' => $clientKey ?? '',
+			'clientSecret' => $clientSecret ?? '',
+		];
+	}
+
+	private function getClientAuthString(OverDriveSetting $settings, ?LibraryOverDriveSettings $librarySettings) : ?string {
+		$credentials = $this->getClientCredentials($settings, $librarySettings);
+		if (empty($credentials['clientKey']) || empty($credentials['clientSecret'])) {
+			return null;
+		}
+		return $credentials['clientKey'] . ':' . $credentials['clientSecret'];
+	}
+
+	private function getQRCodePatronToken(Library $homeLibrary, OverDriveSetting $settings, User $user, bool $forceRefresh = false): ?stdClass {
+		if (empty($settings->enableQRCodeAuth)) {
+			return null;
+		}
+		$tokenRecord = $user->getOverDriveQrToken($settings->id);
+		if (!$tokenRecord) {
+			return null;
+		}
+
+		$needsRefresh = $forceRefresh || $tokenRecord->isExpired(60);
+		if ($needsRefresh) {
+			if (!empty($tokenRecord->refreshToken)) {
+				$librarySettings = $homeLibrary->getLibraryOverdriveSetting($settings->id);
+				$refreshedData = $this->refreshQRCodeToken($settings, $librarySettings, $tokenRecord->refreshToken);
+				if ($refreshedData) {
+					$user->saveOverDriveQrToken($settings->id, $refreshedData);
+					$this->cacheQRCodeToken($refreshedData, $settings, $homeLibrary, $user);
+					return $refreshedData;
+				} else {
+					$user->deleteOverDriveQrToken($settings->id);
+				}
+			} else {
+				$user->deleteOverDriveQrToken($settings->id);
+			}
+			return null;
+		}
+
+		$tokenData = $tokenRecord->toPatronTokenData();
+		$this->cacheQRCodeToken($tokenData, $settings, $homeLibrary, $user);
+		return $tokenData;
+	}
+
+	public function exchangeQRCodeAuthCode(OverDriveSetting $settings, ?LibraryOverDriveSettings $librarySettings, string $authCode): ?stdClass {
+		if (empty($settings->enableQRCodeAuth)) {
+			return null;
+		}
+		$credentials = $this->getClientCredentials($settings, $librarySettings);
+		if (empty($credentials['clientKey']) || empty($credentials['clientSecret'])) {
+			return null;
+		}
+
+		$url = "https://oauth-patron.overdrive.com/patrontoken/code";
+		$this->initCurlWrapper();
+		$this->apiCurlWrapper->setOption(CURLOPT_USERAGENT, "Mozilla/5.0");
+		$this->apiCurlWrapper->setOption(CURLOPT_RETURNTRANSFER, true);
+		$this->apiCurlWrapper->setOption(CURLOPT_SSL_VERIFYPEER, false);
+		$this->apiCurlWrapper->setOption(CURLOPT_FOLLOWLOCATION, 1);
+
+		$encodedAuthValue = base64_encode($credentials['clientKey'] . ':' . $credentials['clientSecret']);
+		global $interface;
+		$this->apiCurlWrapper->addCustomHeaders([
+			"Content-Type: application/x-www-form-urlencoded;charset=UTF-8",
+			"Authorization: Basic " . $encodedAuthValue,
+			"User-Agent: Aspen Discovery " . $interface->getVariable('aspenVersion'),
+		], true);
+
+		$postBody = http_build_query([
+			'grant_type' => 'authorization_code',
+			'code' => $authCode,
+		]);
+		$response = $this->apiCurlWrapper->curlPostPage($url, $postBody);
+		ExternalRequestLogEntry::logRequest('overdrive.qrCode.exchange', 'POST', $url, $this->apiCurlWrapper->getHeaders(), $postBody, $this->apiCurlWrapper->getResponseCode(), $response, []);
+
+		$data = json_decode($response);
+		global $logger;
+		if ($data && empty($data->error)) {
+			return $data;
+		} elseif ($data && isset($data->error)) {
+			$logger->log("OverDrive QR code authentication error: $data->error.", Logger::LOG_ERROR);
+		} else {
+			$logger->log("OverDrive QR code authentication returned unexpected response.", Logger::LOG_ERROR);
+		}
+		return null;
+	}
+
+	private function refreshQRCodeToken(OverDriveSetting $settings, ?LibraryOverDriveSettings $librarySettings, string $refreshToken): ?stdClass {
+		if (empty($settings->enableQRCodeAuth)) {
+			return null;
+		}
+		$credentials = $this->getClientCredentials($settings, $librarySettings);
+		if (empty($credentials['clientKey']) || empty($credentials['clientSecret'])) {
+			return null;
+		}
+
+		$url = "https://oauth-patron.overdrive.com/patrontoken/refresh";
+		$this->initCurlWrapper();
+		$this->apiCurlWrapper->setOption(CURLOPT_USERAGENT, "Mozilla/5.0");
+		$this->apiCurlWrapper->setOption(CURLOPT_RETURNTRANSFER, true);
+		$this->apiCurlWrapper->setOption(CURLOPT_SSL_VERIFYPEER, false);
+		$this->apiCurlWrapper->setOption(CURLOPT_FOLLOWLOCATION, 1);
+
+		$encodedAuthValue = base64_encode($credentials['clientKey'] . ':' . $credentials['clientSecret']);
+		global $interface;
+		$this->apiCurlWrapper->addCustomHeaders([
+			"Content-Type: application/x-www-form-urlencoded;charset=UTF-8",
+			"Authorization: Basic " . $encodedAuthValue,
+			"User-Agent: Aspen Discovery " . $interface->getVariable('aspenVersion'),
+		], true);
+
+		$postBody = http_build_query([
+			'grant_type' => 'refresh_token',
+			'refresh_token' => $refreshToken,
+		]);
+		$response = $this->apiCurlWrapper->curlPostPage($url, $postBody);
+		ExternalRequestLogEntry::logRequest('overdrive.qrCode.refresh', 'POST', $url, $this->apiCurlWrapper->getHeaders(), $postBody, $this->apiCurlWrapper->getResponseCode(), $response, []);
+
+		$data = json_decode($response);
+		global $logger;
+		if ($data && empty($data->error)) {
+			return $data;
+		} elseif ($data && isset($data->error)) {
+			$logger->log("OverDrive QR code refresh error: $data->error", Logger::LOG_ERROR);
+		}
+		return null;
+	}
+
+	private function cacheQRCodeToken(stdClass $tokenData, OverDriveSetting $settings, Library $library, User $user): void {
+		if (empty($settings->enableQRCodeAuth)) {
+			return;
+		}
+		global $memCache;
+		$barcode = $user->getBarcode();
+		if (empty($barcode)) {
+			return;
+		}
+		$expiresIn = isset($tokenData->expires_in) ? (int)$tokenData->expires_in : 3600;
+		$ttl = max(60, $expiresIn - 10);
+		$memCache->set("overdrive_patron_token_{$settings->id}_{$library->libraryId}_$barcode", $tokenData, $ttl);
 	}
 }

@@ -65,7 +65,7 @@ class Admin_StripeSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Stripe');
+	public function getViewPermissions() : array {
+		return ['Administer Stripe'];
 	}
 }

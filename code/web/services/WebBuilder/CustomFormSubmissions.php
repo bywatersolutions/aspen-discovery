@@ -114,11 +114,11 @@ class WebBuilder_CustomFormSubmissions extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Custom Forms',
 			'Administer Library Custom Forms',
-		]);
+		];
 	}
 
 	function getActiveAdminSection(): string {
@@ -135,5 +135,9 @@ class WebBuilder_CustomFormSubmissions extends ObjectEditor {
 		}else{
 			return [];
 		}
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

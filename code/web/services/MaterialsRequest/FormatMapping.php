@@ -102,8 +102,8 @@ class MaterialsRequest_FormatMapping extends ObjectEditor {
 		return 'materials_request';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Materials Requests');
+	public function getViewPermissions() : array {
+		return ['Administer Materials Requests'];
 	}
 
 	function canAddNew() : bool {

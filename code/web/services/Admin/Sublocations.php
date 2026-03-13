@@ -72,11 +72,11 @@ class Admin_Sublocations extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Libraries',
 			'Administer Home Library',
-		]);
+		];
 	}
 
 	function showReturnToList() : bool {

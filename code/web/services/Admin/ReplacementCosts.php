@@ -132,8 +132,8 @@ class Admin_ReplacementCosts extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Replacement Costs');
+	public function getViewPermissions() : array {
+		return ['Administer Replacement Costs'];
 	}
 
 	function canAddNew() : bool {

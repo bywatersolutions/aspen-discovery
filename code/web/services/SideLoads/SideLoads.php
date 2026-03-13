@@ -145,8 +145,8 @@ class SideLoads_SideLoads extends ObjectEditor {
 		]);
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer All Side Loads', 'Administer Side Loads for Home Library', 'Administer Side Load Scopes for Home Library']);
+	public function getViewPermissions() : array {
+		return ['Administer All Side Loads', 'Administer Side Loads for Home Library', 'Administer Side Load Scopes for Home Library'];
 	}
 
 	function canAddNew() : bool {

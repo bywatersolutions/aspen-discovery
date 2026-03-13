@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 abstract class IlsRecordProcessor extends MarcRecordProcessor {
@@ -1824,7 +1825,7 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 
 	}
 
-	HashSet<String> unableToTranslateWarnings = new HashSet<>();
+	private static final Set<String> unableToTranslateWarnings = ConcurrentHashMap.newKeySet();
 	public String translateValue(String mapName, String value, String identifier, boolean reportErrors, boolean addMissingValues){
 		if (value == null){
 			return null;

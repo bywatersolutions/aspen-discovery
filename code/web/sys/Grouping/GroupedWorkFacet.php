@@ -1,5 +1,6 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
 
+require_once ROOT_DIR . '/sys/LibraryLocation/FacetSetting.php';
 class GroupedWorkFacet extends FacetSetting {
 	public $__table = 'grouped_work_facet';
 	public $facetGroupId;

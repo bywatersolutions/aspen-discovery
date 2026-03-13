@@ -61,7 +61,7 @@ class Admin_AuthorAuthorities extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Manually Group and Ungroup Works');
+	public function getViewPermissions() : array {
+		return ['Manually Group and Ungroup Works'];
 	}
 }

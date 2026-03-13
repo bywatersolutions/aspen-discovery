@@ -58,6 +58,7 @@ class Location extends DataObject {
 	public $displayExploreMoreBarInEbscoEds;
 	public $displayExploreMoreBarInEbscoHost;
 	public $displayExploreMoreBarInCatalogSearch;
+	public $displayExploreMoreBarInGale;
 	public $headerText;
 	public $address;
 	public $phone;
@@ -119,6 +120,8 @@ class Location extends DataObject {
 		$includeAllLibraryBranchesInFacets;
 	public /** @noinspection PhpUnused */
 		$additionalLocationsToShowAvailabilityFor;
+	public /** @noinspection PhpUnused */
+		$locationsToExcludeAvailabilityFor;
 	public /** @noinspection PhpUnused */
 		$includeLibraryRecordsToInclude;
 
@@ -205,7 +208,9 @@ class Location extends DataObject {
 		$library->orderBy('displayName');
 		if (!UserAccount::userHasPermission('Administer All Libraries')) {
 			$homeLibrary = Library::getPatronHomeLibrary();
-			$library->libraryId = $homeLibrary->libraryId;
+			if (!empty($homeLibrary)) {
+				$library->libraryId = $homeLibrary->libraryId;
+			}
 		}
 		$library->find();
 		$libraryList = [];
@@ -959,7 +964,16 @@ class Location extends DataObject {
 								'type' => 'text',
 								'label' => 'Additional Locations to Include in Available At Facet',
 								'description' => 'A list of library codes that you would like included in the available at facet separated by pipes |.',
-								'size' => '20',
+								'maxLength' => '100',
+								'hideInLists' => true,
+								'forcesReindex' => true,
+							],
+							'locationsToExcludeAvailabilityFor' => [
+								'property' => 'locationsToExcludeAvailabilityFor',
+								'type' => 'regularExpression',
+								'label' => 'Locations to Exclude from Available At Facet',
+								'description' => 'A list of location names (facet values) that you would like excluded',
+								'maxLength' => '255',
 								'hideInLists' => true,
 								'forcesReindex' => true,
 							],
@@ -1062,6 +1076,14 @@ class Location extends DataObject {
 						'type' => 'checkbox',
 						'label' => 'Display Explore More Bar in Ebsco Host Search Results',
 						'description' => 'Whether to display the Explore More Bar in Ebsco Host search results',
+						'hideInLists' => true,
+						'default' => true,
+					],
+					'displayExploreMoreBarInGale' => [
+						'property' => 'displayExploreMoreBarInGale',
+						'type' => 'checkbox',
+						'label' => 'Display Explore More Bar in Gale Search Results',
+						'description' => 'Whether to display the Explore More Bar in Gale search results',
 						'hideInLists' => true,
 						'default' => true,
 					],
@@ -3348,5 +3370,19 @@ class Location extends DataObject {
 			}
 		}
 		return $this->_homeScreenLinkGroup;
+	}
+
+	private ?int $_cloudSourceSettingId = null;
+	public function getCloudSourceSettingId() : int{
+		if ($this->_cloudSourceSettingId == null) {
+			require_once ROOT_DIR . '/sys/CloudSource/LocationCloudSourceSetting.php';
+			$locationCloudSourceSetting = new LocationCloudSourceSetting();
+			$locationCloudSourceSetting->locationId = $this->locationId;
+			$this->_cloudSourceSettingId = -1;
+			if ($locationCloudSourceSetting->find(true)) {
+				$this->_cloudSourceSettingId = $locationCloudSourceSetting->cloudsourceSettingId;
+			}
+		}
+		return $this->_cloudSourceSettingId;
 	}
 }

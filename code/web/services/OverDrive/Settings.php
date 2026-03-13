@@ -70,7 +70,11 @@ class OverDrive_Settings extends ObjectEditor {
 		return 'overdrive';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Libby/Sora');
+	public function getViewPermissions() : array {
+		return ['Administer Libby/Sora'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'OverDrive';
 	}
 }

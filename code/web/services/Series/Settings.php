@@ -70,11 +70,15 @@ class Series_Settings extends ObjectEditor {
 		return 'series';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Series');
+	public function getViewPermissions() : array {
+		return ['Administer Series'];
 	}
 
 	function canAddNew() : bool {
 		return $this->getNumObjects() == 0;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Series';
 	}
 }

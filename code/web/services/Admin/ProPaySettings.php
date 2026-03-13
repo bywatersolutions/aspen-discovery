@@ -61,7 +61,7 @@ class Admin_ProPaySettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer ProPay');
+	public function getViewPermissions() : array {
+		return ['Administer ProPay'];
 	}
 }

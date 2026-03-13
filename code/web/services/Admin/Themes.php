@@ -117,11 +117,11 @@ class Admin_Themes extends ObjectEditor {
 		return 'theme_and_layout';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Themes',
 			'Administer Library Themes',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

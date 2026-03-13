@@ -62,10 +62,10 @@ class Admin_SearchInterpreter extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer Search Interpreter',
-		]);
+		];
 	}
 
 	function canAddNew(): bool {

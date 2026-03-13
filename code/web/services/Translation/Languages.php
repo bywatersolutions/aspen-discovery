@@ -70,7 +70,7 @@ class Translation_Languages extends ObjectEditor {
 		return 'translations';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Languages');
+	public function getViewPermissions() : array {
+		return ['Administer Languages'];
 	}
 }

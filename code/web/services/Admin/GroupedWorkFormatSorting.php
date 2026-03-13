@@ -68,11 +68,11 @@ class Admin_GroupedWorkFormatSorting extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Format Sorting',
 			'Administer Library Format Sorting',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

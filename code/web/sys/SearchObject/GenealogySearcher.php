@@ -536,6 +536,7 @@ class SearchObject_GenealogySearcher extends SearchObject_SolrSearcher {
 	//TODO: Convert this to use definitions
 	public function getFacetConfig() {
 		if ($this->facetConfig == null) {
+			require_once ROOT_DIR . '/sys/LibraryLocation/LibraryFacetSetting.php';
 			$facetConfig = [];
 			$birthYear = new LibraryFacetSetting();
 			$birthYear->id = 1;

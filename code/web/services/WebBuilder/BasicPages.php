@@ -81,11 +81,11 @@ class WebBuilder_BasicPages extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Basic Pages',
 			'Administer Library Basic Pages',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
@@ -104,5 +104,9 @@ class WebBuilder_BasicPages extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

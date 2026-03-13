@@ -239,6 +239,7 @@ class SearchObject_SeriesSearcher extends SearchObject_SolrSearcher {
 	//TODO: Convert this to use definitions so they can be customized in admin
 	public function getFacetConfig() : array {
 		if ($this->facetConfig == null) {
+			require_once ROOT_DIR . '/sys/LibraryLocation/LibraryFacetSetting.php';
 			$facetConfig = [];
 			global $solrScope;
 

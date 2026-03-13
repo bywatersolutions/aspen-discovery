@@ -78,8 +78,8 @@ class Series_AdministerSeries extends ObjectEditor {
 		return 'series';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Series');
+	public function getViewPermissions() : array {
+		return ['Administer Series'];
 	}
 
 	function canAddNew(): bool{
@@ -101,5 +101,9 @@ class Series_AdministerSeries extends ObjectEditor {
 				'field' => $filterFields['author'],
 			],
 		];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Series';
 	}
 }

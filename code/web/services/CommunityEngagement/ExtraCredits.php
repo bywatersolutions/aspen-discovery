@@ -72,15 +72,19 @@ class CommunityEngagement_ExtraCredits extends ObjectEditor {
 		return 'communityEngagement';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer Community Engagement Module',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {
 		return UserAccount::userHasPermission([
 			'Administer Community Engagement Module',
 		]);
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Community Engagement';
 	}
 }

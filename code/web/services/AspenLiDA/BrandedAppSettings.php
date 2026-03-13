@@ -65,9 +65,16 @@ class AspenLiDA_BrandedAppSettings extends ObjectEditor {
 
 	function canView(): bool {
 		if (SystemVariables::getSystemVariables()->enableBrandedApp) {
-			return UserAccount::userHasPermission('Administer Aspen LiDA Settings');
+			return UserAccount::userHasPermission($this->getViewPermissions());
 		}
 		return false;
 	}
 
+	public function getViewPermissions() : array {
+		return ['Administer Aspen LiDA Settings'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Aspen LiDA';
+	}
 }

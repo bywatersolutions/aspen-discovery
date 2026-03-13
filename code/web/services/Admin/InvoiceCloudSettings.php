@@ -61,7 +61,7 @@ class Admin_InvoiceCloudSettings extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer InvoiceCloud');
+	public function getViewPermissions() : array {
+		return ['Administer InvoiceCloud'];
 	}
 }

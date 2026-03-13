@@ -69,8 +69,8 @@ class Enrichment_OMDBSettings extends ObjectEditor {
 		return 'third_party_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Third Party Enrichment API Keys');
+	public function getViewPermissions() : array {
+		return ['Administer Third Party Enrichment API Keys'];
 	}
 
 	function canAddNew() : bool {

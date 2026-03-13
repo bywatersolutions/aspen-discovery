@@ -70,11 +70,11 @@ class InterLibraryLoan_LocalIllForms extends ObjectEditor {
 		return 'ill_integration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Local ILL Forms',
 			'Administer Library Local ILL Forms',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

@@ -79,11 +79,11 @@ class Admin_eCommerceReport extends ObjectEditor {
 		return 'ecommerce';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
-            'View eCommerce Reports for All Libraries',
-            'View eCommerce Reports for Home Library'
-        ]);
+	public function getViewPermissions() : array {
+		return [
+			'View eCommerce Reports for All Libraries',
+			'View eCommerce Reports for Home Library'
+		];
 	}
 
 	function applyFilter(DataObject $object, string $fieldName, array $filter) : void {

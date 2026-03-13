@@ -173,11 +173,11 @@ class Admin_Libraries extends ObjectEditor {
 		return 'primary_configuration';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Libraries',
 			'Administer Home Library',
-		]);
+		];
 	}
 
 	protected function getDefaultRecordsPerPage() : int {
@@ -356,6 +356,10 @@ class Admin_Libraries extends ObjectEditor {
 			$actions[] = [
 				'label' => 'Update From ILS',
 				'action' => 'loadLibrariesFromILS',
+			];
+			$actions[] = [
+				'label' => 'Batch Update Holidays',
+				'action' => 'return AspenDiscovery.Admin.getBatchUpdateHolidayForm("library")',
 			];
 		}
 		return $actions;

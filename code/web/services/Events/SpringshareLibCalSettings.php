@@ -81,11 +81,15 @@ class Events_SpringshareLibCalSettings extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Springshare LibCal Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Springshare LibCal Settings'];
 	}
 
 	function getActiveAdminSection(): string {
 		return 'events';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

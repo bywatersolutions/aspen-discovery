@@ -9,6 +9,10 @@ abstract class Admin_Admin extends Action {
 		$_SESSION['returnToModule'] = 'Admin';
 		$_SESSION['returnToAction'] = 'Home';
 
+		global $updatingSearchIndex;
+		if ($updatingSearchIndex) {
+			return;
+		}
 		$user = UserAccount::getLoggedInUser();
 
 		//If the user isn't logged in, take them to the login page
@@ -43,7 +47,7 @@ abstract class Admin_Admin extends Action {
 		parent::display($mainContentTemplate, $pageTitle, $sidebarTemplate, $translateTitle);
 	}
 
-	abstract function canView();
+	abstract function canView(): bool;
 
 	/** @noinspection PhpUnused */
 	function getInitializationJs(): string {

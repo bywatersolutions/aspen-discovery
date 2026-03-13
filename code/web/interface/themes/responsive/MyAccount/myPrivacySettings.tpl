@@ -99,6 +99,9 @@
 								{if array_key_exists('Summon', $enabledModules)}
 									<li>{translate text="Summon" isPublicFacing=true}</li>
 								{/if}
+								{if array_key_exists('Gale', $enabledModules)}
+									<li>{translate text="Gale" isPublicFacing=true}</li>
+								{/if}
 								{if array_key_exists('Web Indexer', $enabledModules)}
 									<li>{translate text="Library Website" isPublicFacing=true}</li>
 								{/if}

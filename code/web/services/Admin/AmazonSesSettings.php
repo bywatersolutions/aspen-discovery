@@ -69,7 +69,7 @@ class Admin_AmazonSesSettings extends ObjectEditor {
 		return 'email';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Amazon SES');
+	public function getViewPermissions() : array {
+		return ['Administer Amazon SES'];
 	}
 }

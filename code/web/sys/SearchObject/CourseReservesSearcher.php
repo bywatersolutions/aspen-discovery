@@ -181,6 +181,7 @@ class SearchObject_CourseReservesSearcher extends SearchObject_SolrSearcher {
 	//TODO: Convert this to use definitions so they can be customized in admin
 	public function getFacetConfig() {
 		if ($this->facetConfig == null) {
+			require_once ROOT_DIR . '/sys/LibraryLocation/LibraryFacetSetting.php';
 			$facetConfig = [];
 			$libraryFacet = new LibraryFacetSetting();
 			$libraryFacet->id = 1;

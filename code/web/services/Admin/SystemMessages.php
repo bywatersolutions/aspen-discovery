@@ -90,11 +90,11 @@ class Admin_SystemMessages extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All System Messages',
 			'Administer Library System Messages',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

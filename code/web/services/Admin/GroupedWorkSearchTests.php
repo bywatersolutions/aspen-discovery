@@ -62,8 +62,8 @@ class Admin_GroupedWorkSearchTests extends ObjectEditor {
 		return 'cataloging';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Grouped Work Tests');
+	public function getViewPermissions() : array {
+		return ['Administer Grouped Work Tests'];
 	}
 
 	function customListActions() : array {

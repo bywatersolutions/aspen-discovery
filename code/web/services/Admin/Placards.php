@@ -95,12 +95,12 @@ class Admin_Placards extends ObjectEditor {
 		return 'AspenDiscovery.WebBuilder.getSourceValuesForPlacard()';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Placards',
 			'Administer Library Placards',
 			'Edit Library Placards',
-		]);
+		];
 	}
 
 	function canBatchEdit(): bool {

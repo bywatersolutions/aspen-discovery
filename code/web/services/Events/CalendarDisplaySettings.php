@@ -81,8 +81,8 @@ class Events_CalendarDisplaySettings extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Print Calendars with Header Images and Footer');
+	public function getViewPermissions() : array {
+		return ['Print Calendars with Header Images and Footer'];
 	}
 
 	function getActiveAdminSection(): string {
@@ -100,5 +100,9 @@ class Events_CalendarDisplaySettings extends ObjectEditor {
 			];
 		}
 		return $actions;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Events';
 	}
 }

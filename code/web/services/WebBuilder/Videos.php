@@ -85,11 +85,15 @@ class WebBuilder_Videos extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission(['Administer All Web Content']);
+	public function getViewPermissions() : array {
+		return ['Administer All Web Content'];
 	}
 
 	function getActiveAdminSection(): string {
 		return 'web_builder';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

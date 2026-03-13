@@ -18,8 +18,8 @@ class Admin_BackgroundProcesses extends ObjectEditor {
 		return 'system_reports';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('View System Reports');
+	public function getViewPermissions() : array {
+		return ['View System Reports'];
 	}
 
 	function getObjectType(): string {

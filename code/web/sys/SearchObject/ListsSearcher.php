@@ -235,6 +235,7 @@ class SearchObject_ListsSearcher extends SearchObject_SolrSearcher {
 	public function getFacetConfig() : array {
 		if ($this->facetConfig == null) {
 			$facetConfig = [];
+			require_once ROOT_DIR . '/sys/LibraryLocation/LibraryFacetSetting.php';
 			$author = new LibraryFacetSetting();
 			$author->id = 1;
 			$author->multiSelect = true;

@@ -63,7 +63,11 @@ class AspenLiDA_SelfCheckCompletionMessages extends ObjectEditor {
 		return 'aspen_lida';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Aspen LiDA Self-Check Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Aspen LiDA Self-Check Settings'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Aspen LiDA';
 	}
 }

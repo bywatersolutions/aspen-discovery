@@ -74,11 +74,11 @@ class WebBuilder_WebResources extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Web Resources',
 			'Administer Library Web Resources',
-		]);
+		];
 	}
 
 	function getActiveAdminSection(): string {
@@ -91,5 +91,9 @@ class WebBuilder_WebResources extends ObjectEditor {
 
 	public function hasRecordLocking() : bool {
 		return true;
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

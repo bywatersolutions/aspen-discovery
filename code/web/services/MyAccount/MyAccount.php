@@ -82,7 +82,7 @@ abstract class MyAccount extends Action {
 		$interface->assign('readerName', $readerName);
 
 		// If neither sidebar section is shown, don't display the sidebar
-		if ($interface->getVariable('showMyAccount') || $interface->getVariable('showAccountSettings')) {
+		if (($sidebar != 'Search/home-sidebar.tpl') || ($interface->getVariable('showMyAccount') || $interface->getVariable('showAccountSettings'))) {
 			parent::display($mainContentTemplate, $pageTitle, $sidebar, $translateTitle);
 		} else {
 			parent::display($mainContentTemplate, $pageTitle, false, $translateTitle);

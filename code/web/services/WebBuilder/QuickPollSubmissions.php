@@ -94,14 +94,18 @@ class WebBuilder_QuickPollSubmissions extends ObjectEditor {
 		return $breadcrumbs;
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Quick Polls',
 			'Administer Library Quick Polls',
-		]);
+		];
 	}
 
 	function getActiveAdminSection(): string {
 		return 'web_builder';
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Web Builder';
 	}
 }

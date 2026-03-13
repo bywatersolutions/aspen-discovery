@@ -73,12 +73,12 @@ class Admin_BrowseCategories extends ObjectEditor {
 		return 'local_enrichment';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission([
+	public function getViewPermissions() : array {
+		return [
 			'Administer All Browse Categories',
 			'Administer Library Browse Categories',
 			'Administer Selected Browse Category Groups'
-		]);
+		];
 	}
 
 	function canBatchEdit() : bool {

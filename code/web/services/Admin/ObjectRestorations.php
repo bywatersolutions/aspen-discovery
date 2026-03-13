@@ -56,7 +56,9 @@ class Admin_ObjectRestorations extends ObjectEditor {
 	function getDefaultSort(): string { return 'deletedOn desc'; }
 	function getPrimaryKeyColumn(): string { return 'compositeId'; }
 	function getIdKeyColumn(): string { return 'compositeId'; }
-	function canView(): bool { return UserAccount::userHasPermission('Administer Object Restoration'); }
+	public function getViewPermissions() : array {
+		return ['Administer Object Restoration'];
+	}
 	function canAddNew(): bool { return false; }
 	function canDelete(): bool { return true; }
 	function canEdit(): bool { return false; }
@@ -645,7 +647,6 @@ class Admin_ObjectRestorations extends ObjectEditor {
 				'totalItems' => $totalItems,
 				'perPage' => $recordsPerPage,
 				'canChangeRecordsPerPage' => true,
-				'canJumpToPage' => true,
 			];
 			$pager = new Pager($options);
 			$interface->assign('pageLinks', $pager->getLinks());

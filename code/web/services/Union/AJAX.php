@@ -42,6 +42,8 @@ class Union_AJAX extends JSON_Action {
 			$results = $this->getResultsFromEDS($searchTerm, $numberOfResults, $fullResultsLink);
 		} elseif ($source == 'summon') {
 			$results = $this->getResultsFromSummon($searchTerm, $numberOfResults, $fullResultsLink);
+		} elseif ($source == 'gale') {
+			$results = $this->getResultsFromGale($searchTerm, $numberOfResults, $fullResultsLink);
 		} elseif ($source == 'cloudsource') {
 			$results = $this->getResultsFromCloudSource($searchTerm, $numberOfResults, $fullResultsLink);
 		}elseif ($source == 'ebscohost') {
@@ -251,7 +253,52 @@ class Union_AJAX extends JSON_Action {
 			$summary = $summonSearcher->getResultSummary();
 			$records = $summonSearcher->getCombinedResultHTML();
 			//Handle no results
-			if ($summary['resultTotal' == 0]) {
+			if ($summary['resultTotal'] == 0) {
+				$results = '<div class="clearfix"></div><div>' . translate(['text'=>'No results match your search.', 'isPublicFacing'=>true]) . '</div>';
+			} else {
+				$formattedNumResults = number_format($summary['resultTotal']);
+				$results = "<a href='{$fullResultsLink}' class='btn btn-default combined-results-button'>See all {$formattedNumResults} results <i class='fas fa-chevron-right fa-lg' role='presentation'></i></a><div class='clearfix'></div>";
+
+				$records = array_slice($records, 0, $numberOfResults);
+				global $interface;
+				$interface->assign('recordSet', $records);
+				$interface->assign('showExploreMoreBar', false);
+				$results .= $interface->fetch('Search/list-list.tpl');
+			}
+		}
+		return $results;
+	}
+
+	/**
+	 * @param $searchTerm
+	 * @param $numberOfResults
+	 * @param $fullResultsLink
+	 * @return string
+	 */
+	//return results from a gale search which are set to $source = 'gale' for the display of combined results
+	private function getResultsFromGale($searchTerm, $numberOfResults, $fullResultsLink) {
+		global $interface;
+		//Assign template variable - value true
+		$interface->assign('viewingCombinedResults', true);
+		//Prompt user to enter search terms if there are none provided
+		if ($searchTerm == '') {
+			$results = '<div class="clearfix"></div><div>' . translate(['text'=>'Enter search terms to see results.', 'isPublicFacing'=>true]) . '</div>';
+		} else {
+			//Initialize and execute a GaleSearch using provided search terms
+			/** @var SearchObject_GaleSearcher $galeSearcher */
+			$galeSearcher = SearchObjectFactory::initSearchObject("Gale");
+			$galeSearcher->init();
+			$galeSearcher->setSearchTerms([
+				'index' =>$galeSearcher->getDefaultIndex(),
+				'lookfor' => $searchTerm,
+			]);
+			//Retrieve results
+			//Process the search - param 1 $returnIndexErrors = true, param 2 $recommendations = false;
+			$galeSearcher->processSearch(true, false);
+			$summary = $galeSearcher->getResultSummary();
+			$records = $galeSearcher->getCombinedResultHTML();
+			//Handle no results
+			if ($summary['resultTotal'] == 0) {
 				$results = '<div class="clearfix"></div><div>' . translate(['text'=>'No results match your search.', 'isPublicFacing'=>true]) . '</div>';
 			} else {
 				$formattedNumResults = number_format($summary['resultTotal']);

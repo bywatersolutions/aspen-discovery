@@ -70,7 +70,11 @@ class PalaceProject_Scopes extends ObjectEditor {
 		return 'palace_project';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Palace Project');
+	public function getViewPermissions() : array {
+		return ['Administer Palace Project'];
+	}
+
+	public function getRequiredModule(): ?string {
+		return 'Palace Project';
 	}
 }

@@ -63,8 +63,11 @@ class AspenLiDA_SelfCheckSettings extends ObjectEditor {
 		return 'aspen_lida';
 	}
 
-	function canView(): bool {
-		return UserAccount::userHasPermission('Administer Aspen LiDA Settings');
+	public function getViewPermissions() : array {
+		return ['Administer Aspen LiDA Settings'];
 	}
 
+	public function getRequiredModule(): ?string {
+		return 'Aspen LiDA';
+	}
 }

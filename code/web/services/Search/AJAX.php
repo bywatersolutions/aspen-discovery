@@ -670,6 +670,7 @@ class AJAX extends Action {
 							$appliedFacetValues = [];
 						}
 					}
+
 					$lockSection = $restoredSearch->getSearchName();
 					if (UserAccount::isLoggedIn()) {
 						$user = UserAccount::getActiveUserObj();
@@ -698,7 +699,7 @@ class AJAX extends Action {
 					}
 					$interface->assign('topResults', $topResultList);
 					$topResults = $allFacets[$facetName];
-					ksort($topResults['list'], SORT_NATURAL | SORT_FLAG_CASE);
+					
 					if (!empty($lockedValues)) {
 						foreach ($topResults['list'] as &$facetValue) {
 							if (!empty($facetValue['value']) && in_array($facetValue['value'], $lockedValues, true)) {
@@ -707,7 +708,7 @@ class AJAX extends Action {
 						}
 						unset($facetValue);
 					}
-					$interface->assign('topResults', $topResults['list']);
+					$interface->assign('topResults', $topResultList);
 					$buttons = '';
 					if ($isMultiSelect) {
 						$buttons = '<button class="btn btn-primary" type="submit" name="submit" onclick="$(\'#searchFacetPopup\').submit()">' . translate([

@@ -146,18 +146,20 @@ class SideFacets implements RecommendationInterface {
 		$sideFacets = $this->searchObject->getFacetList($this->mainFacets);
 
 		// Mark loaded facets and create placeholders for facets that weren't loaded
+		$orderedSideFacets = [];
 		foreach ($this->facetSettings as $facetKey => $facetSetting) {
 			if ($facetSetting->showAboveResults) {
 				continue;
 			}
 
 			if (isset($sideFacets[$facetKey])) {
-				$sideFacets[$facetKey]['loadedValues'] = true;
-				if (!isset($sideFacets[$facetKey]['field'])) {
-					$sideFacets[$facetKey]['field'] = $facetKey;
+				$orderedSideFacets[$facetKey] = $sideFacets[$facetKey];
+				$orderedSideFacets[$facetKey]['loadedValues'] = true;
+				if (!isset($orderedSideFacets[$facetKey]['field'])) {
+					$orderedSideFacets[$facetKey]['field'] = $facetKey;
 				}
 			} else {
-				$sideFacets[$facetKey] = [
+				$orderedSideFacets[$facetKey] = [
 					'field' => $facetKey,
 					'field_name' => $facetKey,
 					'label' => $facetSetting->displayName,
@@ -169,6 +171,15 @@ class SideFacets implements RecommendationInterface {
 				];
 			}
 		}
+
+		// Preserve any facets not present in configured settings by appending them at the end.
+		foreach ($sideFacets as $facetKey => $facet) {
+			if (!isset($orderedSideFacets[$facetKey])) {
+				$orderedSideFacets[$facetKey] = $facet;
+			}
+		}
+
+		$sideFacets = $orderedSideFacets;
 
 		//Figure out which counts to show.
 		$searchSource = $_REQUEST['searchSource'];

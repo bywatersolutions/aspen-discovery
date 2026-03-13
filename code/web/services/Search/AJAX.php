@@ -646,6 +646,10 @@ class AJAX extends Action {
 			$restoredSearch = $searchAPI->restoreSearch($searchId);
 			if (!empty($restoredSearch)) {
 				if (array_key_exists($facetName, $restoredSearch->getFacetConfig())) {
+					if (method_exists($restoredSearch, 'setBypassAsyncFacetLogic')) {
+						$restoredSearch->setBypassAsyncFacetLogic(true);
+						$restoredSearch->processSearch(false, true);
+					}
 					$facetConfig = $restoredSearch->getFacetConfig()[$facetName];
 					if (is_object($facetConfig)) {
 						$facetTitle = $facetConfig->displayName;
@@ -784,6 +788,9 @@ class AJAX extends Action {
 				if (array_key_exists($facetName, $restoredSearch->getFacetConfig())) {
 					/** @var SearchObject_SolrSearcher $newSearch */
 					$newSearch = clone $restoredSearch;
+					if (method_exists($newSearch, 'setBypassAsyncFacetLogic')) {
+						$newSearch->setBypassAsyncFacetLogic(true);
+					}
 					$newSearch->addFacetSearch($facetName, $searchTerm);
 					$newSearchResult = $newSearch->processSearch(false, true);
 

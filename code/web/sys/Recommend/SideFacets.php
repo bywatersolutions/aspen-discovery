@@ -97,6 +97,7 @@ class SideFacets implements RecommendationInterface {
 
 		$interface->assign('hasSearchableFacets', $this->searchObject->hasSearchableFacets());
 		$interface->assign('removeAllFiltersUrl', $this->searchObject->getRemoveAllFiltersUrl());
+		$interface->assign('facetFormQueryParams', $_GET);
 
 		$lockSection = $this->searchObject->getSearchName();
 		if (UserAccount::isLoggedIn()) {
@@ -178,7 +179,7 @@ class SideFacets implements RecommendationInterface {
 				$interface->assign('facetCountsToShow', $facetSettings->getFacetGroup()->eventFacetCountsToShow);
 
 				//if there are multiple integrations being used for one library, the first setting found will be used
-				$eventSettings = $this->getEventSettings($facetSettings);
+				$eventSettings = $this->getEventSettings($facetSettings, $library->libraryId);
 
 				if ($eventSettings->find(true)) {
 					$interface->assign('maxEventDate', strtotime("+" . $eventSettings->numberOfDaysToIndex . " days"));

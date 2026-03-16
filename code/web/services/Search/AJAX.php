@@ -640,136 +640,128 @@ class AJAX extends Action {
 		$facetName = $_REQUEST['facetName'];
 		$interface->assign('searchId', $searchId);
 		$interface->assign('facetName', $facetName);
-		if (is_numeric($searchId)) {
-			require_once ROOT_DIR . '/services/API/SearchAPI.php';
-			$searchAPI = new SearchAPI();
-			$restoredSearch = $searchAPI->restoreSearch($searchId);
-			if (!empty($restoredSearch)) {
-				if (array_key_exists($facetName, $restoredSearch->getFacetConfig())) {
-					if (method_exists($restoredSearch, 'setBypassAsyncFacetLogic')) {
-						$restoredSearch->setBypassAsyncFacetLogic(true);
-						$restoredSearch->processSearch(false, true);
-					}
-					$facetConfig = $restoredSearch->getFacetConfig()[$facetName];
-					if (is_object($facetConfig)) {
-						$facetTitle = $facetConfig->displayName;
-						$facetTitlePlural = $facetConfig->displayNamePlural;
-						$isMultiSelect = $facetConfig->multiSelect;
-					} else {
-						$facetTitle = $facetName;
-						$facetTitlePlural = $facetName;
-						$isMultiSelect = false;
-					}
-					$interface->assign('facetTitle', $facetTitle);
-					$interface->assign('facetTitlePlural', $facetTitlePlural);
-					$interface->assign('isMultiSelect', $isMultiSelect);
+		
+		// Return early if non-numeric
+		if (!is_numeric($searchId)) {
+			return $this->getFacetPopupErrorMessage('Invalid search id provided');
+		}
 
-					$appliedFacets = $restoredSearch->getFilterList();
-					$appliedFacetValues = [];
-					if (array_key_exists($facetTitle, $appliedFacets)) {
-						$appliedFacetValues = $appliedFacets[$facetTitle];
-						if (is_array($appliedFacetValues)) {
-							ksort($appliedFacetValues);
-						} else {
-							$appliedFacetValues = [];
-						}
-					}
+		// Get restored search
+		require_once ROOT_DIR . '/services/API/SearchAPI.php';
+		$searchAPI = new SearchAPI();
+		$restoredSearch = $searchAPI->restoreSearch($searchId);
 
-					$lockSection = $restoredSearch->getSearchName();
-					if (UserAccount::isLoggedIn()) {
-						$user = UserAccount::getActiveUserObj();
-						$lockedFacets = !empty($user->lockedFacets) ? json_decode($user->lockedFacets, true) : [];
-					} else {
-						$lockedFacets = $_SESSION['lockedFilters'] ?? [];
-					}
-					$lockedValues = $lockedFacets[$lockSection][$facetName] ?? [];
-					if (!empty($lockedValues)) {
-						foreach ($appliedFacetValues as &$appliedFacetValue) {
-							if (!empty($appliedFacetValue['value']) && in_array($appliedFacetValue['value'], $lockedValues, true)) {
-								$appliedFacetValue['isLocked'] = true;
-							}
-						}
-						unset($appliedFacetValue);
-					}
-					$interface->assign('appliedFacetValues', $appliedFacetValues);
+		// Return early if restored search is empty
+		if (empty($restoredSearch)) {
+			return $this->getFacetPopupErrorMessage('Your search could not be restored, please try a new search');
+		}
 
-					$allFacets = $restoredSearch->getFacetList();
-					$topResults = $allFacets[$facetName] ?? [];
-					$topResultList = $topResults['list'] ?? [];
-					if (is_array($topResultList)) {
-						ksort($topResultList, SORT_NATURAL | SORT_FLAG_CASE);
-					} else {
-						$topResultList = [];
-					}
-					$interface->assign('topResults', $topResultList);
-					$topResults = $allFacets[$facetName];
-					
-					if (!empty($lockedValues)) {
-						foreach ($topResults['list'] as &$facetValue) {
-							if (!empty($facetValue['value']) && in_array($facetValue['value'], $lockedValues, true)) {
-								$facetValue['isLocked'] = true;
-							}
-						}
-						unset($facetValue);
-					}
-					$interface->assign('topResults', $topResultList);
-					$buttons = '';
-					if ($isMultiSelect) {
-						$buttons = '<button class="btn btn-primary" type="submit" name="submit" onclick="$(\'#searchFacetPopup\').submit()">' . translate([
-								'text' => 'Apply',
-								'isPublicFacing' => true,
-							]) . '</button>';
-					}
-					return [
-						'success' => true,
-						'title' => translate([
-							'text' => 'More %1%',
-							'1' => $facetTitlePlural,
-							'isPublicFacing' => true,
-							'translateParameters' => true
-						]),
-						'modalBody' => $interface->fetch('Search/searchFacetPopup.tpl'),
-						'buttons' => $buttons,
-					];
-				} else {
-					return [
-						'success' => false,
-						'title' => translate([
-							'text' => 'Error',
-							'isPublicFacing' => true,
-						]),
-						'message' =>  translate([
-							'text' => 'That facet could not be found, please try a new search',
-							'isPublicFacing' => true,
-						]),
-					];
-				}
+		// Return early if array key not found
+		if (!array_key_exists($facetName, $restoredSearch->getFacetConfig())) {
+			return $this->getFacetPopupErrorMessage('That facet could not be found, please try a new search');
+		}
+
+		// Determine whether to use async loading
+		if (method_exists($restoredSearch, 'setBypassAsyncFacetLogic')) {
+			$restoredSearch->setBypassAsyncFacetLogic(true);
+			$restoredSearch->processSearch(false, true);
+		}
+
+		$facetConfig = $restoredSearch->getFacetConfig()[$facetName];
+		if (is_object($facetConfig)) {
+			$facetTitle = $facetConfig->displayName;
+			$facetTitlePlural = $facetConfig->displayNamePlural;
+			$isMultiSelect = $facetConfig->multiSelect;
+		} else {
+			$facetTitle = $facetName;
+			$facetTitlePlural = $facetName;
+			$isMultiSelect = false;
+		}
+		$interface->assign('facetTitle', $facetTitle);
+		$interface->assign('facetTitlePlural', $facetTitlePlural);
+		$interface->assign('isMultiSelect', $isMultiSelect);
+
+		$appliedFacets = $restoredSearch->getFilterList();
+		$appliedFacetValues = [];
+		if (array_key_exists($facetTitle, $appliedFacets)) {
+			$appliedFacetValues = $appliedFacets[$facetTitle];
+			if (is_array($appliedFacetValues)) {
+				ksort($appliedFacetValues);
 			} else {
-				return [
-					'success' => false,
-					'title' => translate([
-						'text' => 'Error',
-						'isPublicFacing' => true,
-					]),
-					'message' =>  translate([
-						'text' => 'Your search could not be restored, please try a new search',
-						'isPublicFacing' => true,
-					]),
-				];
+				$appliedFacetValues = [];
 			}
-		}else {
-			return [
+		}
+
+		$lockSection = $restoredSearch->getSearchName();
+		if (UserAccount::isLoggedIn()) {
+			$user = UserAccount::getActiveUserObj();
+			$lockedFacets = !empty($user->lockedFacets) ? json_decode($user->lockedFacets, true) : [];
+		} else {
+			$lockedFacets = $_SESSION['lockedFilters'] ?? [];
+		}
+		$lockedValues = $lockedFacets[$lockSection][$facetName] ?? [];
+		if (!empty($lockedValues)) {
+			foreach ($appliedFacetValues as &$appliedFacetValue) {
+				if (!empty($appliedFacetValue['value']) && in_array($appliedFacetValue['value'], $lockedValues, true)) {
+					$appliedFacetValue['isLocked'] = true;
+				}
+			}
+			unset($appliedFacetValue);
+		}
+		$interface->assign('appliedFacetValues', $appliedFacetValues);
+
+		$allFacets = $restoredSearch->getFacetList();
+		$topResults = $allFacets[$facetName] ?? [];
+		$topResultList = $topResults['list'] ?? [];
+		if (is_array($topResultList)) {
+			ksort($topResultList, SORT_NATURAL | SORT_FLAG_CASE);
+		} else {
+			$topResultList = [];
+		}
+		$interface->assign('topResults', $topResultList);
+		$topResults = $allFacets[$facetName];
+		
+		if (!empty($lockedValues)) {
+			foreach ($topResults['list'] as &$facetValue) {
+				if (!empty($facetValue['value']) && in_array($facetValue['value'], $lockedValues, true)) {
+					$facetValue['isLocked'] = true;
+				}
+			}
+			unset($facetValue);
+		}
+		$interface->assign('topResults', $topResultList);
+		$buttons = '';
+		if ($isMultiSelect) {
+			$buttons = '<button class="btn btn-primary" type="submit" name="submit" onclick="$(\'#searchFacetPopup\').submit()">' . translate([
+					'text' => 'Apply',
+					'isPublicFacing' => true,
+				]) . '</button>';
+		}
+		return [
+			'success' => true,
+			'title' => translate([
+				'text' => 'More %1%',
+				'1' => $facetTitlePlural,
+				'isPublicFacing' => true,
+				'translateParameters' => true
+			]),
+			'modalBody' => $interface->fetch('Search/searchFacetPopup.tpl'),
+			'buttons' => $buttons,
+		];
+	}
+
+	private function getFacetPopupErrorMessage(string $text) : array {
+		return [
 				'success' => false,
 				'title' => translate([
 					'text' => 'Error',
 					'isPublicFacing' => true,
 				]),
 				'message' =>  translate([
-					'text' => 'Invalid search id provided',
+					'text' => $text,
 					'isPublicFacing' => true,
 				]),
 			];
-		}
 	}
 
 	/** @noinspection PhpUnused */
@@ -969,7 +961,10 @@ class AJAX extends Action {
 		// Replace facet config with ONLY the requested facet.
 		$restoredSearch->clearFacets();
 		$restoredSearch->addFacet($facetName, $facetSetting);
-		$restoredSearch->setBypassAsyncFacetLogic(true);
+
+		if ($restoredSearch instanceof SearchObject_GroupedWorkSearcher2) {
+			$restoredSearch->setBypassAsyncFacetLogic(true);
+		}
 		$searchResult = $restoredSearch->processSearch(false, true, true);
 
 		// Check if search failed
@@ -986,7 +981,9 @@ class AJAX extends Action {
 		}
 
 		// Restore original settings.
-		$restoredSearch->setBypassAsyncFacetLogic(false);
+		if ($restoredSearch instanceof SearchObject_GroupedWorkSearcher2) {
+			$restoredSearch->setBypassAsyncFacetLogic(false);
+		}
 		$restoredSearch->clearFacets();
 		foreach ($allFacetConfig as $key => $setting) {
 			$restoredSearch->addFacet($key, $setting);

@@ -901,13 +901,7 @@ class AJAX extends Action {
 		$facetName = $_REQUEST['facetName'] ?? null;
 
 		if (!is_numeric($searchId) || empty($facetName)) {
-			return [
-				'success' => false,
-				'message' => translate([
-					'text' => 'Invalid parameters',
-					'isPublicFacing' => true,
-				])
-			];
+			return $this->getFacetValuesHtmlError('Invalid parameters');
 		}
 
 		require_once ROOT_DIR . '/services/API/SearchAPI.php';
@@ -916,24 +910,12 @@ class AJAX extends Action {
 		$restoredSearch = $searchAPI->restoreSearch($searchId);
 
 		if (empty($restoredSearch)) {
-			return [
-				'success' => false,
-				'message' => translate([
-					'text' => 'Could not restore search',
-					'isPublicFacing' => true,
-				])
-			];
+			return $this->getFacetValuesHtmlError('Could not restore search');
 		}
 
 		$facetConfig = $restoredSearch->getFacetConfig();
 		if (!array_key_exists($facetName, $facetConfig)) {
-			return [
-				'success' => false,
-				'message' => translate([
-					'text' => 'Facet not found',
-					'isPublicFacing' => true,
-				])
-			];
+			return $this->getFacetValuesHtmlError('Facet not found');
 		}
 
 		$facetSetting = $facetConfig[$facetName];
@@ -945,7 +927,7 @@ class AJAX extends Action {
 		$restoredSearch->clearFacets();
 		$restoredSearch->addFacet($facetName, $facetSetting);
 
-		if ($restoredSearch instanceof SearchObject_GroupedWorkSearcher2) {
+		if (method_exists($$restoredSearch, 'setBypassAsyncFacetLogic')) {
 			$restoredSearch->setBypassAsyncFacetLogic(true);
 		}
 		$searchResult = $restoredSearch->processSearch(false, true, true);
@@ -954,17 +936,11 @@ class AJAX extends Action {
 		if ($searchResult instanceof AspenError) {
 			global $logger;
 			$logger->log("getFacetValuesHTML failed for facet $facetName: " . $searchResult->toString(), Logger::LOG_ERROR);
-			return [
-				'success' => false,
-				'message' => translate([
-					'text' => 'Search error occurred',
-					'isPublicFacing' => true,
-				])
-			];
+			return $this->getFacetValuesHtmlError('Search error occurred');
 		}
 
 		// Restore original settings.
-		if ($restoredSearch instanceof SearchObject_GroupedWorkSearcher2) {
+		if (method_exists($$restoredSearch, 'setBypassAsyncFacetLogic')) {
 			$restoredSearch->setBypassAsyncFacetLogic(false);
 		}
 		$restoredSearch->clearFacets();
@@ -977,13 +953,7 @@ class AJAX extends Action {
 		$facetList = $restoredSearch->getFacetList([$facetName => $facetSetting]);
 
 		if (!isset($facetList[$facetName])) {
-			return [
-				'success' => false,
-				'message' => translate([
-					'text' => 'No values available',
-					'isPublicFacing' => true,
-				])
-			];
+			return $this->getFacetValuesHtmlError('No values available');
 		}
 
 		global $interface;
@@ -1111,6 +1081,16 @@ class AJAX extends Action {
 		return [
 			'success' => true,
 			'html' => $interface->fetch($template)
+		];
+	}
+
+	private function getFacetValuesHtmlError($errorMsg) {
+		return [
+				'success' => false,
+				'message' => translate([
+					'text' => $errorMsg,
+					'isPublicFacing' => true,
+				])
 		];
 	}
 

@@ -5,7 +5,11 @@
 			{foreach from=$subCategories item=subCategory}
 			<div class="btn-group" role="group" style="margin-right: .5em">
 				<button class="btn btn-primary" id="browse-sub-category-tab-{$subCategory.textId}" type="button" role="tab" aria-selected="{if $subCategory@iteration != 1}false{else}true{/if}" aria-controls="tabpanel-{$subCategory.textId}"  {if $subCategory@iteration != 1}tabindex="-1"{/if} onclick="AspenDiscovery.Browse.changeBrowseSubCategoryTab('{$subCategory.textId}', '{$parentTextId}')"><span class="focus">{translate text=$subCategory.label isPublicFacing=true}</span></button>
-				<button id="selected-browse-more-results-{$subCategory.textId}" onclick="AspenDiscovery.Browse.getMoreSubCategoryResultsLink('{$subCategory.textId}', '{$parentTextId}')" class="btn btn-primary more-browse-sub-category" type="button" title="{translate text='View all results for %1%' 1={$subCategory.label} inAttribute=true isPublicFacing=true translateParameters=true }" aria-selected="{if $subCategory@iteration != 1}false{else}true{/if}" {if $subCategory@iteration != 1}tabindex="-1"{/if}><i class="fas fa-search" role="button"></i></button>
+				{if !empty($subCategory.searchUrl)}
+					<a id="selected-browse-more-results-{$subCategory.textId}" href="{$subCategory.searchUrl}" class="btn btn-primary more-browse-sub-category" role="button" title="{translate text='View all results for %1%' 1={$subCategory.label} inAttribute=true isPublicFacing=true translateParameters=true }" aria-selected="{if $subCategory@iteration != 1}false{else}true{/if}" {if $subCategory@iteration != 1}tabindex="-1"{/if}><i class="fas fa-search" role="presentation"></i></a>
+				{else}
+					<button id="selected-browse-more-results-{$subCategory.textId}" onclick="AspenDiscovery.Browse.getMoreSubCategoryResultsLink('{$subCategory.textId}', '{$parentTextId}')" class="btn btn-primary more-browse-sub-category" type="button" title="{translate text='View all results for %1%' 1={$subCategory.label} inAttribute=true isPublicFacing=true translateParameters=true }" aria-selected="{if $subCategory@iteration != 1}false{else}true{/if}" {if $subCategory@iteration != 1}tabindex="-1"{/if}><i class="fas fa-search" role="presentation"></i></button>
+				{/if}
 				{if !empty($isLoggedIn)}
 					{assign var="subBrowseCategoryId" value=$subCategory.textId}
 					{if $parentTextId == 'system_user_lists' || $parentTextId == 'system_saved_searches'}

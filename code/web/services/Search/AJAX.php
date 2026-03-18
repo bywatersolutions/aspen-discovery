@@ -927,7 +927,7 @@ class AJAX extends Action {
 		$restoredSearch->clearFacets();
 		$restoredSearch->addFacet($facetName, $facetSetting);
 
-		if (method_exists($$restoredSearch, 'setBypassAsyncFacetLogic')) {
+		if (method_exists($restoredSearch, 'setBypassAsyncFacetLogic')) {
 			$restoredSearch->setBypassAsyncFacetLogic(true);
 		}
 		$searchResult = $restoredSearch->processSearch(false, true, true);
@@ -940,7 +940,7 @@ class AJAX extends Action {
 		}
 
 		// Restore original settings.
-		if (method_exists($$restoredSearch, 'setBypassAsyncFacetLogic')) {
+		if (method_exists($restoredSearch, 'setBypassAsyncFacetLogic')) {
 			$restoredSearch->setBypassAsyncFacetLogic(false);
 		}
 		$restoredSearch->clearFacets();

@@ -13,6 +13,11 @@ class SideFacets implements RecommendationInterface {
 	private array $facetSettings;
 	private array $mainFacets;
 
+	private function shouldUseAsyncFacetLoading(): bool {
+		$searchSource = $this->searchObject->getSearchSource();
+		return in_array($searchSource, ['local', 'econtent'], true);
+	}
+
 	/* Constructor
 	 *
 	 * Establishes base settings for making recommendations.
@@ -146,6 +151,7 @@ class SideFacets implements RecommendationInterface {
 		$sideFacets = $this->searchObject->getFacetList($this->mainFacets);
 
 		// Mark loaded facets and create placeholders for facets that weren't loaded
+		$useAsyncFacetLoading = $this->shouldUseAsyncFacetLoading();
 		$orderedSideFacets = [];
 		foreach ($this->facetSettings as $facetKey => $facetSetting) {
 			if ($facetSetting->showAboveResults) {
@@ -166,7 +172,7 @@ class SideFacets implements RecommendationInterface {
 					'displayNamePlural' => $facetSetting->displayNamePlural,
 					'list' => [],
 					'hasApplied' => false,
-					'loadedValues' => false, // Flag to indicate values not loaded.
+					'loadedValues' => !$useAsyncFacetLoading, // Only allow lazy facet loading for Library Catalog and Online Collection.
 					'multiSelect' => $facetSetting->multiSelect,
 				];
 			}

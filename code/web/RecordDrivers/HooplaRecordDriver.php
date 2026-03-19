@@ -141,7 +141,16 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 		} elseif (!empty($this->hooplaRawMetadata->subtitle)) {
 			return $this->hooplaExtract->title . ': ' . $this->hooplaRawMetadata->subtitle;
 		} elseif (!empty($this->hooplaRawMetadata->seasonNumber)) {
-			return $this->hooplaRawMetadata->seriesName . " - Season " . $this->hooplaRawMetadata->seasonNumber . ": Episode " . $this->hooplaRawMetadata->episodeNumber;
+			if (empty($this->hooplaRawMetadata->seriesName)) {
+				$title = $this->hooplaExtract->title;
+			}else{
+				$title = $this->hooplaRawMetadata->seriesName;
+			}
+			$title .= " - Season " . $this->hooplaRawMetadata->seasonNumber;
+			if (!empty($this->hooplaRawMetadata->episodeNumber)) {
+				$title .= " : Episode " . $this->hooplaRawMetadata->episodeNumber;
+			}
+			return $title;
 		} else {
 			return $this->hooplaExtract->title;
 		}

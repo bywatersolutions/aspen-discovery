@@ -100,6 +100,7 @@ class History extends Action {
 	}
 
 	public static function getSearchForSaveForm($searchId) : array {
+		require_once ROOT_DIR . '/sys/SearchObject/minSO.php';
 		global $interface;
 
 		// Retrieve search history
@@ -153,6 +154,8 @@ class History extends Action {
 		$s->id = $searchId;
 		$thisSearch = null;
 		if ($s->find(true)) {
+			require_once ROOT_DIR . '/sys/SearchObject/minSO.php';
+
 			SearchObjectFactory::initSearchObject();
 			$minSO = unserialize($s->search_object);
 

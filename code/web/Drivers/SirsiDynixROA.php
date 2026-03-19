@@ -1339,7 +1339,10 @@ class SirsiDynixROA extends AbstractIlsDriver {
 				$curHold->expirationDate = strtotime($expireDate);
 				$curHold->automaticCancellationDate = strtotime($fillByDate);
 				$curHold->reactivateDate = strtotime($reactivateDate);
-				$curHold->cancelable = !in_array(strtoupper($curHold->status), ['SUSPENDED', 'EXPIRED', 'INSHIPPING', 'INTRANSIT', 'TRANSIT', 'ILL_WYLD', 'ILLSHIPPED']);
+				$curHold->cancelable = !in_array(strtoupper($curHold->status), ['SUSPENDED', 'EXPIRED', 'INSHIPPING', 'INTRANSIT', 'ILL_WYLD', 'ILLSHIPPED']);
+				if (strtoupper($curHold->status) == 'TRANSIT') {
+					$curHold->cancelable == $patron->getHomeLibrary()->allowCancellingInTransitHolds;
+				}
 
 				$curHold->frozen = strcasecmp($curHold->status, 'Suspended') == 0;
 				$curHold->canFreeze = $patron->getHomeLibrary()->allowFreezeHolds;

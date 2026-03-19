@@ -1148,7 +1148,7 @@ class CatalogConnection {
 		return false;
 	}
 
-	public function getSelfRegistrationTerms() {
+	public function getSelfRegistrationTerms() : ?SelfRegistrationTerms {
 		return $this->driver->getSelfRegistrationTerms();
 	}
 

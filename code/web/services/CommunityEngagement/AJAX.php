@@ -1,4 +1,7 @@
 <?php
+
+use JetBrains\PhpStorm\NoReturn;
+
 require_once ROOT_DIR . '/JSON_Action.php';
 require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
@@ -8,20 +11,15 @@ require_once ROOT_DIR . '/sys/UserAccount.php';
 
 class CommunityEngagement_AJAX extends JSON_Action {
 	function launch($method = null) : void {
-		global $enabledModules;
-		if (!in_array('Community Engagement', $enabledModules)) {
-			$this->outputEncodedResult(['error' => 'Community Engagement not enabled']);
-			return;
-		}
+		$this->checkRequiredModule('Community Engagement');
 		parent::launch($method);
 	}
-	function campaignRewardGivenUpdate() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
-		if (empty($_GET['userId']) || empty($_GET['campaignId'])) {
-			return ['error' => "User ID and Campaign ID are required"];
-		}
+
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	function campaignRewardGivenUpdate() : void {
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
+		$this->checkRequiredParameters(['userId', 'campaignId']);
 		$userId = $_GET['userId'];
 		$campaignId = $_GET['campaignId'];
 		$userCampaign = new UserCampaign();
@@ -41,13 +39,11 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	function milestoneRewardGivenUpdate() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
-		if (empty($_GET['userId']) || empty($_GET['campaignId']) || empty($_GET['milestoneId'])) {
-			return ['error' => "User ID, Campaign ID, and Milestone ID are required"];
-		}
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	function milestoneRewardGivenUpdate() : void {
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
+		$this->checkRequiredParameters(['userId', 'campaignId', 'milestoneId']);
 		ob_start();
 
 		try {
@@ -80,17 +76,16 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	function filterCampaigns() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	function filterCampaigns() : void {
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
 
-		global $library;
 		global $interface;
 
 		$campaignId = isset($_REQUEST['campaignId']) ? intval($_REQUEST['campaignId']) : 0;
 		$userId = isset($_REQUEST['userId']) ? intval($_REQUEST['userId']) : 0;
-		$filterType = isset($_REQUEST['filterType']) ? $_REQUEST['filterType'] : '';
+		$filterType = $_REQUEST['filterType'] ?? '';
 	
 		$response = [];
 		if ($filterType === 'campaign') {
@@ -98,7 +93,6 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	
 				$campaign = Campaign::getCampaignById($campaignId);
 				if ($campaign) {
-					$campaign->completedUsersCount = $campaign->getCompletedUsersCount();
 					$html = '<div class="dashboardCategory row" style="border: 1px solid #3174AF; padding: 0 10px 10px 10px; margin-bottom: 10px;">';
 					$html .= '<div class="col-sm-12">';
 					$html .= '<h5 style="font-weight:bold;">';
@@ -114,7 +108,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 					$html .= '<div class="dashboardLabel">Total Number of Unenrollments:</div>';
 					$html .= '<div class="dashboardValue">' . htmlspecialchars($campaign->unenrollmentCounter) . '</div>';
 					$html .= '<div class="dashboardLabel">Number of Users Who Have Completed the Campaign:</div>';
-					$html .= '<div class="dashboardValue">' . htmlspecialchars($campaign->completedUsersCount) . '</div>';
+					$html .= '<div class="dashboardValue">' . htmlspecialchars($campaign->getCompletedUsersCount()) . '</div>';
 					$html .= '</div>';
 					$html .= '</div>';
 					$html .= '</div>';
@@ -233,7 +227,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	private function userRemovedCampaignCheck($campaignId, $userId) {
+	private function userRemovedCampaignCheck($campaignId, $userId) : bool {
 		require_once ROOT_DIR . '/sys/CommunityEngagement/UserRemovedCampaign.php';
 
 		$removed = new UserRemovedCampaign();
@@ -243,52 +237,14 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		return $removed->find(true);
 	}
 
-	public function restoreCampaignForUser() {
-
-		if (!UserAccount::userHasPermission('View Community Engagement Admin View')) {
-			return [
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'You do not have the correct permissions to carry out this action',
-					'isPublicFacing' => true,
-				]),
-			];
-		}
+	/** @noinspection PhpUnused */
+	public function restoreCampaignForUser() : array {
+		$this->checkRequiredPermission(['View Community Engagement Admin View']);
+		$this->checkRequiredParameters(['userId', 'campaignId']);
 
 		$userId = $_REQUEST['userId'] ?? null;
 		$campaignId = $_REQUEST['campaignId'] ?? null;
 
-		if (!$userId) {
-			return [
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'No User ID ',
-					'isPublicFacing' => true,
-				]),
-			];
-		}
-
-		if (!$campaignId) {
-			return [
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'No Campaign ID ',
-					'isPublicFacing' => true,
-				]),
-			];
-		}
 		require_once ROOT_DIR . '/sys/CommunityEngagement/UserRemovedCampaign.php';
 
 		$removed = new UserRemovedCampaign();
@@ -322,10 +278,9 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		}
 	}
 
-	public function filterLeaderboardCampaigns() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
+	/** @noinspection PhpUnused */
+	public function filterLeaderboardCampaigns() : void {
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 		$campaignId = $_GET['campaignId'] ?? null;
 		$response = [];
@@ -334,6 +289,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		try {
 			if ($campaignId) { 
 				$campaign->id = $campaignId;
+				$campaignName = '';
 				if ($campaign->find(true)) {
 					$campaignName = $campaign->name;
 				}
@@ -383,10 +339,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		}
 	}
 
-	public function filterBranchLeaderboardCampaigns() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	public function filterBranchLeaderboardCampaigns() : void {
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
 
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 		$campaignId = $_GET['campaignId'] ?? null;
@@ -397,10 +353,11 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		try {
 			if ($campaignId) {
 				$campaign->id = $campaignId;
+				$campaignName = '';
 				if ($campaign->find(true)) {
 					$campaignName = $campaign->name;
 				}
-				$branchLeaderboard = $campaign->getLeaderboardByBranchForCampaign($campaign);
+				$branchLeaderboard = $campaign->getLeaderboardByBranchForCampaign($campaign->id);
 				if ($branchLeaderboard) {
 					$html .='<table class="leaderboard-table" style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 16px;"><thead><tr><th>Branch</th><th>Rank</th><th>Completed Milestones</th></tr></thead><tbody>';
 					foreach ($branchLeaderboard as $entry) {
@@ -432,9 +389,9 @@ class CommunityEngagement_AJAX extends JSON_Action {
 				}
 			}
 			
-		header('Content-Type: application/json');
-		echo json_encode($response);
-		exit;
+			header('Content-Type: application/json');
+			echo json_encode($response);
+			exit;
 		} catch (Exception $e) {
 			error_log('Error: ' . $e->getMessage());
 			echo json_encode([
@@ -444,60 +401,17 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		}
 	}
 
-	public function manuallyProgressUserMilestone($milestoneId = null, $userId = null, $campaignId = null) {
+	#[NoReturn]
+	public function manuallyProgressUserMilestone($milestoneId = null, $userId = null, $campaignId = null) : void {
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Milestone.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/CampaignMilestone.php';
+		$this->checkRequiredParameters(['userId', 'campaignId', 'milestoneId']);
 
 		$milestoneId = $milestoneId ?? $_GET['milestoneId'] ?? null;
 		$userId = $userId ?? $_GET['userId'] ?? null;
 		$campaignId = $campaignId ?? $_GET['campaignId'] ?? null;
-
-		if (!isset($milestoneId) || $milestoneId <=0) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid milestone ID.',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
-
-		if (!isset($userId)) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid user ID.',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
-
-		if (!isset($campaignId)){
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid campaign ID.',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
 
 		$campaignMilestone = new CampaignMilestone();
 		$campaignMilestone->campaignId = $campaignId;
@@ -526,39 +440,13 @@ class CommunityEngagement_AJAX extends JSON_Action {
  
 	}
 
-	public function campaignLeaderboardOptIn() {
-		if (!UserAccount::isLoggedIn()) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'User not logged in.',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
+	#[NoReturn]
+	public function campaignLeaderboardOptIn() : void {
+		$this->requireLoggedInUser();
+		$this->checkRequiredParameters(['userId', 'campaignId']);
 
 		$userId = $_GET['userId'];
 		$campaignId = $_GET['campaignId'];
-
-		if (empty($campaignId)) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid Campaign ID',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
 
 		$userCampaign = new UserCampaign();
 		$userCampaign->userId = $userId;
@@ -583,40 +471,13 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	public function campaignLeaderboardOptOut() {
-
-		if (!UserAccount::isLoggedIn()) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'User not logged in.',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
+	#[NoReturn]
+	public function campaignLeaderboardOptOut() : void {
+		$this->requireLoggedInUser();
+		$this->checkRequiredParameters(['userId', 'campaignId']);
 
 		$userId = $_GET['userId'];
 		$campaignId = $_GET['campaignId'];
-
-		if (empty($campaignId)) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid Campaign ID',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
 
 		$userCampaign = new UserCampaign();
 		$userCampaign->userId = $userId;
@@ -643,7 +504,11 @@ class CommunityEngagement_AJAX extends JSON_Action {
 
 	}
 
-	public function getCampaignEmailOptInForm() {
+	/** @noinspection PhpUnused */
+	public function getCampaignEmailOptInForm() : array {
+		$this->requireLoggedInUser();
+		$this->checkRequiredParameters(['userId', 'campaignId']);
+
 		require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
 		require_once ROOT_DIR . '/sys/Account/User.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
@@ -651,21 +516,6 @@ class CommunityEngagement_AJAX extends JSON_Action {
 
 		$campaignId = $_GET['campaignId'];
 		$userId = $_GET['userId'];
-
-
-		if (!$campaignId || !$userId) {
-			return [
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Campaign or User information is missing.',
-					'isPublicFacing' => true
-				]),
-			];
-		}
 
 		$user = new User();
 		$user->id = $userId;
@@ -680,7 +530,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 					'text' => 'User not found',
 					'isPublicFacing' => true
 				])
-				];
+			];
 		}
 
 		$optInToAllCampaignEmails = $user->campaignNotificationsByEmail;
@@ -723,6 +573,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		$interface->assign('emailReminder', $emailReminder);
 		$interface->assign('sliderState', $sliderState);
 
+		/** @noinspection BadExpressionStatementJS */
+		/** @noinspection JSVoidFunctionReturnValueUsed */
+		/** @noinspection CommaExpressionJS */
+		/** @noinspection JSUnresolvedReference */
 		return [
 			'success' => true,
 			'title' => translate([
@@ -737,7 +591,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		];
 	}
 
-	public function saveCampaignEmailOptInToggle() {
+	public function saveCampaignEmailOptInToggle() : array {
+		$this->requireLoggedInUser();
+		$this->checkRequiredParameters(['userId', 'campaignId']);
+
 		require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
 		global $interface;
 
@@ -745,7 +602,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		$userId = $_GET['userId'] ?? null;
 		$optIn = $_GET['optIn'] ?? null;
 
-		if (!$campaignId || !$userId || $optIn === null) {
+		if ($optIn === null) {
 			return [
 				'success' => false,
 				'title' => translate([
@@ -753,13 +610,14 @@ class CommunityEngagement_AJAX extends JSON_Action {
 					'isPublicFacing' => true
 				]),
 				'message' => translate([
-					'text' => 'Campaign, user or opt in information is missing',
+					'text' => 'Opt in information is missing',
 					'isPublicFacing' => true,
 				]),
 			];
 		}
 		$campaign = new Campaign();
 		$campaign->id = $campaignId;
+		$campaignName = '';
 		if ($campaign->find(true)) {
 			$campaignName = $campaign->name;
 		}
@@ -768,6 +626,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		$userCampaign->userId = $userId;
 		$userCampaign->campaignId = $campaignId;
 
+		$success = false;
 		if ($userCampaign->find(true)) {
 			$userCampaign->optInToCampaignEmailNotifications = (int)$optIn;
 			$success = $userCampaign->update();
@@ -809,7 +668,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		}
 	}
 
-	private function sendEnrollmentEmail($user, $campaignId) {
+	private function sendEnrollmentEmail($user, $campaignId) : void {
 		require_once ROOT_DIR . '/sys/Email/EmailTemplate.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 
@@ -837,11 +696,17 @@ class CommunityEngagement_AJAX extends JSON_Action {
 			$emailTemplate->sendEmail($user->email, $parameters);
 
 		} catch (Exception $e) {
-			$logger->log("Exception while sending email to {$user->email}: " . $e->getMessage(), Logger::LOG_ERROR);
+			$logger->log("Exception while sending email to $user->email: " . $e->getMessage(), Logger::LOG_ERROR);
 		}
 	}
 
-	public function saveLeaderboardChanges() {
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	public function saveLeaderboardChanges(): void {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission(['Administer All Grapes Pages', 'Administer Library Grapes Pages']);
+		$this->checkRequiredParameters(['html', 'css', 'templateName']);
+
 		header('Content-Type: application/json');
 		ob_start();
 		$data = json_decode(file_get_contents('php://input'), true);
@@ -849,22 +714,6 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		$html = $data['html'];
 		$css = $data['css'];
 		$templateName = $data['templateName'];
-
-		if (empty($html) || empty($templateName) || empty($css)) {
-			ob_end_clean();
-				echo json_encode([
-					'success' => false, 
-					'title' => translate([
-						'text' => 'Error',
-						'isPublicFacing' => true,
-					]),
-					'message' => translate([
-						'text' => 'Invalid html, css or template name',
-						'isPublicFacing' => true,
-					]),
-				]);
-				return;
-		}
 
 		$this->saveLeaderboardToDatabase($templateName, $html, $css);
 		$leaderboardData = $this->getLeaderboardData();
@@ -875,64 +724,33 @@ class CommunityEngagement_AJAX extends JSON_Action {
 				'title' => translate(['text' => 'Error', 'isPublicFacing' => true]),
 				'message' => translate(['text' => 'Failed to retrieve updated leaderboard data', 'isPublicFacing' => true]),
 			]);
-		exit;
-	}
-	
-
-		ob_end_clean();
-		if ($leaderboardData) {
-			echo json_encode([
-				'success' => true,
-				'title' => translate([
-					'text' => 'Success',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Leaderboard changes saved successfully',
-					'isPublicFacing' => true,
-				]),
-				'updatedHTML' => $leaderboardData['html'],
-				'updatedCSS' => $leaderboardData['css']
-			]);
 			exit;
 		}
+
+		ob_end_clean();
+
+		echo json_encode([
+			'success' => true,
+			'title' => translate([
+				'text' => 'Success',
+				'isPublicFacing' => true,
+			]),
+			'message' => translate([
+				'text' => 'Leaderboard changes saved successfully',
+				'isPublicFacing' => true,
+			]),
+			'updatedHTML' => $leaderboardData['html'],
+			'updatedCSS' => $leaderboardData['css']
+		]);
+		exit;
 	}
 
-	private function saveLeaderboardToDatabase($templateName, $html, $css) {
+	private function saveLeaderboardToDatabase($templateName, $html, $css) : void {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission(['Administer All Grapes Pages', 'Administer Library Grapes Pages']);
+
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
 		global $logger;
-
-		$activeUser = UserAccount::getActiveUserObj();
-
-		if (!$activeUser) {
-			return [
-				'success' => false,
-				'title' => translate([
-					'text' =>'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'You must be logged in to make changes to the leaderboard.',
-					'isPublicFacing' => true
-				])
-			];
-		}
-		$userIsAspenAdmin = UserAccount::getActiveUserObj()->isAspenAdminUser();
-		$userIsAdmin = UserAccount::getActiveUserObj()->isUserAdmin();
-
-		if (!$userIsAspenAdmin || !$userIsAdmin) {
-			return [
-				'success' => false,
-				'title' => translate([
-					'text' =>'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'You do not have the correct permissions to make changes to the leaderboard.',
-					'isPublicFacing' => true
-				])
-			];
-		}
 
 		$grapesTemplate = new GrapesTemplate();
 		$grapesTemplate->templateName = $templateName;
@@ -956,10 +774,9 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		if (!$success) {
 			$logger->log("Failed to save template: " . print_r($grapesTemplate->getLastError(), true), LOGGER::LOG_ERROR);
 		}
-		return $success;
 	}
 
-	public function getLeaderboardData() {
+	public function getLeaderboardData() : ?array{
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
 
 		$grapesTemplate = new GrapesTemplate();
@@ -974,7 +791,12 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		return null;
 	}
 
-	public function resetLeaderboardDisplay() {
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	public function resetLeaderboardDisplay() : void {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission(['Administer All Grapes Pages', 'Administer Library Grapes Pages']);
+
 		require_once ROOT_DIR . '/sys/WebBuilder/GrapesTemplate.php';
 		$grapesTemplate = new GrapesTemplate();
 		$grapesTemplate->templateName = 'leaderboard_template';
@@ -1007,38 +829,13 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	public function campaignEmailOptIn() {
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	public function campaignEmailOptIn() : void {
+		$this->checkRequiredParameters(['userId', 'campaignId']);
+
 		$userId = $_GET['userId'];
 		$campaignId = $_GET['campaignId'];
-
-		if (empty($campaignId)) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid Campaign ID',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
-		if (empty($userId)) {
-			echo json_encode([
-				'success' => false,
-				'title' => translate([
-					'text' => 'Error',
-					'isPublicFacing' => true,
-				]),
-				'message' => translate([
-					'text' => 'Invalid User ID',
-					'isPublicFacing' => true,
-				]),
-			]);
-			exit;
-		}
 
 		$userCampaign = new UserCampaign();
 		$userCampaign->userId = $userId;
@@ -1064,8 +861,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	public function campaignEmailOptOut() {
-
+	/** @noinspection PhpUnused */
+	#[NoReturn]
+	public function campaignEmailOptOut() : void {
+		$this->checkRequiredParameters(['userId', 'campaignId']);
 		$userId = $_GET['userId'];
 		$campaignId = $_GET['campaignId'];
 
@@ -1122,10 +921,9 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	public function fetchLibraryUsers($enrolledOnly = false) {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return [];
-		}
+	public function fetchLibraryUsers() : array {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
 
 		global $library;
 
@@ -1172,12 +970,11 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		return $users;
 	}
 
-	public function getLibraryUsers() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
+	/** @noinspection PhpUnused */
+	public function getLibraryUsers() : void {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
 
-		global $library;
 		try {
 			$users = $this->fetchLibraryUsers();
 
@@ -1212,10 +1009,10 @@ class CommunityEngagement_AJAX extends JSON_Action {
 	}
 
 
-	public function addUserByBarcode() {
-		if (!UserAccount::userHasPermission(['View Community Engagement Dashboard'])){
-			return ['error' => "You don't have permission to access this page"];
-		}
+	/** @noinspection PhpUnused */
+	public function addUserByBarcode() : array {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission(['View Community Engagement Dashboard']);
 
 		$barcode = $_POST['barcode'] ?? '';
 		
@@ -1226,7 +1023,6 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		require_once ROOT_DIR . '/sys/Account/User.php';
 		require_once ROOT_DIR . '/CatalogFactory.php';
 		global $library;
-		global $logger;
 		$accountProfile = new AccountProfile();
 		$accountProfile->id = $library->accountProfileId;
 		$accountProfile->find(true);
@@ -1249,7 +1045,7 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		}
 		
 		// Try to load from ILS
-		$catalog = CatalogFactory::getCatalogConnectionInstance(null, null);
+		$catalog = CatalogFactory::getCatalogConnectionInstance();
 		if (method_exists($catalog, 'findNewUser')) {
 			$newUser = $catalog->findNewUser($barcode, '');
 		} else {
@@ -1296,7 +1092,8 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		];
 	}
 
-	public function addProgressToExtraCreditActivities($extraCreditActivityId = null, $userId = null, $campaignId = null) {
+	#[NoReturn]
+	public function addProgressToExtraCreditActivities($extraCreditActivityId = null, $userId = null, $campaignId = null) : void {
 		require_once ROOT_DIR . '/sys/CommunityEngagement/Campaign.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/ExtraCredit.php';
 		require_once ROOT_DIR . '/sys/CommunityEngagement/UserCampaign.php';
@@ -1380,7 +1177,8 @@ class CommunityEngagement_AJAX extends JSON_Action {
  
 	}
 
-	function extraCreditRewardGivenUpdate() {
+	/** @noinspection PhpUnused */
+	function extraCreditRewardGivenUpdate() : void {
 		ob_start();
 
 		try {
@@ -1468,7 +1266,8 @@ class CommunityEngagement_AJAX extends JSON_Action {
 		exit;
 	}
 
-	public function searchUsers() {
+	/** @noinspection PhpUnused */
+	public function searchUsers() : array {
 		$query = $_REQUEST['query'] ?? '';
 
 		$response = [

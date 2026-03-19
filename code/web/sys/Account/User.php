@@ -2676,6 +2676,7 @@ class User extends DataObject {
 		$numHoldsAlreadyFrozen = 0;
 
 		if ($total >= 1) {
+			/** @var Hold $hold */
 			foreach ($allUnavailableHolds as $hold) {
 				$frozen = $hold->frozen;
 				if ($frozen) {
@@ -2685,7 +2686,7 @@ class User extends DataObject {
 				$recordId = $hold->sourceId;
 				$holdId = $hold->cancelId;
 				$holdType = $hold->source;
-				$patron = ($hold->patronId && $hold->patronId !== $user->id) ? $user->getUserReferredTo($hold->patronId) : $user;
+				$patron = $user->getUserReferredTo($hold->userId);
 				if ($patron && $frozen == 0 && $canFreeze == 1) {
 					if ($holdType == 'ils') {
 						$tmpResult = $patron->freezeHold($recordId, $holdId, $reactivationDate);
@@ -2798,14 +2799,14 @@ class User extends DataObject {
 		$total = count($allHolds['unavailable']);
 
 		if ($total >= 1) {
+			/** @var Hold $hold */
 			foreach ($allUnavailableHolds as $hold) {
 				$frozen = $hold->frozen;
 				$canFreeze = $hold->canFreeze;
 				$recordId = $hold->sourceId;
 				$holdId = $hold->cancelId;
 				$holdType = $hold->source;
-				$patronId = $hold->patronId ?? $user->id;
-				$patron = ($hold->patronId && $hold->patronId !== $user->id) ? $user->getUserReferredTo($hold->patronId) : $user;
+				$patron = $user->getUserReferredTo($hold->userId);
 				if ($patron && $frozen == 1 && $canFreeze == 1) {
 					if ($holdType == 'ils') {
 						$tmpResult = $patron->thawHold($recordId, $holdId);

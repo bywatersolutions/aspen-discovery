@@ -2367,9 +2367,9 @@ class Library extends DataObject {
 								'description' => 'Whether or not the user can cancel in transit holds.',
 								'hideInLists' => true,
 								'default' => 1,
-								'note' => 'Applies to CARL.X Only',
+								'note' => 'Applies to CARL.X and Symphony Only',
 								'permissions' => ['Library ILS Connection'],
-								'relatedIls' => ['carlx'],
+								'relatedIls' => ['carlx', 'symphony'],
 							],
 							'allowFreezeHolds' => [
 								'property' => 'allowFreezeHolds',
@@ -6640,6 +6640,7 @@ class Library extends DataObject {
 		$suspendRequiresReactivationDate = false;
 		$showDateWhenSuspending = true;
 		$catalogHasAccountNotifications = false;
+		$reactivateDateNotRequired = false;
 
 		$catalog = CatalogFactory::getCatalogConnectionInstance();
 		if ($catalog != null) {

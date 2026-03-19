@@ -165,7 +165,7 @@ function getUpdates26_03_00(): array {
 			'title' => 'User - Allow patrons to choose if they want email notifications when saved searches are updated.',
 			'description' => 'Patrons will gain the choice within Your Preferences to have Aspen notify them via email when updates to their saved searches occur.',
 			'sql' => [
-				"ALTER TABLE user ADD COLUMN notifySavedSearches tinyint(1) NOT NULL DEFAULT 1",
+				"ALTER TABLE user ADD COLUMN notifySavedSearches tinyint(1) NOT NULL DEFAULT 0",
 			]
 		], //notify_saved_searches
 

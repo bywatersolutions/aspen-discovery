@@ -1362,55 +1362,9 @@ abstract class Solr {
 			$filters = $filter;
 		}
 
-
 		// Build Facet Options
-		if ($facet && !empty($facet['field']) && $configArray['Index']['enableFacets']) {
-			$options['facet'] = 'true';
-			$options['facet.mincount'] = 1;
-			$options['facet.method'] = 'fcs';
-			$options['facet.threads'] = 25;
-			$options['facet.limit'] = (isset($facet['limit'])) ? $facet['limit'] : null;
-
-			unset($facet['limit']);
-			if (isset($facet['field']) && is_array($facet['field']) && in_array('date_added', $facet['field'])) {
-				$options['facet.date'] = 'date_added';
-				$options['facet.date.end'] = 'NOW';
-				$options['facet.date.start'] = 'NOW-1YEAR';
-				$options['facet.date.gap'] = '+1WEEK';
-				foreach ($facet['field'] as $key => $value) {
-					if ($value == 'date_added') {
-						unset($facet['field'][$key]);
-						break;
-					}
-				}
-			}
-
-			if (isset($facet['field'])) {
-				foreach ($facet['field'] as $facetField => $facetInfo) {
-					$options['facet.field'][] = $facetInfo;
-				}
-			} else {
-				$options['facet.field'] = null;
-			}
-
-			//unset($facet['field']);
-			$options['facet.sort'] = (isset($facet['sort'])) ? $facet['sort'] : 'count';
-			unset($facet['sort']);
-			if (isset($facet['offset'])) {
-				$options['facet.offset'] = $facet['offset'];
-				unset($facet['offset']);
-			}
-			if (isset($facet['limit'])) {
-				$options['facet.limit'] = $facet['limit'];
-				unset($facet['limit']);
-			}
-
-			foreach ($facet as $param => $value) {
-				if ($param != 'additionalOptions' && $param != 'field') {
-					$options[$param] = $value;
-				}
-			}
-		}
+		$shouldBuildFacets = $facet && !empty($facet['field']) && $configArray['Index']['enableFacets'];
+		[$options, $facet] = $shouldBuildFacets ? $this->buildFacetOptions($options, $facet) : [$options, $facet];
 
 		if (isset($facet['additionalOptions'])) {
 			$options = array_merge($options, $facet['additionalOptions']);
@@ -1431,8 +1385,9 @@ abstract class Solr {
 			$this->getHighlightOptions($fields, $options);
 		}
 
+		
 		$solrSearchDebug = print_r($options, true) . "\n";
-		if ($this->debugSolrQuery) {
+		if ($this->debugSolrQuery && $this->isPrimarySearch) {
 
 			if ($filters) {
 				$solrSearchDebug .= "\nFilterQuery: ";
@@ -1445,10 +1400,8 @@ abstract class Solr {
 				$solrSearchDebug .= "\nSort: " . $options['sort'];
 			}
 
-			if ($this->isPrimarySearch) {
-				global $interface;
-				$interface->assign('solrSearchDebug', $solrSearchDebug);
-			}
+			global $interface;
+			$interface->assign('solrSearchDebug', $solrSearchDebug);
 		}
 		if ($this->debugSolrQuery || $this->debug) {
 			$options['debugQuery'] = 'on';
@@ -1463,7 +1416,6 @@ abstract class Solr {
 
 		return $result;
 	}
-
 
 	/**
 	 * Get filters based on scoping for the search
@@ -1527,6 +1479,56 @@ abstract class Solr {
 		$options['spellcheck.accuracy'] = .5;
 
 		return $options;
+	}
+
+	private function buildFacetOptions(array $options, array $facet) : array {
+		$options['facet'] = 'true';
+		$options['facet.mincount'] = 1;
+		$options['facet.method'] = 'fcs';
+		$options['facet.threads'] = 25;
+		$options['facet.limit'] = (isset($facet['limit'])) ? $facet['limit'] : null;
+
+		unset($facet['limit']);
+		if (isset($facet['field']) && is_array($facet['field']) && in_array('date_added', $facet['field'])) {
+			$options['facet.date'] = 'date_added';
+			$options['facet.date.end'] = 'NOW';
+			$options['facet.date.start'] = 'NOW-1YEAR';
+			$options['facet.date.gap'] = '+1WEEK';
+			foreach ($facet['field'] as $key => $value) {
+				if ($value == 'date_added') {
+					unset($facet['field'][$key]);
+					break;
+				}
+			}
+		}
+
+		if (isset($facet['field'])) {
+			foreach ($facet['field'] as $facetField => $facetInfo) {
+				$options['facet.field'][] = $facetInfo;
+			}
+		} else {
+			$options['facet.field'] = null;
+		}
+
+		//unset($facet['field']);
+		$options['facet.sort'] = (isset($facet['sort'])) ? $facet['sort'] : 'count';
+		unset($facet['sort']);
+		if (isset($facet['offset'])) {
+			$options['facet.offset'] = $facet['offset'];
+			unset($facet['offset']);
+		}
+		if (isset($facet['limit'])) {
+			$options['facet.limit'] = $facet['limit'];
+			unset($facet['limit']);
+		}
+
+		foreach ($facet as $param => $value) {
+			if ($param != 'additionalOptions' && $param != 'field') {
+				$options[$param] = $value;
+			}
+		}
+
+		return [$options, $facet];
 	}
 
 	/**

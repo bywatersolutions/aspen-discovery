@@ -22,7 +22,7 @@
 			</div>
 			{if !empty($removeAllFiltersUrl)}
 				<div class="removeAllFilters">
-					<a class="btn btn-default btn-sm removeAllFiltersBtn" href="{$removeAllFiltersUrl}">{translate text="Clear All" isPublicFacing=true}</a>
+					<a class="btn btn-default btn-sm removeAllFiltersBtn" href="{$removeAllFiltersUrl}" onclick="return AspenDiscovery.Searches.clearAllFiltersAndUnlock('{$removeAllFiltersUrl|escape:'javascript'}');">{translate text="Clear All" isPublicFacing=true}</a>
 				</div>
 			{/if}
 		{/if}
@@ -38,7 +38,7 @@
 							<div id="facetToggle_{$title}" aria-controls="facetDetails_{$title}" class="facetTitle panel-title {if !empty($cluster.locked)}expanded{elseif !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}collapsed{else}expanded{/if}" tabindex="0" role="button" aria-expanded="{if !empty($cluster.locked)}true{elseif !empty($cluster.collapseByDefault) && empty($cluster.hasApplied)}false{else}true{/if}" data-facet-loaded="{if !empty($cluster.loadedValues) || count($cluster.list) > 0}true{else}false{/if}" data-search-id="{$searchId}" data-facet-name="{if !empty($cluster.field)}{$cluster.field}{else}{$title}{/if}">
 								{translate text=$cluster.label isPublicFacing=true}
 
-								{if !empty($cluster.canLock)}
+								{if !empty($cluster.canLock) && !($module == 'MyAccount' && $action == 'MyList')}
 									<span class="facetLock pull-right" id="facetLock_{$title}" {if empty($cluster.hasApplied) && empty($cluster.locked)}style="display: none"{/if} title="{translate text="Locking a facet will retain the selected filters in new searches until they are cleared" inAttribute=true isPublicFacing=true}">
 										<a id="facetLock_lockIcon_{$title}" {if !empty($cluster.locked)}style="display: none"{/if} onclick="return AspenDiscovery.Searches.lockFacet('{$title}');"><i class="fas fa-lock-open fa-lg fa-fw" style="vertical-align: middle"></i></a>
 										<a id="facetLock_unlockIcon_{$title}" {if empty($cluster.locked)}style="display: none"{/if} onclick="return AspenDiscovery.Searches.unlockFacet('{$title}');"><i class="fas fa-lock fa-lg fa-fw" style="vertical-align: middle"></i></a>

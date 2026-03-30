@@ -141,6 +141,12 @@ abstract class AbstractAPI extends Action{
 				'event_aspenEvent',
 				'grouped_work'
 			];
+		} elseif ($context == 'list') {
+			return [
+				'GroupedWork',
+				'Events',
+				'Lists'
+			];
 		} else {
 			return [
 				'GroupedWork',

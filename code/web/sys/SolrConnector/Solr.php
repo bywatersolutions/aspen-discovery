@@ -1341,29 +1341,7 @@ abstract class Solr {
 		}
 
 		// Enable Spell Checking
-		if ($spell != '') {
-			require_once ROOT_DIR . '/sys/SystemVariables.php';
-			$systemVariables = SystemVariables::getSystemVariables();
-			$maxCollationTries = ($systemVariables && $systemVariables->spellcheckMaxCollationTries > 0) ? $systemVariables->spellcheckMaxCollationTries : 25;
-
-			$options['spellcheck'] = 'true';
-			$options['spellcheck.q'] = $spell;
-//			if ($dictionary != null) {
-//				$options['spellcheck.dictionary'] = $dictionary;
-//			}
-			$options['spellcheck.extendedResults'] = 'true';
-			$options['spellcheck.count'] = 5;
-			$options['spellcheck.onlyMorePopular'] = 'true';
-			$options['spellcheck.maxResultsForSuggest'] = 5;
-			$options['spellcheck.alternativeTermCount'] = 5;
-			$options['spellcheck.collate'] = 'true';
-			$options['spellcheck.collateParam.q.op'] = 'AND';
-			$options['spellcheck.collateParam.mm'] = '100%';
-			$options['spellcheck.maxCollations'] = 5;
-			$options['spellcheck.collateExtendedResults'] = 'true';
-			$options['spellcheck.maxCollationTries'] = $maxCollationTries;
-			$options['spellcheck.accuracy'] = .5;
-		}
+		$options = ($spell !== '') ? $this->setSpellCheckOptions($options, $spell) : $options;
 
 		// Enable highlighting
 		if ($this->_highlight) {
@@ -1439,6 +1417,33 @@ abstract class Solr {
 		}
 
 		return $cfqParts;
+	}
+
+	private function setSpellCheckOptions(array $options, string $spell) : array {
+		require_once ROOT_DIR . '/sys/SystemVariables.php';
+		$systemVariables = SystemVariables::getSystemVariables();
+		$DEFAULT_COLATION_TRIES = 25;
+		$maxCollationTries = 
+			($systemVariables && $systemVariables->spellcheckMaxCollationTries > 0) ? 
+			$systemVariables->spellcheckMaxCollationTries : 
+			$DEFAULT_COLATION_TRIES;
+
+		$options['spellcheck'] = 'true';
+		$options['spellcheck.q'] = $spell;
+		$options['spellcheck.extendedResults'] = 'true';
+		$options['spellcheck.count'] = 5;
+		$options['spellcheck.onlyMorePopular'] = 'true';
+		$options['spellcheck.maxResultsForSuggest'] = 5;
+		$options['spellcheck.alternativeTermCount'] = 5;
+		$options['spellcheck.collate'] = 'true';
+		$options['spellcheck.collateParam.q.op'] = 'AND';
+		$options['spellcheck.collateParam.mm'] = '100%';
+		$options['spellcheck.maxCollations'] = 5;
+		$options['spellcheck.collateExtendedResults'] = 'true';
+		$options['spellcheck.maxCollationTries'] = $maxCollationTries;
+		$options['spellcheck.accuracy'] = .5;
+
+		return $options;
 	}
 
 	/**

@@ -1485,7 +1485,7 @@ abstract class Solr {
 		$options['facet'] = 'true';
 		$options['facet.mincount'] = 1;
 		$options['facet.method'] = 'fcs';
-		$options['facet.threads'] = 25;
+		$options['facet.threads'] = 4;
 		$options['facet.limit'] = (isset($facet['limit'])) ? $facet['limit'] : null;
 
 		unset($facet['limit']);

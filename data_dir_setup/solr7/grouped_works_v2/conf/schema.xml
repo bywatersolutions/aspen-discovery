@@ -392,6 +392,16 @@
 		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false"/>
 		<!-- Field to get random titles -->
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
+
+		<!-- Precomputed boost components -->
+		<field name="format_boost_capped" type="pfloat" indexed="true" stored="false" docValues="true"/>
+		<field name="holdings_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
+		<field name="popularity_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
+		<field name="rating_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
+		<field name="lib_boost_capped" type="pfloat" indexed="true" stored="false" docValues="true"/>
+
+		<!-- Optional combined field (faster path) -->
+		<field name="base_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
 	</fields>
 
 	<uniqueKey>id</uniqueKey>
@@ -436,4 +446,5 @@
 	<copyField source="genre" dest="genre_proper"/>
 	<copyField source="local_callnumber_*" dest="local_callnumber_exact_*"/>
 	<copyField source="local_callnumber_*" dest="local_callnumber_left_*"/>
+	
 </schema>

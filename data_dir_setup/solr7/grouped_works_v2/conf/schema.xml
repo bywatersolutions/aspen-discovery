@@ -394,14 +394,14 @@
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
 
 		<!-- Precomputed boost components -->
-		<field name="format_boost_capped" type="pfloat" indexed="true" stored="false" docValues="true"/>
-		<field name="holdings_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
-		<field name="popularity_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
-		<field name="rating_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
-		<field name="lib_boost_capped" type="pfloat" indexed="true" stored="false" docValues="true"/>
+		<field name="format_boost_capped" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="holdings_boost" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="popularity_boost" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="rating_boost" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="lib_boost_capped" type="float" indexed="true" stored="false" docValues="true"/>
 
 		<!-- Optional combined field (faster path) -->
-		<field name="base_boost" type="pfloat" indexed="true" stored="false" docValues="true"/>
+		<field name="base_boost" type="float" indexed="true" stored="false" docValues="true"/>
 	</fields>
 
 	<uniqueKey>id</uniqueKey>

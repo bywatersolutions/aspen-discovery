@@ -118,6 +118,16 @@ public abstract class AbstractGroupedWorkSolr implements DebugLogger {
 
 	protected final HashMap<Integer, Set<String>> customFacetValues = new HashMap<>();
 
+	protected float formatBoostCapped;
+	protected float numHoldingsSafe;
+	protected float holdingsBoost;
+	protected float popularitySafe;
+	protected float popularityPerHold;
+	protected float popularityBoost;
+	protected float ratingBoost;
+	protected float libBoostCapped;
+	protected float baseBoost;
+
 	//Store a list of scopes for the work
 	protected HashMap<String, ArrayList<ScopingInfo>> relatedScopes = new HashMap<>();
 

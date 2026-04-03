@@ -359,6 +359,27 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 			doc.addField("display_description", displayDescription);
 			doc.addField("ils_description", ilsDescription);
 
+
+			formatBoostCapped = Math.min(25, getTotalFormatBoost());
+			numHoldingsSafe = Math.max(this.numHoldings, 1);
+			holdingsBoost = Math.min(25, numHoldingsSafe);
+			popularitySafe = Math.max((float)this.popularity, 1);
+			popularityPerHold = popularitySafe / numHoldingsSafe;
+			popularityBoost = Math.min(25, popularityPerHold);
+			ratingBoost = Math.max(this.rating, 1);
+			//libBoostCapped = Math.max(libBoost, 1);
+			baseBoost = Math.min(500,
+				formatBoostCapped +
+				holdingsBoost +
+				popularityBoost
+			);
+			doc.addField("format_boost_capped", formatBoostCapped);
+			doc.addField("holdings_boost", holdingsBoost);
+			doc.addField("popularity_boost", popularityBoost);
+			doc.addField("rating_boost", ratingBoost);
+			//doc.addField("lib_boost_capped", libBoostCapped);
+			doc.addField("base_boost", baseBoost);
+
 			for (Integer customFacetNumber : customFacetValues.keySet()) {
 				doc.addField("custom_facet_" + customFacetNumber, customFacetValues.get(customFacetNumber));
 			}

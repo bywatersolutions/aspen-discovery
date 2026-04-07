@@ -220,7 +220,7 @@
 		<!-- AUTHOR INFORMATION -->
 		<field name="author" type="searchable_text_unstemmed" indexed="true" stored="false" />
 		<field name="author_display" type="unchanged_string" indexed="false" stored="true" multiValued="false"/> <!-- The author to display to the user -->
-		<field name="authorStr" type="unchanged_string" indexed="true" stored="true" termVectors="true"/>
+		<field name="authorStr" type="unchanged_string" indexed="true" stored="true" termVectors="true" docValues="true"/>
 		<field name="author_exact" type="text-exact" indexed="true" stored="true" />
 		<field name="author_left" type="text-left" indexed="true" stored="true" />
 		<field name="author-letter" type="unchanged_string" indexed="true" stored="true"/>
@@ -250,13 +250,13 @@
 		<field name="item_details" type="unchanged_string" indexed="false" stored="true" multiValued="true"/>
 		<dynamicField name="scoping_details_*" type="unchanged_string" indexed="false" stored="true" multiValued="true"/>
 		<!-- The popularity of a title in terms of circulation activity -->
-		<field name="popularity" type="integer" indexed="true" stored="false" default="0"/>
+		<field name="popularity" type="integer" indexed="true" stored="false" default="0" docValues="true"/>
 		<field name="total_holds" type="integer" indexed="true" stored="false" default="0"/>
 
 		<!-- Format information -->
 		<field name="grouping_category" type="unchanged_string" indexed="true" stored="true" multiValued="false"/>
 		<field name="format" type="unchanged_string" indexed="true" stored="true" multiValued="true"/>
-		<field name="format_boost" type="integer" indexed="true" stored="false"/>
+		<field name="format_boost" type="integer" indexed="true" stored="false" docValues="true"/>
 		<field name="format_category" type="unchanged_string" indexed="true" stored="true" multiValued="true"/>
 
 		<!-- Fields to determine ownership and location based on location codes -->
@@ -360,9 +360,9 @@
 		<field name="display_description" type="unchanged_string" indexed="false" stored="true"/>
 		<field name="ils_description" type="unchanged_string" indexed="false" stored="true"/>
 		<!-- Total number of holdings for a work -->
-		<field name="num_holdings" type="integer" indexed="true" stored="false"/>
+		<field name="num_holdings" type="integer" indexed="true" stored="false" docValues="true"/>
 		<!-- End user rating for a work 2.5 if not set -->
-		<field name="rating" type="float" indexed="true" stored="false" multiValued="false" default="2.5"/>
+		<field name="rating" type="float" indexed="true" stored="false" multiValued="false" default="2.5" docValues="true"/>
 		<field name="rating_facet" type="unchanged_string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
 		<!-- Custom facets -->
@@ -389,11 +389,11 @@
 		<field name="suggestions_context_filter" type="unchanged_string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
 		<!-- Boosts -->
-		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false"/>
+		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false" docValues="true"/>
 		<!-- Field to get random titles -->
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
 
-		<!-- Precomputed boost components -->
+				<!-- Precomputed boost components -->
 		<field name="format_boost_capped" type="float" indexed="true" stored="false" docValues="true"/>
 		<field name="holdings_boost" type="float" indexed="true" stored="false" docValues="true"/>
 		<field name="popularity_boost" type="float" indexed="true" stored="false" docValues="true"/>
@@ -446,5 +446,4 @@
 	<copyField source="genre" dest="genre_proper"/>
 	<copyField source="local_callnumber_*" dest="local_callnumber_exact_*"/>
 	<copyField source="local_callnumber_*" dest="local_callnumber_left_*"/>
-	
 </schema>

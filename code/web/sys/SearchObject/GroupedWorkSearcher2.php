@@ -341,6 +341,7 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 		}
 
 		// Build a list of facets we want from the index
+		require_once ROOT_DIR . '/services/API/SearchAPI.php';
 		$facetConfig = $this->getFacetConfig();
 		if ($recommendations && !empty($facetConfig)) {
 			$facetSet['limit'] = $this->facetLimit;

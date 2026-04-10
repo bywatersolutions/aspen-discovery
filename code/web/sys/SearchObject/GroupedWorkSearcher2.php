@@ -342,14 +342,16 @@ class SearchObject_GroupedWorkSearcher2 extends SearchObject_AbstractGroupedWork
 
 		// Build a list of facets we want from the index
 		$facetConfig = $this->getFacetConfig();
+		$searchAPI = new SearchAPI();
 		if ($recommendations && !empty($facetConfig)) {
 			$facetSet['limit'] = $this->facetLimit;
 			foreach ($facetConfig as $facetField => $facetInfo) {
 				if ($facetInfo instanceof FacetSetting) {
 					$shouldLoad = true;
 					$facetName = $facetInfo->getFacetName(2);
-
-					if (!$this->bypassAsyncFacetLogic) {
+					
+					$bypassLazyLoading = $this->bypassAsyncFacetLogic || $searchAPI->checkIfLiDA();
+					if (!$bypassLazyLoading) {
 						// Check if async facet loading is enabled for this library
 						$library = Library::getActiveLibrary();
 						$asyncFacetLoadingEnabled = !empty($library->enableAsyncFacetLoading);

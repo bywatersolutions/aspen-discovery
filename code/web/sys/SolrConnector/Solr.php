@@ -506,27 +506,118 @@ abstract class Solr {
 
 		// Add highlighting because suggestion highlighting still does not
 		// work in Solr (https://issues.apache.org/jira/browse/SOLR-7964).
-		if (isset($result['suggest']) && !empty($phrase)) {
-			$searchTerms = preg_split('/\s+/', strtolower(trim($phrase)));
-			$searchTerms = array_filter($searchTerms, function($term) { return strlen($term) > 1; });
+		if (!(isset($result['suggest']) && !empty($phrase))) {
+			return $result;
+		}
+		
+		$searchTerms = preg_split('/\s+/', strtolower(trim($phrase)));
+		$searchTerms = array_filter($searchTerms, fn($term) => strlen($term) > 1);
 
-			foreach ($result['suggest'] as &$dictionary) {
-				foreach ($dictionary as &$queryData) {
-					if (isset($queryData['suggestions'])) {
-						foreach ($queryData['suggestions'] as &$suggestion) {
-							if (isset($suggestion['term'])) {
-								foreach ($searchTerms as $term) {
-									$pattern = '/(' . preg_quote($term, '/') . ')/i';
-									$suggestion['term'] = preg_replace($pattern, '<b>$1</b>', $suggestion['term']);
-								}
-							}
-						}
+		foreach ($result['suggest'] as &$dictionary) {
+			foreach ($dictionary as &$queryData) {
+				if (!isset($queryData['suggestions'])) {
+					continue;
+				}
+				foreach ($queryData['suggestions'] as &$suggestion) {
+					if (!isset($suggestion['term'])) {
+						continue;
+					}
+					foreach ($searchTerms as $term) {
+						$pattern = '/(' . preg_quote($term, '/') . ')/i';
+						$suggestion['term'] = preg_replace($pattern, '<b>$1</b>', $suggestion['term']);
 					}
 				}
 			}
 		}
+		
+		return $result;
+	}
+
+	private function setDebugStatus(string $method, string $queryString) : void {
+		if (!($this->debug || $this->debugSolrQuery)) {
+			return;
+		}
+		
+		$solrQueryDebug = "";
+		if ($this->debugSolrQuery) {
+			$solrQueryDebug .= "$method: ";
+		}
+		//Add debug parameter so we can see the explain section at the bottom.
+		$this->debugSearchUrl = $this->host . "/select/?debugQuery=on&" . $queryString;
+
+		if ($this->debugSolrQuery) {
+			$solrQueryDebug .= "<a href='" . $this->debugSearchUrl . "' target='_blank'>$this->fullSearchUrl</a>";
+		}
+
+		global $interface;
+		if ($this->isPrimarySearch && $interface) {
+			$interface->assign('solrLinkDebug', $solrQueryDebug);
+		}
+	}
+
+	private function getParsedValues(array $params) : array {
+		$query = [];
+
+		$parseAdditional = function($add) {
+			$retVal = match(true) {
+				($add instanceof FacetSetting) => $add->facetName,
+				default => $add
+			};
+			return urlencode($retVal);
+		};
+
+		$parseArrayValue = function($function, $val) use ($parseAdditional){
+			$encodedVals = array_map($parseAdditional, $val);
+			$retVal = array_map(fn($v) => "$function=$v", $encodedVals);
+			return $retVal;
+		};
+
+		$parseStringVal = function($function, $val) {
+			$valStr = urlencode($val);
+			return "$function=$valStr";
+		};
+
+		$filterFunc = fn($value, $function) => !($function === '' || ($function === 'facet.field' && empty($value)));
+
+		$paramsToParse = array_filter($params, $filterFunc, mode: 1);
+
+		foreach($paramsToParse as $function => $value){
+			if (!is_array($value)) {
+				$query[] = $parseStringVal($function, $value);
+				continue;
+			}
+			
+			$query = array_merge($query, $parseArrayValue($function, $value));
+		}
+
+		return $query;
+	}
+
+	private function sendSearchSuggestionRequest(string $method, string $queryHandler, string $queryString) : bool | string {
+		
+		$this->setPostConnectionTimeouts();
+		
+		$result = match(true) {
+			$method === 'GET' => $this->client->curlGetPage($this->host . "/$queryHandler/?$queryString"),
+			$method === 'POST' => $this->client->curlPostPage($this->host . "/$queryHandler/", $queryString),
+			default => false
+		};
 
 		return $result;
+	}
+
+	private function setPostConnectionTimeouts() : void {
+		// Get System Variables
+		require_once ROOT_DIR . '/sys/SystemVariables.php';
+		$systemVariables = SystemVariables::getSystemVariables();
+		
+		// Set Necessary Timeouts
+		if ($systemVariables && $systemVariables->solrConnectTimeout > 0) {
+			$this->client->setConnectTimeout($systemVariables->solrConnectTimeout);
+		}
+		if ($systemVariables && $systemVariables->solrQueryTimeout > 0) {
+			$this->client->setTimeout($systemVariables->solrQueryTimeout);
+		}
 	}
 
 	/**
@@ -721,7 +812,7 @@ abstract class Solr {
 			$values = [];
 			$values['onephrase'] = '"' . str_replace('"', '', implode(' ', $tokenized)) . '"';
 			if (count($tokenized) > 1) {
-				$values['proximal'] = $values['onephrase'] . '~10';
+				$values['proximal'] = $values['onephrase'] . '~5';
 				$values['single_word'] = null;
 			} else {
 				$values['proximal'] = null;
@@ -1271,55 +1362,9 @@ abstract class Solr {
 			$filters = $filter;
 		}
 
-
 		// Build Facet Options
-		if ($facet && !empty($facet['field']) && $configArray['Index']['enableFacets']) {
-			$options['facet'] = 'true';
-			$options['facet.mincount'] = 1;
-			$options['facet.method'] = 'fcs';
-			$options['facet.threads'] = 25;
-			$options['facet.limit'] = (isset($facet['limit'])) ? $facet['limit'] : null;
-
-			unset($facet['limit']);
-			if (isset($facet['field']) && is_array($facet['field']) && in_array('date_added', $facet['field'])) {
-				$options['facet.date'] = 'date_added';
-				$options['facet.date.end'] = 'NOW';
-				$options['facet.date.start'] = 'NOW-1YEAR';
-				$options['facet.date.gap'] = '+1WEEK';
-				foreach ($facet['field'] as $key => $value) {
-					if ($value == 'date_added') {
-						unset($facet['field'][$key]);
-						break;
-					}
-				}
-			}
-
-			if (isset($facet['field'])) {
-				foreach ($facet['field'] as $facetField => $facetInfo) {
-					$options['facet.field'][] = $facetInfo;
-				}
-			} else {
-				$options['facet.field'] = null;
-			}
-
-			//unset($facet['field']);
-			$options['facet.sort'] = (isset($facet['sort'])) ? $facet['sort'] : 'count';
-			unset($facet['sort']);
-			if (isset($facet['offset'])) {
-				$options['facet.offset'] = $facet['offset'];
-				unset($facet['offset']);
-			}
-			if (isset($facet['limit'])) {
-				$options['facet.limit'] = $facet['limit'];
-				unset($facet['limit']);
-			}
-
-			foreach ($facet as $param => $value) {
-				if ($param != 'additionalOptions' && $param != 'field') {
-					$options[$param] = $value;
-				}
-			}
-		}
+		$shouldBuildFacets = $facet && !empty($facet['field']) && $configArray['Index']['enableFacets'];
+		[$options, $facet] = $shouldBuildFacets ? $this->buildFacetOptions($options, $facet) : [$options, $facet];
 
 		if (isset($facet['additionalOptions'])) {
 			$options = array_merge($options, $facet['additionalOptions']);
@@ -1333,37 +1378,16 @@ abstract class Solr {
 		}
 
 		// Enable Spell Checking
-		if ($spell != '') {
-			require_once ROOT_DIR . '/sys/SystemVariables.php';
-			$systemVariables = SystemVariables::getSystemVariables();
-			$maxCollationTries = ($systemVariables && $systemVariables->spellcheckMaxCollationTries > 0) ? $systemVariables->spellcheckMaxCollationTries : 25;
-
-			$options['spellcheck'] = 'true';
-			$options['spellcheck.q'] = $spell;
-//			if ($dictionary != null) {
-//				$options['spellcheck.dictionary'] = $dictionary;
-//			}
-			$options['spellcheck.extendedResults'] = 'true';
-			$options['spellcheck.count'] = 5;
-			$options['spellcheck.onlyMorePopular'] = 'true';
-			$options['spellcheck.maxResultsForSuggest'] = 5;
-			$options['spellcheck.alternativeTermCount'] = 5;
-			$options['spellcheck.collate'] = 'true';
-			$options['spellcheck.collateParam.q.op'] = 'AND';
-			$options['spellcheck.collateParam.mm'] = '100%';
-			$options['spellcheck.maxCollations'] = 5;
-			$options['spellcheck.collateExtendedResults'] = 'true';
-			$options['spellcheck.maxCollationTries'] = $maxCollationTries;
-			$options['spellcheck.accuracy'] = .5;
-		}
+		$options = ($spell !== '') ? $this->setSpellCheckOptions($options, $spell) : $options;
 
 		// Enable highlighting
 		if ($this->_highlight) {
 			$this->getHighlightOptions($fields, $options);
 		}
 
+		
 		$solrSearchDebug = print_r($options, true) . "\n";
-		if ($this->debugSolrQuery) {
+		if ($this->debugSolrQuery && $this->isPrimarySearch) {
 
 			if ($filters) {
 				$solrSearchDebug .= "\nFilterQuery: ";
@@ -1376,10 +1400,8 @@ abstract class Solr {
 				$solrSearchDebug .= "\nSort: " . $options['sort'];
 			}
 
-			if ($this->isPrimarySearch) {
-				global $interface;
-				$interface->assign('solrSearchDebug', $solrSearchDebug);
-			}
+			global $interface;
+			$interface->assign('solrSearchDebug', $solrSearchDebug);
 		}
 		if ($this->debugSolrQuery || $this->debug) {
 			$options['debugQuery'] = 'on';
@@ -1394,7 +1416,6 @@ abstract class Solr {
 
 		return $result;
 	}
-
 
 	/**
 	 * Get filters based on scoping for the search
@@ -1431,6 +1452,83 @@ abstract class Solr {
 		}
 
 		return $cfqParts;
+	}
+
+	private function setSpellCheckOptions(array $options, string $spell) : array {
+		require_once ROOT_DIR . '/sys/SystemVariables.php';
+		$systemVariables = SystemVariables::getSystemVariables();
+		$DEFAULT_COLATION_TRIES = 25;
+		$maxCollationTries = 
+			($systemVariables && $systemVariables->spellcheckMaxCollationTries > 0) ? 
+			$systemVariables->spellcheckMaxCollationTries : 
+			$DEFAULT_COLATION_TRIES;
+
+		$options['spellcheck'] = 'true';
+		$options['spellcheck.q'] = $spell;
+		$options['spellcheck.extendedResults'] = 'true';
+		$options['spellcheck.count'] = 5;
+		$options['spellcheck.onlyMorePopular'] = 'true';
+		$options['spellcheck.maxResultsForSuggest'] = 5;
+		$options['spellcheck.alternativeTermCount'] = 5;
+		$options['spellcheck.collate'] = 'true';
+		$options['spellcheck.collateParam.q.op'] = 'AND';
+		$options['spellcheck.collateParam.mm'] = '100%';
+		$options['spellcheck.maxCollations'] = 5;
+		$options['spellcheck.collateExtendedResults'] = 'true';
+		$options['spellcheck.maxCollationTries'] = $maxCollationTries;
+		$options['spellcheck.accuracy'] = .5;
+
+		return $options;
+	}
+
+	private function buildFacetOptions(array $options, array $facet) : array {
+		$options['facet'] = 'true';
+		$options['facet.mincount'] = 1;
+		$options['facet.method'] = 'fcs';
+		$options['facet.threads'] = 4;
+		$options['facet.limit'] = (isset($facet['limit'])) ? $facet['limit'] : null;
+
+		unset($facet['limit']);
+		if (isset($facet['field']) && is_array($facet['field']) && in_array('date_added', $facet['field'])) {
+			$options['facet.date'] = 'date_added';
+			$options['facet.date.end'] = 'NOW';
+			$options['facet.date.start'] = 'NOW-1YEAR';
+			$options['facet.date.gap'] = '+1WEEK';
+			foreach ($facet['field'] as $key => $value) {
+				if ($value == 'date_added') {
+					unset($facet['field'][$key]);
+					break;
+				}
+			}
+		}
+
+		if (isset($facet['field'])) {
+			foreach ($facet['field'] as $facetField => $facetInfo) {
+				$options['facet.field'][] = $facetInfo;
+			}
+		} else {
+			$options['facet.field'] = null;
+		}
+
+		//unset($facet['field']);
+		$options['facet.sort'] = (isset($facet['sort'])) ? $facet['sort'] : 'count';
+		unset($facet['sort']);
+		if (isset($facet['offset'])) {
+			$options['facet.offset'] = $facet['offset'];
+			unset($facet['offset']);
+		}
+		if (isset($facet['limit'])) {
+			$options['facet.limit'] = $facet['limit'];
+			unset($facet['limit']);
+		}
+
+		foreach ($facet as $param => $value) {
+			if ($param != 'additionalOptions' && $param != 'field') {
+				$options[$param] = $value;
+			}
+		}
+
+		return [$options, $facet];
 	}
 
 	/**
@@ -1642,79 +1740,23 @@ abstract class Solr {
 
 		$memoryWatcher->logMemory('Start Solr Select');
 
-		//$this->pingServer();
-
 		$params['wt'] = 'json';
 		$params['json.nl'] = 'arrarr';
 
 		// Build query string for use with GET or POST:
-		$query = [];
-		if ($params) {
-			foreach ($params as $function => $value) {
-				if ($function != '') {
-					if ($function === 'facet.field') {
-						// If we stripped all values, skip the parameter:
-						if (empty($value)) {
-							continue;
-						}
-					}
-					if (is_array($value)) {
-						foreach ($value as $additional) {
-							if ($additional instanceof FacetSetting) {
-								$additional = urlencode($additional->facetName);
-								$query[] = "$function=$additional";
-							} elseif (is_string($additional)) {
-								$additional = urlencode($additional);
-								$query[] = "$function=$additional";
-							}
-						}
-					} else {
-						$value = urlencode($value);
-						$query[] = "$function=$value";
-					}
-				}
-			}
-		}
+		$query = $this->getParsedValues($params);
 		$queryString = implode('&', $query);
 
+		// Set full search URL
 		$this->fullSearchUrl = $this->host . "/select/?" . $queryString;
-		if ($this->debug || $this->debugSolrQuery) {
-			$solrQueryDebug = "";
-			if ($this->debugSolrQuery) {
-				$solrQueryDebug .= "$method: ";
-			}
-			//Add debug parameter so we can see the explain section at the bottom.
-			$this->debugSearchUrl = $this->host . "/select/?debugQuery=on&" . $queryString;
 
-			if ($this->debugSolrQuery) {
-				$solrQueryDebug .= "<a href='" . $this->debugSearchUrl . "' target='_blank'>$this->fullSearchUrl</a>";
-			}
-
-			if ($this->isPrimarySearch) {
-				global $interface;
-				if ($interface) {
-					$interface->assign('solrLinkDebug', $solrQueryDebug);
-				}
-			}
-		}
-
+		// Set debug (if applicable)
+		$this->setDebugStatus($method, $queryString);
+		
 		// Send Request
 		$timer->logTime("Prepare to send request to solr");
 		$memoryWatcher->logMemory('Prepare to send request to solr');
-		$result = false;
-		if ($method == 'GET') {
-			$result = $this->client->curlGetPage($this->host . "/$queryHandler/?$queryString");
-		} elseif ($method == 'POST') {
-			require_once ROOT_DIR . '/sys/SystemVariables.php';
-			$systemVariables = SystemVariables::getSystemVariables();
-			if ($systemVariables && $systemVariables->solrConnectTimeout > 0) {
-				$this->client->setConnectTimeout($systemVariables->solrConnectTimeout);
-			}
-			if ($systemVariables && $systemVariables->solrQueryTimeout > 0) {
-				$this->client->setTimeout($systemVariables->solrQueryTimeout);
-			}
-			$result = $this->client->curlPostPage($this->host . "/$queryHandler/", $queryString);
-		}
+		$result = $this->sendSearchSuggestionRequest($method, $queryHandler, $queryString);
 
 		$timer->logTime("Send data to solr for select $queryString");
 		$memoryWatcher->logMemory("Send data to solr for select $queryString");

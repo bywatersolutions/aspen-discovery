@@ -455,18 +455,6 @@ class GroupedWorksSolrConnector2 extends Solr {
 			return $boostFactors;
 		}
 
-
-		// Search Cache for boosting information
-		$cacheKey = $this->getCacheKey($searchLibrary, $activeLanguage, $searchIndex);
-
-		$cacheFile = '/tmp/solr_cache/' . $cacheKey . '.json';
-    	$cacheDir = dirname($cacheFile);
-
-		// Check file cache (valid for 1 hour)
-		if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 3600) {
-			return json_decode(file_get_contents($cacheFile), true);
-		}
-
 		if (UserAccount::isLoggedIn()) {
 			$searchPreferenceLanguage = UserAccount::getActiveUserObj()->searchPreferenceLanguage;
 		} elseif (isset($_COOKIE['searchPreferenceLanguage'])) {
@@ -493,24 +481,7 @@ class GroupedWorksSolrConnector2 extends Solr {
 		global $solrScope;
 		$boostFactors[] = "max(lib_boost_{$solrScope},1)";
 
-		//TODO Add cron to replace this file
-		// Write Cache
-		if (!is_dir($cacheDir)) {
-        	mkdir($cacheDir, 0755, true);
-		}
-		file_put_contents($cacheFile, json_encode($boostFactors));
-
 		return $boostFactors;
-	}
-
-
-	private function getCacheKey(?Library $searchLibrary, ?Language $activeLanguage, ?string $searchIndex) : string {
-		$cacheKey = 'boost_factors_' . 
-			($searchLibrary->id ?? 'null') . '_' .
-			($activeLanguage->code ?? 'en') . '_' .
-			($searchIndex ?? 'default');
-		
-		return $cacheKey;
 	}
 
 	/**

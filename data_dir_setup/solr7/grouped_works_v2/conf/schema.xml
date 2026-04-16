@@ -393,7 +393,7 @@
 		<!-- Field to get random titles -->
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
 
-				<!-- Precomputed boost components -->
+		<!-- Precomputed boost components -->
 		<field name="format_boost_capped" type="float" indexed="true" stored="false" docValues="true"/>
 		<field name="holdings_boost" type="float" indexed="true" stored="false" docValues="true"/>
 		<field name="popularity_boost" type="float" indexed="true" stored="false" docValues="true"/>

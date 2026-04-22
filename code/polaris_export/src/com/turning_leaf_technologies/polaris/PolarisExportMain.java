@@ -875,6 +875,7 @@ public class PolarisExportMain {
 									groupedWorkIndexer.deleteRecord(result.permanentId, result.groupedWorkId);
 								}
 								logEntry.incDeleted();
+								logger.error("Deleted in updateRecords");
 								if (logEntry.getNumDeleted() % 250 == 0) {
 									logEntry.saveResults();
 								}
@@ -892,7 +893,7 @@ public class PolarisExportMain {
 			//Don't quit since that keeps the exporter from running continuously
 		}
 		logger.info("Finished loading changed records from Polaris APIs");
-
+		logger.error("Test log 2");
 		return totalChanges;
 	}
 
@@ -940,6 +941,7 @@ public class PolarisExportMain {
 								getGroupedWorkIndexer().deleteRecord(result.permanentId, result.groupedWorkId);
 							}
 							logEntry.incDeleted();
+							logger.error("Deleted in extractDeletedBibs");
 							lastId = bibliographicRecordId;
 							numChanges++;
 						}
@@ -1129,7 +1131,7 @@ public class PolarisExportMain {
 		}catch (Exception e){
 			logEntry.incErrors("Error updating bibs", e);
 		}
-
+		logger.error("Test Log 1");
 		return numChanges;
 	}
 
@@ -1395,7 +1397,15 @@ public class PolarisExportMain {
 		boolean successfulResponse = false;
 		while (numTries < 3 && !successfulResponse) {
 			numTries++;
-			WebServiceResponse getBibsResponse = callPolarisAPI(getBibsRequestUrl, null, "GET", "text/xml", accessSecret);
+			WebServiceResponse getBibsResponse = null;
+			try{
+				logger.error("Calling polaris API");
+				getBibsResponse = callPolarisAPI(getBibsRequestUrl, null, "GET", "text/xml", accessSecret);
+				logger.error("Call successful");
+			} catch (Exception ex) {
+				logger.error("API call exception occurred");
+			}
+			
 			if (getBibsResponse.isSuccess()) {
 				try {
 					successfulResponse = true;
@@ -1420,7 +1430,7 @@ public class PolarisExportMain {
 						//Stop looping looking for more records
 						response.doneLoading = true;
 					}
-
+					logger.error("Successful response");
 					//Use multiple threads to update each bib record, so we can make multiple calls to Polaris to get items
 					MarcFactory finalMarcFactory = marcFactory;
 					CountDownLatch latch = new CountDownLatch(bibsPagedRows.getLength());
@@ -1434,8 +1444,10 @@ public class PolarisExportMain {
 							}
 						});
 					}
+					logger.error("ProcessGetBibsRequest for loop exited");
 					while (true) {
 						try {
+							logger.error("Waiting for while loop completion");
 							boolean completed = latch.await(1, TimeUnit.MINUTES);
 							if (completed){
 								break;
@@ -1444,6 +1456,7 @@ public class PolarisExportMain {
 							logger.error("Error waiting for all extracts to finish");
 						}
 					}
+					logger.error("While loop successfully exited");
 					groupedWorksQueued.clear();
 					logEntry.saveResults();
 				} catch (Exception e) {
@@ -1555,6 +1568,8 @@ public class PolarisExportMain {
 							}
 						}
 						response.numChanges++;
+					} else {
+						logger.error("Got Items is null, YL");
 					}
 				} else {
 					logEntry.incErrors("Could not read marc record for " + bibliographicRecordId);
@@ -1571,6 +1586,7 @@ public class PolarisExportMain {
 				getGroupedWorkIndexer().deleteRecord(result.permanentId, result.groupedWorkId);
 			}
 			logEntry.incDeleted();
+			logger.error("Deleted in processPolarisBibAndReindex");
 		}
 	}
 
@@ -2058,6 +2074,7 @@ public class PolarisExportMain {
 					getGroupedWorkIndexer().deleteRecord(result.permanentId, result.groupedWorkId);
 				}
 				logEntry.incDeleted();
+				logger.error("Deleted in checkForDeletedBibsInPolaris");
 			}
 		}
 

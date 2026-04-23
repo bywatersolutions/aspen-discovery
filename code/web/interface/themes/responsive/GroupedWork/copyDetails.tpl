@@ -16,6 +16,9 @@
 				<th>{translate text="Holds" isPublicFacing=true}</th>
 			{/if}
 			{if ($whereIsItDisplayStyle == 2)}
+				{if ($infoToShow.barcode) && $showItemBarcodes}
+					<th>{translate text="Barcode" isPublicFacing=true}</th>
+				{/if}
 				{if ($infoToShow.note) && $showItemNotes}
 					<th>{translate text="Note" isPublicFacing=true}</th>
 				{/if}
@@ -62,6 +65,11 @@
 					</td>
 				{/if}
 				{if ($whereIsItDisplayStyle == 2)}
+					{if ($infoToShow.barcode) && $showItemBarcodes}
+						<td>
+							{if !empty($item.barcode)}{$item.barcode}{/if}
+						</td>
+					{/if}
 					{if !empty($infoToShow.note) && $showItemNotes}
 						<td>
 							{if !empty($item.note)}{$item.note}{/if}

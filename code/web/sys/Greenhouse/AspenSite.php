@@ -2,6 +2,9 @@
 
 class AspenSite extends DataObject {
 	public $__table = 'aspen_sites';
+	/**
+	 * @var mixed|null
+	 */
 	protected $id;
 	protected $name;
 	protected $baseUrl;
@@ -102,6 +105,7 @@ class AspenSite extends DataObject {
 			'appAccess',
 			'ils',
 			'isOnline',
+			'monitored'
 		];
 	}
 
@@ -774,5 +778,17 @@ class AspenSite extends DataObject {
 	 */
 	public function getId() : mixed{
 		return $this->id;
+	}
+
+	public function isOnline() : bool {
+		return $this->isOnline;
+	}
+
+	public function isMonitored() : bool {
+		return $this->monitored;
+	}
+
+	public function setMonitored(int $monitored) : void {
+		$this->__set('monitored', $monitored);
 	}
 }

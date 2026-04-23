@@ -58,7 +58,7 @@ if ($search->getNumResults() > 0) {
 
 			require_once ROOT_DIR . '/sys/SearchObject/minSO.php';
 
-			$searchObject = SearchObjectFactory::initSearchObject();
+			SearchObjectFactory::initSearchObject($searchEntry->searchSource);
 			$size = strlen($searchEntry->search_object);
 			$minSO = unserialize($searchEntry->search_object);
 			$searchObject = SearchObjectFactory::deminify($minSO);

@@ -404,6 +404,31 @@ class Grouping_Manifestation {
 		return $this->_itemSummary;
 	}
 
+	protected ?array $_itemDetails = null;
+
+	/**
+	 * @return array
+	 */
+	function getItemDetails() : array {
+		if ($this->_itemDetails == null) {
+			global $timer;
+			require_once ROOT_DIR . '/sys/Utils/GroupingUtils.php';
+			$itemDetails = [];
+			foreach ($this->_variations as $variation) {
+				$itemDetails += $variation->getItemDetails();
+			}
+			require_once ROOT_DIR . '/sys/Utils/GroupingUtils.php';
+			if ($this->isPeriodical()) {
+				$itemDetails = sortPeriodicalItemsByShelfLocationAndCallNumber($itemDetails);
+			} else {
+				$itemDetails = sortItemsByShelfLocationAndCallNumber($itemDetails);
+			}
+			$this->_itemDetails = $itemDetails;
+			$timer->logTime("Got item details for manifestation");
+		}
+		return $this->_itemDetails;
+	}
+
 	function hasVolumes() : bool {
 		foreach ($this->_variations as $variation) {
 				$records = $variation->getRecords();

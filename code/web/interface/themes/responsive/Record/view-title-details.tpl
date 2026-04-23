@@ -12,11 +12,15 @@
 		</div>
 	{/if}
 
-	{if $recordDriver->getAuthor()}
+	{if !empty($recordDriver->getAuthor()) || !empty($recordDriver->get880Authors())}
 		<div class="row">
 			<div class="result-label col-sm-4 col-xs-12">{translate text="Author" isPublicFacing=true} </div>
 			<div class="result-value col-sm-8 col-xs-12">
-				<a href='/Author/Home?author="{$recordDriver->getAuthor()|escape:"url"}"'>{$recordDriver->getAuthor()|highlight}</a>{if !empty($recordDriver->get880Authors())} <span class="agrAuthor">({implode subject=$recordDriver->get880Authors() glue=',' removeTrailingPunctuationFromTerms=true})</span>{/if}<br/>
+				{if empty($recordDriver->getAuthor()) && !empty($recordDriver->get880Authors())}
+					<span class="agrAuthor">{implode subject=$recordDriver->get880Authors() glue=',' removeTrailingPunctuationFromTerms=true}</span>
+				{else}
+					<a href='/Author/Home?author="{$recordDriver->getAuthor()|escape:"url"}"'>{$recordDriver->getAuthor()|highlight}</a>{if !empty($recordDriver->get880Authors())} <span class="agrAuthor">({implode subject=$recordDriver->get880Authors() glue=',' removeTrailingPunctuationFromTerms=true})</span>{/if}<br/>
+				{/if}
 			</div>
 		</div>
 	{/if}

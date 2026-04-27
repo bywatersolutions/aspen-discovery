@@ -604,6 +604,9 @@ class OverDriveDriver extends AbstractEContentDriver {
 		$accountSummary = $patron->getCachedAccountSummary('overdrive');
 		$cachedCheckouts = $patron->getCachedCheckoutsForSource('overdrive');
 		if ($accountSummary->dataIsStale || $accountSummary->areCheckoutsStale() || isset($_REQUEST['reload']) || isset($_REQUEST['refreshCheckouts'])) {
+			$userEligibleForPalaceProject = $patron->isValidForEContentSource('palace_project');
+			$showPalaceProjectLink = $userEligibleForPalaceProject && $patron->getHomeLibrary()->getPalaceProjectSettings()->showPalaceProjectLinks;
+
 			require_once ROOT_DIR . '/sys/User/Checkout.php';
 			global $logger;
 
@@ -740,6 +743,8 @@ class OverDriveDriver extends AbstractEContentDriver {
 									}
 								}
 							}
+
+							$checkout->showPalaceProjectLink = $showPalaceProjectLink;
 
 							$key = $checkout->source . $checkout->sourceId . $checkout->userId;
 							$checkouts[$key] = $checkout;

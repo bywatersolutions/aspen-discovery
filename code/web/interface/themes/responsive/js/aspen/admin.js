@@ -1836,6 +1836,19 @@ AspenDiscovery.Admin = (function () {
 				$('#filterValue2_' + propertyName).show();
 			}
 		},
+		setIntegerFilterFieldVisibility: function (propertyName) {
+			var selectedValue = $('#filterType_' + propertyName).val();
+			if (selectedValue === 'greaterThan') {
+				$('#filterValue_' + propertyName).show();
+				$('#filterValue2_' + propertyName).val('').hide();
+			} else if (selectedValue === 'lessThan') {
+				$('#filterValue_' + propertyName).val('').hide();
+				$('#filterValue2_' + propertyName).show();
+			} else {
+				$('#filterValue_' + propertyName).show();
+				$('#filterValue2_' + propertyName).show();
+			}
+		},
 		getUrlOptions: function () {
 			$('#propertyRowlinkUrl').hide();
 			$('#propertyRowctaUrl').hide();

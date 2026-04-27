@@ -165,6 +165,8 @@ class User extends DataObject {
 	public $holdSortUnavailable;
 	public $checkoutSort;
 
+	public $allowAppRequestLogging;
+
 	private static int $CIRCULATION_CACHE_TIMEOUT = 300; // 5 minutes
 
 	public static $lidaToAspenCheckoutSortMapping = [
@@ -948,7 +950,7 @@ class User extends DataObject {
 		return $users;
 	}
 
-	function isValidForEContentSource($source) {
+	function isValidForEContentSource(string $source) : bool {
 		global $enabledModules;
 		if ($this->parentUser == null || ($this->getBarcode() != $this->parentUser->getBarcode())) {
 			$userHomeLibrary = Library::getPatronHomeLibrary($this);
@@ -1742,6 +1744,8 @@ class User extends DataObject {
 			}
 		}
 
+		$this->__set('allowAppRequestLogging', (isset($_POST['allowAppRequestLogging']) && $_POST['allowAppRequestLogging'] == 'on') ? 1 : 0);
+
 		$saveResult = $this->update();
 		if ($saveResult === false) {
 			return [
@@ -2108,7 +2112,7 @@ class User extends DataObject {
 		require_once ROOT_DIR . "/sys/User/Hold.php";
 		$hold = new Hold();
 		$hold->userId = $this->id;
-		$hold->cancelled = 0;
+		$hold->whereAdd('cancelled = 0 OR cancelled is null');
 		$hold->find();
 		while ($hold->fetch()) {
 			$cacheKey = "$hold->source:$hold->recordId";
@@ -2489,7 +2493,15 @@ class User extends DataObject {
 				'inAttribute' => true
 			]);
 
-			$result['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='$viewHoldsText'>$viewHoldsText</a>";
+			if (!$this->disableCirculationActions) {
+				$result['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='$viewHoldsText'>$viewHoldsText</a>";
+			}else{
+				$result['viewHoldsAction'] = '';
+			}
+			if (!empty($result['api']['action'])) {
+				$buttonText = $result['api']['text'] ?? "Go to Holds";
+				$result['modalButtons'] = "<a href='/MyAccount/Holds' class='btn btn-primary btn-wrap'>$buttonText</a>";
+			}
 
 			//If we have a cached account summary, add one to the number of unavailable holds (no ILSs move a hold to active immediately)
 			$accountSummary = $this->getCachedAccountSummary('ils');
@@ -2517,7 +2529,16 @@ class User extends DataObject {
 				'inAttribute' => true,
 			]);
 
-			$result['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='$viewHoldsText'>$viewHoldsText</a>";
+			if (!$this->disableCirculationActions) {
+				$result['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='$viewHoldsText'>$viewHoldsText</a>";
+			}else{
+				$result['viewHoldsAction'] = '';
+			}
+
+			if (!empty($result['api']['action'])) {
+				$buttonText = $result['api']['text'] ?? "Go to Holds";
+				$result['modalButtons'] = "<a href='/MyAccount/Holds' class='btn btn-primary btn-wrap'>$buttonText</a>";
+			}
 
 			$accountSummary = $this->getCachedAccountSummary('ils');
 			$accountSummary->incrementNumberOfUnavailableHolds();
@@ -2533,6 +2554,11 @@ class User extends DataObject {
 			$accountSummary = $this->getCachedAccountSummary('ils');
 			$accountSummary->incrementNumberOfUnavailableHolds();
 			$accountSummary->markHoldsStale();
+
+			if (!empty($result['api']['action'])) {
+				$buttonText = $result['api']['text'] ?? "Go to Holds";
+				$result['modalButtons'] = "<a href='/MyAccount/Holds' class='btn btn-primary btn-wrap'>$buttonText</a>";
+			}
 		}
 		return $result;
 	}
@@ -2590,7 +2616,15 @@ class User extends DataObject {
 				'inAttribute' => true,
 			]);
 
-			$result['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='{$viewHoldsText}'>{$viewHoldsText}</a>";
+			if (!$this->disableCirculationActions) {
+				$result['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='{$viewHoldsText}'>{$viewHoldsText}</a>";
+			}else{
+				$result['viewHoldsAction'] = '';
+			}
+			if (!empty($result['api']['action'])) {
+				$buttonText = $result['api']['text'] ?? "Go to Holds";
+				$result['modalButtons'] = "<a href='/MyAccount/Holds' class='btn btn-primary btn-wrap'>$buttonText</a>";
+			}
 
 			//Update account summary and ensure holds reload
 			$accountSummary = $this->getCachedAccountSummary('ils');
@@ -2655,7 +2689,12 @@ class User extends DataObject {
 	}
 
 	function freezeHold(string $recordId, string $holdId, ?string $reactivationDate) : array {
-		return $this->getCatalogDriver()->freezeHold($this, $recordId, $holdId, $reactivationDate);
+		$result = $this->getCatalogDriver()->freezeHold($this, $recordId, $holdId, $reactivationDate);
+		if ($result['success']){
+			$accountSummary = $this->getCachedAccountSummary('ils');
+			$accountSummary->markHoldsStale();
+		}
+		return $result;
 	}
 
 	function freezeAllHolds($reactivationDate = false) : array {
@@ -2885,7 +2924,12 @@ class User extends DataObject {
 	}
 
 	function thawHold(string $recordId, string $holdId): array {
-		return $this->getCatalogDriver()->thawHold($this, $recordId, $holdId);
+		$result = $this->getCatalogDriver()->thawHold($this, $recordId, $holdId);
+		if ($result['success']){
+			$accountSummary = $this->getCachedAccountSummary('ils');
+			$accountSummary->markHoldsStale();
+		}
+		return $result;
 	}
 
 	function freezeOverDriveHold($overDriveId): array {
@@ -3079,6 +3123,7 @@ class User extends DataObject {
 			$readingHistoryEntry = new ReadingHistoryEntry();
 			$readingHistoryEntry->userId = $this->id;
 			$readingHistoryEntry->deleted = 0;
+			$readingHistoryEntry->whereAdd('checkOutDate > 0');
 			$readingHistoryEntry->orderBy('checkOutDate ASC');
 			$readingHistoryEntry->limit(0, 1);
 			if ($readingHistoryEntry->find(true)) {
@@ -4242,6 +4287,7 @@ class User extends DataObject {
 		$sections['system_admin']->addAction(new AdminAction('Object Restorations', 'Restore soft-deleted objects from the recycle bin.', '/Admin/ObjectRestorations'), 'Administer Object Restoration');
 		$sections['system_admin']->addAction(new AdminAction('Manually Run Cron', 'Manually Start Cron Processes.', '/Admin/CronRunner'), 'Manually Run Cron Processes');
 		$sections['system_admin']->addAction(new AdminAction('Consolidate Reading History', 'Consolidate Reading History Entries to minimize database size.', '/Admin/ConsolidateReadingHistory'), 'Perform System Maintenance');
+		$sections['system_admin']->addAction(new AdminAction('Indexer Information', 'View information about the indexers running on the system.', '/Admin/IndexerInformation'), 'Perform System Maintenance');
 
 		$sections['system_reports'] = new AdminSection('System Reports');
 		$sections['system_reports']->addAction(new AdminAction('Site Status', 'View Status of Aspen Discovery.', '/Admin/SiteStatus'), 'View System Reports');
@@ -4259,6 +4305,7 @@ class User extends DataObject {
 			'View System Reports',
 			'View Indexing Logs',
 		]);
+		$sections['system_reports']->addAction(new AdminAction('Collection Reports', 'View collection reports of records Aspen has processed.', '/Admin/CollectionReports'), ['View System Reports']);
 		$sections['system_reports']->addAction(new AdminAction('Cron Log', 'View Cron Log. The cron process handles periodic cleanup tasks and updates reading history for users.', '/Admin/CronLog'), 'View System Reports');
 		$sections['system_reports']->addAction(new AdminAction('Background Processes', 'View information about background processes that are being run.', '/Admin/BackgroundProcesses'), 'View System Reports');
 		$sections['system_reports']->addAction(new AdminAction('Saved Search Notifications Log', 'A log of searches that have been checked for new results to generate notices.', '/Admin/SearchUpdateLog'), 'View System Reports');
@@ -4426,7 +4473,7 @@ class User extends DataObject {
 		$sections['cataloging']->addAction(new AdminAction('Author Authorities', 'Create and edit authorities for authors.', '/Admin/AuthorAuthorities'), 'Manually Group and Ungroup Works');
 		$sections['cataloging']->addAction(new AdminAction('Records To Not Group', 'Lists records that should not be grouped.', '/Admin/NonGroupedRecords'), 'Manually Group and Ungroup Works');
 		$sections['cataloging']->addAction(new AdminAction('Record Grouping Overrides', 'Manage record-level grouping overrides. These force specific records to stay in specific grouped works regardless of the automatic grouping algorithm.', '/Admin/RecordGroupingOverrides'), 'Manually Group and Ungroup Works');
-		$sections['cataloging']->addAction(new AdminAction('Manual Grouped Works', 'Manually create and manage custom record groups.', '/Admin/ManualGroupedWorks'), 'Manually Group and Ungroup Works');
+		$sections['cataloging']->addAction(new AdminAction('Custom Grouped Works', 'Manually create and manage custom record groups.', '/Admin/ManualGroupedWorks'), 'Manually Group and Ungroup Works');
 		$sections['cataloging']->addAction(new AdminAction('Replacement Costs', 'Define default replacement costs by format.', '/Admin/ReplacementCosts'), 'Administer Replacement Costs');
 		$sections['cataloging']->addAction(new AdminAction('Hidden Series', 'Edit series to be excluded from the Series facet and Series Display Information', '/Admin/HideSeriess'), 'Hide Metadata');
 		$sections['cataloging']->addAction(new AdminAction('Hidden Subjects', 'Edit subjects to be excluded from the Subjects facet.', '/Admin/HideSubjectFacets'), 'Hide Metadata');
@@ -4873,6 +4920,7 @@ class User extends DataObject {
 		if (array_key_exists('User Lists', $enabledModules)) {
 			$sections['user_lists'] = new AdminSection('User Lists');
 			$sections['user_lists']->addAction(new AdminAction('Settings', 'Define settings for indexing user lists within Aspen Discovery.', '/UserLists/Settings'), 'Administer List Indexing Settings');
+			$sections['user_lists']->addAction(new AdminAction('User List Facet Settings', 'Define facets for user list searches.', '/UserLists/UserListFacets'), 'Administer User List Facet Settings');
 			$sections['user_lists']->addAction(new AdminAction('Indexing Log', 'View the indexing log for User Lists.', '/UserLists/IndexingLog'), [
 				'View System Reports',
 				'View Indexing Logs',
@@ -4949,7 +4997,7 @@ class User extends DataObject {
 
 
 		$sections['support'] = new AdminSection('Aspen Discovery Support');
-		$sections['support']->addAction(new AdminAction('Help Center', 'View the Help Center for Aspen Discovery.', 'https://help.aspendiscovery.org'), true);
+		$sections['support']->addAction(new AdminAction('Help Center', 'View the Help Center for Aspen Discovery.', 'https://aspen-discovery.atlassian.net/wiki/spaces/Help/overview'), true);
 		$sections['support']->addAction(new AdminAction('API Documentation', 'View available OpenAPI specifications for Aspen Discovery APIs.', '/API/Documentation'), true);
 		$sections['support']->addAction(new AdminAction('Release Notes', 'View release notes for Aspen Discovery which contain information about new functionality and fixes for each release.', '/Admin/ReleaseNotes'), true);
 
@@ -6342,7 +6390,11 @@ class User extends DataObject {
 							'inAttribute' => true
 						]);
 						$recordId = $_REQUEST['catalogKey'] ?? '';
-						$results['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='$viewHoldsText'>$viewHoldsText</a>";
+						if (!$this->disableCirculationActions) {
+							$results['viewHoldsAction'] = "<a id='onHoldAction$recordId' href='/MyAccount/Holds' class='btn btn-sm btn-info btn-wrap' title='$viewHoldsText'>$viewHoldsText</a>";
+						}else{
+							$results['viewHoldsAction'] = '';
+						}
 
 						//If we have a cached account summary, add one to the number of unavailable holds (no ILSs move a hold to active immediately)
 						$accountSummary = $this->getCachedAccountSummary('ils');

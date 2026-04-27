@@ -61,7 +61,7 @@ class ExploreMore {
 			$interface->assign('relatedArticles', $ebscoMatches);
 		}
 
-		$aummonMatches = $this->loadSummonOptions('', [], $searchTerm);
+		$summonMatches = $this->loadSummonOptions('', [], $searchTerm);
 		if (count($summonMatches) > 0) {
 			$interface->assign('relatedArticles', $summonMatches);
 		}
@@ -142,7 +142,7 @@ class ExploreMore {
 			$exploreMoreOptions = $this->loadGaleOptions($activeSection, $exploreMoreOptions, $searchTerm, $appliedTheme);
 		}
 
-    if (array_key_exists('CloudSource', $enabledModules)) {
+		if (array_key_exists('CloudSource', $enabledModules)) {
 			$exploreMoreOptions = $this->loadCloudSourceOptions($activeSection, $exploreMoreOptions, $searchTerm, $appliedTheme);
 		};
 
@@ -201,7 +201,7 @@ class ExploreMore {
 		if ($activeSection != 'websites') {
 			if (strlen($searchTerm) > 0) {
 				$exploreMoreOptions['sampleRecords']['websites'] = [];
-				/** @var SearchObject_ListsSearcher $searchObject */
+				/** @var SearchObject_WebsitesSearcher $searchObjectSolr */
 				$searchObjectSolr = SearchObjectFactory::initSearchObject('Websites');
 				$searchObjectSolr->init();
 				$searchObjectSolr->disableSpelling();
@@ -243,20 +243,33 @@ class ExploreMore {
 						];
 					}
 					foreach ($results['response']['docs'] as $doc) {
-						/** @var ListsRecordDriver $driver */
+						/** @var IndexRecordDriver $driver */
 						$driver = $searchObjectSolr->getRecordDriverForResult($doc);
-						$id = str_replace('WebResource:', '', $driver->getId());
 						if ($numCatalogResultsAdded < $this->numEntriesToAdd) {
-							//Add a link to the actual title
-							$exploreMoreOptions['sampleRecords']['websites'][] = [
-								'label' => $driver->getTitle(),
-								'description' => $driver->getTitle(),
-								'image' => $driver->getBookcoverUrl('medium'),
-								'link' => 'javascript:;',
-								'onclick' => "AspenDiscovery.WebBuilder.getWebResource('{$id}'); AspenDiscovery.Websites.trackUsage('{$driver->getId()}');",
-								'usageCount' => 1,
-								'openInNewWindow' => false,
-							];
+							if ($doc['recordtype'] == 'WebResource') {
+								$id = str_replace('WebResource:', '', $driver->getId());
+								//Add a link to the actual title
+								$exploreMoreOptions['sampleRecords']['websites'][] = [
+									'label' => $driver->getTitle(),
+									'description' => $driver->getTitle(),
+									'image' => $driver->getBookcoverUrl('medium'),
+									'link' => 'javascript:;',
+									'onclick' => "AspenDiscovery.WebBuilder.getWebResource('$id'); AspenDiscovery.Websites.trackUsage('{$driver->getId()}');",
+									'usageCount' => 1,
+									'openInNewWindow' => false,
+								];
+							}else{
+								//Add a link to the actual title
+								$exploreMoreOptions['sampleRecords']['websites'][] = [
+									'label' => $driver->getTitle(),
+									'description' => $driver->getTitle(),
+									'image' => $driver->getBookcoverUrl('medium'),
+									'link' => $driver->getLinkUrl(),
+									'onclick' => 'AspenDiscovery.Websites.trackUsage(' . $driver->getId() . ')',
+									'usageCount' => 1,
+									'openInNewWindow' => false,
+								];
+							}
 						}
 
 						$numCatalogResultsAdded++;
@@ -913,14 +926,28 @@ class ExploreMore {
 	public function loadCloudSourceOptions($activeSection, $exploreMoreOptions, $searchTerm, $appliedTheme) {
 		global $library;
 		global $enabledModules;
-		if (!empty($searchTerm) && array_key_exists('CloudSource', $enabledModules)) {
+		global $locationSingleton;
+		$activeLocation = $locationSingleton->getActiveLocation();
+		if (!empty($searchTerm) && array_key_exists('CloudSource', $enabledModules) && $activeSection != 'cloudsource') {
+			$hasSetting = false;
 			require_once ROOT_DIR . '/sys/CloudSource/LibraryCloudSourceSetting.php';
 			$libraryCloudSourceSetting = new LibraryCloudSourceSetting();
 			$libraryCloudSourceSetting->libraryId = $library->libraryId;
-			if ($libraryCloudSourceSetting->find(true)){
+			if ($libraryCloudSourceSetting->find(true)) {
+				$hasSetting = true;
+				$settingId = $libraryCloudSourceSetting->cloudsourceSettingId;
+			} else {
+				require_once ROOT_DIR . '/sys/CloudSource/LocationCloudSourceSetting.php';
+				$locationCloudSourceSetting = new LocationCloudSourceSetting();
+				$locationCloudSourceSetting->locationId = $activeLocation->locationId;
+				if ($libraryCloudSourceSetting->find(true)) {
+					$hasSetting = true;
+					$settingId = $locationCloudSourceSetting->cloudsourceSettingId;
+				}
+			} if ($hasSetting) {
 				require_once ROOT_DIR . '/sys/CloudSource/CloudSourceSetting.php';
 				$cloudSourceSetting = new CloudSourceSetting();
-				$cloudSourceSetting->id = $libraryCloudSourceSetting->cloudsourceSettingId;
+				$cloudSourceSetting->id = $settingId;
 				if ($cloudSourceSetting->find(true) && $cloudSourceSetting->showInExploreMore){
 					//Load Cloud Source Options
 					/** @var SearchObject_CloudSourceSearcher $cloudSourceSearcher */
@@ -934,7 +961,7 @@ class ExploreMore {
 						$numMatches = $cloudSourceSearcher->getresultsTotal();
 						if ($numMatches > 1) {
 							if ($appliedTheme != null && !empty($appliedTheme->articlesDBImage)) {
-								$image = '/files/origional/' . $appliedTheme->articlesDBImage;
+								$image = '/files/original/' . $appliedTheme->articlesDBImage;
 							} else {
 								$image = '/interface/themes/responsive/images/cloudsource.png';
 							}

@@ -10,6 +10,11 @@ class Search_Results extends ResultsAction {
 
 	function launch() : void {
 		global $interface;
+
+		// If redirected from a grouped work search, pass the original search URL to the template.
+		if (!empty($_REQUEST['seriesRedirectedFrom'])) {
+			$interface->assign('seriesRedirectedFrom', $_REQUEST['seriesRedirectedFrom']);
+		}
 		global $timer;
 		global $memoryWatcher;
 		global $library;

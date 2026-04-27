@@ -3780,6 +3780,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 					'text' => 'There was an error checking out this title.',
 					'isPublicFacing' => true,
 				]),
+				'itemNotFound' => false,
 			],
 			'itemData' => []
 		];
@@ -3813,6 +3814,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 				'text' => 'Could not find an item with that barcode, unable to checkout item.',
 				'isPublicFacing' => true,
 			]);
+			$result['api']['itemNotFound'] = true;
 		}else{
 			require_once ROOT_DIR . '/sys/AspenLiDA/SelfCheckSetting.php';
 			$scoSettings = new AspenLiDASelfCheckSetting();

@@ -3,6 +3,7 @@
 		<input type="hidden" name="holdId" value="{$holdId}" id="holdId">
 		<input type="hidden" name="patronId" value="{$patronId}" id="patronId">
 		<input type="hidden" name="recordId" value="{$recordId}" id="recordId">
+		<input type="hidden" name="isAlreadyFrozen" value="{$isAlreadyFrozen}" id="isAlreadyFrozen">
 		<div class="form-group">
 			<label for="reactivationDate">{translate text="Select the date when you want the hold thawed." isPublicFacing=true}</label>
 			{* Calculate max freeze date from hold placement date if available, otherwise use default *}

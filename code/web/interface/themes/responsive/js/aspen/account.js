@@ -20,20 +20,27 @@ AspenDiscovery.Account = (function () {
 		 * @returns {boolean}
 		 */
 		addList: function () {
-			var form = $("#addListForm");
-			var source = form.find("input[name=source]").val();
-			var sourceId = form.find("input[name=sourceId]").val();
-			var isPublic = form.find("#public").prop("checked");
-			var isSearchable = false;
-			var searchableControl = $("#searchable");
+			let form = $("#addListForm");
+			let source = form.find("input[name=source]").val();
+			let sourceId = form.find("input[name=sourceId]").val();
+			let isPublic = form.find("#public").prop("checked");
+			let isSearchable = false;
+			let searchableControl = $("#searchable");
+			let isDisplayListAuthor = false;
+			let customAuthorName = '';
 			if (searchableControl) {
 				isSearchable = searchableControl.prop("checked");
+				if (isSearchable) {
+					let displayListAuthorControl = $("#displayListAuthor");
+					if (displayListAuthorControl) {
+						isDisplayListAuthor = displayListAuthorControl.prop("checked");
+						if (isDisplayListAuthor) {
+							customAuthorName = form.find("input[name=customAuthorName]").val();
+						}
+					}
+				}
 			}
-			var isDisplayListAuthor = false;
-			var displayListAuthorControl = $("#displayListAuthor");
-			if (displayListAuthorControl) {
-				isDisplayListAuthor = displayListAuthorControl.prop("checked");
-			}
+
 			var titleInput = form.find("input[name=title]");
 			var title;
 			if (titleInput.length > 0) {
@@ -54,6 +61,7 @@ AspenDiscovery.Account = (function () {
 				public: isPublic,
 				searchable: isSearchable,
 				displayListAuthor: isDisplayListAuthor,
+				customAuthorName: customAuthorName,
 				desc: desc,
 				source: source,
 				sourceId: sourceId,
@@ -1204,13 +1212,14 @@ AspenDiscovery.Account = (function () {
 			}).fail(AspenDiscovery.ajaxFail);
 		},
 
-		freezeHold: function (patronId, recordId, holdId, promptForReactivationDate, caller) {
+		freezeHold: function (patronId, recordId, holdId, promptForReactivationDate, isAlreadyFrozen, caller) {
 			AspenDiscovery.loadingMessage();
 			var url = Globals.path + '/MyAccount/AJAX';
 			var params = {
 				patronId: patronId
 				, recordId: recordId
 				, holdId: holdId
+				, isAlreadyFrozen:isAlreadyFrozen
 			};
 			if (promptForReactivationDate) {
 				//Prompt the user for the date they want to reactivate the hold
@@ -1245,6 +1254,7 @@ AspenDiscovery.Account = (function () {
 				, recordId: $('#recordId').val()
 				, holdId: $("#holdId").val()
 				, reactivationDate: $("#reactivationDate").val()
+				, isAlreadyFrozen: $("#isAlreadyFrozen").val()
 			};
 			var url = Globals.path + '/MyAccount/AJAX';
 			AspenDiscovery.showMessage(popUpBoxTitle, "Updating your hold.  This may take a minute.");

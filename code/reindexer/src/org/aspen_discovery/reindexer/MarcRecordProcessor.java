@@ -1435,13 +1435,14 @@ abstract class MarcRecordProcessor {
 		return publisher;
 	}
 
-	String languageFields = "041a:008[35-37]";
+	String languageFields = "008[35-37]:041a";
 
 	void loadLanguageDetails(AbstractGroupedWorkSolr groupedWork, org.marc4j.marc.Record record, HashSet<RecordInfo> ilsRecords, String identifier) {
 		Set <String> languages = MarcUtil.getFieldList(record, languageFields);
 		HashSet<String> translatedLanguages = new HashSet<>();
 		boolean isFirstLanguage = true;
 		for (String language : languages){
+			language = language.replaceAll("^[^a-zA-Z]+|[^a-zA-Z]+$|\\p{Punct}", "");
 			if (!indexer.hasSystemTranslation("language", language)) {
 				continue;
 			}
@@ -1514,6 +1515,32 @@ abstract class MarcRecordProcessor {
 		groupedWork.addAuthor2(MarcUtil.getFieldList(record, "110ab:111ab:700abcd:710ab:711ab:800ac"));
 		//author_additional = 505r:245c
 		groupedWork.addAuthorAdditional(MarcUtil.getFieldList(record, "505r:245c"));
+		//set display author based on 100/110
+		String displayAuthor = MarcUtil.getFirstFieldVal(record, "100acdq:110ab");
+		if (displayAuthor != null && displayAuthor.indexOf(';') > 0){
+			displayAuthor = displayAuthor.substring(0, displayAuthor.indexOf(';') -1);
+		}
+		//a title of <>. is an indicator that additional info may be in the 880
+		String title = MarcUtil.getFirstFieldVal(record, "245a");
+		if (title != null && title.equals("<>.")) {
+			List<DataField> altAuthorField = MarcUtil.getDataFields(record, 880);
+			Iterator<DataField> fieldIterator = altAuthorField.iterator();
+			DataField field880;
+			Set<String> additionalAuthors = new HashSet<>();
+			while (fieldIterator.hasNext()) {
+				field880 = fieldIterator.next();
+				if (field880.getSubfield('6') != null && field880.getSubfieldsAsString("6").contains("100")) { //equivalent to 100a
+					groupedWork.setAuthAuthor(field880.getSubfieldsAsString("a"));
+					if (displayAuthor == null) {
+						displayAuthor = field880.getSubfieldsAsString("a");
+					}
+				}
+				if ((field880.getSubfield('6') != null) && (field880.getSubfield('e') != null && field880.getSubfieldsAsString("e").contains("author"))) { //additional author 880 fields have "author." in the e subfield
+					additionalAuthors.add(field880.getSubfieldsAsString("a"));
+				}
+				groupedWork.addAuthAuthor2(additionalAuthors);
+			}
+		}
 		//Load contributors with role
 		List<DataField> contributorFields = MarcUtil.getDataFields(record, new int[]{700,710});
 		HashSet<String> contributors = new HashSet<>();
@@ -1533,10 +1560,6 @@ abstract class MarcRecordProcessor {
 		}
 
 		groupedWork.addAuthor2Role(contributors);
-		String displayAuthor = MarcUtil.getFirstFieldVal(record, "100acdq:110ab");
-		if (displayAuthor != null && displayAuthor.indexOf(';') > 0){
-			displayAuthor = displayAuthor.substring(0, displayAuthor.indexOf(';') -1);
-		}
 
 		RecordInfo recordInfo = groupedWork.getRecordInfo(profileType, identifier);
 		groupedWork.setAuthorDisplay(displayAuthor, formatCategory, recordInfo);
@@ -1546,13 +1569,27 @@ abstract class MarcRecordProcessor {
 		DataField titleField = record.getDataField(245);
 		String authorInTitleField = null;
 		if (titleField != null) {
+			String title = titleField.getSubfieldsAsString("a");
 			//noinspection SpellCheckingInspection
 			String subTitle = titleField.getSubfieldsAsString("bfgnp", " ");
+			if (title != null && title.equals("<>.")) { //a title of <>. is an indicator that the title may be in the 880
+				List<DataField> altTitleField = MarcUtil.getDataFields(record, 880);
+				Iterator<DataField> fieldIterator = altTitleField.iterator();
+				DataField field880;
+				while (fieldIterator.hasNext()) {
+					field880 = fieldIterator.next();
+					if (field880.getSubfield('6') != null && field880.getSubfieldsAsString("6").contains("245")) {
+						title = field880.getSubfieldsAsString("a");
+						subTitle = field880.getSubfieldsAsString("b");
+						break;
+					}
+				}
+			}
 			if (!hasParentRecord) {
 				RecordInfo recordInfo = groupedWork.getRecordInfo(profileType, identifier);
 
 				groupedWork.setTitle(
-					titleField.getSubfieldsAsString("a"),
+					title,
 					subTitle,
 					this.getSortableTitle(record),
 					formatCategory,

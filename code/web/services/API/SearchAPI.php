@@ -461,12 +461,25 @@ class SearchAPI extends AbstractAPI {
 						/** @noinspection PhpPossiblePolymorphicInvocationInspection */
 						$logEntry->websiteName = 'Web Builder Content';
 					}elseif ($aspenModule->name == 'Hoopla') {
-						require_once ROOT_DIR . '/sys/Hoopla/HooplaSetting.php';
-						$hooplaSettings = new HooplaSetting();
-						$hooplaSettings->find();
 						$checkEntriesInLast34Hours = true;
 						$checkEntriesInLast24Hours = false;
 						$checkEntriesInLast1Hours = false;
+						//Check to see if Flex is enabled (which will have continuous indexing)
+						$numEntriesToCheck = 1;
+						if (!empty($systemVariables)) {
+							if ($systemVariables->hooplaVersion == 1) {
+								require_once ROOT_DIR . '/sys/Hoopla/HooplaSetting.php';
+								$hooplaSetting = new HooplaSetting();
+							}else{
+								require_once ROOT_DIR . '/sys/Hoopla/LibraryHooplaSetting.php';
+								$hooplaSetting = new LibraryHooplaSetting();
+							}
+							$hooplaSetting->hooplaFlexEnabled = 1;
+							if ($hooplaSetting->count() > 0) {
+								//Flex is enabled
+								$numEntriesToCheck = 3;
+							}
+						}
 					}
 					$logEntry->limit(0, $numEntriesToCheck * $numSettings);
 					$logErrors = 0;
@@ -536,9 +549,6 @@ class SearchAPI extends AbstractAPI {
 							}
 						}
 					}elseif ($aspenModule->name == 'Hoopla') {
-						require_once ROOT_DIR . '/sys/Hoopla/HooplaSetting.php';
-						$hooplaSettings = new HooplaSetting();
-						$hooplaSettings->find();
 						$checkEntriesInLast34Hours = true;
 						$checkEntriesInLast24Hours = false;
 						$checkEntriesInLast1Hours = false;
@@ -1310,6 +1320,9 @@ class SearchAPI extends AbstractAPI {
 		$isLiDA = $this->checkIfLiDA();
 		$textId = $this->getTextId($textId);
 		$user = $this->getUserForApiCall();
+		if (empty($user)) {
+			$user = UserAccount::getLoggedInUser();
+		}
 		$key = $isLiDA ? 'records' : 'initialResults';
 		$curCount = 1;
 		if (!empty($textId)) {
@@ -1329,7 +1342,7 @@ class SearchAPI extends AbstractAPI {
 								$pageToLoad = 1;
 								require_once ROOT_DIR . '/services/Search/History.php';
 								$savedSearch = History::getSavedSearchObject($temp->id);
-								SearchObjectFactory::initSearchObject();
+								SearchObjectFactory::initSearchObject($savedSearch['source']);
 								$minSO = unserialize($savedSearch['search_object']);
 								$searchObject = SearchObjectFactory::deminify($minSO);
 								$searchObject->getFilterList();
@@ -1794,7 +1807,7 @@ class SearchAPI extends AbstractAPI {
 					if (!$hasSubcategories && $subCategoryCount === 0) {
 						$results = $this->getAppBrowseCategoryResults($browseCategory->textId, $appUser);
 						if ($browseCategory->textId === "system_recommended_for_you") {
-							$results = $results['records'];
+							$results = $results['records'] ?? [];
 						} else {
 							$results = $results['items'];
 						}
@@ -2012,11 +2025,8 @@ class SearchAPI extends AbstractAPI {
 		//based off of url, branch parameter, or IP address
 		$activeLocation = $locationSingleton->getActiveLocation();
 
-		[
-			$username,
-			$password,
-		] = $this->loadUsernameAndPassword();
-		$appUser = UserAccount::validateAccount($username, $password);
+		$appUser = $this->getUserForApiCall();
+
 
 		/** @var BrowseCategoryGroupEntry[] $browseCategories */
 		if ($activeLocation == null) {
@@ -2647,6 +2657,11 @@ class SearchAPI extends AbstractAPI {
 				if ($browseCategory->textId == 'system_recommended_for_you') {
 					$records = $this->getAppSuggestionsBrowseCategoryResults($pageToLoad, $pageSize);
 					$response['key'] = $browseCategory->textId;
+					if (!array_key_exists('records', $records)){
+						//User not logged in
+						$response['success'] = false;
+						return $response;
+					}
 					$response['records'] = $records['records'];
 					$response['message'] = 'Results found for browse category';
 				} else {
@@ -3811,6 +3826,7 @@ class SearchAPI extends AbstractAPI {
 		$search = new SearchEntry();
 		$search->id = $id;
 		if ($search->find(true)) {
+			SearchObjectFactory::initSearchObject($search->searchSource);
 			$minSO = unserialize($search->search_object);
 			$storedSearch = SearchObjectFactory::deminify($minSO, $search);
 			$searchObj = $storedSearch->restoreSavedSearch($id, false, true);
@@ -3841,6 +3857,7 @@ class SearchAPI extends AbstractAPI {
 		$search = new SearchEntry();
 		$search->id = $id;
 		if ($search->find(true)) {
+			SearchObjectFactory::initSearchObject($search->searchSource);
 			$minSO = unserialize($search->search_object);
 			$searchObj = SearchObjectFactory::deminify($minSO, $search);
 			$sortList = $searchObj->getSortList();
@@ -4226,6 +4243,7 @@ class SearchAPI extends AbstractAPI {
 		$search = new SearchEntry();
 		$search->id = $id;
 		if ($search->find(true)) {
+			SearchObjectFactory::initSearchObject($search->searchSource);
 			$minSO = unserialize($search->search_object);
 			$searchObj = SearchObjectFactory::deminify($minSO, $search);
 			$filters = $searchObj->getFilterList();

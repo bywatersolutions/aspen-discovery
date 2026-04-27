@@ -2071,6 +2071,16 @@ class Location extends DataObject {
 					}
 				}
 			}
+			//Add the library facet info as well since we sometimes use library label (i.e. when there is only 1 location)
+			$library = new Library();
+			$library->libraryId = $libraryId;
+			if ($library->find(true)) {
+				if (empty($library->facetLabel)) {
+					$facets[] = $library->displayName;
+				} else {
+					$facets[] = $library->facetLabel;
+				}
+			}
 			$this->_locationFacets = $facets;
 		}
 

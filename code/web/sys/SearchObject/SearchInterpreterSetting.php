@@ -18,6 +18,7 @@ class SearchInterpreterSetting extends DataObject {
 	public $processFictionNonFiction;
 	public $processNew;
 	public $processAvailable;
+	public $triggerSeriesSearch;
 
 	public $_termsToSkip;
 	public $_specialTerms;
@@ -217,6 +218,23 @@ class SearchInterpreterSetting extends DataObject {
 						'description' => 'Whether the search should be checked for available searches.',
 						'hideInLists' => true,
 						'default' => 1,
+					],
+				],
+			],
+			'additionalSection' => [
+				'property' => 'additionalSection',
+				'type' => 'section',
+				'label' => 'Additional Settings',
+				'hideInLists' => true,
+				'expandByDefault' => true,
+				'properties' => [
+					'triggerSeriesSearch' => [
+						'property' => 'triggerSeriesSearch',
+						'type' => 'checkbox',
+						'label' => 'Trigger Series Search',
+						'description' => 'Whether the search interpreter should default to a series search when the keyword &ldquo;series&rdquo; is used.',
+						'hideInLists' => true,
+						'default' => 0,
 					],
 				],
 			],

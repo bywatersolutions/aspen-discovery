@@ -26,7 +26,17 @@ class Series_AdministerSeries extends ObjectEditor {
 		$object->deleted = 0;
 		$object->limit(($page - 1) * $recordsPerPage, $recordsPerPage);
 		$this->applyFilters($object);
-		$object->orderBy($this->getSort());
+
+		//Join series member so we can sort by number of series members
+		$seriesMember = new SeriesMember();
+		$object->joinAdd($seriesMember, 'INNER', 'series_member', 'id', 'seriesId');
+		$object->selectAdd();
+		$object->selectAdd('series.*');
+		$object->selectAdd('count(series_member.seriesId) as numTitlesInSeries');
+		$object->groupBy('series.id');
+
+		$sort = $this->getSort();
+		$object->orderBy($sort);
 		$object->find();
 		$objectList = [];
 		while ($object->fetch()) {

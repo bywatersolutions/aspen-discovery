@@ -169,6 +169,7 @@ class Event extends DataObject {
 				'label' => 'Start Date',
 				'readOnly' => true,
 				'hiddenByDefault' => true,
+				'canSort' => false
 			],
 			'scheduleSection' => [
 				'property' => 'scheduleSection',

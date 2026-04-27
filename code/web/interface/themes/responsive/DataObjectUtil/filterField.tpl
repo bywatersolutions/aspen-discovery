@@ -42,6 +42,25 @@
 				{rdelim});
 			</script>
 		</div>
+	{elseif $filterField.type == 'integer' || $filterField.type == 'calculatedInteger'}
+		<div class="col-xs-3">
+			{assign var=label value="Type of filtering for `$filterField.label`"}
+			<select name="filterType[{$filterField.property}]" id="filterType_{$filterField.property}" class="form-control form-control-sm filterType" aria-label="{translate text=$label inAttribute=true isAdminFacing=true}" onchange="AspenDiscovery.Admin.setDateFilterFieldVisibility('{$filterField.property}')">
+				<option value="greaterThan" {if !empty($appliedFilter) && $appliedFilter.filterType == 'greaterThan'}selected="selected"{/if}>{translate text="Greater Than" isAdminFacing=true}</option>
+				<option value="lessThan" {if !empty($appliedFilter) && $appliedFilter.filterType == 'lessThan'}selected="selected"{/if}>{translate text="Less Than" isAdminFacing=true}</option>
+				<option value="between" {if !empty($appliedFilter) && $appliedFilter.filterType == 'between'}selected="selected"{/if}>{translate text="Between" isAdminFacing=true}</option>
+			</select>
+		</div>
+		<div class="col-xs-5">
+			{assign var=label value="Type of filtering for `$filterField.label`"}
+			<input type="text" name="filterValue[{$filterField.property}]" id="filterValue_{$filterField.property}" class="form-control form-control-sm filterValue" aria-label="" {if !empty($appliedFilter)}value="{$appliedFilter.filterValue}"{/if}/>
+			<input type="text" name="filterValue2[{$filterField.property}]" id="filterValue2_{$filterField.property}" class="form-control form-control-sm filterValue" aria-label="" {if !empty($appliedFilter)}value="{$appliedFilter.filterValue2}"{/if}/>
+			<script type="text/javascript">
+				$(document).ready(function(){ldelim}
+					AspenDiscovery.Admin.setIntegerFilterFieldVisibility('{$filterField.property}');
+				{rdelim});
+			</script>
+		</div>
 	{elseif $filterField.type == 'checkbox'}
 		<div class="col-xs-8">
 			{assign var=label value="Type of filtering for `$filterField.label`"}

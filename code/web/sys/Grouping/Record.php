@@ -735,7 +735,12 @@ class Grouping_Record {
 			if ($this->publicationDate == null) {
 				$this->sortablePublicationDate = 0;
 			}else{
-				$this->sortablePublicationDate = preg_replace('/[^0-9]/', '', $this->publicationDate);
+				$matches = [];
+				if (preg_match('(\d{4})', $this->publicationDate, $matches)){
+					$this->sortablePublicationDate = $matches[0];
+				}else{
+					$this->sortablePublicationDate = 0;
+				}
 			}
 		}
 		return $this->sortablePublicationDate;

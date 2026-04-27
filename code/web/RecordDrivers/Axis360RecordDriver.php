@@ -143,7 +143,7 @@ class Axis360RecordDriver extends GroupedWorkSubDriver {
 		return '';
 	}
 
-	public function getMoreDetailsOptions() {
+	public function getMoreDetailsOptions() : array {
 		global $interface;
 
 		$isbn = $this->getCleanISBN();

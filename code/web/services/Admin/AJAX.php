@@ -242,9 +242,12 @@ class Admin_AJAX extends JSON_Action {
 		require_once ROOT_DIR . '/sys/LocalEnrichment/CollectionSpotlight.php';
 		$collectionSpotlight = new CollectionSpotlight();
 		if (!UserAccount::userHasPermission('Administer All Collection Spotlights')) {
-			//Get all spotlights for the library
-			$userLibrary = Library::getPatronHomeLibrary();
-			$collectionSpotlight->libraryId = $userLibrary->libraryId;
+			$libraries = Library::getLibraryList(true);
+			if (empty($libraries)) {
+				$collectionSpotlight->whereAdd('libraryId = -1');
+			}else{
+				$collectionSpotlight->whereAdd('libraryId IN (' . implode(',', array_keys($libraries)) . ') OR libraryId = -1');
+			}
 		}
 		$collectionSpotlight->orderBy('name');
 		$existingCollectionSpotlights = $collectionSpotlight->fetchAll('id', 'name');

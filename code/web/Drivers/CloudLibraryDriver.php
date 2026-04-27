@@ -30,6 +30,9 @@ class CloudLibraryDriver extends AbstractEContentDriver {
 		$accountSummary = $patron->getCachedAccountSummary('cloud_library');
 		$cachedCheckouts = $patron->getCachedCheckoutsForSource('cloud_library');
 		if ($accountSummary->areCheckoutsStale() || isset($_REQUEST['reload']) || isset($_REQUEST['refreshCheckouts'])) {
+			$userEligibleForPalaceProject = $patron->isValidForEContentSource('palace_project');
+			$showPalaceProjectLink = $userEligibleForPalaceProject && $patron->getHomeLibrary()->getPalaceProjectSettings()->showPalaceProjectLinks;
+
 			require_once ROOT_DIR . '/RecordDrivers/CloudLibraryRecordDriver.php';
 
 			$checkouts = [];
@@ -76,6 +79,8 @@ class CloudLibraryDriver extends AbstractEContentDriver {
 						}
 
 						$checkout->userId = $patron->id;
+
+						$checkout->showPalaceProjectLink = $showPalaceProjectLink;
 
 						$checkouts[$checkout->source . $checkout->sourceId . $checkout->userId] = $checkout;
 					}

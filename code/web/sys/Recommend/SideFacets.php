@@ -299,10 +299,17 @@ class SideFacets implements RecommendationInterface {
 		} elseif ($this->searchObject instanceof SearchObject_ListsSearcher) {
 			foreach ($sideFacets as $facetKey => $facet) {
 				//Do special processing of facets
+				/** @var FacetSetting $facetSetting */
+				$facetSetting = $this->facetSettings[$facetKey];
 				if (preg_match('/local_time_since_(added|updated)/i', $facetKey)) {
 					$timeSinceAddedFacet = $this->updateTimeSinceAddedFacet($facet);
 					$sideFacets[$facetKey] = $timeSinceAddedFacet;
+				}else{
+					$sideFacets = $this->applyFacetSettings($facetKey, $sideFacets, $facetSetting, $lockedFacets);
 				}
+				$sideFacets[$facetKey]['collapseByDefault'] = $facetSetting->collapseByDefault;
+				$sideFacets[$facetKey]['locked'] = array_key_exists($facetKey, $lockedFacets);
+				$sideFacets[$facetKey]['canLock'] = $facetSetting->canLock;
 			}
 		} else {
 			//Process other searchers to add more facet popup

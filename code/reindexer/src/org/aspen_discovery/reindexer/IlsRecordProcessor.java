@@ -951,6 +951,10 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 			formatClassifier.loadItemFormat(groupedWork, recordInfo, itemField, itemInfo, settings, indexer.getLogEntry(), logger);
 		}
 
+		itemInfo.setBarcode(MarcUtil.getItemSubfieldData(settings.getBarcodeSubfield(), itemField, indexer.getLogEntry(), logger));
+		itemInfo.setNote(MarcUtil.getItemSubfieldData(settings.getNoteSubfield(), itemField, indexer.getLogEntry(), logger));
+		itemInfo.setDueDate(MarcUtil.getItemSubfieldData(settings.getDueDateSubfield(), itemField, indexer.getLogEntry(), logger));
+
 		groupedWork.addKeywords(itemLocation);
 		if (!itemSublocation.isEmpty()){
 			groupedWork.addKeywords(itemSublocation);

@@ -669,20 +669,27 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		}
 	}
 
+	private $_title = null;
 	/**
 	 * Get the full title of the record.
 	 *
 	 * @return  string
 	 */
 	public function getTitle() {
-		return $this->getFirstFieldValue('245', [
-			'a',
-			'b',
-			'f',
-			'g',
-			'n',
-			'p',
-		]);
+		if ($this->_title == null) {
+			$this->_title = $this->getFirstFieldValue('245', [
+				'a',
+				'b',
+				'f',
+				'g',
+				'n',
+				'p',
+			]);
+			if ($this->_title == '<>.') {
+				$this->_title = '';
+			}
+		}
+		return $this->_title;
 	}
 
 	private $_alternateGraphicRepresentations = null;
@@ -1890,7 +1897,7 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 		return $this->upcs;
 	}
 
-	public function getMoreDetailsOptions() {
+	public function getMoreDetailsOptions() : array {
 		global $interface;
 		/** @var Library $library */
 		global $library;
@@ -2784,6 +2791,19 @@ class MarcRecordDriver extends GroupedWorkSubDriver {
 	public function getCopies() : array {
 		$this->loadCopies();
 		return $this->holdings;
+	}
+
+	public function getSortedCopies() : array {
+		$this->loadCopies();
+		$isPeriodical = $this->isPeriodical();
+		$holdings = $this->holdings;
+		require_once ROOT_DIR . '/sys/Utils/GroupingUtils.php';
+		if ($isPeriodical) {
+			$holdings = sortPeriodicalItemsByShelfLocationAndCallNumber($holdings);
+		}else{
+			$holdings = sortItemsByShelfLocationAndCallNumber($holdings);
+		}
+		return $holdings;
 	}
 
 	private ?bool $_isPeriodical = null;

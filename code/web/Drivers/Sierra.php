@@ -3381,6 +3381,7 @@ class Sierra extends AbstractIlsDriver {
 					'text' => 'There was an error checking out this title.',
 					'isPublicFacing' => true,
 				]),
+				'itemNotFound' => false,
 			],
 			'itemData' => []
 		];
@@ -3419,6 +3420,7 @@ class Sierra extends AbstractIlsDriver {
 					1 => $barcode,
 					'isPublicFacing' => true,
 				]);
+				$result['api']['itemNotFound'] = true;
 			}else{
 				if (pg_num_rows($getItemRS) > 1) {
 					$result['message'] = translate([

@@ -40,6 +40,13 @@ class CloudSourceRecordDriver extends RecordInterface {
 		}
 		$bookCoverUrl .= "/bookcover.php?id={$this->getUniqueID()}&size={$size}&type=cloudsource";
 
+		if (!empty($this->record->isbn[0])){
+			$bookCoverUrl .= "&isbn={$this->record->isbn[0]}";
+		}
+		if (!empty($this->record->publication->issnL)) {
+			$bookCoverUrl .= "&issn={$this->record->publication->issnL}";
+		}
+
 		return $bookCoverUrl;
 	}
 
@@ -47,9 +54,24 @@ class CloudSourceRecordDriver extends RecordInterface {
 	 * @param bool $unscoped
 	 * @return string
 	 */
-	public function getLinkUrl($unscoped = false)
-	{
+	public function getLinkUrl($unscoped = false) {
+		if ($this->bypassAspenCloudSourcePageSetting()){
+			return $this->getRecordUrl();
+		}
 		return '/CloudSource/Record?id=' . $this->getId();
+	}
+
+	public function bypassAspenCloudSourcePageSetting(): bool {
+		global $library;
+		require_once ROOT_DIR . '/sys/CloudSource/CloudSourceSetting.php';
+		$libraryCloudSourceSetting = new CloudSourceSetting();
+		$libraryCloudSourceSetting->id = $library->getCloudSourceSettingId();
+		if ($libraryCloudSourceSetting->find(true)) {
+			if ($libraryCloudSourceSetting->bypassAspenCloudSourcePage) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -98,6 +120,7 @@ class CloudSourceRecordDriver extends RecordInterface {
 		$interface->assign('module', $this->getModule());
 		$interface->assign('summFormats', $formats);
 		$interface->assign('summUrl', $this->getLinkUrl());
+		$interface->assign('externalUrl', $this->getRecordUrl());
 		$interface->assign('summTitle', $this->getTitle());
 		$interface->assign('summAuthor', $this->getAuthor());
 		$interface->assign('summPublicationDates', $this->getPublicationDate());
@@ -112,6 +135,7 @@ class CloudSourceRecordDriver extends RecordInterface {
 		$interface->assign('summDescription', $this->getDescription());
 		$interface->assign('bookCoverUrl', $this->getBookcoverUrl('small'));
 		$interface->assign('bookCoverUrlMedium', $this->getBookcoverUrl('medium'));
+		$interface->assign('bypassAspenPage', $this->bypassAspenCloudSourcePageSetting());
 
 		/*require_once ROOT_DIR . '/sys/CloudSource/CloudSourceRecordUsage.php';
 		global $aspenUsage;
@@ -302,9 +326,8 @@ class CloudSourceRecordDriver extends RecordInterface {
 		return $description;
 	}
 
-	public function getMoreDetailsOptions()
-	{
-		// TODO: Implement getMoreDetailsOptions() method.
+	public function getMoreDetailsOptions() : array {
+		return [];
 	}
 
 	public function getFormats()

@@ -968,10 +968,10 @@ try {
 		} else {
 			require_once ROOT_DIR . '/sys/SystemLogging/SlowPage.php';
 			$slowPage = new SlowPage();
-			$slowPage->year = date('Y');
-			$slowPage->month = date('n');
-			$slowPage->module = $module;
-			$slowPage->action = $action;
+			$slowPage->setYear(date('Y'));
+			$slowPage->setMonth(date('n'));
+			$slowPage->setModule($module);
+			$slowPage->setAction($action);
 			if ($slowPage->find(true)) {
 				$slowPage->setSlowness($elapsedTime);
 				$slowPage->update();

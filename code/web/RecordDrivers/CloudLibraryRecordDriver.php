@@ -108,7 +108,7 @@ class CloudLibraryRecordDriver extends MarcRecordDriver {
 		return $this->id;
 	}
 
-	public function getMoreDetailsOptions() {
+	public function getMoreDetailsOptions() : array {
 		global $interface;
 
 		$isbn = $this->getCleanISBN();

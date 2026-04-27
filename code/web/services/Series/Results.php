@@ -8,6 +8,11 @@ require_once ROOT_DIR . '/sys/Pager.php';
 class Series_Results extends ResultsAction {
 	function launch() {
 		global $interface;
+
+		// If redirected from a grouped work search, pass the original search URL to the template.
+		if (!empty($_REQUEST['seriesRedirectedFrom'])) {
+			$interface->assign('seriesRedirectedFrom', $_REQUEST['seriesRedirectedFrom']);
+		}
 		global $timer;
 		//global $aspenUsage;
 		//$aspenUsage->userListSearches++;

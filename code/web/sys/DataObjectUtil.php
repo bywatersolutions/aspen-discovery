@@ -658,6 +658,7 @@ class DataObjectUtil {
 									'regularExpression',
 									'multilineRegularExpression',
 									'hidden',
+									'storedPassword'
 								])) {
 									$oldValue = $subObject->$subPropertyName;
 									$changed = $subObject->setProperty($subPropertyName, $_REQUEST[$requestKey][$id], $subProperty);

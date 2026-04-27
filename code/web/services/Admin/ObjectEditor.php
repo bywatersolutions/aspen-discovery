@@ -141,7 +141,7 @@ abstract class ObjectEditor extends Admin_Admin {
 	 * Get a count of the number of objects so we can paginate as needed
 	 */
 	function getNumObjects(): int {
-		if ($this->_numObjects == null) {
+		if ($this->_numObjects === null) {
 			/** @var DataObject $object */
 			$objectType = $this->getObjectType();
 			$object = new $objectType();
@@ -1269,8 +1269,9 @@ abstract class ObjectEditor extends Admin_Admin {
 					'currency',
 					'text',
 					'integer',
+					'calculatedInteger',
 					'email',
-					'url',
+					'url'
 				])) {
 				$sortableFields[$field['label']] = $field;
 			}
@@ -1359,32 +1360,32 @@ abstract class ObjectEditor extends Admin_Admin {
 				return;
 			}
 			if ($filter['filterValue'] == '') {
-				$object->whereAdd("$fieldName IS NULL OR $fieldName = ''");
+				$object->whereAdd("$object->__table.$fieldName IS NULL OR $fieldName = ''");
 			} else {
 				$object->$fieldName = $filter['filterValue'];
 			}
 		} elseif ($filter['filterType'] == 'contains') {
-			$object->whereAdd($fieldName . ' like ' . $object->escape('%' . $filter['filterValue'] . '%'));
+			$object->whereAdd("$object->__table.$fieldName like " . $object->escape('%' . $filter['filterValue'] . '%'));
 		} elseif ($filter['filterType'] == 'startsWith') {
-			$object->whereAdd($fieldName . ' like ' . $object->escape($filter['filterValue'] . '%'));
+			$object->whereAdd("$object->__table.$fieldName like " . $object->escape($filter['filterValue'] . '%'));
 		} elseif ($filter['filterType'] == 'beforeTime') {
 			$fieldValue = strtotime($filter['filterValue2']);
 			if ($fieldValue !== false) {
-				$object->whereAdd($fieldName . ' < ' . $fieldValue);
+				$object->whereAdd("$object->__table.$fieldName" . ' < ' . $fieldValue);
 			}
 		} elseif ($filter['filterType'] == 'afterTime') {
 			$fieldValue = strtotime($filter['filterValue']);
 			if ($fieldValue !== false) {
-				$object->whereAdd($fieldName . ' > ' . $fieldValue);
+				$object->whereAdd("$object->__table.$fieldName" . ' > ' . $fieldValue);
 			}
 		} elseif ($filter['filterType'] == 'betweenTimes') {
 			$fieldValue = strtotime($filter['filterValue']);
 			if ($fieldValue !== false) {
-				$object->whereAdd($fieldName . ' > ' . $fieldValue);
+				$object->whereAdd("$object->__table.$fieldName" . ' > ' . $fieldValue);
 			}
 			$fieldValue2 = strtotime($filter['filterValue2']);
 			if ($fieldValue2 !== false) {
-				$object->whereAdd($fieldName . ' < ' . $fieldValue2);
+				$object->whereAdd("$object->__table.$fieldName" . ' < ' . $fieldValue2);
 			}
 		}
 	}

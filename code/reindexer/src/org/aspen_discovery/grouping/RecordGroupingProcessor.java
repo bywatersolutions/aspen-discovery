@@ -908,7 +908,23 @@ public class RecordGroupingProcessor {
 			}
 		}
 		if (activeLanguage == null || activeLanguage.equals("|||") || activeLanguage.equals("   ") || activeLanguage.contains(" ")){
-			activeLanguage = "unk";
+			String secondaryLanguageField = "041a";
+			activeLanguage = null;
+			languages = MarcUtil.getFieldList(marcRecord, secondaryLanguageField);
+			for (String language : languages){
+				language = language.replaceAll("^[^a-zA-Z]+|[^a-zA-Z]+$|\\p{Punct}", "");
+				if (activeLanguage == null){
+					activeLanguage = language;
+				}else{
+					if (!activeLanguage.equals(language)){
+						activeLanguage = "mul";
+						break;
+					}
+				}
+			}
+			if (activeLanguage == null) {
+				activeLanguage = "unk";
+			}
 		}
 		return activeLanguage;
 	}
@@ -1177,8 +1193,15 @@ public class RecordGroupingProcessor {
 		JSONObject titleMetadata = titleDetails.getJSONObject("metadata");
 
 		title = titleMetadata.getString("title");
+		title = GroupedWork.removeComplexSubtitlesFromTitle(title);
+
 		if (titleMetadata.has("subtitle")){
 			subTitle = titleMetadata.getString("subtitle");
+			String subtitleLower = subTitle.toLowerCase(Locale.ROOT);
+			if (subtitleLower.contains("book club") || subtitleLower.contains("award winner") || subtitleLower.contains("read with jenna")
+				|| subtitleLower.contains("number one bestseller")) {
+				subTitle = "";
+			}
 		}else{
 			subTitle = "";
 		}
@@ -1204,10 +1227,12 @@ public class RecordGroupingProcessor {
 		switch (type) {
 			//noinspection HttpUrlsUsage
 			case "http://bib.schema.org/Audiobook":
+			case "http://schema.org/Audiobook":
 				primaryFormat = "eAudiobook";
 				break;
 			//noinspection HttpUrlsUsage
 			case "http://schema.org/EBook":
+			case "http://schema.org/Book":
 				//TODO: May need to check the subjects to determine if this is a comic/graphic novel
 				primaryFormat = "eBook";
 				break;

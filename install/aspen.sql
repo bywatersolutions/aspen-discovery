@@ -826,8 +826,7 @@ DROP TABLE IF EXISTS ce_campaign_milestone_progress_entries;
 CREATE TABLE `ce_campaign_milestone_progress_entries` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userId` int(11) NOT NULL,
-  `ce_campaign_id` int(11) NOT NULL,
-  `ce_milestone_id` int(11) NOT NULL,
+  `ce_campaign_milestone_id` int(11) NOT NULL,
   `ce_campaign_milestone_users_progress_id` int(11) NOT NULL,
   `tableName` varchar(100) DEFAULT NULL,
   `processed` tinyint(4) DEFAULT 0,
@@ -839,8 +838,7 @@ DROP TABLE IF EXISTS ce_campaign_milestone_users_progress;
 CREATE TABLE `ce_campaign_milestone_users_progress` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userId` int(11) NOT NULL,
-  `ce_campaign_id` int(11) NOT NULL,
-  `ce_milestone_id` int(11) NOT NULL,
+  `ce_campaign_milestone_id` int(11) NOT NULL,
   `progress` int(11) NOT NULL,
   `rewardGiven` tinyint(4) DEFAULT 0,
   `milestoneCompleteEmailSent` tinyint(1) DEFAULT 0,
@@ -879,7 +877,6 @@ CREATE TABLE `ce_milestone` (
   `conditionalOperator` varchar(100) DEFAULT NULL,
   `conditionalValue` varchar(100) DEFAULT NULL,
   `milestoneType` varchar(100) DEFAULT NULL,
-  `campaignId` int(11) DEFAULT NULL,
   `progressBeyondOneHundredPercent` tinyint(4) DEFAULT 0,
   `allowPatronProgressInput` tinyint(4) DEFAULT 0,
   `description` varchar(255) DEFAULT NULL,
@@ -925,8 +922,7 @@ DROP TABLE IF EXISTS ce_user_completed_milestones;
 CREATE TABLE `ce_user_completed_milestones` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userId` int(11) NOT NULL,
-  `milestoneId` int(11) NOT NULL,
-  `campaignId` int(11) NOT NULL,
+  `ce_campaign_milestone_id` int(11) NOT NULL,
   `completedAt` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -3120,7 +3116,6 @@ CREATE TABLE `library` (
   `logSelfRegistrations` tinyint(1) DEFAULT 0,
   `showYouMightAlsoLike` tinyint(1) DEFAULT 1,
   `allowMaterialRequestsBranchChoice` tinyint(1) DEFAULT 0,
-  `communityEngagementAdminUserSelect` varchar(20) DEFAULT 'dropdown',
   `displayOnlyUsersForLocationInUserAdmin` tinyint(1) DEFAULT 0,
   `allowAdminToEnrollUsersInAdminView` tinyint(1) DEFAULT 0,
   `displayDigitalRewardOnlyWhenAwarded` tinyint(1) DEFAULT 0,

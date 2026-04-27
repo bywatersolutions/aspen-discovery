@@ -397,8 +397,8 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 	 */
 	function getFormats() : array {
 		return match ($this->getType()) {
-			'http://schema.org/EBook' => ['eBook'],
-			'http://bib.schema.org/Audiobook' => ['eAudiobook'],
+			'http://schema.org/EBook', 'http://schema.org/Book' => ['eBook'],
+			'http://bib.schema.org/Audiobook', 'http://schema.org/Audiobook' => ['eAudiobook'],
 			default => ['Unknown'],
 		};
 
@@ -409,8 +409,8 @@ class PalaceProjectRecordDriver extends GroupedWorkSubDriver {
 	 */
 	function getFormatCategory() : string|array|null {
 		return match ($this->getType()) {
-			'http://schema.org/EBook' => ['eBook'],
-			'http://bib.schema.org/Audiobook' => ['Audio Books'],
+			'http://schema.org/EBook', 'http://schema.org/Book' => ['eBook'],
+			'http://bib.schema.org/Audiobook', 'http://schema.org/Audiobook' => ['Audio Books'],
 			default => ['Unknown'],
 		};
 	}

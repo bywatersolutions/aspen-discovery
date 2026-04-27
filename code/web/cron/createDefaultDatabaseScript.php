@@ -155,6 +155,7 @@ fwrite($fhnd, "INSERT INTO events_facet VALUES (1,1, 'Age Group/Audience', 'Age 
 fwrite($fhnd, "INSERT INTO open_archives_facet_groups (id, name) VALUES (1, 'default');\n");
 fwrite($fhnd, "INSERT INTO open_archives_facets VALUES (1,1, 'Collection', 'Collections', 'collection_name', 1, 5, 'num_results', 1, 1, 1, 1, 1),(2,1, 'Creator', 'Creators', 'creator_facet', 2, 5, 'num_results', 1, 1, 1, 1, 1),(3,1, 'Contributor', 'Contributors', 'contributor_facet', 3, 5, 'num_results', 1, 1, 1, 1, 1),(4,1, 'Type', 'Types', 'type', 4, 5, 'num_results', 1, 1, 1, 1, 1),(5,1, 'Subject', 'Subjects', 'subject_facet', 5, 5, 'num_results', 1, 1, 1, 1, 1),(6,1, 'Publisher', 'Publishers', 'publisher_facet', 6, 5, 'num_results', 1, 1, 1, 1, 1),(7,1, 'Source', 'Sources', 'source', 7, 5, 'num_results', 1, 1, 1, 1, 1);\n");
 fwrite($fhnd, "INSERT INTO grouped_work_format_sort_group (id, name) VALUES (1, 'Default Format Sorting');\n");
+fwrite($fhnd, "INSERT INTO user_list_facet_groups (id, name) VALUES (1, 'default');\n");
 
 //TODO: Fix which modules are enabled by default
 //TODO: Make sure the permissions are all correct

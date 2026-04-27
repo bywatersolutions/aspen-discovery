@@ -44,7 +44,7 @@ function getUpdates26_04_00(): array {
 			'description' => 'Setup tables to define facets for use when searching lists',
 			'sql' => [
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('User Lists', 'Administer User List Facet Settings', '', 40, 'Allows users to administer facets for user list searches.')",
-				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer User List Facet Settings'))",
+				"INSERT INTO role_permissions (roleId, permissionId) SELECT r.roleId, p.id FROM roles r JOIN permissions p ON p.name = 'Administer User List Facet Settings' WHERE r.name = 'opacAdmin'",
 				"CREATE TABLE `user_list_facet_groups` (
 					`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 					`name` varchar(255) NOT NULL,
@@ -141,7 +141,7 @@ function getUpdates26_04_00(): array {
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES
 					('User Lists', 'Transfer Lists', '', 6, 'Allows the user to transfer a list to another staff.')
 				",
-				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Transfer Lists'))",
+				"INSERT INTO role_permissions (roleId, permissionId) SELECT r.roleId, p.id FROM roles r JOIN permissions p ON p.name = 'Transfer Lists' WHERE r.name = 'opacAdmin'",
 			],
 		],
 		//list_transfer_permission

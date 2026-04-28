@@ -742,7 +742,7 @@ class MyAccount_AJAX extends JSON_Action {
 		]);
 
 		if ($user->rememberHoldPickupLocation) {
-			$pickupLocation = $user->getPickupLocation();
+			$pickupLocation = $user->getPickupLocationCode();
 			// If the pickup location defaults to the user's home location, its validity must still be checked.
 			if ($pickupLocation != null && $pickupLocation->validHoldPickupBranch != 2) {
 				$bypassPickupChoice = true;

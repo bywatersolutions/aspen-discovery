@@ -250,7 +250,7 @@
 		<field name="item_details" type="unchanged_string" indexed="false" stored="true" multiValued="true"/>
 		<dynamicField name="scoping_details_*" type="unchanged_string" indexed="false" stored="true" multiValued="true"/>
 		<!-- The popularity of a title in terms of circulation activity -->
-		<field name="popularity" type="integer" indexed="true" stored="false" default="0"/>
+		<field name="popularity" type="integer" indexed="true" stored="false" default="0" docValues="true"/>
 		<field name="total_holds" type="integer" indexed="true" stored="false" default="0"/>
 
 		<!-- Format information -->
@@ -360,9 +360,9 @@
 		<field name="display_description" type="unchanged_string" indexed="false" stored="true"/>
 		<field name="ils_description" type="unchanged_string" indexed="false" stored="true"/>
 		<!-- Total number of holdings for a work -->
-		<field name="num_holdings" type="integer" indexed="true" stored="false"/>
+		<field name="num_holdings" type="integer" indexed="true" stored="false" docValues="true"/>
 		<!-- End user rating for a work 2.5 if not set -->
-		<field name="rating" type="float" indexed="true" stored="false" multiValued="false" default="2.5"/>
+		<field name="rating" type="float" indexed="true" stored="false" multiValued="false" default="2.5" docValues="true"/>
 		<field name="rating_facet" type="unchanged_string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
 		<!-- Custom facets -->
@@ -389,7 +389,7 @@
 		<field name="suggestions_context_filter" type="unchanged_string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
 		<!-- Boosts -->
-		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false"/>
+		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false" docValues="true"/>
 		<!-- Field to get random titles -->
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
 	</fields>

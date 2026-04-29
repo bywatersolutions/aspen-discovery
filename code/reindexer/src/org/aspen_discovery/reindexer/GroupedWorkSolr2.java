@@ -375,6 +375,47 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 		return doc;
 	}
 
+	public static double computeBoost(
+		double formatBoost,
+		double numHoldings,
+		double popularity,
+		double rating,
+		double libBoostWebsite
+	) {
+		// Ensure every value in non-null
+		// Solr-style null safety equivalents
+		double holdingsSafe = Math.max(numHoldings, 1.0);
+		double popularitySafe = Math.max(popularity, 1.0);
+
+		// min(25, format_boost)
+		double formatComponent = Math.min(25.0, formatBoost);
+
+		// min(25, max(num_holdings,1))
+		double holdingsComponent = Math.min(25.0, holdingsSafe);
+
+		// min(25, div(max(popularity,1), max(num_holdings,1)))
+		double ratioComponent = Math.min(
+			25.0,
+			popularitySafe / holdingsSafe
+		);
+
+		// inner sum
+		double innerSum = formatComponent
+						+ holdingsComponent
+						+ ratioComponent;
+
+		// min(500, innerSum)
+		double baseScore = Math.min(500.0, innerSum);
+
+		// max(rating,1)
+		double ratingComponent = Math.max(rating, 1.0);
+
+		// max(lib_boost_website,1)
+		double libComponent = Math.max(libBoostWebsite, 1.0);
+
+		return baseScore + ratingComponent + libComponent;
+	}
+
 	protected void addScopedFieldsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry) {
 		//Load information based on scopes.  This has some pretty severe performance implications since we potentially
 		//have a lot of scopes and a lot of items & records.
@@ -611,6 +652,7 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 				doc.addField("local_callnumber_" + scopeName, localCallNumbersForScope);
 				doc.addField("callnumber_sort_" + scopeName, sortableCallNumberForScope);
 				doc.addField("available_copies_" + scopeName, numAvailableCopies);
+				doc.addField("precomputed_boost", computeBoost(getTotalFormatBoost(), numHoldings, (long) popularity, rating == -1f ? 2.5 : rating, libBoost));
 
 				for (String availabilityToggleValue : availabilityToggleForScope.getValues()){
 					availabilityToggleValues.add(scopePrefix + availabilityToggleValue);

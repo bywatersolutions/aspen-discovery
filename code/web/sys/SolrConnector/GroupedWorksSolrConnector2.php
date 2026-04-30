@@ -455,55 +455,19 @@ class GroupedWorksSolrConnector2 extends Solr {
 			return $boostFactors;
 		}
 
-		if (UserAccount::isLoggedIn()) {
-			$searchPreferenceLanguage = UserAccount::getActiveUserObj()->searchPreferenceLanguage;
-		} elseif (isset($_COOKIE['searchPreferenceLanguage'])) {
-			$searchPreferenceLanguage = $_COOKIE['searchPreferenceLanguage'];
-		} else {
-			$searchPreferenceLanguage = 0;
-		}
-
-		if ($activeLanguage == null || $activeLanguage->code == 'en' || $searchPreferenceLanguage <= 0) {
-			$applyHoldingsBoost = true;
-			if (isset($searchLibrary) && !is_null($searchLibrary)) {
-				$applyHoldingsBoost = $searchLibrary->getGroupedWorkDisplaySettings()->applyNumberOfHoldingsBoost;
-			}
-
-			$limitBoosts = $searchLibrary->getGroupedWorkDisplaySettings()->limitBoosts;
-			$maxTotalBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxTotalBoost;
-			if ($searchIndex != 'Keyword' && $searchIndex != 'mlt') {
-				$maxTotalBoost = $maxTotalBoost / 4;
-			}
-			$maxPopularityBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxPopularityBoost;
-			$maxFormatBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxFormatBoost;
-			$maxHoldingsBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxHoldingsBoost;
-			if ($applyHoldingsBoost) {
-				if ($limitBoosts) {
-					//Add format boost, number of holdings, popularity divided by number of holdings
-					$boostFactors[] = "min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,max(num_holdings,1)),min($maxPopularityBoost,div(max(popularity,1),max(num_holdings,1)))))";
-				}else{
-					$boostFactors[] = "product(format_boost,max(num_holdings,1),div(max(popularity,1),max(num_holdings,1)))";
-				}
-			} else {
-				if ($limitBoosts) {
-					$boostFactors[] = "min($maxTotalBoost,product(min($maxPopularityBoost,popularity),min($maxFormatBoost,format_boost)))";
-				}else{
-					$boostFactors[] = "div(popularity,format_boost)";
-				}
-			}
-		} else {
-			if ($searchPreferenceLanguage == 1) {
-				//Apply a ridiculously high boost if the user wants to see foreign language materials first
-				$boostFactors[] = 'product(999999999,termfreq(language,' . $activeLanguage->facetValue . '))';
-			}
-			$boostFactors[] = 'format_boost';
-		}
-
-		//Add rating as part of the ranking, normalize so ratings of less that 2.5 are below unrated entries.
-		$boostFactors[] = 'max(rating,1)';
+		$searchPreferenceLanguage = match(true) {
+			UserAccount::isLoggedIn() => UserAccount::getActiveUserObj()->searchPreferenceLanguage,
+			isset($_COOKIE['searchPreferenceLanguage']) => $_COOKIE['searchPreferenceLanguage'],
+			default => 0
+		};
 
 		global $solrScope;
-		$boostFactors[] = "max(lib_boost_{$solrScope},1)";
+		$boostFactors[] = "precomputed_boost_{$solrScope}";
+
+		// keep ONLY user-specific logic
+		if ($activeLanguage != null && $activeLanguage->code != 'en' && $searchPreferenceLanguage == 1) {
+			$boostFactors[] = 'product(999999999,termfreq(language,' . $activeLanguage->facetValue . '))';
+		}
 
 		return $boostFactors;
 	}

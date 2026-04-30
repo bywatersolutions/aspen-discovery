@@ -652,7 +652,7 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 				doc.addField("local_callnumber_" + scopeName, localCallNumbersForScope);
 				doc.addField("callnumber_sort_" + scopeName, sortableCallNumberForScope);
 				doc.addField("available_copies_" + scopeName, numAvailableCopies);
-				doc.addField("precomputed_boost", computeBoost(getTotalFormatBoost(), numHoldings, (long) popularity, rating == -1f ? 2.5 : rating, libBoost));
+				doc.addField("precomputed_boost_" + scopeName, computeBoost(getTotalFormatBoost(), numHoldings, (long) popularity, rating == -1f ? 2.5 : rating, libBoost));
 
 				for (String availabilityToggleValue : availabilityToggleForScope.getValues()){
 					availabilityToggleValues.add(scopePrefix + availabilityToggleValue);

@@ -390,7 +390,7 @@
 
 		<!-- Boosts -->
 		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false" docValues="true"/>
-		<double name="precomputed_boost" indexed="true" stored="false" docValues="true"/>
+		<dynamicField name="precomputed_boost_" type="float" indexed="true" stored="false" docValues="true"/>
 		<!-- Field to get random titles -->
 		<dynamicField name="random*" type="random" indexed="true" stored="true"/>
 		

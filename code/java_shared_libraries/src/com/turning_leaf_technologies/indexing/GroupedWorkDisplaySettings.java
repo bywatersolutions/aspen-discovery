@@ -9,6 +9,14 @@ public class GroupedWorkDisplaySettings {
 	private boolean includeAllRecordsInDateAddedFacets;
 	private boolean includeEContentInShelvingLocations;
 	private boolean baseAvailabilityToggleOnLocalHoldingsOnly = false;
+	
+	// Boost Factors
+	private boolean applyNumberOfHoldingsBoost;
+	private boolean limitBoosts;
+	private int maxTotalBoost;
+	private int maxPopularityBoost;
+	private int maxFormatBoost;
+	private int maxHoldingsBoost;
 
 	public long getId() {
 		return id;
@@ -65,6 +73,56 @@ public class GroupedWorkDisplaySettings {
 
 	void setIncludeOnlineMaterialsInAvailableToggle(boolean includeOnlineMaterialsInAvailableToggle) {
 		this.includeOnlineMaterialsInAvailableToggle = includeOnlineMaterialsInAvailableToggle;
+	}
+
+	// Getters
+	public boolean getApplyNumberOfHoldingsBoost() {
+		return applyNumberOfHoldingsBoost;
+	}
+
+	public boolean getLimitBoosts() {
+		return limitBoosts;
+	}
+
+	public int getMaxTotalBoost() {
+		return maxTotalBoost;
+	}
+
+	public int getMaxPopularityBoost() {
+		return maxPopularityBoost;
+	}
+
+	public int getMaxFormatBoost() {
+		return maxFormatBoost;
+	}
+
+	public int getMaxHoldingsBoost() {
+		return maxHoldingsBoost;
+	}
+
+	// Setters
+	public void setApplyNumberOfHoldingsBoost(boolean applyNumberOfHoldingsBoost) {
+		this.applyNumberOfHoldingsBoost = applyNumberOfHoldingsBoost;
+	}
+
+	public void setLimitBoosts(boolean limitBoosts) {
+		this.limitBoosts = limitBoosts;
+	}
+
+	public void setMaxTotalBoost(int maxTotalBoost) {
+		this.maxTotalBoost = maxTotalBoost;
+	}
+
+	public void setMaxPopularityBoost(int maxPopularityBoost) {
+		this.maxPopularityBoost = maxPopularityBoost;
+	}
+
+	public void setMaxFormatBoost(int maxFormatBoost) {
+		this.maxFormatBoost = maxFormatBoost;
+	}
+
+	public void setMaxHoldingsBoost(int maxHoldingsBoost) {
+		this.maxHoldingsBoost = maxHoldingsBoost;
 	}
 
 }

@@ -54,6 +54,12 @@ public class IndexingUtils {
 				setting.setIncludeAllRecordsInDateAddedFacets(groupedWorkDisplaySettingsRS.getBoolean("includeAllRecordsInDateAddedFacets"));
 				setting.setBaseAvailabilityToggleOnLocalHoldingsOnly(groupedWorkDisplaySettingsRS.getBoolean("baseAvailabilityToggleOnLocalHoldingsOnly"));
 				setting.setincludeEContentInShelvingLocations(groupedWorkDisplaySettingsRS.getBoolean("includeEContentInShelvingLocations"));
+				setting.setApplyNumberOfHoldingsBoost(groupedWorkDisplaySettingsRS.getBoolean("applyNumberOfHoldingsBoost"));
+				setting.setLimitBoosts(groupedWorkDisplaySettingsRS.getBoolean("limitBoosts"));
+				setting.setMaxTotalBoost(groupedWorkDisplaySettingsRS.getInt("maxTotalBoost"));
+				setting.setMaxPopularityBoost(groupedWorkDisplaySettingsRS.getInt("maxPopularityBoost"));
+				setting.setMaxFormatBoost(groupedWorkDisplaySettingsRS.getInt("maxFormatBoost"));
+				setting.setMaxHoldingsBoost(groupedWorkDisplaySettingsRS.getInt("maxHoldingsBoost"));
 
 				groupedWorkSettings.put(setting.getId(), setting);
 			}

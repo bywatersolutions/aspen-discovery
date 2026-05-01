@@ -389,6 +389,11 @@
 		<field name="suggestions_context_filter" type="unchanged_string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
 		<!-- Boosts -->
+		<field name="holdingsWithLimitScore" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="holdingsWithoutLimitScore" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="noHoldingsWithLimitScore" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="noHoldingsWithoutLimitScore" type="float" indexed="true" stored="false" docValues="true"/>
+		<field name="formatLanguageScore" type="float" indexed="true" stored="false" docValues="true"/>
 		<dynamicField name="lib_boost_*" type="integer" indexed="true" stored="false" docValues="true"/>
 		<dynamicField name="precomputed_boost_*" type="float" indexed="true" stored="false" docValues="true"/>
 		<!-- Field to get random titles -->

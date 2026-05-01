@@ -375,6 +375,16 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 		return doc;
 	}
 
+	public void addBoostsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry) {
+		for(String)
+	}
+
+	public static double computeHoldsAndLimits(){
+		//"min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,max(num_holdings,1)),min($maxPopularityBoost,div(max(popularity,1),max(num_holdings,1)))))"
+		double finalFormatBoost = Math.sum(Math.min());
+		//return Math.min(maxTotalBoost(),)
+	}
+
 	public static double computeBoost(
 		double formatBoost,
 		double numHoldings,
@@ -414,6 +424,10 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 		double libComponent = Math.max(libBoostWebsite, 1.0);
 
 		return baseScore + ratingComponent + libComponent;
+	}
+
+	public static double computeBoost2(){
+
 	}
 
 	protected void addScopedFieldsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry) {

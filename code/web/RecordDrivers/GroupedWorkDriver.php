@@ -1642,8 +1642,8 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		return $this->_moreInfoLink;
 	}
 
-	public function getMpaaRating() {
-		return $this->fields['mpaa_rating'] ?? null;
+	public function getContentRating() {
+		return $this->fields['content_rating'] ?? null;
 	}
 
 	private $numRelatedRecords = -1;
@@ -3484,13 +3484,14 @@ class GroupedWorkDriver extends IndexRecordDriver {
 			$records = [];
 		} else {
 			$uniqueRecordIdsString = implode(',', $uniqueRecordIds);
-			$recordQuery = "SELECT grouped_work_records.id, recordIdentifier, isClosedCaptioned, indexed_record_source.source, indexed_record_source.subSource, indexed_edition.edition, indexed_publisher.publisher, indexed_publication_date.publicationDate, indexed_place_of_publication.placeOfPublication, indexed_physical_description.physicalDescription, indexed_format.format, indexed_format_category.formatCategory, indexed_language.language, indexed_audience.audience, hasParentRecord, hasChildRecord FROM grouped_work_records
+			$recordQuery = "SELECT grouped_work_records.id, recordIdentifier, isClosedCaptioned, indexed_record_source.source, indexed_record_source.subSource, indexed_edition.edition, indexed_publisher.publisher, indexed_publication_date.publicationDate, indexed_place_of_publication.placeOfPublication, indexed_physical_description.physicalDescription, indexed_format.format, indexed_format_category.formatCategory, indexed_language.language, indexed_audience.audience, indexed_duration.duration, hasParentRecord, hasChildRecord FROM grouped_work_records
 								  LEFT JOIN indexed_record_source ON sourceId = indexed_record_source.id
 								  LEFT JOIN indexed_edition ON editionId = indexed_edition.id
 								  LEFT JOIN indexed_publisher ON publisherId = indexed_publisher.id
 								  LEFT JOIN indexed_publication_date ON publicationDateId = indexed_publication_date.id
 								  LEFT JOIN indexed_place_of_publication ON placeOfPublicationId = indexed_place_of_publication.id
 								  LEFT JOIN indexed_physical_description ON physicalDescriptionId = indexed_physical_description.id
+								  LEFT JOIN indexed_duration ON durationId = indexed_duration.id
 								  LEFT JOIN indexed_format on formatId = indexed_format.id
 								  LEFT JOIN indexed_format_category on formatCategoryId = indexed_format_category.id
 								  LEFT JOIN indexed_language on languageId = indexed_language.id

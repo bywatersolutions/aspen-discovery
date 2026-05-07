@@ -253,10 +253,16 @@ class HooplaDriver extends AbstractEContentDriver {
 	}
 
 	/**
-	 * @param $patron User
+	 * Get Patron Checkouts
+	 *
+	 * This is responsible for retrieving all checkouts (i.e. checked out items)
+	 * by a specific patron.
+	 *
+	 * @param User $patron       The user to load transactions for
+	 * @param array $options     Additional options
 	 * @return Checkout[]
 	 */
-	public function getCheckouts(User $patron): array {
+	public function getCheckouts(User $patron, array $options = []): array {
 		$accountSummary = $patron->getCachedAccountSummary('hoopla');
 		$cachedCheckouts = $patron->getCachedCheckoutsForSource('hoopla');
 		if ($accountSummary->areCheckoutsStale() || isset($_REQUEST['reload']) || isset($_REQUEST['refreshCheckouts'])) {

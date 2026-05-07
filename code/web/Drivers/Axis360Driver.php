@@ -64,11 +64,12 @@ class Axis360Driver extends AbstractEContentDriver {
 	 * This is responsible for retrieving all checkouts (i.e. checked out items)
 	 * by a specific patron.
 	 *
-	 * @param User $patron The user to load transactions for
+	 * @param User $patron 	     The user to load transactions for
+	 * @param array $options     Additional options
 	 * @return Checkout[]        Array of the patron's transactions on success
 	 * @access public
 	 */
-	public function getCheckouts(User $patron): array {
+	public function getCheckouts(User $patron, array $options = []): array {
 		$accountSummary = $patron->getCachedAccountSummary('axis360');
 		$cachedCheckouts = $patron->getCachedCheckoutsForSource('axis360');
 		if ($accountSummary->areCheckoutsStale() || isset($_REQUEST['reload']) || isset($_REQUEST['refreshCheckouts'])) {

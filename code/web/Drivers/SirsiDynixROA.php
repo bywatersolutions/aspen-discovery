@@ -1048,13 +1048,17 @@ class SirsiDynixROA extends AbstractIlsDriver {
 	}
 
 	/**
-	 * @param User $patron
-	 * @param int $page
-	 * @param int $recordsPerPage
-	 * @param string $sortOption
-	 * @return Checkout[]
+	 * Get Patron Checkouts
+	 *
+	 * This is responsible for retrieving all checkouts (i.e. checked out items)
+	 * by a specific patron.
+	 *
+	 * @param User $patron       The user to load transactions for
+	 * @param array $options     Additional options
+	 * @return Checkout[]        Array of the patron's transactions on success
+	 * @access public
 	 */
-	public function getCheckouts(User $patron, int $page = 1, int $recordsPerPage = -1, string $sortOption = 'dueDate'): array {
+	public function getCheckouts(User $patron, array $options = []): array {
 		require_once ROOT_DIR . '/sys/User/Checkout.php';
 		$checkedOutTitles = [];
 

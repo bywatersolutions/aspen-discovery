@@ -30,11 +30,12 @@ abstract class AbstractDriver {
 	 * This is responsible for retrieving all checkouts (i.e. checked out items)
 	 * by a specific patron.
 	 *
-	 * @param User $patron The user to load transactions for
+	 * @param User $patron       The user to load transactions for
+	 * @param array $option      Additional options, currently used for Koha/isNightlyUpdate
 	 * @return Checkout[]        Array of the patron's transactions on success
 	 * @access public
 	 */
-	public abstract function getCheckouts(User $patron): array;
+	public abstract function getCheckouts(User $patron, array $options): array;
 
 	/**
 	 * @return boolean true if the driver can renew all titles in a single pass

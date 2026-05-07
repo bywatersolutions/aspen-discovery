@@ -376,10 +376,6 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 	}
 
 	public void addBoostsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry, GroupedWorkDisplaySettings settings) {
-		logger.info("Hold with limit" + computeHoldingsWithLimitScore(settings));
-		logger.info("Hold with limit" + computeHoldingsWithoutLimitScore(settings));
-		logger.info("Hold with limit" + computeNoHoldingsWithLimitScore(settings));
-		logger.info("Hold with limit" + computeNoHoldingsWithoutLimitScore(settings));
 		doc.addField("holdingsWithLimitScore", computeHoldingsWithLimitScore(settings));
 		doc.addField("holdingsWithoutLimitScore",computeHoldingsWithoutLimitScore(settings));
 		doc.addField("noHoldingsWithLimitScore", computeNoHoldingsWithLimitScore(settings));
@@ -415,6 +411,13 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 	
 	private double computeNoHoldingsWithoutLimitScore(GroupedWorkDisplaySettings settings) {
 		return popularity / getTotalFormatBoost();
+	}
+
+	private boolean boostsAdded(SolrInputDocument doc) {
+		return doc.getField("holdingsWithLimitScore") != null ||
+			doc.getField("holdingsWithoutLimitScore") != null ||
+			doc.getField("noHoldingsWithLimitScore") != null ||
+			doc.getField("noHoldingsWithoutLimitScore") != null;
 	}
 
 	protected void addScopedFieldsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry) {
@@ -475,7 +478,9 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 					scopeDisplaySettings  = curScope.getGroupedWorkDisplaySettings();
 				}
 
-				addBoostsToDocument(doc, logEntry, scopeDisplaySettings);
+				if (!boostsAdded(doc)) {
+					addBoostsToDocument(doc, logEntry, scopeDisplaySettings);
+				}
 
 				logger.info("Value 1" + doc.getField("holdingsWithLimitScore"));
 				logger.info("Value 2" + doc.getField("holdingsWithoutLimitScore"));

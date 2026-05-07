@@ -67,8 +67,11 @@ public class UpdateReadingHistoryTask implements Runnable {
 				}
 				retry = false;
 				// Call the patron API to get their checked out items.
-				URL patronApiUrl = new URL(aspenUrl + "/API/UserAPI?method=updatePatronReadingHistory&username=" + URLEncoder.encode(ilsBarcode, StandardCharsets.UTF_8));
+				// Use localhost to avoid the request leaving the server and being subject to WAF rules.
+				String hostName = new URL(aspenUrl).getHost();
+				URL patronApiUrl = new URL("http://localhost/API/UserAPI?method=updatePatronReadingHistory&username=" + URLEncoder.encode(ilsBarcode, StandardCharsets.UTF_8));
 				HttpURLConnection conn = (HttpURLConnection) patronApiUrl.openConnection();
+				conn.setRequestProperty("Host", hostName);
 				// Give 10 seconds for connection timeout and 10 minutes for read timeout.
 				conn.setConnectTimeout(10000);
 				conn.setReadTimeout(600000);

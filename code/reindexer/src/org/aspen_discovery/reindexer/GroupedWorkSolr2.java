@@ -375,59 +375,46 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 		return doc;
 	}
 
-	public void addBoostsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry) {
-		for(String)
+	public void addBoostsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry, GroupedWorkDisplaySettings settings) {
+		logger.info("Hold with limit" + computeHoldingsWithLimitScore(settings));
+		logger.info("Hold with limit" + computeHoldingsWithoutLimitScore(settings));
+		logger.info("Hold with limit" + computeNoHoldingsWithLimitScore(settings));
+		logger.info("Hold with limit" + computeNoHoldingsWithoutLimitScore(settings));
+		doc.addField("holdingsWithLimitScore", computeHoldingsWithLimitScore(settings));
+		doc.addField("holdingsWithoutLimitScore",computeHoldingsWithoutLimitScore(settings));
+		doc.addField("noHoldingsWithLimitScore", computeNoHoldingsWithLimitScore(settings));
+		doc.addField("noHoldingsWithoutLimitScore", computeNoHoldingsWithoutLimitScore(settings));
 	}
 
-	public static double computeHoldsAndLimits(){
-		//"min($maxTotalBoost,sum(min($maxFormatBoost,format_boost),min($maxHoldingsBoost,max(num_holdings,1)),min($maxPopularityBoost,div(max(popularity,1),max(num_holdings,1)))))"
-		double finalFormatBoost = Math.sum(Math.min());
-		//return Math.min(maxTotalBoost(),)
-	}
-
-	public static double computeBoost(
-		double formatBoost,
-		double numHoldings,
-		double popularity,
-		double rating,
-		double libBoostWebsite
-	) {
-		// Ensure every value in non-null
-		// Solr-style null safety equivalents
-		double holdingsSafe = Math.max(numHoldings, 1.0);
-		double popularitySafe = Math.max(popularity, 1.0);
-
-		// min(25, format_boost)
-		double formatComponent = Math.min(25.0, formatBoost);
-
-		// min(25, max(num_holdings,1))
-		double holdingsComponent = Math.min(25.0, holdingsSafe);
-
-		// min(25, div(max(popularity,1), max(num_holdings,1)))
-		double ratioComponent = Math.min(
-			25.0,
-			popularitySafe / holdingsSafe
+	private double computeHoldingsWithLimitScore(GroupedWorkDisplaySettings settings) {
+		return Math.min(
+			settings.getMaxTotalBoost(),
+			Arrays.asList(
+				(double)Math.min(settings.getMaxFormatBoost(), getTotalFormatBoost()),
+				(double)Math.min(settings.getMaxHoldingsBoost(), Math.max(numHoldings, 1)),
+				(double)Math.min(settings.getMaxPopularityBoost(), Math.max(popularity, 1) / Math.max(numHoldings, 1))
+			).stream().mapToDouble(Double::doubleValue).sum()
 		);
-
-		// inner sum
-		double innerSum = formatComponent
-						+ holdingsComponent
-						+ ratioComponent;
-
-		// min(500, innerSum)
-		double baseScore = Math.min(500.0, innerSum);
-
-		// max(rating,1)
-		double ratingComponent = Math.max(rating, 1.0);
-
-		// max(lib_boost_website,1)
-		double libComponent = Math.max(libBoostWebsite, 1.0);
-
-		return baseScore + ratingComponent + libComponent;
+	}
+	
+	private double computeHoldingsWithoutLimitScore(GroupedWorkDisplaySettings settings) {
+		return Arrays.asList(
+			(double)getTotalFormatBoost(),
+			(double)Math.max(numHoldings, 1),
+			(double)Math.max(popularity, 1) / Math.max(numHoldings, 1)
+		).stream().mapToDouble(Double::doubleValue).reduce(1.0, (a, b) -> a * b);
 	}
 
-	public static double computeBoost2(){
-
+	private double computeNoHoldingsWithLimitScore(GroupedWorkDisplaySettings settings) {
+		return Math.min(
+			(double)settings.getMaxTotalBoost(),
+			(double)Math.min(settings.getMaxPopularityBoost(), popularity) * 
+			(double)Math.min(settings.getMaxFormatBoost(), getTotalFormatBoost())
+		);
+	}
+	
+	private double computeNoHoldingsWithoutLimitScore(GroupedWorkDisplaySettings settings) {
+		return popularity / getTotalFormatBoost();
 	}
 
 	protected void addScopedFieldsToDocument(SolrInputDocument doc, BaseIndexingLogEntry logEntry) {
@@ -488,6 +475,12 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 					scopeDisplaySettings  = curScope.getGroupedWorkDisplaySettings();
 				}
 
+				addBoostsToDocument(doc, logEntry, scopeDisplaySettings);
+
+				logger.info("Value 1" + doc.getField("holdingsWithLimitScore"));
+				logger.info("Value 2" + doc.getField("holdingsWithoutLimitScore"));
+				logger.info("Value 3" + doc.getField("noHoldingsWithLimitScore"));
+				logger.info("Value 4" + doc.getField("noHoldingsWithoutLimitScore"));
 				//Process all items for the scope
 				for (ScopingInfo scopingInfo : itemsWithScopingInfoForActiveScope) {
 					if (storeRecordDetailsInSolr) {
@@ -666,7 +659,7 @@ public class GroupedWorkSolr2 extends AbstractGroupedWorkSolr implements Cloneab
 				doc.addField("local_callnumber_" + scopeName, localCallNumbersForScope);
 				doc.addField("callnumber_sort_" + scopeName, sortableCallNumberForScope);
 				doc.addField("available_copies_" + scopeName, numAvailableCopies);
-				doc.addField("precomputed_boost_" + scopeName, computeBoost(getTotalFormatBoost(), numHoldings, (long) popularity, rating == -1f ? 2.5 : rating, libBoost));
+				//doc.addField("precomputed_boost_" + scopeName, computeBoost(getTotalFormatBoost(), numHoldings, (long) popularity, rating == -1f ? 2.5 : rating, libBoost));
 
 				for (String availabilityToggleValue : availabilityToggleForScope.getValues()){
 					availabilityToggleValues.add(scopePrefix + availabilityToggleValue);

@@ -477,20 +477,10 @@ class GroupedWorksSolrConnector2 extends Solr {
 			$maxPopularityBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxPopularityBoost;
 			$maxFormatBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxFormatBoost;
 			$maxHoldingsBoost = $searchLibrary->getGroupedWorkDisplaySettings()->maxHoldingsBoost;
-			if ($applyHoldingsBoost) {
-				if ($limitBoosts) {
-					//Add format boost, number of holdings, popularity divided by number of holdings
-					$boostFactors[] = "holdingsWithLimitScore";
-				}else{
-					$boostFactors[] = "holdingsWithoutLimitScore";
-				}
-			} else {
-				if ($limitBoosts) {
-					$boostFactors[] = "noHoldingsWithLimitScore";
-				}else{
-					$boostFactors[] = "noHoldingsWithoutLimitScore";
-				}
-			}
+			
+			$boostFactors[] = $applyHoldingsBoost ?
+				($limitBoosts ? "holdingsWithLimitScore" : "holdingsWithoutLimitScore") :
+				($limitBoosts ? "noHoldingsWithLimitScore" : "noHoldingsWithoutLimitScore");
 		} else {
 			if ($searchPreferenceLanguage == 1) {
 				//Apply a ridiculously high boost if the user wants to see foreign language materials first

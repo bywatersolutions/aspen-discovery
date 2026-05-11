@@ -1241,22 +1241,15 @@ abstract class Solr {
 			} else {
 				$baseQuery = $options['q'];
 				//Boost items in our system
-				if (count($boostFactors) > 0) {
-					$boost = "sum(" . implode(',', $boostFactors) . ")";
-				} else {
-					$boost = '';
-				}
-				if (empty($boost)) {
-					$options['q'] = $baseQuery;
-				} else {
-					$options['q'] = "{!boost b=$boost} $baseQuery";
-				}
-				//echo ("Advanced Query " . $options['q']);
+				$boost = count($boostFactors) > 0 ? "sum(" . implode(',', $boostFactors) . ")" : '';
+				$options['q'] = empty($boost) ? $baseQuery : "{!boost b=$boost} $baseQuery";
 			}
 
 			$timer->logTime("apply boosting");
 
 		}
+		global $logger;
+		$logger->log("Boost Factors: " . print_r($boostFactors, true), Logger::LOG_ERROR);
 		$scopingFilters = $this->getScopingFilters($searchLibrary, $searchLocation);
 
 		if ($filter != null && $scopingFilters != null) {

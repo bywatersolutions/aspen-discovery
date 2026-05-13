@@ -11849,23 +11849,24 @@ AspenDiscovery.GroupedWork = (function(){
 			$.getJSON(url, params, function(data) {
 				try{
 					var similarTitleData = data.similarTitles;
-					if (similarTitleData && similarTitleData.titles.length > 0) {
-						//Create an unordered list for display
-						var html = '<ul>';
 
-						$.each(similarTitleData.titles, function() {
-							html += '<li class="carouselTitleWrapper">' + this.formattedTitle + '</li>';
-						});
+					//Create an unordered list for display
+					var html = '<ul>';
 
-						html += '</ul>';
-						var carouselElement = $('#moreLikeThisCarousel');
-						var jCarousel = carouselElement.jcarousel();
+					$.each(similarTitleData.titles, function() {
+						html += '<li class="carouselTitleWrapper">' + this.formattedTitle + '</li>';
+					});
 
-						carouselElement.html(html);
+					html += '</ul>';
+					var carouselElement = $('#moreLikeThisCarousel');
+					var jCarousel = carouselElement.jcarousel();
 
-						// Reload carousel
-						jCarousel.jcarousel('reload');
-					}else{
+					carouselElement.html(html);
+
+					// Reload carousel
+					jCarousel.jcarousel('reload');
+
+					if(!similarTitleData || similarTitleData.title.length === 0) {
 						$('#moreLikeThisPanel').hide();
 					}
 

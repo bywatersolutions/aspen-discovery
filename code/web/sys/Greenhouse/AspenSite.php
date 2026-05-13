@@ -41,7 +41,6 @@ class AspenSite extends DataObject {
 	protected $nextMeetingDate;
 	/** @noinspection PhpUnused */
 	protected $nextMeetingPerson;
-	protected $activeTicketFeed;
 	protected $lastOfflineTime;
 	/** @noinspection PhpUnused */
 	protected $lastOnlineTime;
@@ -265,15 +264,6 @@ class AspenSite extends DataObject {
 				'description' => 'What operating system the site is on',
 				'maxLength' => 75,
 				'required' => false,
-			],
-			'activeTicketFeed' => [
-				'property' => 'activeTicketFeed',
-				'type' => 'url',
-				'label' => 'Active Ticket Feed',
-				'description' => 'The URL to get a list of all active tickets for an instance',
-				'maxLength' => 1000,
-				'required' => false,
-				'hideInLists' => true,
 			],
 			'contactFrequency' => [
 				'property' => 'contactFrequency',
@@ -691,13 +681,6 @@ class AspenSite extends DataObject {
 	public function getSiteBaseUrl() : string|bool {
 		if($this->baseUrl) {
 			return $this->baseUrl;
-		}
-		return false;
-	}
-
-	public function getActiveTicketFeed() {
-		if($this->activeTicketFeed) {
-			return $this->activeTicketFeed;
 		}
 		return false;
 	}

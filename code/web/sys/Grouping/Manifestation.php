@@ -280,13 +280,6 @@ class Grouping_Manifestation {
 		}
 
 		//Hide variations as needed
-		if (!empty($selectedLanguages)) {
-			foreach ($this->getVariations() as $variation) {
-				if (!in_array($variation->language, $selectedLanguages)) {
-					$variation->setHideByDefault(true);
-				}
-			}
-		}
 		if (!empty($selectedEcontentSources)) {
 			foreach ($this->getVariations() as $variation) {
 				if ($variation->isEContent() && !in_array($variation->econtentSource, $selectedEcontentSources)) {

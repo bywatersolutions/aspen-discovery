@@ -160,10 +160,10 @@
 		</div>
 	{/if}
 
-	{if !empty($mpaaRating)}
+	{if !empty($contentRating)}
 		<div class="row">
-			<div class="result-label col-sm-4 col-xs-12">{translate text='MPAA Rating' isPublicFacing=true}</div>
-			<div class="result-value col-sm-8 col-xs-12">{implode subject=$mpaaRating glue=", " translate=true isPublicFacing=true}</div>
+			<div class="result-label col-sm-4 col-xs-12">{translate text='Content Rating' isPublicFacing=true}</div>
+			<div class="result-value col-sm-8 col-xs-12">{implode subject=$contentRating glue=", " translate=true isPublicFacing=true}</div>
 		</div>
 	{/if}
 

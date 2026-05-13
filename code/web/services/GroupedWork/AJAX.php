@@ -649,6 +649,7 @@ class GroupedWork_AJAX extends JSON_Action {
 		]);
 
 		// button template
+		$interface->assign('summId', $recordDriver->getPermanentId());
 		$interface->assign('workId', $recordDriver->getPermanentId());
 		$interface->assign('escapeId', $escapedId);
 		$interface->assign('buttonLabel', $buttonLabel);

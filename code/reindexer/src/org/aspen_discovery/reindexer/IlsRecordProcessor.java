@@ -336,6 +336,7 @@ abstract class IlsRecordProcessor extends MarcRecordProcessor {
 			loadEditions(groupedWork, record, allRelatedRecords);
 			loadAudiences(groupedWork, record, allRelatedRecords);
 			loadPhysicalDescription(groupedWork, record, allRelatedRecords);
+			loadDuration(groupedWork, record, allRelatedRecords);
 			loadLanguageDetails(groupedWork, record, allRelatedRecords, identifier);
 			loadPublicationDetails(groupedWork, record, allRelatedRecords);
 			loadClosedCaptioning(record, allRelatedRecords);

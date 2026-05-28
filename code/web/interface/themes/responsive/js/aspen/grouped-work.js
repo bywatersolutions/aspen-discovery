@@ -200,44 +200,44 @@ AspenDiscovery.GroupedWork = (function(){
 			});
 		},
 
-		loadMoreLikeThis: function (id, forceReload) {
+		loadMoreLikeThis: function(id, forceReload) {
 			var url = Globals.path + "/GroupedWork/" + encodeURIComponent(id) + "/AJAX";
+
 			var params = {
-				'method':'getMoreLikeThis'
+				method: 'getMoreLikeThis'
 			};
-			if (forceReload !== undefined){
-				params['reload'] = true;
+
+			if (forceReload !== undefined) {
+				params.reload = true;
 			}
+
 			$.getJSON(url, params, function(data) {
-				try{
-					var similarTitleData = data.similarTitles;
 
-					//Create an unordered list for display
-					var html = '<ul>';
+				var similarTitleData = data?.similarTitles || {};
+				var titles = Array.isArray(similarTitleData.titles)
+					? similarTitleData.titles
+					: [];
 
-					$.each(similarTitleData.titles, function() {
-						html += '<li class="carouselTitleWrapper">' + this.formattedTitle + '</li>';
-					});
-
-					html += '</ul>';
-					var carouselElement = $('#moreLikeThisCarousel');
-					var jCarousel = carouselElement.jcarousel();
-
-					carouselElement.html(html);
-
-					// Reload carousel
-					jCarousel.jcarousel('reload');
-
-					if(!similarTitleData || similarTitleData.title.length === 0) {
-						$('#moreLikeThisPanel').hide();
-					}
-
-				} catch (e) {
-					setTimeout(function (){
-						var jCarousel = carouselElement.jcarousel();
-						jCarousel.jcarousel('reload');
-					},1000);
+				if (titles.length === 0) {
+					$('#moreLikeThisPanel').hide();
+					return;
 				}
+
+				var html = '<ul>';
+
+				$.each(titles, function() {
+					html += '<li class="carouselTitleWrapper">' +
+						this.formattedTitle +
+						'</li>';
+				});
+
+				html += '</ul>';
+
+				var carouselElement = $('#moreLikeThisCarousel');
+				carouselElement.html(html);
+
+				var jCarousel = carouselElement.jcarousel();
+				jCarousel.jcarousel('reload');
 			});
 		},
 

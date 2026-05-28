@@ -9412,9 +9412,13 @@ AspenDiscovery.Browse = (function(){
 					var resultsTabPanel = document.getElementById('swiper-browse-category-' + categoryTextId) ;
 					resultsTabPanel.innerHTML = "";
 					var browseSwiper = new Swiper('.swiper-browse-category-' + categoryTextId, {
-						slidesPerView: 3,
-						slidesPerGroup: 3,
+						slidesPerView: 7,
+						slidesPerGroup: 7,
 						breakpoints: {
+							1: {
+								slidesPerView: 3,
+								slidesPerGroup: 3,
+							},
 							640: {
 								slidesPerView: 4,
 								slidesPerGroup: 4,
@@ -9697,9 +9701,13 @@ AspenDiscovery.Browse = (function(){
 					if (wrapper) wrapper.innerHTML = '';
 
 					const browseSwiper = new Swiper(container, {
-						slidesPerView: 3,
-						slidesPerGroup: 3,
+						slidesPerView: 7,
+						slidesPerGroup: 7,
 						breakpoints: {
+							1: {
+								slidesPerView: 3,
+								slidesPerGroup: 3,
+							},
 							640: {
 								slidesPerView: 4,
 								slidesPerGroup: 4,
@@ -13464,8 +13472,11 @@ AspenDiscovery.MaterialsRequest = (function(){
 			return false;
 		},
 
-		getSelectedRequests: function(promptToSelectAll){
-			var selectedRequests = $("input.select:checked").map(function() {
+		getSelectedRequests: function(promptToSelectAll, selectName){
+			if (selectName === undefined) {
+				selectName = 'select';
+			}
+			var selectedRequests = $("input." + selectName + ":checked").map(function() {
 				return $(this).attr('name') + "=" + $(this).val();
 			}).get().join("&");
 			console.log(selectedRequests);
@@ -13738,7 +13749,7 @@ AspenDiscovery.MaterialsRequest = (function(){
 				alert("Please select a new assignee and/or status to update.");
 				return false;
 			}
-			var selectedRequests = this.getSelectedRequests(false);
+			var selectedRequests = this.getSelectedRequests(false, 'selectedObject');
 			var url = Globals.path + "/MaterialsRequest/AJAX";
 			var params = {
 				method:  'updateSelectedTitleRequests',
@@ -15097,7 +15108,7 @@ AspenDiscovery.Record = (function () {
 				});
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showPlaceHold(module, source, id, volume, variationId, button, allowFormatSelection);
+					AspenDiscovery.Record.showPlaceHold(module, source, id, volume, variationId, button, allowEditionSelection, format);
 				}, false);
 			}
 			return false;

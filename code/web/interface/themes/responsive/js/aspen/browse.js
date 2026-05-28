@@ -326,9 +326,13 @@ AspenDiscovery.Browse = (function(){
 					var resultsTabPanel = document.getElementById('swiper-browse-category-' + categoryTextId) ;
 					resultsTabPanel.innerHTML = "";
 					var browseSwiper = new Swiper('.swiper-browse-category-' + categoryTextId, {
-						slidesPerView: 3,
-						slidesPerGroup: 3,
+						slidesPerView: 7,
+						slidesPerGroup: 7,
 						breakpoints: {
+							1: {
+								slidesPerView: 3,
+								slidesPerGroup: 3,
+							},
 							640: {
 								slidesPerView: 4,
 								slidesPerGroup: 4,
@@ -611,9 +615,13 @@ AspenDiscovery.Browse = (function(){
 					if (wrapper) wrapper.innerHTML = '';
 
 					const browseSwiper = new Swiper(container, {
-						slidesPerView: 3,
-						slidesPerGroup: 3,
+						slidesPerView: 7,
+						slidesPerGroup: 7,
 						breakpoints: {
+							1: {
+								slidesPerView: 3,
+								slidesPerGroup: 3,
+							},
 							640: {
 								slidesPerView: 4,
 								slidesPerGroup: 4,

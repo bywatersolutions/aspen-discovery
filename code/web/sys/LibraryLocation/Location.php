@@ -3179,11 +3179,34 @@ class Location extends DataObject {
 		} else {
 			$apiInfo['email'] = $this->contactEmail;
 		}
+
+		require_once ROOT_DIR . '/sys/LibraryLocation/Holiday.php';
+
+		$today = (int)date('w');
+		$specialHours = new Holiday();
+		$specialHours->locationId = $this->locationId;
+		$specialHours->date = date('Y-m-d');
+		$isHoliday = $specialHours->find(true);
+		if ($isHoliday){
+			$apiInfo['hours'][] = [
+				'day' => $today,
+				'dayName' => $specialHours->name,
+				'isClosed' => (bool)$specialHours->closed,
+				'open' => $specialHours->open ?? '',
+				'close' => $specialHours->close ?? '',
+				'notes' => '',
+			];
+		}
+
 		unset($this->_hours);
 		$hours = $this->getHours();
 		foreach ($hours as $hour) {
+			$dayOfWeek = (int)$hour->day;
+			if ($isHoliday && $today === $dayOfWeek) {
+				continue;
+			}
 			$apiInfo['hours'][] = [
-				'day' => (int)$hour->day,
+				'day' => $dayOfWeek,
 				'dayName' => LocationHours::$dayNames[$hour->day],
 				'isClosed' => (bool)$hour->closed,
 				'open' => $hour->open,

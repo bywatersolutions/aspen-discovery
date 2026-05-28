@@ -859,7 +859,8 @@ class OverDriveDriver extends AbstractEContentDriver {
 
 		if ($summary->dataIsStale || isset($_REQUEST['reload'])) {
 			//Get account information from api
-			$checkedOutItems = $this->getCheckouts($user, true);
+			$options = ["forSummary" => true];
+			$checkedOutItems = $this->getCheckouts($user, $options);
 			$summary->numCheckedOut = count($checkedOutItems);
 
 			$holds = $this->getHolds($user, true);

@@ -809,6 +809,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 			}
 
 			$foundValidBarcode = false;
+			$barcode = '';
 			if ($selfRegistrationForm != null){
 				$barcodePrefix = $selfRegistrationForm->selfRegistrationBarcodePrefix;
 				$barcodeSuffixLength = $selfRegistrationForm->selfRegBarcodeSuffixLength;
@@ -824,7 +825,6 @@ class SirsiDynixROA extends AbstractIlsDriver {
 					$foundValidBarcode = true;
 				}
 			}
-			$barcode = '';
 			if (!$foundValidBarcode) {
 				$barcodeVariable = new Variable();
 				$barcodeVariable->name = 'self_registration_card_number';
@@ -844,7 +844,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 				}
 			}
 
-			if ($foundValidBarcode) {
+			if ($foundValidBarcode && !empty($barcode)) {
 				$createPatronInfoParameters['fields']['barcode'] = (string)$barcode;
 
 				//global $configArray;

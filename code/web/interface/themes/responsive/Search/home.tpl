@@ -50,13 +50,11 @@
 		</div>
 
 		{if !empty($loggedIn) && $numHiddenCategory > 0}
-			<div class="row text-center" style="margin-top: 2em">
-				<div class="col-xs-12">
-					<hr/>
-					<a class="btn {if !empty($showBrowseContent)}btn-default{else}btn-primary{/if}"  href="#" role="button" title="{translate text='Show Hidden Browse Categories' inAttribute=true isPublicFacing=true}" onclick="return AspenDiscovery.Account.showHiddenBrowseCategories('{$loggedInUser}')">
-						<i class="fas fa-eye"></i> {translate text='Show Hidden Browse Categories' isPublicFacing=true}
-					</a>
-				</div>
+			<div class="col-xs-12 text-center" style="margin-top: 2em">
+				<hr/>
+				<a class="btn {if !empty($showBrowseContent)}btn-default{else}btn-primary{/if}"  href="#" role="button" title="{translate text='Show Hidden Browse Categories' inAttribute=true isPublicFacing=true}" onclick="return AspenDiscovery.Account.showHiddenBrowseCategories('{$loggedInUser}')">
+					<i class="fas fa-eye"></i> {translate text='Show Hidden Browse Categories' isPublicFacing=true}
+				</a>
 			</div>
 		{/if}
 

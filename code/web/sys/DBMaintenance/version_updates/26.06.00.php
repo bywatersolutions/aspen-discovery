@@ -22,6 +22,14 @@ function getUpdates26_06_00(): array {
 		//kodi
 
 		//yanjun
+		'add_overdriveAdvantageId' => [
+			'title' => 'Add overdriveAdvantageId column',
+			'description' => 'Add overdriveAdvantageId column to library_overdrive_settings',
+			'continueOnError' => false,
+			'sql' => [
+				'ALTER TABLE library_overdrive_settings ADD COLUMN overdriveAdvantageId int(11) DEFAULT 0'
+			]
+		],//add_overdriveAdvantageId
 
 		//imani
 

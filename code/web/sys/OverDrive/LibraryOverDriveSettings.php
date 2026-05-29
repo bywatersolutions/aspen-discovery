@@ -15,6 +15,7 @@ class LibraryOverDriveSettings extends DataObject {
 	public $overdriveAdvantageName;
 	/** @noinspection PhpUnused - Used in indexer */
 	public $overdriveAdvantageProductsKey;
+	public $overdriveAdvantageId;
 
 	public function getNumericColumnNames(): array {
 		return [
@@ -105,6 +106,15 @@ class LibraryOverDriveSettings extends DataObject {
 				'label' => 'Overdrive Advantage Name',
 				'description' => 'The name of the OverDrive Advantage account if any.',
 				'size' => '80',
+				'hideInLists' => false,
+				'forcesReindex' => true,
+			],
+			'overdriveAdvantageId' => [
+				'property' => 'overdriveAdvantageId',
+				'type' => 'text',
+				'label' => 'Overdrive Advantage Products ID',
+				'description' => 'The ID of the OverDrive Advantage account if any.',
+				'size' => '20',
 				'hideInLists' => false,
 				'forcesReindex' => true,
 			],

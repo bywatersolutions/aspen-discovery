@@ -225,6 +225,14 @@ function getUpdates26_05_00(): array {
 				"ALTER TABLE holiday ADD INDEX LibraryDate (libraryId, date)",
 			]
 		], //holiday_table_migration
+		'add_overdriveAdvantageId' => [
+			'title' => 'Add overdriveAdvantageId column',
+			'description' => 'Add overdriveAdvantageId column to library_overdrive_settings',
+			'continueOnError' => false,
+			'sql' => [
+				'ALTER TABLE library_overdrive_settings ADD COLUMN overdriveAdvantageId int(11) DEFAULT 0'
+			]
+		],//add_overdriveAdvantageId
 
 		//imani
 		// Aspen Progressive Web Application(PWA) updates moved

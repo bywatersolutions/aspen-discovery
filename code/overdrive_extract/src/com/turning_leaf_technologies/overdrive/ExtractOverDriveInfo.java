@@ -45,7 +45,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 	private String overDriveAPIToken;
 	private String overDriveAPITokenType;
 	private long overDriveAPIExpiration;
-	private final TreeMap<Long, String> libToOverDriveAPIKeyMap = new TreeMap<>();
+	private final TreeMap<Long, LibraryAdvantageSetting> libraryAdvantageSettings = new TreeMap<>();
 
 	private final ConcurrentHashMap<String, OverDriveRecordInfo> allProductsInOverDrive = new ConcurrentHashMap<>();
 	private final List<AdvantageCollectionInfo> allAdvantageCollections = Collections.synchronizedList(new ArrayList<>());
@@ -79,6 +79,16 @@ class ExtractOverDriveInfo implements AutoCloseable {
 	private boolean hadTimeoutsFromOverDrive;
 	private GroupedWorkIndexer groupedWorkIndexer;
 	private Ini configIni;
+
+	private static class LibraryAdvantageSetting {
+		private long advantageId;
+		private String advantageProductsKey;
+
+		private LibraryAdvantageSetting(long advantageId, String advantageProductsKey) {
+			this.advantageId = advantageId;
+			this.advantageProductsKey = advantageProductsKey;
+		}
+	}
 
 	private int totalProductsInCollection;
 
@@ -486,11 +496,6 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		updateProductAvailabilityStmt = dbConn.prepareStatement("UPDATE overdrive_api_products SET lastAvailabilityCheck = ?, lastAvailabilityChange = ? where id = ?");
 		logExternalRequestStmt = dbConn.prepareStatement("INSERT INTO external_request_log (requestType, requestMethod, requestUrl, requestHeaders, requestBody, responseCode, response, requestTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
-		if (settings.getProductsKey() == null){
-			logEntry.incErrors("No products key was provided for settings " + settings.getId());
-		}
-		libToOverDriveAPIKeyMap.put(-1L, settings.getProductsKey());
-
 		//Load last extract time regardless of if we are doing full index or partial index
 		if (!settings.isRunFullUpdate()) {
 			lastExtractDate = new Date(settings.getLastUpdateOfChangedRecords() * 1000);
@@ -508,11 +513,14 @@ class ExtractOverDriveInfo implements AutoCloseable {
 			}
 		}
 
-		try (PreparedStatement advantageCollectionMapStmt = dbConn.prepareStatement("SELECT library.libraryId, library_overdrive_settings.overdriveAdvantageName, library_overdrive_settings.overdriveAdvantageProductsKey FROM library INNER JOIN library_overdrive_settings on library.libraryId = library_overdrive_settings.libraryId where library_overdrive_settings.overdriveAdvantageName != '' and settingId = ?")) {
+		try (PreparedStatement advantageCollectionMapStmt = dbConn.prepareStatement("SELECT library.libraryId, library_overdrive_settings.overdriveAdvantageProductsKey, library_overdrive_settings.overdriveAdvantageId FROM library INNER JOIN library_overdrive_settings on library.libraryId = library_overdrive_settings.libraryId where library_overdrive_settings.overdriveAdvantageName != '' and settingId = ?")) {
 			advantageCollectionMapStmt.setLong(1, settings.getId());
 			try (ResultSet advantageCollectionMapRS = advantageCollectionMapStmt.executeQuery()) {
 				while (advantageCollectionMapRS.next()) {
-					libToOverDriveAPIKeyMap.put(advantageCollectionMapRS.getLong(1), advantageCollectionMapRS.getString(3));
+					long libraryId = advantageCollectionMapRS.getLong(1);
+					String advantageProductsKey = advantageCollectionMapRS.getString(2);
+					long advantageId = advantageCollectionMapRS.getLong(3);
+					libraryAdvantageSettings.put(libraryId, new LibraryAdvantageSetting(advantageId, advantageProductsKey));
 				}
 			}
 		}
@@ -669,6 +677,19 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		WebServiceResponse libraryInfoResponse = callOverDriveURL("overDriveExtract.loadLibraries", "https://api.overdrive.com/v1/libraries/" + settings.getAccountId());
 		if (libraryInfoResponse.getResponseCode() == 200 && libraryInfoResponse.getMessage() != null){
 			JSONObject libraryInfo = libraryInfoResponse.getJSONResponse();
+
+			// Update shared Products Key
+			String sharedCollectionToken = libraryInfo.getString("collectionToken");
+			if (!sharedCollectionToken.isEmpty() && !sharedCollectionToken.equals(settings.getProductsKey())) {
+				try (PreparedStatement updateProductsKeyStmt = dbConn.prepareStatement("UPDATE overdrive_settings SET productsKey = ? WHERE id = ? ")) {
+					updateProductsKeyStmt.setString(1, sharedCollectionToken);
+					updateProductsKeyStmt.setLong(2, settings.getId());
+					updateProductsKeyStmt.executeUpdate();
+				} catch (Exception e) {
+					logger.error("Error updating OverDrive productsKey", e);
+				}
+			}
+
 			//noinspection CommentedOutCode
 			try {
 				//noinspection DuplicatedCode
@@ -687,7 +708,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 					mainCollectionInfo = new AdvantageCollectionInfo();
 					mainCollectionInfo.setAdvantageId(-1);
 					mainCollectionInfo.setName("Shared Libby Collection");
-					mainCollectionInfo.setCollectionToken(libraryInfo.getString("collectionToken"));
+					mainCollectionInfo.setCollectionToken(sharedCollectionToken);
 					mainCollectionInfo.addAspenLibraryId(-1);
 					allAdvantageCollections.add(mainCollectionInfo);
 					loadCollectionInfo = true;
@@ -781,17 +802,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 	private void loadProductsForAdvantageAccount(int loadType, JSONObject curAdvantageAccount, long startTime, boolean loadCollectionInfo) throws SocketTimeoutException {
 		AdvantageCollectionInfo collectionInfo = null;
 		if (loadType == LOAD_ALL_PRODUCTS || loadCollectionInfo) {
-			collectionInfo = new AdvantageCollectionInfo();
-			//noinspection DuplicatedCode
-			collectionInfo.setAdvantageId(curAdvantageAccount.getInt("id"));
-			collectionInfo.setName(curAdvantageAccount.getString("name"));
-			collectionInfo.setCollectionToken(curAdvantageAccount.getString("collectionToken"));
-			for (Long curLibraryId : libToOverDriveAPIKeyMap.keySet()) {
-				String collectionToken = libToOverDriveAPIKeyMap.get(curLibraryId);
-				if (collectionToken.equals(collectionInfo.getCollectionToken())) {
-					collectionInfo.addAspenLibraryId(curLibraryId);
-				}
-			}
+			collectionInfo = buildAdvantageCollectionInfo(curAdvantageAccount);
 			if (!collectionInfo.getName().contains("Inactive")) {
 				allAdvantageCollections.add(collectionInfo);
 			}
@@ -859,14 +870,26 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		WebServiceResponse libraryInfoResponse = callOverDriveURL("overdriveExtract.loadLibraryAccount", "https://api.overdrive.com/v1/libraries/" + settings.getAccountId());
 		if (libraryInfoResponse.getResponseCode() == 200 && libraryInfoResponse.getMessage() != null){
 			JSONObject libraryInfo = libraryInfoResponse.getJSONResponse();
-			try {
-				AdvantageCollectionInfo mainCollectionInfo = new AdvantageCollectionInfo();
-				mainCollectionInfo.setAdvantageId(-1);
-				mainCollectionInfo.setName("Shared Libby Collection");
-				mainCollectionInfo.setCollectionToken(libraryInfo.getString("collectionToken"));
-				mainCollectionInfo.addAspenLibraryId(-1);
-				allAdvantageCollections.add(mainCollectionInfo);
 
+			// Update shared Products Key
+			String sharedCollectionToken = libraryInfo.getString("collectionToken");
+			if (!sharedCollectionToken.isEmpty() && !sharedCollectionToken.equals(settings.getProductsKey())) {
+				try (PreparedStatement updateProductsKeyStmt = dbConn.prepareStatement("UPDATE overdrive_settings SET productsKey = ? WHERE id = ?")) {
+					updateProductsKeyStmt.setString(1, sharedCollectionToken);
+					updateProductsKeyStmt.setLong(2, settings.getId());
+					updateProductsKeyStmt.executeUpdate();
+				} catch (SQLException e) {
+					logEntry.incErrors("Error updating shared OverDrive products key", e);
+				}
+			}
+
+			AdvantageCollectionInfo mainCollectionInfo = new AdvantageCollectionInfo();
+			mainCollectionInfo.setAdvantageId(-1);
+			mainCollectionInfo.setName("Shared Libby Collection");
+			mainCollectionInfo.setCollectionToken(sharedCollectionToken);
+			mainCollectionInfo.addAspenLibraryId(-1);
+			allAdvantageCollections.add(mainCollectionInfo);
+			try {
 				//Get a list of advantage collections
 				if (libraryInfo.getJSONObject("links").has("advantageAccounts")) {
 					WebServiceResponse webServiceResponse = callOverDriveURL("overdriveExtract.loadAdvantageAccounts", libraryInfo.getJSONObject("links").getJSONObject("advantageAccounts").getString("href"));
@@ -876,18 +899,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 							JSONArray advantageAccounts = advantageInfo.getJSONArray("advantageAccounts");
 							for (int i = 0; i < advantageAccounts.length(); i++) {
 								JSONObject curAdvantageAccount = advantageAccounts.getJSONObject(i);
-
-								AdvantageCollectionInfo collectionInfo = new AdvantageCollectionInfo();
-								//noinspection DuplicatedCode
-								collectionInfo.setAdvantageId(curAdvantageAccount.getInt("id"));
-								collectionInfo.setName(curAdvantageAccount.getString("name"));
-								collectionInfo.setCollectionToken(curAdvantageAccount.getString("collectionToken"));
-								for (Long curLibraryId : libToOverDriveAPIKeyMap.keySet()) {
-									String collectionToken = libToOverDriveAPIKeyMap.get(curLibraryId);
-									if (collectionToken.equals(collectionInfo.getCollectionToken())) {
-										collectionInfo.addAspenLibraryId(curLibraryId);
-									}
-								}
+								AdvantageCollectionInfo collectionInfo = buildAdvantageCollectionInfo(curAdvantageAccount);
 								if (!collectionInfo.getName().contains("Inactive")) {
 									allAdvantageCollections.add(collectionInfo);
 								}
@@ -916,6 +928,48 @@ class ExtractOverDriveInfo implements AutoCloseable {
 			logger.info("Error loading Libby accounts " + libraryInfoResponse.getMessage());
 			return false;
 		}
+	}
+
+	private AdvantageCollectionInfo buildAdvantageCollectionInfo(JSONObject curAdvantageAccount) throws JSONException {
+		int apiAdvantageId = curAdvantageAccount.getInt("id");
+		String apiCollectionToken = curAdvantageAccount.getString("collectionToken");
+
+		AdvantageCollectionInfo collectionInfo = new AdvantageCollectionInfo();
+		collectionInfo.setAdvantageId(apiAdvantageId);
+		collectionInfo.setName(curAdvantageAccount.getString("name"));
+		collectionInfo.setCollectionToken(apiCollectionToken);
+
+		for (Map.Entry<Long, LibraryAdvantageSetting> entry : libraryAdvantageSettings.entrySet()) {
+			long libraryId = entry.getKey();
+			LibraryAdvantageSetting storedLibrarySetting = entry.getValue();
+			long storedAdvantageId = storedLibrarySetting.advantageId;
+			String storedAdvantageKey = storedLibrarySetting.advantageProductsKey;
+
+			boolean needUpdate = false;
+			if (storedAdvantageId > 0) {
+				if (storedAdvantageId == apiAdvantageId) {
+					collectionInfo.addAspenLibraryId(libraryId);
+					needUpdate = !Objects.equals(storedAdvantageKey, apiCollectionToken);
+				}
+			} else {
+				if (Objects.equals(storedAdvantageKey, apiCollectionToken)) {
+					collectionInfo.addAspenLibraryId(libraryId);
+					needUpdate = true;
+				}
+			}
+			if (needUpdate) {
+				try (PreparedStatement updateStmt = dbConn.prepareStatement("UPDATE library_overdrive_settings SET overdriveAdvantageId = ?, overdriveAdvantageProductsKey = ? WHERE settingId = ? AND libraryId = ?")) {
+					updateStmt.setLong(1, apiAdvantageId);
+					updateStmt.setString(2, apiCollectionToken);
+					updateStmt.setLong(3, settings.getId());
+					updateStmt.setLong(4, libraryId);
+					updateStmt.executeUpdate();
+				} catch (Exception e) {
+					logEntry.incErrors("Error updating Advantage setting for library " + libraryId, e);
+				}
+			}
+		}
+		return collectionInfo;
 	}
 
 	private void loadProductsFromUrl(AdvantageCollectionInfo collectionInfo, String mainProductUrl, int loadType, long startTime) throws JSONException, SocketTimeoutException {
@@ -1700,7 +1754,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 			groupedWorkIndexer = null;
 		}
 
-		libToOverDriveAPIKeyMap.clear();
+		libraryAdvantageSettings.clear();
 
 		allProductsInOverDrive.clear();
 		allAdvantageCollections.clear();

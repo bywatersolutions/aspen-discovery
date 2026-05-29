@@ -9,14 +9,14 @@ class Mailer {
 	 * @access  public
 	 * @param string $to Recipient email address
 	 * @param string $subject Subject line for message
-	 * @param string $body Message body
+	 * @param ?string $body Message body
 	 * @param ?string $replyTo Someone to reply to
 	 * @param ?string $htmlBody Message body
 	 * @param array $attachments an array of attachments to include
 	 *
 	 * @return  boolean
 	 */
-	public function send(string $to, string $subject, string $body, ?string $replyTo = null, ?string $htmlBody = null, array $attachments = []) : bool {
+	public function send(string $to, string $subject, ?string $body = null, ?string $replyTo = null, ?string $htmlBody = null, array $attachments = []) : bool {
 
 		require_once ROOT_DIR . '/sys/Email/SendGridSetting.php';
 		require_once ROOT_DIR . '/sys/Email/AmazonSesSetting.php';

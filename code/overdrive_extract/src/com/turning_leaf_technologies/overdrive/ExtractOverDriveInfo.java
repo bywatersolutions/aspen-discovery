@@ -94,6 +94,11 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		}
 	}
 
+	private static class AvailabilityProcessingResult {
+		private boolean changed;
+		private boolean hadErrors;
+	}
+
 	private int totalProductsInCollection;
 
 	public ExtractOverDriveInfo(OverDriveSetting settings) {
@@ -955,6 +960,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 
 			boolean needUpdate = false;
 			boolean matchedPrimary = false;
+			boolean needAdditionalUpdate = false;
 			if (storedAdvantageId > 0) {
 				if (storedAdvantageId == apiAdvantageId) {
 					collectionInfo.addAspenLibraryId(libraryId);
@@ -987,8 +993,22 @@ class ExtractOverDriveInfo implements AutoCloseable {
 			// Additonal slot
 			if (storedAddiontalAdvantageId > 0 && storedAddiontalAdvantageId == apiAdvantageId) {
 				collectionInfo.addAdditionalAspenLibraryId(libraryId);
+				needAdditionalUpdate = !Objects.equals(storedAdditionalAdvantageProductsKey, apiCollectionToken);
 			} else if (storedAddiontalAdvantageId == 0 && storedAdditionalAdvantageProductsKey.equals(apiCollectionToken)) {
 				collectionInfo.addAdditionalAspenLibraryId(libraryId);
+				needAdditionalUpdate = true;
+			}
+
+			if (needAdditionalUpdate) {
+				try (PreparedStatement updateStmt = dbConn.prepareStatement("UPDATE library_overdrive_settings SET additionalAdvantageId = ?, additionalAdvantageProductsKey = ? WHERE settingId = ? AND libraryId = ?")) {
+					updateStmt.setLong(1, apiAdvantageId);
+					updateStmt.setString(2, apiCollectionToken);
+					updateStmt.setLong(3, settings.getId());
+					updateStmt.setLong(4, libraryId);
+					updateStmt.executeUpdate();
+				} catch (Exception e) {
+					logEntry.incErrors("Error updating additional Advantage setting for library " + libraryId, e);
+				}
 			}
 		}
 		return collectionInfo;
@@ -1401,8 +1421,8 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		//Don't need to load availability if we already have availability, and the availability was checked within the last hour
 		long curTime = new Date().getTime() / 1000;
 
-		final boolean[] changesMade = {false};
-		final boolean[] errorsEncountered = {false};
+		boolean changesMade = false;
+		boolean errorsEncountered = false;
 
 		//Get existing availability
 		HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities = new HashMap<>();
@@ -1431,21 +1451,12 @@ class ExtractOverDriveInfo implements AutoCloseable {
 
 		Set<Long> librariesSatisfiedByPrimaryAvailability = ConcurrentHashMap.newKeySet();
 
-		List<AdvantageCollectionInfo> primaryCollections = new ArrayList<>();
-		List<AdvantageCollectionInfo> additionalCollections = new ArrayList<>();
+		AvailabilityProcessingResult primaryResult = processAvailabilityCollections(overDriveInfo, singleWork, existingAvailabilities, librariesSatisfiedByPrimaryAvailability, true);
 
-		for (AdvantageCollectionInfo collectionInfo : overDriveInfo.getCollections()) {
-			if (!collectionInfo.getAspenLibraryIds().isEmpty()) {
-				primaryCollections.add(collectionInfo);
-			}
-			if (!collectionInfo.getAdditionalAspenLibraryIds().isEmpty()) {
-				additionalCollections.add(collectionInfo);
-			}
-		}
+		AvailabilityProcessingResult additionalResult = processAvailabilityCollections(overDriveInfo, singleWork, existingAvailabilities, librariesSatisfiedByPrimaryAvailability, false);
 
-		processAvailabilityCollections(primaryCollections, overDriveInfo, databaseId, singleWork, existingAvailabilities, changesMade, errorsEncountered, librariesSatisfiedByPrimaryAvailability, true);
-
-		processAvailabilityCollections(additionalCollections, overDriveInfo, databaseId, singleWork, existingAvailabilities, changesMade, errorsEncountered, librariesSatisfiedByPrimaryAvailability, false);
+		changesMade = primaryResult.changed || additionalResult.changed;
+		errorsEncountered = primaryResult.hadErrors || additionalResult.hadErrors;
 
 		//Delete availability for any collections that did not exist
 		for (OverDriveAvailabilityInfo existingAvailability: existingAvailabilities.values()){
@@ -1454,18 +1465,19 @@ class ExtractOverDriveInfo implements AutoCloseable {
 					long existingId = existingAvailability.getId();
 					deleteAvailabilityStmt.setLong(1, existingId);
 					deleteAvailabilityStmt.executeUpdate();
-					changesMade[0] = true;
+					changesMade = true;
 					if (singleWork) {
 						logEntry.addNote("Deleting availability for library " + existingAvailability.getLibraryId());
 					}
 				} catch (SQLException e) {
+					errorsEncountered = true;
 					logEntry.incErrors("SQL Error deleting availability for title " + overDriveInfo.getId(), e);
 				}
 			}
 		}
 
 		//Update the product to indicate that we checked availability
-		if (changesMade[0]){
+		if (changesMade){
 			try {
 				updateProductAvailabilityStmt.setLong(1, curTime);
 				updateProductAvailabilityStmt.setLong(2, curTime);
@@ -1473,32 +1485,28 @@ class ExtractOverDriveInfo implements AutoCloseable {
 				updateProductAvailabilityStmt.setLong(3, databaseId);
 				updateProductAvailabilityStmt.executeUpdate();
 			} catch (SQLException e) {
+				errorsEncountered = true;
 				logEntry.incErrors("Error updating product availability status " + overDriveInfo.getId(), e);
 			}
 		}
 		//If we got here, everything is good
-		return errorsEncountered[0];
+		return errorsEncountered;
 	}
 
-	private void processAvailabilityCollections(List<AdvantageCollectionInfo> collections, OverDriveRecordInfo overDriveInfo, long databaseId, boolean singleWork, HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities, boolean[] changesMade, boolean[] errorsEncountered, Set<Long> librariesSatisfiedByPrimaryAvailability, boolean primaryPhase) {
+	private AvailabilityProcessingResult processAvailabilityCollections(OverDriveRecordInfo overDriveInfo, boolean singleWork, HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities, Set<Long> librariesSatisfiedByPrimaryAvailability, boolean primaryPhase) {
+		AvailabilityProcessingResult result = new AvailabilityProcessingResult();
 
 		BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(overDriveInfo.getCollections().size());
 		ThreadPoolExecutor es = new ThreadPoolExecutor(overDriveInfo.getCollections().size() / 2, overDriveInfo.getCollections().size(), 5000, TimeUnit.MILLISECONDS, blockingQueue);
+		List<Future<AvailabilityProcessingResult>> futures = new ArrayList<>();
 
-		for (AdvantageCollectionInfo collectionInfo : collections) {
-			if (collectionInfo.getAspenLibraryIds().isEmpty() && collectionInfo.getAdditionalAspenLibraryIds().isEmpty()){
+		for (AdvantageCollectionInfo collectionInfo : overDriveInfo.getCollections()) {
+			Collection<Long> targetLibraries = primaryPhase ? collectionInfo.getAspenLibraryIds() : collectionInfo.getAdditionalAspenLibraryIds();
+
+			if (targetLibraries.isEmpty()) {
 				continue;
 			}
-			es.execute(() -> processAvailabilityForCollection(
-					collectionInfo,
-					overDriveInfo,
-					databaseId,
-					singleWork,
-					existingAvailabilities,
-					changesMade,
-					errorsEncountered,
-					librariesSatisfiedByPrimaryAvailability,
-					primaryPhase));
+			futures.add(es.submit(() -> processAvailabilityForCollection(collectionInfo, overDriveInfo, singleWork, existingAvailabilities, librariesSatisfiedByPrimaryAvailability, primaryPhase)));
 		}
 
 		es.shutdown();
@@ -1512,9 +1520,23 @@ class ExtractOverDriveInfo implements AutoCloseable {
 				logger.error("Error waiting for availability threads to finish", e);
 			}
 		}
+
+		for (Future<AvailabilityProcessingResult> future : futures) {
+			try {
+				AvailabilityProcessingResult collectionResult = future.get();
+				result.changed = result.changed || collectionResult.changed;
+				result.hadErrors = result.hadErrors || collectionResult.hadErrors;
+			} catch (Exception e) {
+				logEntry.incErrors("Error waiting for availability processing", e);
+				result.hadErrors = true;
+			}
+		}
+		return result;
 	}
 
-	private void processAvailabilityForCollection(AdvantageCollectionInfo collectionInfo, OverDriveRecordInfo overDriveInfo, long databaseId, boolean singleWork, HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities, boolean[] changesMade, boolean[] errorsEncountered, Set<Long> librariesSatisfiedByPrimaryAvailability,boolean primaryPhase) {
+	private AvailabilityProcessingResult processAvailabilityForCollection(AdvantageCollectionInfo collectionInfo, OverDriveRecordInfo overDriveInfo, boolean singleWork, HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities, Set<Long> librariesSatisfiedByPrimaryAvailability,boolean primaryPhase) {
+		AvailabilityProcessingResult result = new AvailabilityProcessingResult();
+		Collection<Long> targetLibraries = primaryPhase ? collectionInfo.getAspenLibraryIds() : collectionInfo.getAdditionalAspenLibraryIds();
 		String apiKey = collectionInfo.getCollectionToken();
 		String url = "https://api.overdrive.com/v2/collections/" + apiKey + "/products/" + overDriveInfo.getId() + "/availability";
 		WebServiceResponse availabilityResponse;
@@ -1523,12 +1545,12 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		} catch (SocketTimeoutException e) {
 			settings.addProductToUpdateNextTime(overDriveInfo.getId());
 			logEntry.addNote("Error loading availability for " + overDriveInfo.getId() + " " + e.getMessage());
-			errorsEncountered[0] = true;
-			return;
+			result.hadErrors = true;
+			return result;
 		}
 
 		if (availabilityResponse.getResponseCode() == 404) {
-			return;
+			return result;
 		} else if (availabilityResponse.getResponseCode() != 200) {
 			if (singleWork) {
 				logEntry.addNote("Found availability for api key " + apiKey);
@@ -1536,17 +1558,32 @@ class ExtractOverDriveInfo implements AutoCloseable {
 			settings.addProductToUpdateNextTime(overDriveInfo.getId());
 			logEntry.addNote("Error availability API for product " + overDriveInfo.getId() + " collection " + collectionInfo.getName() + " response code " + availabilityResponse.getResponseCode());
 			logger.info(availabilityResponse.getResponseCode() + ":" + availabilityResponse.getMessage());
-			errorsEncountered[0] = true;
-			return;
+			result.hadErrors = true;
+			return result;
 		} else if (availabilityResponse.getMessage() == null) {
-			handleEmptyAvailabilityResponse(
-					collectionInfo,
-					overDriveInfo,
-					existingAvailabilities,
-					changesMade,
-					librariesSatisfiedByPrimaryAvailability,
-					primaryPhase);
-			return;
+			//Delete all availability for this record
+			if (singleWork) {
+				logEntry.addNote("Availability response had no message " + apiKey + " response code " + availabilityResponse.getResponseCode());
+			}
+			for (Long aspenLibraryId : targetLibraries) {
+				if (!primaryPhase && librariesSatisfiedByPrimaryAvailability.contains(aspenLibraryId)) {
+					continue;
+				}
+				if (existingAvailabilities.containsKey(aspenLibraryId)) {
+					try (PreparedStatement deleteAllAvailabilityStmt = dbConn.prepareStatement("DELETE FROM overdrive_api_product_availability where productId = ? and libraryId = ? and settingId = ?")) {
+						deleteAllAvailabilityStmt.setLong(1, overDriveInfo.getDatabaseId());
+						deleteAllAvailabilityStmt.setLong(2, aspenLibraryId);
+						deleteAllAvailabilityStmt.setLong(3, settings.getId());
+						deleteAllAvailabilityStmt.executeUpdate();
+						result.changed = true;
+						existingAvailabilities.remove(aspenLibraryId);
+					} catch (SQLException e) {
+						result.hadErrors = true;
+						logEntry.incErrors("SQL Error deleting all availability for title " + overDriveInfo.getId(), e);
+					}
+				}
+			}
+			return result;
 		}
 		if (singleWork) {
 			logEntry.addNote("Got availability response for collection " + collectionInfo.getName() + " code was " + availabilityResponse.getResponseCode());
@@ -1556,56 +1593,48 @@ class ExtractOverDriveInfo implements AutoCloseable {
 		try {
 			JSONObject availability = availabilityResponse.getJSONResponse();
 			if (!availability.has("errorCode")) {
-				boolean available = false;
-				if (availability.has("available")) {
-					Object availableObj = availability.get("available");
-					if (availableObj instanceof Boolean) {
-						available = (Boolean) availableObj;
-					} else if (availableObj instanceof String) {
-						available = availability.getString("available").equals("true");
-					}
-				}
-
-				int numCopiesOwned = availability.getInt("copiesOwned");
-				int numCopiesAvailable = availability.getInt("copiesAvailable");
-				int numberOfHolds = availability.getInt("numberOfHolds");
-				String availabilityType = availability.getString("availabilityType");
-
-				Collection<Long> targetLibraries = primaryPhase ? collectionInfo.getAspenLibraryIds() : collectionInfo.getAdditionalAspenLibraryIds();
-
 				for (Long aspenLibraryId : targetLibraries) {
 					if (!primaryPhase && librariesSatisfiedByPrimaryAvailability.contains(aspenLibraryId)) {
 						continue;
 					}
-
 					try {
-						updateAvailabilityForLibrary(
-								aspenLibraryId,
-								databaseId,
-								existingAvailabilities,
-								available,
-								numCopiesOwned,
-								numCopiesAvailable,
-								numberOfHolds,
-								availabilityType,
-								changesMade,
-								singleWork);
+						boolean libraryChanged = updateAvailabilityForLibrary(aspenLibraryId, existingAvailabilities, availability, singleWork, overDriveInfo.getDatabaseId());
+						result.changed = result.changed || libraryChanged;
 
 						if (primaryPhase) {
 							librariesSatisfiedByPrimaryAvailability.add(aspenLibraryId);
 						}
 					} catch (SQLException e) {
+						result.hadErrors = true;
 						logEntry.incErrors("SQL Error adding availability for title " + overDriveInfo.getId(), e);
 					}
 				}
 			}
 		} catch (Exception e) {
+			result.hadErrors = true;
 			logEntry.incErrors("Error processing availability for title " + overDriveInfo.getId(), e);
 		}
+		return result;
 	}
 
 
-	private void updateAvailabilityForLibrary(long aspenLibraryId, long databaseId, HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities, boolean available, int numCopiesOwned, int numCopiesAvailable, int numberOfHolds, String availabilityType, boolean[] changesMade, boolean singleWork) throws SQLException {
+	private boolean updateAvailabilityForLibrary(long aspenLibraryId, HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities, JSONObject availability, boolean singleWork, long databaseId) throws SQLException {
+		boolean changed = false;
+
+		boolean available = false;
+		if (availability.has("available")) {
+			Object availableObj = availability.get("available");
+			if (availableObj instanceof Boolean) {
+				available = (Boolean) availableObj;
+			} else if (availableObj instanceof String) {
+				available = availability.getString("available").equals("true");
+			}
+		}
+		int numCopiesOwned = availability.getInt("copiesOwned");
+		int numCopiesAvailable = availability.getInt("copiesAvailable");
+		int numberOfHolds = availability.getInt("numberOfHolds");
+		String availabilityType = availability.getString("availabilityType");
+
 		OverDriveAvailabilityInfo existingAvailability = existingAvailabilities.get(aspenLibraryId);
 		if (existingAvailability != null) {
 			if (singleWork) {
@@ -1629,7 +1658,7 @@ class ExtractOverDriveInfo implements AutoCloseable {
 					updateAvailabilityStmt.setLong(7, existingId);
 					updateAvailabilityStmt.executeUpdate();
 				}
-				changesMade[0] = true;
+				changed = true;
 			} else if (singleWork) {
 				logEntry.addNote("Availability did not change, did not update the database");
 			}
@@ -1650,40 +1679,9 @@ class ExtractOverDriveInfo implements AutoCloseable {
 				addAvailabilityStmt.setBoolean(9, false);
 				addAvailabilityStmt.executeUpdate();
 			}
-			changesMade[0] = true;
+			changed = true;
 		}
-	}
-
-	private void handleEmptyAvailabilityResponse(
-		AdvantageCollectionInfo collectionInfo,
-		OverDriveRecordInfo overDriveInfo,
-		HashMap<Long, OverDriveAvailabilityInfo> existingAvailabilities,
-		boolean[] changesMade,
-		Set<Long> librariesSatisfiedByPrimaryAvailability,
-		boolean primaryPhase) {
-
-		Collection<Long> targetLibraries = primaryPhase
-				? collectionInfo.getAspenLibraryIds()
-				: collectionInfo.getAdditionalAspenLibraryIds();
-
-		for (Long aspenLibraryId : targetLibraries) {
-			if (!primaryPhase && librariesSatisfiedByPrimaryAvailability.contains(aspenLibraryId)) {
-				continue;
-			}
-			if (existingAvailabilities.containsKey(aspenLibraryId)) {
-				try (PreparedStatement deleteAllAvailabilityStmt = dbConn.prepareStatement(
-						"DELETE FROM overdrive_api_product_availability where productId = ? and libraryId = ? and settingId = ?")) {
-					deleteAllAvailabilityStmt.setLong(1, overDriveInfo.getDatabaseId());
-					deleteAllAvailabilityStmt.setLong(2, aspenLibraryId);
-					deleteAllAvailabilityStmt.setLong(3, settings.getId());
-					deleteAllAvailabilityStmt.executeUpdate();
-					changesMade[0] = true;
-					existingAvailabilities.remove(aspenLibraryId);
-				} catch (SQLException e) {
-					logEntry.incErrors("SQL Error deleting all availability for title " + overDriveInfo.getId(), e);
-				}
-			}
-		}
+		return changed;
 	}
 
 	private WebServiceResponse callOverDriveURL(String requestType, String overdriveUrl, boolean logFailures) throws SocketTimeoutException {

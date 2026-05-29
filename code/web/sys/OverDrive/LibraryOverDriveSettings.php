@@ -16,11 +16,15 @@ class LibraryOverDriveSettings extends DataObject {
 	/** @noinspection PhpUnused - Used in indexer */
 	public $overdriveAdvantageProductsKey;
 	public $overdriveAdvantageId;
+	public $additionalAdvantageId;
+	public $additionalAdvantageProductsKey;
 
 	public function getNumericColumnNames(): array {
 		return [
 			'id',
 			'libraryId',
+			'overdriveAdvantageId',
+			'additionalAdvantageId',
 		];
 	}
 
@@ -122,6 +126,24 @@ class LibraryOverDriveSettings extends DataObject {
 				'property' => 'overdriveAdvantageProductsKey',
 				'type' => 'text',
 				'label' => 'Overdrive Advantage Products Key',
+				'description' => 'The products key for use when building urls to the API from the advantageAccounts call.',
+				'size' => '80',
+				'hideInLists' => false,
+				'forcesReindex' => true,
+			],
+			'additionalAdvantageId' => [
+				'property' => 'additionalAdvantageId',
+				'type' => 'text',
+				'label' => 'Overdrive Additional Advantage Products ID',
+				'description' => 'The ID of the OverDrive Advantage account if any.',
+				'size' => '20',
+				'hideInLists' => false,
+				'forcesReindex' => true,
+			],
+			'additionalAdvantageProductsKey' => [
+				'property' => 'additionalAdvantageProductsKey',
+				'type' => 'text',
+				'label' => 'Overdrive Additional Advantage Products Key',
 				'description' => 'The products key for use when building urls to the API from the advantageAccounts call.',
 				'size' => '80',
 				'hideInLists' => false,

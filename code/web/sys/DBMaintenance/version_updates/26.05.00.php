@@ -395,7 +395,7 @@ function getUpdates26_05_00(): array {
 			'continueOnError' => true,
 			'sql' => [
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Local Enrichment', 'Administer All Explore More', '', 40, 'Allows users to administer Explore More sources.')",
-				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer All Explore More'))",
+				"INSERT INTO role_permissions (roleId, permissionId) SELECT r.roleId, p.id FROM roles r JOIN permissions p ON p.name = 'Administer All Explore More' WHERE r.name = 'opacAdmin'",
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Local Enrichment', 'Administer Library Explore More', '', 40, 'Allows users to administer Explore More sources for their library.')",
 			],
 		], //add_explore_more_permissions

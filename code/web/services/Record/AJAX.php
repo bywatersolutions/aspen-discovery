@@ -677,7 +677,7 @@ class Record_AJAX extends JSON_Action {
 						}
 					}
 					if ($isOnHold) {
-						if ($allowEditionSelection) {
+						if ($allowEditionSelection && $allowHoldsToBeGrouped) {
 							$results['modalButtons'] = "<button type='submit' name='submit' id='requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHyperhold(\"$groupedWorkId\");'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
 								'text' => "Yes, Place Hold",
 								'isPublicFacing' => true,

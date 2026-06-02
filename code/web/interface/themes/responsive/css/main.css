@@ -7308,6 +7308,10 @@ td.hidden-inline-block-lg {
     display: none !important;
   }
 }
+html,
+body {
+  scrollbar-gutter: stable;
+}
 a,
 a:visited {
   color: #3174AF;
@@ -10839,7 +10843,7 @@ td[data-entry-id]:has(.date-edit:focus)::after {
   font-size: 12px;
 }
 .replacement-search-info-text {
-  color: #888888;
+  opacity: 75%;
   font-style: normal;
 }
 .result-title {

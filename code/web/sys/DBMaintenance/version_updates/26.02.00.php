@@ -363,6 +363,5 @@ function getUpdates26_02_00(): array {
 
 		//other
 
-
 	];
 }

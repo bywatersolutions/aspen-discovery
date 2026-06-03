@@ -576,14 +576,13 @@ class Koha extends AbstractIlsDriver {
 			}
 			$curCheckout->dueDate = $dueTime;
 			$curCheckout->itemId = $itemNumber;
+			$curCheckout->renewIndicator = $curRow['itemnumber'];
 
 			if( !$options['isNightlyUpdate'] ) {
 				$checkouts[$curCheckout->source . $curCheckout->sourceId . $curCheckout->userId] = $curCheckout;
 				continue;
 			}
 
-
-			$curCheckout->renewIndicator = $curRow['itemnumber'];
 			if ($kohaVersion >= 22.11) {
 				$curCheckout->renewCount = $curRow['renewals_count'];
 			} else {

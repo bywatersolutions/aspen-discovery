@@ -1939,7 +1939,7 @@ class Koha extends AbstractIlsDriver {
 				//If there is more than one item type for the variation, we don't know what to place a hold on so just do bib level.
 				//If there is just one, we can do an item type hold
 				if (count($allItemTypes) == 1) {
-					$holdParams['item_type'] = reset($allItemTypes);
+					$holdParams[$this->getKohaVersion() >= 25.11 ? 'item_type_id' : 'item_type'] = reset($allItemTypes);
 				}
 			}
 		}

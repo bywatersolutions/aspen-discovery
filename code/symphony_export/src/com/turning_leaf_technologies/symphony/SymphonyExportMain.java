@@ -776,12 +776,10 @@ public class SymphonyExportMain {
 		long latestMarcFile = 0;
 		boolean hasFullExportFile = false;
 		File fullExportFile = null;
-		String absolutePath;
 		String successMessage;
 		String failureMessage;
 		if (exportedMarcFiles != null){
 			for (File exportedMarcFile : exportedMarcFiles) {
-				absolutePath = exportedMarcFile.getAbsolutePath();
 				//Remove any files that are older than the last time we processed files.
 				if (exportedMarcFile.lastModified() / 1000 < lastUpdateFromMarc){
 					successMessage = "Removed old file ";

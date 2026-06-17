@@ -816,8 +816,8 @@ public class SymphonyExportMain {
 		if (exportedMarcDeltaFiles != null && exportedMarcDeltaFiles.length > 0){
 			for (File exportedMarcDeltaFile : exportedMarcDeltaFiles) {
 				if (exportedMarcDeltaFile.lastModified() / 1000 < lastUpdateFromMarc){
-					String successMessage = "Removed old delta file ";
-					String failureMessage = "Could not remove old delta file ";
+					successMessage = "Removed old delta file ";
+					failureMessage = "Could not remove old delta file ";
 					attemptFileDeletion(exportedMarcDeltaFile, successMessage, failureMessage);
 				}else{
 					if (exportedMarcDeltaFile.lastModified() > latestMarcFile){

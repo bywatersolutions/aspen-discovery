@@ -811,18 +811,22 @@ public class SymphonyExportMain {
 		//process unzipped files(marcExportPath)
 		File[] exportedMarcDeltaFiles = marcDeltaPath.listFiles((dir, name) -> name.endsWith("mrc") || name.endsWith("marc"));
 		if (exportedMarcDeltaFiles != null && exportedMarcDeltaFiles.length > 0){
+			String absolutePath;
 			for (File exportedMarcDeltaFile : exportedMarcDeltaFiles) {
+				absolutePath = exportedMarcDeltaFile.getAbsolutePath();
 				if (exportedMarcDeltaFile.lastModified() / 1000 < lastUpdateFromMarc){
 					if (exportedMarcDeltaFile.delete()){
-						logEntry.addNote("Removed old delta file " + exportedMarcDeltaFile.getAbsolutePath());
+						logEntry.addNote("Removed old delta file " + absolutePath);
 						logEntry.saveResults();
 					}else{
-						logEntry.addNote("Could not remove old delta file " + exportedMarcDeltaFile.getAbsolutePath());
+						logEntry.addNote("Could not remove old delta file " + absolutePath);
 						logEntry.saveResults();
 					}
 				}else{
 					if (exportedMarcDeltaFile.lastModified() > latestMarcFile){
 						filesToProcess.add(exportedMarcDeltaFile);
+					}else if(exportedMarcDeltaFile.delete()){
+						logEntry.addNote("Successfully deleted " + absolutePath);
 					}
 				}
 			}

@@ -793,6 +793,7 @@ public class SymphonyExportMain {
 						latestFile = exportedMarcFile;
 					}else if(exportedMarcFile.delete()){
 						logEntry.addNote("Successfully deleted " + absolutePath);
+						logEntry.saveResults();
 					}
 				}
 			}

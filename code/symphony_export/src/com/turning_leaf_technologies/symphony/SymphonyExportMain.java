@@ -791,6 +791,8 @@ public class SymphonyExportMain {
 					if (exportedMarcFile.lastModified() / 1000 > latestMarcFile){
 						latestMarcFile = exportedMarcFile.lastModified();
 						latestFile = exportedMarcFile;
+					}else if(exportedMarcFile.delete()){
+						logEntry.addNote("Successfully deleted " + absolutePath);
 					}
 				}
 			}
@@ -825,8 +827,6 @@ public class SymphonyExportMain {
 				}else{
 					if (exportedMarcDeltaFile.lastModified() > latestMarcFile){
 						filesToProcess.add(exportedMarcDeltaFile);
-					}else if(exportedMarcDeltaFile.delete()){
-						logEntry.addNote("Successfully deleted " + absolutePath);
 					}
 				}
 			}

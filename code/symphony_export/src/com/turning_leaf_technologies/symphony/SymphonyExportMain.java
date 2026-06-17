@@ -776,25 +776,27 @@ public class SymphonyExportMain {
 		long latestMarcFile = 0;
 		boolean hasFullExportFile = false;
 		File fullExportFile = null;
+		String absolutePath;
+		String successMessage;
+		String failureMessage;
 		if (exportedMarcFiles != null){
 			for (File exportedMarcFile : exportedMarcFiles) {
+				absolutePath = exportedMarcFile.getAbsolutePath();
 				//Remove any files that are older than the last time we processed files.
 				if (exportedMarcFile.lastModified() / 1000 < lastUpdateFromMarc){
-					if (exportedMarcFile.delete()){
-						logEntry.addNote("Removed old file " + exportedMarcFile.getAbsolutePath());
-						logEntry.saveResults();
-					}else{
-						logEntry.addNote("Could not remove old file " + exportedMarcFile.getAbsolutePath());
-						logEntry.saveResults();
-					}
+					successMessage = "Removed old file ";
+					failureMessage = "Could not remove old file ";
+					attemptFileDeletion(exportedMarcFile, successMessage, failureMessage);
+					continue;
+				}
+
+				// Update timestamp for most recent file
+				if (exportedMarcFile.lastModified() / 1000 > latestMarcFile){
+					attemptFileDeletion(latestFile, successMessage, failureMessage);
+					latestMarcFile = exportedMarcFile.lastModified();
+					latestFile = exportedMarcFile;
 				}else{
-					if (exportedMarcFile.lastModified() / 1000 > latestMarcFile){
-						latestMarcFile = exportedMarcFile.lastModified();
-						latestFile = exportedMarcFile;
-					}else if(exportedMarcFile.delete()){
-						logEntry.addNote("Successfully deleted " + absolutePath);
-						logEntry.saveResults();
-					}
+					attemptFileDeletion(exportedMarcFile, successMessage, failureMessage);
 				}
 			}
 		}
@@ -814,17 +816,11 @@ public class SymphonyExportMain {
 		//process unzipped files(marcExportPath)
 		File[] exportedMarcDeltaFiles = marcDeltaPath.listFiles((dir, name) -> name.endsWith("mrc") || name.endsWith("marc"));
 		if (exportedMarcDeltaFiles != null && exportedMarcDeltaFiles.length > 0){
-			String absolutePath;
 			for (File exportedMarcDeltaFile : exportedMarcDeltaFiles) {
-				absolutePath = exportedMarcDeltaFile.getAbsolutePath();
 				if (exportedMarcDeltaFile.lastModified() / 1000 < lastUpdateFromMarc){
-					if (exportedMarcDeltaFile.delete()){
-						logEntry.addNote("Removed old delta file " + absolutePath);
-						logEntry.saveResults();
-					}else{
-						logEntry.addNote("Could not remove old delta file " + absolutePath);
-						logEntry.saveResults();
-					}
+					String successMessage = "Removed old delta file ";
+					String failureMessage = "Could not remove old delta file ";
+					attemptFileDeletion(exportedMarcDeltaFile, successMessage, failureMessage);
 				}else{
 					if (exportedMarcDeltaFile.lastModified() > latestMarcFile){
 						filesToProcess.add(exportedMarcDeltaFile);
@@ -844,6 +840,16 @@ public class SymphonyExportMain {
 			//TODO: See if we can get more runtime info from SirsiDynix APIs;
 			return 0;
 		}
+	}
+
+	private static void attemptFileDeletion(File fileToDelete, String successMsg, String failureMsg) {
+		if(!fileToDelete){
+			return;
+		}
+
+		String absolutePath = fileToDelete.getAbsolutePath();
+		logEntry.addNote((fileToDelete.delete() ? successMsg : failureMsg) + absolutePath);
+		logEntry.saveResults();
 	}
 
 	public static void unzipAllFiles(File export){

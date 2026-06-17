@@ -779,11 +779,11 @@ public class SymphonyExportMain {
 		String successMessage;
 		String failureMessage;
 		if (exportedMarcFiles != null){
+			successMessage = "Removed old file ";
+			failureMessage = "Could not remove old file ";
 			for (File exportedMarcFile : exportedMarcFiles) {
 				//Remove any files that are older than the last time we processed files.
 				if (exportedMarcFile.lastModified() / 1000 < lastUpdateFromMarc){
-					successMessage = "Removed old file ";
-					failureMessage = "Could not remove old file ";
 					attemptFileDeletion(exportedMarcFile, successMessage, failureMessage);
 					continue;
 				}

@@ -677,11 +677,11 @@ class Record_AJAX extends JSON_Action {
 						}
 					}
 					if ($isOnHold) {
-						if ($allowEditionSelection) {
-							$results['modalButtons'] = "buttin type='submit' name='submit' id=requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHyperhold(\"$groupedWorkId\");'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
+						if ($allowEditionSelection && $allowHoldsToBeGrouped) {
+							$results['modalButtons'] = "<button type='submit' name='submit' id='requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHyperhold(\"$groupedWorkId\");'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
 								'text' => "Yes, Place Hold",
 								'isPublicFacing' => true,
-							]) . "</button";
+							]) . "</button>";
 						} else {
 								$results['modalButtons'] = "<button type='submit' name='submit' id='requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHoldForm();'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
 								'text' => "Yes, Place Hold",
@@ -690,7 +690,7 @@ class Record_AJAX extends JSON_Action {
 						}
 					} else {
 						if ($allowEditionSelection && $allowHoldsToBeGrouped) {
-							$results['modalButtons'] = "<button type='submit' name='submit' id=requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHyperhold(\"$groupedWorkId\");'><i class='fas fa-spinner hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
+							$results['modalButtons'] = "<button type='submit' name='submit' id='requestTitleButton' class='btn btn-primary' onclick='return AspenDiscovery.Record.submitHyperhold(\"$groupedWorkId\");'><i class='fas fa-spinner hidden' role='status' aria-hidden='true'></i>&nbsp;" . translate([
 								'text' => "Submit Hold Request",
 								'isPublicFacing' => true,
 							]) . "</button>";

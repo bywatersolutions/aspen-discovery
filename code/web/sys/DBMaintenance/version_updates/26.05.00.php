@@ -395,7 +395,7 @@ function getUpdates26_05_00(): array {
 			'continueOnError' => true,
 			'sql' => [
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Local Enrichment', 'Administer All Explore More', '', 40, 'Allows users to administer Explore More sources.')",
-				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer All Explore More'))",
+				"INSERT INTO role_permissions (roleId, permissionId) SELECT r.roleId, p.id FROM roles r JOIN permissions p ON p.name = 'Administer All Explore More' WHERE r.name = 'opacAdmin'",
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Local Enrichment', 'Administer Library Explore More', '', 40, 'Allows users to administer Explore More sources for their library.')",
 			],
 		], //add_explore_more_permissions
@@ -418,6 +418,17 @@ function getUpdates26_05_00(): array {
 				"INSERT INTO explore_more_source (source, showInExploreMore) VALUES ('Genealogy', 8);",
 			],
 		], //insert_default_explore_more_sources
+		'user_agent_cleanup' => [
+			'title' => 'User Agent Cleanup',
+			'description' => 'Clean up user agent data to keep only recent usage history for this upgrade.',
+			'continueOnError' => false,
+			'sql' => [
+				"DELETE FROM usage_by_user_agent WHERE year < 2026 OR (year = 2026 AND month < 3)",
+				"DELETE ua FROM user_agent ua LEFT JOIN usage_by_user_agent u ON u.userAgentId = ua.id WHERE u.userAgentId IS NULL",
+				"DROP TABLE IF EXISTS user_agent_temp",
+				"DROP TABLE IF EXISTS usage_by_user_agent_temp",
+			],
+		],
 		'user_agent_consolidation' => [
 			'title' => 'Consolidate User Agents and Stats',
 			'description' => 'Consolidating user agents and their corresponding stats to remove duplicates that only differ by version details. This will allow for cleaner reporting and bot detection.',

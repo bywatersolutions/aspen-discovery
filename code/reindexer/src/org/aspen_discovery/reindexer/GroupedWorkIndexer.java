@@ -397,9 +397,27 @@ public class GroupedWorkIndexer implements AutoCloseable {
 		}
 		http2Client = new Http2SolrClient.Builder().build();
 		try {
+			int totalCores = Runtime.getRuntime().availableProcessors();
+			int workerThreads;
+			int queueSize;
+
+			// if (totalCores <= 4) {
+			// 	workerThreads = 1;
+			// 	queueSize = 250;
+			// } else if (totalCores <= 16) {
+			// 	workerThreads = 2;
+			// 	queueSize = 500;
+			// } else {
+			// 	workerThreads = 4;
+			// 	queueSize = 1000;
+			// }
+
+			workerThreads = 24;
+			queueSize = 500;
+
 			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder(solrUrl, http2Client)
-				.withThreadCount(1)
-				.withQueueSize(25)
+				.withThreadCount(workerThreads)
+				.withQueueSize(queueSize)
 				.build();
 		}catch (OutOfMemoryError e) {
 			logger.error("Unable to create solr client, out of memory", e);

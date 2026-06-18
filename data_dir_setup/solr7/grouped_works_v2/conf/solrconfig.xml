@@ -291,7 +291,7 @@
          have some sort of hard autoCommit to limit the log size.
       -->
     <autoCommit>
-      <maxTime>${solr.autoCommit.maxTime:15000}</maxTime>
+      <maxTime>${solr.autoCommit.maxTime:300000}</maxTime>
       <openSearcher>false</openSearcher>
     </autoCommit>
 
@@ -302,7 +302,7 @@
       -->
 
     <autoSoftCommit>
-      <maxTime>${solr.autoSoftCommit.maxTime:-1}</maxTime>
+      <maxTime>${solr.autoSoftCommit.maxTime:5000}</maxTime>
     </autoSoftCommit>
 
     <!-- Update Related Event Listeners
@@ -348,6 +348,9 @@
        Query section - these settings control query time things like caches
        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <query>
+
+    <!-- Log Slow Queries -->
+    <slowQueryThresholdMillis>7500</slowQueryThresholdMillis>
 
     <!-- Maximum number of clauses allowed when parsing a boolean query string.
 

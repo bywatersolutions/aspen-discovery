@@ -404,16 +404,20 @@ public class GroupedWorkIndexer {
 			int workerThreads;
 			int queueSize;
 
-			if (totalCores <= 4) {
-				workerThreads = 1;
-				queueSize = 250;
-			} else if (totalCores <= 16) {
-				workerThreads = 2;
-				queueSize = 500;
-			} else {
-				workerThreads = 4;
-				queueSize = 1000;
-			}
+			// if (totalCores <= 4) {
+			// 	workerThreads = 1;
+			// 	queueSize = 250;
+			// } else if (totalCores <= 16) {
+			// 	workerThreads = 2;
+			// 	queueSize = 500;
+			// } else {
+			// 	workerThreads = 4;
+			// 	queueSize = 1000;
+			// }
+
+			workerThreads = 24;
+			queueSize = 500;
+
 			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder(solrUrl, http2Client)
 				.withThreadCount(workerThreads)
 				.withQueueSize(queueSize)

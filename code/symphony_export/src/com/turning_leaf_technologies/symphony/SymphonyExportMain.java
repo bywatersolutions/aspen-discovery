@@ -841,9 +841,7 @@ public class SymphonyExportMain {
 	}
 
 	private static void attemptFileDeletion(File fileToDelete, String successMsg, String failureMsg) {
-		if(!fileToDelete){
-			return;
-		}
+		if(fileToDelete == null){ return; }
 
 		String absolutePath = fileToDelete.getAbsolutePath();
 		logEntry.addNote((fileToDelete.delete() ? successMsg : failureMsg) + absolutePath);

@@ -3954,27 +3954,42 @@ class MyAccount_AJAX extends JSON_Action {
 			$allowHoldsToBeGrouped = $catalogDriver && $catalogDriver->supportsHyperholdsGrouping() && User::resolveAllowHoldsToBeGrouped($user, $library);
 		
 			if ($allowHoldsToBeGrouped) {
-				$patronId = $user->unique_ils_id;
-				$groupedHoldsResponse = $catalogDriver->getPatronHoldGroups($patronId);
 				$groupedHolds = [];
-				if (isset($groupedHoldsResponse['content'])) {
-					if (is_string($groupedHoldsResponse['content'])) {
-						$groupedHolds = json_decode($groupedHoldsResponse['content'], true) ?: [];
-					} elseif (is_array($groupedHoldsResponse['content'])) {
-						$groupedHolds = $groupedHoldsResponse['content'];
+				$holdGroupUsers = array_merge([$user], $user->getLinkedUsers());
+				foreach ($holdGroupUsers as $holdGroupUser) {
+					$patronId = $holdGroupUser->unique_ils_id;
+					$groupedHoldsResponse = $catalogDriver->getPatronHoldGroups($patronId);
+
+					$patronGroups = [];
+					if (isset($groupedHoldsResponse['content'])) {
+						if (is_string($groupedHoldsResponse['content'])) {
+							$patronGroups = json_decode($groupedHoldsResponse['content'], true) ?: [];
+						} elseif (is_array($groupedHoldsResponse['content'])) {
+							$patronGroups = $groupedHoldsResponse['content'];
+						} else {
+							$logger->log(
+								'Unexpected type for groupedHoldsResponse["content"]: ' . gettype($groupedHoldsResponse['content']),
+								Logger::LOG_ERROR
+							);
+						}
+					} elseif (is_array($groupedHoldsResponse)) {
+						$patronGroups = $groupedHoldsResponse;
 					} else {
 						$logger->log(
-							'Unexpected type for groupedHoldsResponse["content"]: ' . gettype($groupedHoldsResponse['content']),
+							'Unexpected type for groupedHoldsResponse: ' . gettype($groupedHoldsResponse),
 							Logger::LOG_ERROR
 						);
 					}
-				} elseif (is_array($groupedHoldsResponse)) {
-					$groupedHolds = $groupedHoldsResponse;
-				} else {
-					$logger->log(
-						'Unexpected type for groupedHoldsResponse: ' . gettype($groupedHoldsResponse),
-						Logger::LOG_ERROR
-					);
+
+					if ($holdGroupUser->id !== $user->id) {
+						foreach ($patronGroups as &$patronGroup) {
+							$patronGroup['linked_user_id'] = $holdGroupUser->id;
+							$patronGroup['linked_user_name'] = $holdGroupUser->displayName;
+						}
+						unset($patronGroup);
+					}
+
+					$groupedHolds = array_merge($groupedHolds, $patronGroups);
 				}
 			}
 
@@ -4124,22 +4139,20 @@ class MyAccount_AJAX extends JSON_Action {
 				if (!empty($groupedHolds) && !empty($allHolds['unavailable'])) {
 					foreach($groupedHolds as $group) {
 						if (!empty($group['holds']) && is_array($group['holds']) && count ($group['holds']) > 1) {
-							$groupBiblioIds = [];
 							$groupHoldIds = [];
 							foreach ($group['holds'] as $hold) {
-								$groupBiblioIds[] = $hold['biblio_id'] ?? null;
 								$groupHoldIds[] = $hold['hold_id'] ?? null;
 							}
 							$matchingHolds = [];
 							foreach ($allHolds['unavailable'] as $holdKey => $holdObj) {
-								if (in_array($holdObj->recordId, $groupBiblioIds)) {
+								if (in_array($holdObj->cancelId, $groupHoldIds)) {
 									$matchingHolds[] = $holdObj;
 									$hiddenHoldIds[] = $holdKey;
 								}
 							}
 							if (count($matchingHolds) > 1) {
 								$hyperHolds[] = [
-									'visual_hold_id' => $group['visual_hold_group_id'],
+									'visual_hold_id' => $group['hold_group_id'],
 									'hold_group_id' => $group['hold_group_id'],
 									'holdCount' => count($matchingHolds),
 									'holds' => $matchingHolds,

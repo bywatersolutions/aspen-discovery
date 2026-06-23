@@ -233,6 +233,14 @@ function getUpdates26_05_00(): array {
 				'ALTER TABLE library_overdrive_settings ADD COLUMN overdriveAdvantageId int(11) DEFAULT 0'
 			]
 		],//add_overdriveAdvantageId
+		'expand_overdriveAdvantageProductsKey' => [
+			'title' => 'Expand overdriveAdvantageProductsKey',
+			'description' => 'Expand overdriveAdvantageProductsKey to allow longer collection tokens',
+			'continueOnError' => false,
+			'sql' => [
+				"ALTER TABLE library_overdrive_settings MODIFY COLUMN overdriveAdvantageProductsKey VARCHAR(255) DEFAULT ''",
+			]
+		], //expand_overdriveAdvantageProductsKey
 
 		//imani
 		// Aspen Progressive Web Application(PWA) updates moved

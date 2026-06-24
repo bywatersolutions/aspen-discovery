@@ -391,9 +391,9 @@ public class GroupedWorkIndexer implements AutoCloseable {
 
 		String solrUrl;
 		if (indexVersion == 1) {
-			solrUrl = "https://" + solrHost + ":" + solrPort + "/solr/grouped_works";
+			solrUrl = "http://" + solrHost + ":" + solrPort + "/solr/grouped_works";
 		}else{
-			solrUrl = "https://" + solrHost + ":" + solrPort + "/solr/grouped_works_v2";
+			solrUrl = "http://" + solrHost + ":" + solrPort + "/solr/grouped_works_v2";
 		}
 		http2Client = new Http2SolrClient.Builder().build();
 		try {

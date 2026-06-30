@@ -278,7 +278,7 @@ function getUpdates26_06_00(): array {
 			'description' => 'Create permissions for LocalHop',
 			'sql' => [
 				"INSERT INTO permissions (sectionName, name, requiredModule, weight, description) VALUES ('Events', 'Administer LocalHop Settings', 'Events', 20, 'Allows the user to administer integration with LocalHop for all libraries.')",
-				"INSERT INTO role_permissions(roleId, permissionId) VALUES ((SELECT roleId from roles where name='opacAdmin'), (SELECT id from permissions where name='Administer LocalHop Settings'))",
+				"INSERT INTO role_permissions (roleId, permissionId) SELECT r.roleId, p.id FROM roles r JOIN permissions p ON p.name = 'Administer LocalHop Settings' WHERE r.name = 'opacAdmin'",
 			],
 		],
 		// permissions_create_events_localhop

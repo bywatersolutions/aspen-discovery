@@ -1549,8 +1549,11 @@ class CarlX extends AbstractIlsDriver {
 		return null;
 	}
 
-	public function getFines(User $patron, $includeMessages = false): array {
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
 		$myFines = [];
+		if ($type == 'credit'){
+			return $myFines;
+		}
 		$request = $this->getSearchbyPatronIdRequest($patron);
 
 		$request->TransactionType = 'Fine';

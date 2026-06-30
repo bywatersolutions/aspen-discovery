@@ -845,6 +845,8 @@ class Sierra extends AbstractIlsDriver {
 						$curCheckout->author = 'Unknown';
 					}
 					$curCheckout->formats = ['Unknown'];
+					$homeLibrary = $patron->getHomeLibrary();
+					$curCheckout->canRenew = !($homeLibrary && !$homeLibrary->allowToRenewILL);
 				} else {
 					preg_match($this->urlIdRegExp, $entry->item, $m);
 					$itemIdShort = $m[1];
@@ -2697,8 +2699,11 @@ class Sierra extends AbstractIlsDriver {
 		}
 	}
 
-	public function getFines($patron = null, $includeMessages = false): array {
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
 		$fines = [];
+		if ($type == 'credit'){
+			return $fines;
+		}
 
 		$params = [
 			'fields' => 'default,assessedDate,itemCharge,processingFee,billingFee,chargeType,paidAmount,datePaid,description,returnDate,location,description,invoiceNumber',

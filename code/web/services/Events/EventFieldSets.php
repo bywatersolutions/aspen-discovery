@@ -78,4 +78,8 @@ class Events_EventFieldSets extends ObjectEditor {
 	public function getRequiredModule(): ?string {
 		return 'Events';
 	}
+
+	function getInitializationJs(): string {
+		return 'AspenDiscovery.Events.displayFieldOptionsForSelectedUse();';
+	}
 }

@@ -754,6 +754,19 @@ class OverDriveRecordDriver extends GroupedWorkSubDriver {
 		}
 	}
 
+	/**
+	 * @return string
+	 */
+	public function getDuration() : string {
+		$formats = $this->getOverDriveMetaData()->getDecodedRawData()->formats ?? null;
+
+		if (!empty($formats) && isset($formats[0]->duration)) {
+			return StringUtils::extractTotalMinutes($formats[0]->duration);
+		}
+
+		return '';
+	}
+
 	/** @noinspection PhpUnused */
 	public function getStreetDate() : ?string {
 		return isset($this->overDriveMetaData->getDecodedRawData()->publishDateText) ? $this->overDriveMetaData->getDecodedRawData()->publishDateText : null;

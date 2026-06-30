@@ -1,6 +1,7 @@
 package org.aspen_discovery.grouping;
 
 import com.opencsv.CSVReader;
+import com.turning_leaf_technologies.hoopla.HooplaUtils;
 import com.turning_leaf_technologies.indexing.RecordIdentifier;
 import com.turning_leaf_technologies.logging.BaseIndexingLogEntry;
 import com.turning_leaf_technologies.marc.MarcUtil;
@@ -1146,13 +1147,7 @@ public class RecordGroupingProcessor implements AutoCloseable {
 				primaryFormat = mediaType;
 				break;
 		}
-		String author = "";
-		if (itemDetails.has("artist")) {
-			author = itemDetails.getString("artist");
-			author = AspenStringUtils.swapFirstLastNames(author);
-		} else if (itemDetails.has("publisher")) {
-			author = itemDetails.getString("publisher");
-		}
+		String author = HooplaUtils.getPrimaryAuthor(itemDetails, mediaType);
 
 		RecordIdentifier primaryIdentifier = new RecordIdentifier("hoopla", Long.toString(hooplaId));
 

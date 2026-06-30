@@ -102,6 +102,7 @@ class Record_Home extends GroupedWorkSubRecordHomeAction {
 
 			if ($this->recordDriver instanceof MarcRecordDriver) {
 				$interface->assign('physicalDescriptions', $this->recordDriver->getPhysicalDescriptions());
+				$interface->assign('duration', $this->recordDriver->getDuration());
 			}else{
 				$marcFields = $marcRecord->getFields('300');
 				if ($marcFields) {
@@ -234,6 +235,8 @@ class Record_Home extends GroupedWorkSubRecordHomeAction {
 		$interface->assign('exploreMoreInfo', $exploreMoreInfo);
 
 		$interface->assign('semanticData', json_encode($this->recordDriver->getSemanticData()));
+
+		$interface->assign('formatDisplayStyle', $groupedWorkDisplaySettings->formatDisplayStyle);
 
 		// Display Page
 		$this->display('full-record.tpl', $this->recordDriver->getTitle(), '', false);

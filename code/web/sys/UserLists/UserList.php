@@ -828,6 +828,12 @@ class UserList extends DataObject {
 							$coverUrl = "/bookcover.php?id=$id&size=medium&type=assabet_event";
 
 							$interface->assign('bookCoverUrl', $coverUrl);
+						} elseif (str_starts_with($listEntryInfo['sourceId'], 'localhop')){
+							$id = explode("localhop_1_", $listEntryInfo['sourceId']);
+							$id = $id[1];
+							$coverUrl = "/bookcover.php?id=$id&size=medium&type=localhop_event";
+
+							$interface->assign('bookCoverUrl', $coverUrl);
 						}
 					}
 
@@ -937,6 +943,12 @@ class UserList extends DataObject {
 							$id = explode("assabet_1_", $listEntryInfo['sourceId']);
 							$id = $id[1];
 							$coverUrl = "/bookcover.php?id=$id&size=medium&type=assabet_event";
+
+							$interface->assign('bookCoverUrl', $coverUrl);
+						} elseif (str_starts_with($listEntryInfo['sourceId'], 'localhop')){
+							$id = explode("localhop_1_", $listEntryInfo['sourceId']);
+							$id = $id[1];
+							$coverUrl = "/bookcover.php?id=$id&size=medium&type=localhop_event";
 
 							$interface->assign('bookCoverUrl', $coverUrl);
 						}
@@ -1143,6 +1155,8 @@ class UserList extends DataObject {
 		$springshareAddToList = false;
 		$assabetBypass = false;
 		$assabetAddToList = false;
+		$localhopBypass = false;
+		$localhopAddToList = false;
 
 		$libraryEventSettings = [];
 
@@ -1192,7 +1206,15 @@ class UserList extends DataObject {
 							$assabetBypass = $eventSetting->bypassAspenEventPages;
 							$assabetAddToList = $eventSetting->eventsInLists;
 						}
-					}else {
+					} else if ($source == 'localhop') {
+						require_once ROOT_DIR . '/sys/Events/LocalHopSetting.php';
+						$eventSetting = new LocalHopSetting();
+						$eventSetting->id = $id;
+						if($eventSetting->find(true)) {
+							$assabetBypass = $eventSetting->bypassAspenEventPages;
+							$assabetAddToList = $eventSetting->eventsInLists;
+						}
+					} else {
 						// invalid event source
 					}
 				}

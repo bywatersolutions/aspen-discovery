@@ -281,7 +281,11 @@ abstract class SIP2Driver extends AbstractIlsDriver {
 		return null;
 	}
 
-	public function getFines(User $patron, $includeMessages = false): array {
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
+		$fines = [];
+		if ($type == 'credit'){
+			return $fines;
+		}
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 
 		global $activeLanguage;
@@ -294,7 +298,6 @@ abstract class SIP2Driver extends AbstractIlsDriver {
 
 		$currencyFormatter = new NumberFormatter($activeLanguage->locale . '@currency=' . $currencyCode, NumberFormatter::CURRENCY);
 
-		$fines = [];
 		$start = 1;
 		$batchSize = 25;
 		$end = $start + $batchSize - 1;

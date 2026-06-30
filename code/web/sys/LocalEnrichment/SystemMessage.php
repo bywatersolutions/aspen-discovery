@@ -82,6 +82,13 @@ class SystemMessage extends DB_LibraryLocationLinkedObject {
 					3 => 'Holds Page',
 					4 => 'Fines Page',
 					5 => 'Contact Information Page',
+					6 => 'Events',
+					7 => 'Your Searches' ,
+					8 => 'Preferences',
+					9 => 'Libby Options',
+					10 => 'Hoopla Options',
+					11 => 'Your Lists',
+					12 => 'Home Page'
 				],
 				'label' => 'Show On',
 				'description' => 'The pages this message should be shown on',

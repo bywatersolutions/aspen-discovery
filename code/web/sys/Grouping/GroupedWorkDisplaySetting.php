@@ -32,6 +32,7 @@ class GroupedWorkDisplaySetting extends DataObject {
 	public $alwaysFlagNewTitles;
 	public $showRelatedRecordLabels;
 	public $showEditionCovers;
+	public $showEarliestPublicationDateSearchResults;
 
 	// Contents of search
 	public $includeOutOfSystemExternalLinks;
@@ -47,6 +48,7 @@ class GroupedWorkDisplaySetting extends DataObject {
 
 	// Faceting
 	public $includeAllRecordsInShelvingFacets;
+	/** @noinspection PhpUnused */
 	public $includeEContentInShelvingLocations;
 	public $includeAllRecordsInDateAddedFacets;
 	public $facetCountsToShow;
@@ -76,6 +78,7 @@ class GroupedWorkDisplaySetting extends DataObject {
 	public $showFastAddSubjects;
 	public $showOtherSubjects;
 	public $showInMainDetails;
+	public $showEarliestPublicationDateFullRecord;
 	public $preferIlsDescription;
 
 	// Search options
@@ -469,6 +472,13 @@ class GroupedWorkDisplaySetting extends DataObject {
 						'listStyle' => 'checkboxSimple',
 						'values' => self::$showInMainDetailsOptions,
 					],
+					'showEarliestPublicationDateFullRecord' => [
+						'property' => 'showEarliestPublicationDateFullRecord',
+						'type' => 'checkbox',
+						'label' => 'Show Earliest Publication Date for Full Record',
+						'description' => 'Show Earliest Publication Date for Full Record when publication dates vary for the work',
+						'default' => true,
+					],
 					'moreDetailsOptions' => [
 						'property' => 'moreDetailsOptions',
 						'type' => 'oneToMany',
@@ -757,6 +767,13 @@ class GroupedWorkDisplaySetting extends DataObject {
 						'description' => 'Selected details will be shown in the main details section of a record on a search results page.',
 						'listStyle' => 'checkboxSimple',
 						'values' => self::$searchResultsMainDetailsOptions,
+					],
+					'showEarliestPublicationDateSearchResults' => [
+						'property' => 'showEarliestPublicationDateSearchResults',
+						'type' => 'checkbox',
+						'label' => 'Show Earliest Publication Date in Search Results',
+						'description' => 'Show Earliest Publication Date in Search Results when publication dates vary for the work',
+						'default' => true,
 					],
 					'showIndexedSeriesWithNoveList' => [
 						'property' => 'showIndexedSeriesWithNoveList',

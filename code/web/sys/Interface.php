@@ -141,7 +141,38 @@ class UInterface extends Smarty {
 		require_once ROOT_DIR . '/sys/SystemVariables.php';
 		$systemVariables = SystemVariables::getSystemVariables();
 		if (!empty($systemVariables)) {
-			if ($systemVariables->catalogStatus == 2) {
+			$now = time();
+			$scheduledStart = $systemVariables->scheduledOfflineStart ?? 0;
+			$scheduledEnd   = $systemVariables->scheduledOfflineEnd   ?? 0;
+
+			if ($scheduledEnd != 0) {
+				$inScheduledWindow = $scheduledStart && $scheduledEnd
+					&& $now >= $scheduledStart
+					&& $now <= $scheduledEnd;
+			} else {
+				$inScheduledWindow = $scheduledStart && $now >= $scheduledStart;
+			}
+
+			if (!empty($scheduledStart)) {
+				if ($inScheduledWindow) {
+					$systemVariables->catalogStatus = 1;
+					if ($systemVariables->scheduledEcontentAccess) {
+						$systemVariables->catalogStatus = 2;
+						$loginAllowedWhileOffline = true;
+					}
+					$offlineMode = true;
+					$this->assign('enableEContentWhileOffline', $loginAllowedWhileOffline);
+					$this->assign('offlineMessage', $systemVariables->offlineMessage);
+				} else {
+					//Offline time has finished, reset
+					if ($scheduledEnd <= $now && $scheduledStart <= $now) {
+						$systemVariables->scheduledOfflineStart = 0;
+						$systemVariables->scheduledOfflineEnd = 0;
+						$systemVariables->catalogStatus = 0;
+					}
+				}
+				$systemVariables->update();
+			} elseif ($systemVariables->catalogStatus == 2) {
 				$offlineMode = true;
 				$loginAllowedWhileOffline = true;
 				$this->assign('enableEContentWhileOffline', true);

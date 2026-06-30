@@ -590,7 +590,11 @@ class Evolve extends AbstractIlsDriver {
 		return null;
 	}
 
-	public function getFines(User $patron, $includeMessages = false): array {
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
+		$fines = [];
+		if ($type == 'credit'){
+			return $fines;
+		}
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 
 		global $activeLanguage;
@@ -603,7 +607,6 @@ class Evolve extends AbstractIlsDriver {
 
 		$currencyFormatter = new NumberFormatter($activeLanguage->locale . '@currency=' . $currencyCode, NumberFormatter::CURRENCY);
 
-		$fines = [];
 		$sessionInfo = $this->loginViaWebService($patron->ils_barcode, $patron->ils_password);
 		if ($sessionInfo['userValid']) {
 			$evolveUrl = $this->accountProfile->patronApiUrl . '/AccountFinancial/Token=' . $sessionInfo['accessToken'];

@@ -1,17 +1,79 @@
 <?php
+
 require_once ROOT_DIR . '/services/API/AbstractAPI.php';
 require_once ROOT_DIR . '/CatalogConnection.php';
 
 class UserAPI extends AbstractAPI {
 
 
-	/**
-	 * Processes method to determine the return type and calls the correct method.
-	 * Should not be called directly.
-	 *
-	 * @see Action::launch()
-	 * @access private
-	 */
+    /**
+     * Define required OAuth2 scopes for specific API methods
+     * @param string $method The API method name
+     * @return array Array of required scopes
+     */
+    protected function getRequiredScopes($method): array {
+        // Map methods to required scopes
+        $methodScopes = [
+			// Read-only methods require user:read
+			'isLoggedIn' => ['user:read'],
+			'getMyAccount' => ['user:read'],
+			'getPatronProfile' => ['user:read'],
+			'getPatronHolds' => ['user:read'],
+			'getPatronCheckedOutItems' => ['user:read'],
+			'getValidPickupLocations' => ['user:read'],
+			'getValidSublocations' => ['user:read'],
+			'getLinkedAccounts' => ['user:read'],
+			'getViewers' => ['user:read'],
+			'getPatronReadingHistory' => ['user:read'],
+			'getReadingHistorySortOptions' => ['user:read'],
+			'getNotificationPreference' => ['user:read'],
+			'getNotificationPreferences' => ['user:read'],
+			'getAppPreferencesForUser' => ['user:read'],
+			'getInbox' => ['user:read'],
+			'getMaterialsRequests' => ['user:read'],
+			'getMaterialsRequestDetails' => ['user:read'],
+			'getUserCampaigns' => ['user:read'],
+
+			// Write methods require user:write
+			'login' => ['user:write'],
+			'logout' => ['user:write'],
+			'checkoutItem' => ['user:write'],
+			'renewItem' => ['user:write'],
+			'renewAll' => ['user:write'],
+			'placeHold' => ['user:write'],
+			'cancelHold' => ['user:write'],
+			'activateHold' => ['user:write'],
+			'freezeHold' => ['user:write'],
+			'changeHoldPickUpLocation' => ['user:write'],
+			'confirmHold' => ['user:write'],
+			'returnCheckout' => ['user:write'],
+			'resetPassword' => ['user:write'],
+			'updatePatronReadingHistory' => ['user:write'],
+			'optIntoReadingHistory' => ['user:write'],
+			'optOutOfReadingHistory' => ['user:write'],
+			'deleteAllFromReadingHistory' => ['user:write'],
+			'deleteSelectedFromReadingHistory' => ['user:write'],
+			'markMessageAsRead' => ['user:write'],
+			'markMessageAsUnread' => ['user:write'],
+			'setNotificationPreference' => ['user:write'],
+			'createMaterialsRequest' => ['user:write'],
+			'cancelMaterialsRequest' => ['user:write'],
+			'enrollUserInCampaign' => ['user:write'],
+			'unenrollUserFromCampaign' => ['user:write'],
+			'addActivityProgress' => ['user:write'],
+        ];
+
+        // Return the scopes for this method, or empty array if no specific scopes defined
+        return $methodScopes[$method] ?? parent::getRequiredScopes($method);
+    }
+
+    /**
+     * Processes method to determine the return type and calls the correct method.
+     * Should not be called directly.
+     *
+     * @see Action::launch()
+     * @access private
+     */
 	function launch() : void {
 		$method = (isset($_GET['method']) && !is_array($_GET['method'])) ? $_GET['method'] : '';
 		$output = '';
@@ -21,132 +83,9 @@ class UserAPI extends AbstractAPI {
 		//header('Content-type: text/html');
 		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
 
-		global $activeLanguage;
-		if (isset($_GET['language'])) {
-			$language = new Language();
-			$language->code = $_GET['language'];
-			if ($language->find(true)) {
-				$activeLanguage = $language;
-			}
-		}
+		$this->setLanguage();
 
-		if (isset($_SERVER['PHP_AUTH_USER'])) {
-			if ($this->grantTokenAccess()) {
-				if (in_array($method, [
-					'isLoggedIn',
-					'logout',
-					'login',
-					'loginToLiDA',
-					'resetExpiredPin',
-					'checkoutItem',
-					'placeHold',
-					'renewItem',
-					'renewAll',
-					'viewOnlineItem',
-					'changeHoldPickUpLocation',
-					'getPatronProfile',
-					'validateAccount',
-					'getPatronHolds',
-					'getPatronCheckedOutItems',
-					'cancelHold',
-					'activateHold',
-					'freezeHold',
-					'returnCheckout',
-					'updateOverDriveEmail',
-					'getValidPickupLocations',
-					'getValidSublocations',
-					'getHiddenBrowseCategories',
-					'getILSMessages',
-					'dismissBrowseCategory',
-					'showBrowseCategory',
-					'getLinkedAccounts',
-					'getViewers',
-					'addAccountLink',
-					'removeAccountLink',
-					'saveLanguage',
-					'initMasquerade',
-					'endMasquerade',
-					'saveNotificationPushToken',
-					'deleteNotificationPushToken',
-					'getNotificationPushToken',
-					'submitVdxRequest',
-					'cancelVdxRequest',
-					'submitLocalIllRequest',
-					'submitLocalIllRequestEmail',
-					'getNotificationPreference',
-					'setNotificationPreference',
-					'getNotificationPreferences',
-					'updateBrowseCategoryStatus',
-					'removeViewerLink',
-					'getPatronReadingHistory',
-					'updatePatronReadingHistory',
-					'optIntoReadingHistory',
-					'optOutOfReadingHistory',
-					'deleteAllFromReadingHistory',
-					'deleteSelectedFromReadingHistory',
-					'getReadingHistorySortOptions',
-					'confirmHold',
-					'updateNotificationOnboardingStatus',
-					'resetPassword',
-					'disableAccountLinking',
-					'enableAccountLinking',
-					'validateSession',
-					'prepareSharedSession',
-					'updateScreenBrightnessStatus',
-					'validateUserCredentials',
-					'getAppPreferencesForUser',
-					'getInbox',
-					'markMessageAsRead',
-					'markMessageAsUnread',
-					'updateAlternateLibraryCard',
-					'getMaterialsRequests',
-					'getMaterialsRequestDetails',
-					'createMaterialsRequest',
-					'cancelMaterialsRequest',
-                    'deleteAspenUser',
-					'updateSortPreferences',
-					'updateHoldPickupPreferences',
-					'getUserCampaigns',
-					'enrollUserInCampaign',
-					'unenrollUserFromCampaign',
-					'addActivityProgress',
-					'optUserIntoCampaignEmails',
-					'enrollUserInCampaignLeaderboard',
-					'unenrollUserFromCampaignLeaderboard',
-					'trackAppLaunches',
-					'trackAppResume'
-				])) {
-					header("Cache-Control: max-age=10800");
-					require_once ROOT_DIR . '/sys/SystemLogging/APIUsage.php';
-					APIUsage::incrementStat('UserAPI', $method);
-					$output = json_encode(['result' => $this->$method()]);
-				} else {
-					header('Cache-Control: no-cache, must-revalidate'); // HTTP/1.1
-					$output = json_encode(['error' => 'invalid_method']);
-				}
-			} else {
-				header('Cache-Control: no-cache, must-revalidate'); // HTTP/1.1
-				header('HTTP/1.0 401 Unauthorized');
-				$output = json_encode(['error' => 'unauthorized_access']);
-			}
-			ExternalRequestLogEntry::logRequest('UserAPI.' . $method, $_SERVER['REQUEST_METHOD'], $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], getallheaders(), '', $_SERVER['REDIRECT_STATUS'], $output, []);
-			echo $output;
-		} elseif (IPAddress::allowAPIAccessForClientIP()) {
-			header('Cache-Control: no-cache, must-revalidate'); // HTTP/1.1
-			if (!in_array($method, ['getUserForApiCall', 'checkInILSItem']) && method_exists($this, $method)) {
-				$result = [
-					'result' => $this->$method(),
-				];
-				$output = json_encode($result);
-				require_once ROOT_DIR . '/sys/SystemLogging/APIUsage.php';
-				APIUsage::incrementStat('UserAPI', $method);
-			} else {
-				$output = json_encode(['error' => 'invalid_method']);
-			}
-			echo $output;
-		} else {
-			$this->forbidAPIAccess();
-		}
+		$this->handleAPIRequestAuto($method, 'user_api');
 	}
 
 	/**
@@ -720,6 +659,10 @@ class UserAPI extends AbstractAPI {
 	function getPatronProfile(): array {
 		$user = $this->getUserForApiCall();
 		if ($user && !($user instanceof AspenError)) {
+			
+			// Fetch the latest contact information from the ILS
+			$user->loadContactInformation();
+
 			//Remove a bunch of junk from the user data
 			unset($user->query);
 			$userData = new stdClass();
@@ -1971,7 +1914,18 @@ class UserAPI extends AbstractAPI {
 			}
 		}
 
-		$user = $this->getUserForApiCall();
+		$user = false;
+		//we send up userId from LiDA if we
+		//are requesting for a linked account
+		if (isset($_REQUEST['userId'])) {
+			$user = new User();
+			$user->id = $_REQUEST['userId'];
+			if (!$user->find(true)) {
+				$user = false;
+			}
+		} else {
+			$user = $this->getUserForApiCall();
+		}
 		if ($user && !($user instanceof AspenError)) {
 			global $library;
 			if ($library->showHoldButton) {
@@ -4366,9 +4320,9 @@ class UserAPI extends AbstractAPI {
 			$givenId = $_REQUEST['browseCategoryId'];
 			$hide = $_REQUEST['all'] ?? 'single';
 			$label = explode('_', $givenId);
-			$id = $label[3];
 			if ($user && !($user instanceof AspenError)) {
-				if (strpos($givenId, 'system_saved_searches') !== false) {
+				if ($givenId !== 'system_saved_searches' && str_contains($givenId, 'system_saved_searches')) {
+					$id = $label[3];
 					$searchEntry = new SearchEntry();
 					$searchEntry->id = $id;
 					if (!$searchEntry->find(true)) {
@@ -4384,9 +4338,10 @@ class UserAPI extends AbstractAPI {
 							]),
 						];
 					}
-				} elseif (strpos($givenId, 'system_user_lists') !== false) {
+				} elseif ($givenId !== 'system_user_lists' && str_contains($givenId, 'system_user_lists')) {
 					require_once ROOT_DIR . '/sys/UserLists/UserList.php';
 					$userList = new UserList();
+					$id = $label[3];
 					$userList->id = $id;
 					if (!$userList->find(true)) {
 						return [
@@ -4516,7 +4471,8 @@ class UserAPI extends AbstractAPI {
 		$browseCategoryId = $_REQUEST['browseCategoryId'];
 		$user = $this->getUserForApiCall();
 		if ($user && !($user instanceof AspenError)) {
-			if ($browseCategoryId != "system_saved_searches" && strpos($browseCategoryId, "system_saved_searches") !== false) {
+			//Look for a saved search, but not the overall saved searches category
+			if ($browseCategoryId != "system_saved_searches" && str_contains($browseCategoryId, "system_saved_searches")) {
 				$label = explode('_', $browseCategoryId);
 				$id = $label[3];
 				$searchEntry = new SearchEntry();
@@ -5008,7 +4964,7 @@ class UserAPI extends AbstractAPI {
 	/**
 	 * @return bool|User
 	 */
-	function getUserForApiCall(?String $patronBarcode = null, ?String $patronPassword = null) : bool|User {
+	protected function getUserForApiCall(?String $patronBarcode = null, ?String $patronPassword = null) : bool|User {
 		if ($this->context == 'internal') {
 			if ($patronBarcode == null && $patronPassword == null) {
 				return UserAccount::getActiveUserObj();
@@ -5016,6 +4972,25 @@ class UserAPI extends AbstractAPI {
 				return UserAccount::validateAccount($patronBarcode, $patronPassword);
 			}
 		} else {
+			global $composerActive;
+			if ($composerActive) {
+				$oauthUser = OAuth2Middleware::getAuthenticatedUser();
+				if ($oauthUser) {
+					if (empty($_REQUEST['language'])) {
+						global $activeLanguage;
+						global $translator;
+						$userLanguage = new Language();
+						$userLanguage->code = $oauthUser->interfaceLanguage;
+						if ($userLanguage->find(true)) {
+							if ($userLanguage->code != $activeLanguage->code) {
+								$activeLanguage = $userLanguage;
+								$translator = new Translator('lang', $userLanguage->code);
+							}
+						}
+					}
+					return $oauthUser;
+				}
+			}
 			$user = false;
 
 			if ($this->checkIfLiDA()) {
@@ -6286,6 +6261,17 @@ class UserAPI extends AbstractAPI {
 		}
 	}
 
+	/**
+	 * @oauth false
+	 * @token false
+	 * @public false
+	 *
+	 * @param $patronBarcode
+	 * @param $patronPassword
+	 * @param $itemBarcode
+	 * @param $activeLocationId
+	 * @return array
+	 */
 	function checkinILSItem($patronBarcode = null, $patronPassword = null, $itemBarcode = null, $activeLocationId = null): array {
 		if ($patronBarcode != null && $patronPassword == null && $this->context == 'internal') {
 			//For self check we don't require the pin, use find new user
@@ -7467,6 +7453,7 @@ class UserAPI extends AbstractAPI {
 	function enrollUserInCampaignLeaderboard() {
 		require_once ROOT_DIR . '/services/CommunityEngagement/AJAX.php';
 
+		global $offlineMode;
 		if ($offlineMode) {
 			return [
 				'success' => false,
@@ -7520,7 +7507,7 @@ class UserAPI extends AbstractAPI {
 
 	function unenrollUserFromCampaignLeaderboard() {
 		require_once ROOT_DIR . '/services/CommunityEngagement/AJAX.php';
-
+		global $offlineMode;
 		if ($offlineMode) {
 			return [
 				'success' => false,

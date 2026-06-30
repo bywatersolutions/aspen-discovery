@@ -8,7 +8,39 @@
 			</div>
 			<div style="margin-bottom: 3px; font-size: smaller">
 				{if !empty($firstRecord->publicationDate) || !empty($firstRecord->publisher)}
-					{$firstRecord->publicationDate} {$firstRecord->publisher}
+					{$firstRecord->publicationDate} {$firstRecord->publisher} <br>
+				{/if}
+				{if !empty($duration)}
+					{if $multipleDurations == false}
+						{math equation="floor(x/60)" x=$duration assign="hours"}
+						{math equation="x%60" x=$duration assign="minutes"}
+						{if $hours != 0 && $minutes != 0}
+							{translate text='Duration is %1% hours %2% minutes' 1=$hours 2=$minutes isPublicFacing=true}<br/>
+						{else}
+							{if $hours == 0}
+								{translate text='Duration is %2% minutes' 2=$minutes isPublicFacing=true}<br/>
+								{else}
+								{translate text='Duration is %1% hours' 1=$hours isPublicFacing=true}<br/>
+							{/if}
+						{/if}
+
+					{else}
+						{if $withinOneHour == true}
+							{math equation="floor(x/60)" x=$duration assign="hours"}
+							{math equation="x%60" x=$duration assign="minutes"}
+							{if $hours != 0 && $minutes != 0}
+								{translate text='Duration is approximately %1% hours %2% minutes' 1=$hours 2=$minutes isPublicFacing=true}. <a href="javascript:void(0)" onclick="AspenDiscovery.GroupedWork.showAllEditionsForVariation('{$workId}', '{$format}', '{$variationId}')">{translate text='See editions' isPublicFacing=true}</a> <br>
+							{else}
+								{if $hours == 0}
+									{translate text='Duration is approximately %2% minutes' 1=$hours 2=$minutes isPublicFacing=true}. <a href="javascript:void(0)" onclick="AspenDiscovery.GroupedWork.showAllEditionsForVariation('{$workId}', '{$format}', '{$variationId}')">{translate text='See editions' isPublicFacing=true}</a> <br>
+								{else}
+									{translate text='Duration is approximately %1% hours' 1=$hours 2=$minutes isPublicFacing=true}. <a href="javascript:void(0)" onclick="AspenDiscovery.GroupedWork.showAllEditionsForVariation('{$workId}', '{$format}', '{$variationId}')">{translate text='See editions' isPublicFacing=true}</a> <br>
+								{/if}
+							{/if}
+						{else}
+							<a href="javascript:void(0)" onclick="AspenDiscovery.GroupedWork.showAllEditionsForVariation('{$workId}', '{$format}', '{$variationId}')">{translate text='Duration varies, see editions' isPublicFacing=true}</a> <br>
+						{/if}
+					{/if}
 				{/if}
 				{if !empty($firstRecord->edition)} {$firstRecord->edition}{/if}
 				{* {if !empty($firstRecord->getEContentSource())} {translate text=$firstRecord->getEContentSource() isPublicFacing=true}{/if} *}
@@ -35,7 +67,7 @@
 				{/if}
 			{/foreach}
 			{foreach from=$itemSummary item=$curItemSummary name=itemSummary}
-				{*If we only have 3 or fewe summaries to show, show all 3. If we have more than 3, display 2 and a button to see the rest *}
+				{*If we only have 3 or fewer summaries to show, show all 3. If we have more than 3, display 2 and a button to see the rest *}
 				{if ($numDisplayed < 2 || ($totalSummariesToDisplay == 3 && count($itemSummary) == 3)) && $curItemSummary.displayByDefault}
 					{assign var=numDisplayed value=$numDisplayed+1}
 					<div class="col-tn-4">

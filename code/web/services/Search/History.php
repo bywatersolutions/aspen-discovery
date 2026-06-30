@@ -67,6 +67,20 @@ class History extends Action {
 			unset($_SESSION['lastSearchURL']);
 		}
 
+		$now = time();
+		$customAccountMessages = new SystemMessage();
+		$customAccountMessages->whereAdd("showOn = 1 OR showOn = 7");
+		$customAccountMessages->whereAdd("startDate = 0 OR startDate <= $now");
+		$customAccountMessages->whereAdd("endDate = 0 OR endDate > $now");
+		$customAccountMessages->find();
+		$accountMessages = [];
+		while ($customAccountMessages->fetch()) {
+			if ($customAccountMessages->isValidForDisplay()) {
+				$accountMessages[] = clone $customAccountMessages;
+			}
+		}
+		$interface->assign('accountMessages', $accountMessages);
+
 		$interface->assign('numSavedSearches', 0);
 		$interface->assign('numRecentSearches', 0);
 		$tab = $_REQUEST['tab'] ?? 'saved';

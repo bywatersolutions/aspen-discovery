@@ -392,6 +392,9 @@ class Events_Calendar extends Action {
 						elseif (str_starts_with($result['id'], 'aspen')){
 							$url = '/AspenEvents/' . $result['id'] . '/Event';
 						}
+						elseif (str_starts_with($result['id'], 'localhop')){
+							$url = '/LocalHop/' . $result['id'] . '/Event';
+						}
 
 						if (!empty($eventFieldsToShow)) {
 							foreach ($eventFieldsToShow as $fieldToShow) {

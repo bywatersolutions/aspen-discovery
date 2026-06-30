@@ -288,7 +288,7 @@ class StripeSetting extends DataObject {
 						if ($chargeRequest->getResponseCode() == 200) {
 							$chargeData = json_decode($chargeResponse, true);
 							if (!empty($chargeData['receipt_url'])) {
-								$payment->stripeReceiptUrl = $chargeData['receipt_url'];
+								$payment->receiptUrl = $chargeData['receipt_url'];
 							}
 						}
 					}
@@ -303,8 +303,8 @@ class StripeSetting extends DataObject {
 								'isPublicFacing' => true,
 							]),
 						];
-						if (!empty($payment->stripeReceiptUrl)) {
-							$result['receiptUrl'] = $payment->stripeReceiptUrl;
+						if (!empty($payment->receiptUrl)) {
+							$result['receiptUrl'] = $payment->receiptUrl;
 						}
 						return $result;
 					} else {
@@ -322,8 +322,8 @@ class StripeSetting extends DataObject {
 										'isPublicFacing' => true,
 									]),
 								];
-								if (!empty($payment->stripeReceiptUrl)) {
-									$result['receiptUrl'] = $payment->stripeReceiptUrl;
+								if (!empty($payment->receiptUrl)) {
+									$result['receiptUrl'] = $payment->receiptUrl;
 								}
 								return $result;
 							} else {

@@ -2149,4 +2149,41 @@ class Admin_AJAX extends JSON_Action {
 
 		return $dates;
 	}
+
+	/** @noinspection PhpUnused */
+	public function getPaymentDetails(): array {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission([
+			'View eCommerce Reports for All Libraries',
+			'View eCommerce Reports for Home Library'
+		]);
+		global $interface;
+
+		$paymentId = (int)($_REQUEST['paymentId'] ?? 0);
+
+		require_once ROOT_DIR . '/sys/Account/UserPaymentLine.php';
+		require_once ROOT_DIR . '/sys/Account/UserPayment.php';
+		$payment = new UserPayment();
+		$payment->id = $paymentId;
+		$payment->find(true);
+		$paymentLines = new UserPaymentLine();
+		$paymentLines->paymentId = $paymentId;
+		$lineItems = [];
+		$paymentLines->find();
+		while ($paymentLines->fetch()) {
+			$lineItems[] = clone $paymentLines;
+		}
+
+		$interface->assign('paymentId', $paymentId);
+		$interface->assign('payment', $payment);
+		$interface->assign('lineItems', $lineItems);
+
+		return [
+			'title' => translate([
+				'text' => 'Payment Details',
+				'isPublicFacing' => true,
+			]),
+			'modalBody' => $interface->fetch('Admin/paymentDetails.tpl')
+		];
+	}	
 }

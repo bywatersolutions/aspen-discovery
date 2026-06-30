@@ -59,6 +59,110 @@ class UserAccount {
 		return $needsToComplete2FA;
 	}
 
+	public static function get2FAMethodStatus(): array {
+		$activeLibrary = null;
+		$user = UserAccount::getActiveUserObj();
+		if ($user !== null) {
+
+			$twoFactorAuthSetting = $user->getTwoFactorAuthenticationSetting();
+			if ($twoFactorAuthSetting != null) {
+				$userTwoFactorMethods = ($user->twoFactorMethod ?? '');
+
+				$setupMethods = array_values(array_filter(array_map('trim', explode(',', $userTwoFactorMethods)), static function ($method) {
+					return $method !== '';
+				}));
+
+				$allowEmail = (int)$twoFactorAuthSetting->allowEmail === 1;
+				$allowTotp = (int)$twoFactorAuthSetting->allowTotp === 1;
+
+				$validMethods = [
+					'email',
+					'totp'
+				];
+				$setupMethods = array_values(array_unique(array_filter($setupMethods, static function ($method) use ($validMethods) {
+					return in_array($method, $validMethods, true);
+				})));
+
+				$filteredMethods = array_values(array_filter($setupMethods, static function ($method) use ($allowEmail, $allowTotp) {
+					if ($method === 'email' && !$allowEmail) {
+						return false;
+					}
+					if ($method === 'totp' && !$allowTotp) {
+						return false;
+					}
+					return true;
+				}));
+
+				$methodsChanged = $filteredMethods !== $setupMethods;
+				$setupMethods = $filteredMethods;
+				$updatedTwoFactorMethod = implode(',', $setupMethods);
+
+				if ($methodsChanged) {
+					// remove 2FA methods the user has set up which the library no longer allows
+					$user->twoFactorMethod = $updatedTwoFactorMethod;
+					$user->update();
+				}
+
+				$hasEmail = in_array('email', $setupMethods, true);
+				$hasTotp = in_array('totp', $setupMethods, true);
+
+				$showSetupEmail = !$hasEmail && $allowEmail;
+				$showSetupTotp = !$hasTotp && $allowTotp;
+				$showDisableEmail = $hasEmail;
+				$showDisableTotp = $hasTotp;
+
+				$canDisableEmail = $showDisableEmail;
+				$canDisableTotp = $showDisableTotp;
+
+				if (UserAccount::isRequired2FA()) {
+					$configuredAllowedCount = 0;
+					if ($hasEmail && $allowEmail) {
+						$configuredAllowedCount++;
+					}
+					if ($hasTotp && $allowTotp) {
+						$configuredAllowedCount++;
+					}
+					if ($configuredAllowedCount <= 1) {
+						$canDisableEmail = false;
+						$canDisableTotp = false;
+					}
+				}
+
+				$requiredSetupWarning = null;
+				if (!$hasEmail && !$hasTotp) {
+					if ($allowEmail && !$allowTotp) {
+						$requiredSetupWarning = translate([
+							'text' => 'You must set up email two-factor authentication to keep using two-factor authentication.',
+							'isPublicFacing' => true
+						]);
+					} elseif (!$allowEmail && $allowTotp) {
+						$requiredSetupWarning = translate([
+							'text' => 'You must set up authenticator app (TOTP) to keep using two-factor authentication.',
+							'isPublicFacing' => true
+						]);
+					}
+				}
+			}
+		}
+
+		return [
+			'setupMethods' => $setupMethods ?? '',
+			'hasEmail' => $hasEmail ?? false,
+			'hasTotp' => $hasTotp ?? false,
+			'allowEmail' => $allowEmail ?? false,
+			'allowTotp' => $allowTotp ?? false,
+			'showSetupEmail' => $showSetupEmail ?? false,
+			'showSetupTotp' => $showSetupTotp ?? false,
+			'showDisableEmail' => $showDisableEmail ?? false,
+			'showDisableTotp' => $showDisableTotp ?? false,
+			'canDisableEmail' => $canDisableEmail ?? false,
+			'canDisableTotp' => $canDisableTotp ?? false,
+			'requiredSetupWarning' => $requiredSetupWarning ?? '',
+			'methodsChanged' => $methodsChanged ?? false,
+			'updatedTwoFactorMethod' => $updatedTwoFactorMethod ?? '',
+		];
+	}
+
 	/**
 	 *
 	 * Checks whether the user is logged in.
@@ -289,6 +393,19 @@ class UserAccount {
 			return count(UserAccount::$primaryUserObjectFromDB->getLinkedUserObjects()) > 0;
 		}
 		return 'false';
+	}
+
+	public static function isAuthorizedToActOnBehalfOf(int $userId): bool {
+		$activeUserId = (int)self::getActiveUserId();
+		if ($userId === $activeUserId) {
+			return true;
+		}
+		foreach (self::getActiveUserObj()->getLinkedUsers() as $linkedUser) {
+			if ($linkedUser->id == $userId) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static function getUserHomeLocationId() {
@@ -591,6 +708,7 @@ class UserAccount {
 						return $cardExpired;
 					} elseif ($library->allowLoginToPatronsOfThisLibraryOnly && ($tempUser->getHomeLibrary() != null && ($tempUser->getHomeLibrary()->libraryId != $library->libraryId))) {
 						$disallowedMessage = empty(trim(strip_tags($library->messageForPatronsOfOtherLibraries))) ? 'Sorry, this catalog can only be accessed by patrons of ' . $library->displayName : $library->messageForPatronsOfOtherLibraries;
+						$disallowedMessage .= ' Your home library is ' . $tempUser->getHomeLibrary()->displayName . '. <a href="' . $tempUser->getHomeLibrary()->baseUrl . '">Go to your library’s website to login</a>.';
 						return new AspenError($disallowedMessage);
 					} elseif ($tempUser->getHomeLibrary() != null && ($tempUser->getHomeLibrary()->preventLogin)) {
 						$disallowedMessage = empty(trim(strip_tags($tempUser->getHomeLibrary()->preventLoginMessage))) ? 'Sorry, patrons of ' . $library->displayName . ' cannot login at this time.' : $tempUser->getHomeLibrary()->preventLoginMessage;
@@ -621,17 +739,28 @@ class UserAccount {
 			if (!$validatedViaSSO && UserAccount::isRequired2FA() && !UserAccount::has2FAEnabled() && UserAccount::$isAuthenticated === false) {
 				UserAccount::$isLoggedIn = false;
 				$logger->log("User needs to enroll in two-factor authentication", Logger::LOG_DEBUG);
+				$authStatus = UserAccount::get2FAMethodStatus();
 				$_SESSION['enroll2FA'] = true;
 				$_SESSION['has2FA'] = false;
 				$_SESSION['codeSent'] = false;
+				$_SESSION['authMethod'] = $authStatus['allowTotp'] ? 'totp' : 'email';
 				return new TwoFactorAuthenticationError(UserAccount::getActiveUserId(), TwoFactorAuthenticationError:: MUST_ENROLL, "User needs to enroll in two-factor authentication");
 			} elseif (!$validatedViaSSO && UserAccount::has2FAEnabled() && UserAccount::$isAuthenticated === false) {
 				UserAccount::$isLoggedIn = false;
 				$logger->log("User needs to two-factor authenticate", Logger::LOG_DEBUG);
+				$authStatus = UserAccount::get2FAMethodStatus();
+				$_SESSION['enroll2FA'] = false;
+				$_SESSION['authMethod'] = $authStatus['hasTotp'] ? 'totp' : 'email';
+				if ($authStatus['hasTotp']) {
+					$_SESSION['has2FA'] = true;
+					$_SESSION['codeSent'] = false;
+					return new TwoFactorAuthenticationError(UserAccount::getActiveUserId(), TwoFactorAuthenticationError::MUST_COMPLETE_AUTHENTICATION, 'You must authenticate before logging in. Please provide a code from your authenticator app.');
+				}
+
+				// else just assume email at this point
 				require_once ROOT_DIR . '/sys/TwoFactorAuthCode.php';
 				$twoFactorAuth = new TwoFactorAuthCode();
 				$codeSent = $twoFactorAuth->createCode();
-				$_SESSION['enroll2FA'] = false;
 				$_SESSION['codeSent'] = $codeSent;
 				$_SESSION['has2FA'] = $codeSent;
 				return new TwoFactorAuthenticationError(UserAccount::getActiveUserId(), TwoFactorAuthenticationError::MUST_COMPLETE_AUTHENTICATION, 'You must authenticate before logging in. Please provide the 6-digit code that was emailed to you.');
@@ -640,9 +769,11 @@ class UserAccount {
 					require_once ROOT_DIR . '/sys/YearInReview/YearInReviewGenerator.php';
 					generateYearInReview($primaryUser);
 				}
+				$authStatus = UserAccount::get2FAMethodStatus();
 				$_SESSION['enroll2FA'] = false;
 				$_SESSION['has2FA'] = false;
 				$_SESSION['codeSent'] = false;
+				$_SESSION['authMethod'] = 'none';
 				UserAccount::$isLoggedIn = true;
 				UserAccount::$primaryUserData = $primaryUser;
 				if (isset($_COOKIE['searchPreferenceLanguage']) && $primaryUser->searchPreferenceLanguage == -1) {
@@ -969,6 +1100,15 @@ class UserAccount {
 		}
 		return false;
 	}
+
+	static function typeOf2FAEnabled(): ?string {
+		UserAccount::loadUserObjectFromDatabase();
+		if (UserAccount::$primaryUserObjectFromDB != false && UserAccount::$ssoAuthOnly === false) {
+			return UserAccount::$primaryUserObjectFromDB->get2FAMethod();
+		}
+		return null;
+	}
+
 
 
 	/**

@@ -22,7 +22,7 @@
 						<p class="alert alert-info">
 							{translate text="Select which editions of this format you want to place holds on. By default, all editions are selected." isPublicFacing=true}
 						</p>
-						
+
 						<div class="editions-list">
 							<ul class="list-unstyled">
 								<li>
@@ -31,9 +31,9 @@
 									{foreach from=$editions item=edition}
 										<li class="edition-item mb-2" style="display: none;">
 											<label>
-												<input type="checkbox" 
-													name="hyperholdRecord[]" 
-													value="{$edition.id}" 
+												<input type="checkbox"
+													name="hyperholdRecord[]"
+													value="{$edition.id}"
 													checked="checked"
 													class="edition-checkbox">
 												<strong>{$edition.title|escape}</strong>
@@ -44,9 +44,9 @@
 									{/foreach}
 							</ul>
 						</div>
-						
+
 						<hr>
-					</div>	
+					</div>
 				{/if}
 
 				<div class="holdsSummary">
@@ -266,6 +266,9 @@
 					{/if}
 					<input type="hidden" name="holdPromptForEditions" id="holdPromptForEditions" value="{$holdPromptForEditions}">
 					{if $holdPromptForEditions > 0 && count($editionOptions) > 0 && $promptForEdition}
+						{if !empty($holdEditionPromptMessage)}
+							<div class="alert alert-info">{translate text=$holdEditionPromptMessage isPublicFacing=true}</div>
+						{/if}
 						<div id="editionSelectionOptions" class="form-group">
 							<label class="control-label" for="selectedEditionOption">{translate text="Do you want to place a hold on the suggested edition or a specific edition?" isPublicFacing=true}</label>
 							<select name="selectedEditionOption" id="selectedEditionOption" class="form-control"  onchange="AspenDiscovery.GroupedWork.showEditionSwiper()">
@@ -295,7 +298,7 @@
 														</div>
 														<div class="edition-data">
 															{$edition->publicationDate}. {$edition->publisher}. {$edition->physical}.<br/>
-															{include file='GroupedWork/statusIndicator.tpl' statusInformation=$relatedRecord->getStatusInformation() viewingIndividualRecord=1}
+															{include file='GroupedWork/statusIndicator.tpl' statusInformation=$edition->getStatusInformation() viewingIndividualRecord=1}
 															<span>{$current} of {count($editionOptions)}</span>
 														</div>
 													</label>
@@ -355,7 +358,7 @@
 <script>
 	$('#toggleEditions').on('click', function(e){
 		e.preventDefault();
-		$('.edition-item').toggle(); 
+		$('.edition-item').toggle();
 		if ($('.edition-item:visible').length) {
 			$(this).text('Hide Editions');
 		} else {

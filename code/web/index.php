@@ -59,9 +59,17 @@ $interface->assign('cssJsCacheCounter', 47);
 global $language;
 global $serverName;
 //Get the active language
+require_once ROOT_DIR . '/sys/Translation/Language.php';
 $userLanguage = UserAccount::getUserInterfaceLanguage();
 if ($userLanguage == '') {
-	$language = strip_tags((isset($_SESSION['language'])) ? $_SESSION['language'] : 'en');
+	if (!empty($_COOKIE['aspenInterfaceLanguage'])) {
+		$language = strip_tags($_COOKIE['aspenInterfaceLanguage']);
+	} elseif (!empty($_SESSION['language'])) {
+		$language = strip_tags($_SESSION['language']);
+	} else {
+		$browserLanguage = Language::getLanguageFromBrowser();
+		$language = $browserLanguage ?: Language::getDefaultLanguageCode();
+	}
 } else {
 	$language = $userLanguage;
 }
@@ -74,7 +82,8 @@ if (isset($_REQUEST['myLang'])) {
 	}
 	if ($language != $newLanguage) {
 		$language = $newLanguage;
-		$_SESSION['language'] = $language;
+		setcookie('aspenInterfaceLanguage', $language, time() + (3 * 365 * 24 * 3600), '/');
+		$_COOKIE['aspenInterfaceLanguage'] = $language;
 		//Clear the preference cookie
 		if (isset($_COOKIE['searchPreferenceLanguage'])) {
 			//Clear the cookie when we change languages
@@ -97,11 +106,10 @@ if (!UserAccount::isLoggedIn() && isset($_COOKIE['searchPreferenceLanguage'])) {
 $interface->assign('showLanguagePreferencesBar', $showLanguagePreferencesBar);
 
 // Make sure language code is valid, reset to default if bad:
-require_once ROOT_DIR . '/sys/Translation/Language.php';
 $validLanguages = Language::getValidLanguages();
 
 if (!array_key_exists($language, $validLanguages)) {
-	$language = 'en';
+	$language = Language::getDefaultLanguageCode();
 }
 global $activeLanguage;
 global $translator;
@@ -1079,9 +1087,12 @@ function loadModuleActionId() {
 			//This happens before the table is added, just ignore it.
 		}
 	}
+	if (str_starts_with($requestURI, '//')) {
+		$requestURI = substr($requestURI, 1);
+	}
 	/** IndexingProfile[] $indexingProfiles */ global $indexingProfiles;
 	/** SideLoad[] $sideLoadSettings */ global $sideLoadSettings;
-	$allRecordModules = "OverDrive|GroupedWork|Record|ExternalEContent|Person|Library|Hoopla|CloudLibrary|Files|Axis360|WebBuilder|ProPay|CourseReserves|Springshare|LibraryMarket|Communico|PalaceProject|Assabet|AspenEvents|Series";
+	$allRecordModules = "OverDrive|GroupedWork|Record|ExternalEContent|Person|Library|Hoopla|CloudLibrary|Files|Axis360|WebBuilder|ProPay|CourseReserves|Springshare|LibraryMarket|Communico|PalaceProject|Assabet|AspenEvents|Series|LocalHop";
 	foreach ($indexingProfiles as $profile) {
 		$allRecordModules .= '|' . $profile->recordUrlComponent;
 	}
@@ -1089,75 +1100,52 @@ function loadModuleActionId() {
 		$allRecordModules .= '|' . $profile->recordUrlComponent;
 	}
 	$checkWebBuilderAliases = false;
-	if (preg_match("~(MyAccount)/([^/?]+)/([^/?]+)(\?.+)?~", $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['id'] = $matches[3];
-		$_GET['action'] = $matches[2];
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['id'] = $matches[3];
-		$_REQUEST['action'] = $matches[2];
-	} elseif (preg_match("~(MyAccount)/([^/?]+)(\?.+)?~", $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['action'] = $matches[2];
-		$_REQUEST['id'] = '';
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['action'] = $matches[2];
-		$_REQUEST['id'] = '';
-	} elseif (preg_match("~(MyAccount)/?~", $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['action'] = 'Home';
-		$_REQUEST['id'] = '';
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['action'] = 'Home';
-		$_REQUEST['id'] = '';
-	} elseif (preg_match('~/(Archive)/((?:[\\w\\d:]|%3A)+)/([^/?]+)~', $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['id'] = urldecode($matches[2]); // Decodes colons % codes back into colons.
-		$_GET['action'] = $matches[3];
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['id'] = urldecode($matches[2]);  // Decodes colons % codes back into colons.
-		$_REQUEST['action'] = $matches[3];
+	if (preg_match("~^/(MyAccount)/([^/?]+)/([^/?]+)(\?.+)?~", $requestURI, $matches)) {
+		setRoute($matches[1], $matches[2], $matches[3]);
+	} elseif (preg_match("~^/(MyAccount)/([^/?]+)(\?.+)?~", $requestURI, $matches)) {
+		setRoute($matches[1], $matches[2]);
+		setEmptyRouteId();
+	} elseif (preg_match("~^/(MyAccount)/?~", $requestURI, $matches)) {
+		setRoute($matches[1]);
+		setEmptyRouteId();
+	} elseif (preg_match('~^/(Archive)/((?:[\\w\\d:]|%3A)+)/([^/?]+)~', $requestURI, $matches)) {
+		setRoute($matches[1], $matches[3], urldecode($matches[2])); // Decodes colons % codes back into colons.
 		//Redirect things /GroupedWork/AJAX to the proper action
-	} elseif (preg_match("~($allRecordModules)/([a-zA-Z]+)(?:\?|/?$)~", $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['action'] = $matches[2];
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['action'] = $matches[2];
+	} elseif (preg_match("~^/($allRecordModules)/([a-zA-Z]+)(?:\?|/?$)~", $requestURI, $matches)) {
+		setRoute($matches[1], $matches[2]);
 		//Redirect things /Record/.b3246786/Home to the proper action
 		//Also things like /OverDrive/84876507-043b-b3ce-2930-91af93d2a4f0/Home
-	} elseif (preg_match("~($allRecordModules)/([^/?]+?)/([^/?]+)~", $requestURI, $matches)) {
+	} elseif (preg_match("~^/($allRecordModules)/([^/?]+?)/([^/?]+)~", $requestURI, $matches)) {
 		//Getting some weird cases where the action is replaced with an email address for uintah.
 		//As a workaround, if the action looks like an email, change it to Home
-		if (preg_match('/^[A-Z0-9][A-Z0-9._%+-]{0,63}@(?:[A-Z0-9-]{1,63}\.){1,8}[A-Z]{2,63}$/i', $matches[3])) {
+		if (preg_match('/[A-Z0-9][A-Z0-9._%+-]{0,63}@(?:[A-Z0-9-]{1,63}\.){1,8}[A-Z]{2,63}$/i', $matches[3])) {
 			$requestURI = str_replace($matches[3], 'Home', $requestURI);
 			header('Location: ' . $requestURI);
 			die();
 		}
-		$_GET['module'] = $matches[1];
-		$_GET['id'] = $matches[2];
-		$_GET['action'] = $matches[3];
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['id'] = $matches[2];
-		$_REQUEST['action'] = $matches[3];
+		setRoute($matches[1], $matches[3], $matches[2]);
 		//Redirect things /Record/.b3246786 to the proper action
-	} elseif (preg_match("~($allRecordModules)/([^/?]+?)(?:\?|/?$)~", $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['id'] = $matches[2];
-		$_GET['action'] = 'Home';
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['id'] = $matches[2];
-		$_REQUEST['action'] = 'Home';
-	} elseif (preg_match("~([^/?]+)/([^/?]+)~", $requestURI, $matches)) {
-		$_GET['module'] = $matches[1];
-		$_GET['action'] = $matches[2];
-		$_REQUEST['module'] = $matches[1];
-		$_REQUEST['action'] = $matches[2];
-		if (file_exists(ROOT_DIR . '/services/' . $_REQUEST['module'] . '/' . $_REQUEST['action'] . '.php')) {
-			$checkWebBuilderAliases = false;
-		}else{
+	} elseif (preg_match("~^/($allRecordModules)/([^/?]+?)(?:\?|/?$)~", $requestURI, $matches)) {
+		setRoute($matches[1], 'Home', $matches[2]);
+	} elseif (preg_match("~^/(Authentication)/(OAuth2)/([^/?]+)~", $requestURI, $matches)) {
+		setRoute($matches[1], 'OAuth2_' . $matches[3]); // OAuth2_Authorize or OAuth2_Token
+	} elseif (preg_match("~^/(\.well-known)/([^/?]+)~", $requestURI, $matches)) {
+		// Map well-known requests to appropriate OAuth2/OIDC endpoints
+		$wellKnownType = $matches[2];
+		$action = $wellKnownType === 'jwks.json' ? 'OAuth2_JWKS' : 'OAuth2_Discovery';
+
+		setRoute('Authentication', $action);
+	} elseif (preg_match("~^/([^/?]+)/([^/?]+)~", $requestURI, $matches)) {
+		setRoute($matches[1], $matches[2]);
+		if (!file_exists(ROOT_DIR . '/services/' . $_REQUEST['module'] . '/' . $_REQUEST['action'] . '.php')) {
 			$checkWebBuilderAliases = true;
 		}
-	} else {
+	} elseif (preg_match("~^/([^/?]+)~", $requestURI, $matches)) {
+		setRoute($matches[1]);
+		if (!file_exists(ROOT_DIR . '/services/' . $_REQUEST['module'] . '/' . $_REQUEST['action'] . '.php')) {
+			$checkWebBuilderAliases = true;
+		}
+	}else{
 		$checkWebBuilderAliases = true;
 	}
 

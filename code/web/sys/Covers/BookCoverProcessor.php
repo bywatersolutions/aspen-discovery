@@ -43,13 +43,9 @@ class BookCoverProcessor {
 
 		if (!$this->reload) {
 			$this->log("Looking for Cached cover", Logger::LOG_NOTICE);
-			if ($this->getCachedCover()) {
+			if ($this->getCachedCover() || $this->checkForEarlyRedirect()) {
 				return true;
 			}
-		}
-
-		if ($this->checkForEarlyRedirect()) {
-			return true;
 		}
 
 		if($this->bookCoverInfo->getImageSource() == 'upload') {
@@ -93,7 +89,11 @@ class BookCoverProcessor {
 			if ($this->getAssabetCover($this->id)){
 				return true;
 			}
-		} elseif ($this->type == 'aspenEvent_event') {
+		} elseif ($this->type == 'localhop_event') {
+			if ($this->getLocalHopCover($this->id)){
+				return true;
+			}
+		}elseif ($this->type == 'aspenEvent_event') {
 			if ($this->getAspenEventsDateCover($this->id)){
 				return true;
 			}
@@ -1834,7 +1834,11 @@ class BookCoverProcessor {
 		$coverBuilder = new SeriesCoverBuilder();
 		require_once ROOT_DIR . '/sys/Series/Series.php';
 		$series = new Series();
-		$series->id = $id;
+		if (is_numeric($id)) {
+			$series->id = $id;
+		}else{
+			$series->seriesPermanentId = $id;
+		}
 
 		if ($series->find(true)) {
 			if ($this->getUploadedSeriesCover($series->cover)) {
@@ -2041,6 +2045,53 @@ class BookCoverProcessor {
 		}
 		require_once ROOT_DIR . '/RecordDrivers/AssabetEventRecordDriver.php';
 		$driver = new AssabetEventRecordDriver($id);
+		require_once ROOT_DIR . '/sys/Covers/EventCoverBuilder.php';
+		if (!($driver->isValid())){ //if driver isn't valid, likely a past event on a list
+			require_once ROOT_DIR . '/sys/Events/UserEventsEntry.php';
+			$coverBuilder = new EventCoverBuilder();
+			$userEntry = new UserEventsEntry();
+			$userEntry->sourceId = $id;
+			if ($userEntry->find(true)){
+				$startDate = new DateTime("@$userEntry->eventDate");
+				/** @noinspection PhpUnhandledExceptionInspection */
+				$startDate->setTimezone(new DateTimeZone(date_default_timezone_get()));
+				$props = [
+					'eventDate' => $startDate,
+					'isPastEvent' => true,
+				];
+				$title = $userEntry->title;
+			} else{
+				$props = [
+					'eventDate' => $driver->getStartDateFromDB($id),
+					'isPastEvent' => true,
+				];
+				$title = $driver->getTitleFromDB($id);
+			}
+			$coverBuilder->getCover($title, $this->cacheFile, $props);
+		} else {
+			$coverBuilder = new EventCoverBuilder();
+			$isPast = false;
+			if (array_key_exists('isPast', $_REQUEST)){
+				$isPast = $_REQUEST['isPast'];
+			}
+			$props = [
+				'eventDate' => $driver->getStartDate(),
+				'isPastEvent' => $isPast,
+			];
+			$coverBuilder->getCover($driver->getTitle(), $this->cacheFile, $props);
+		}
+		return $this->processImageURL('default_event', $this->cacheFile, false);
+	}
+
+	private function getLocalHopCover($id) : bool {
+		if (str_contains($id, ':')) {
+			[
+				,
+				$id,
+			] = explode(":", $id);
+		}
+		require_once ROOT_DIR . '/RecordDrivers/LocalHopEventRecordDriver.php';
+		$driver = new LocalHopEventRecordDriver($id);
 		require_once ROOT_DIR . '/sys/Covers/EventCoverBuilder.php';
 		if (!($driver->isValid())){ //if driver isn't valid, likely a past event on a list
 			require_once ROOT_DIR . '/sys/Events/UserEventsEntry.php';
@@ -2310,7 +2361,7 @@ class BookCoverProcessor {
 								return false;
 							}
 
-							$originalUrl = $referencedCoverInfo->getOriginalUrl();
+							$originalUrl = $referencedCoverInfo->getOriginalUrl($this->size);
 							if (!empty($originalUrl)) {
 								$url = $originalUrl;
 								$maybeHash = substr($originalUrl, 0, 32);
@@ -2598,7 +2649,7 @@ class BookCoverProcessor {
 				];
 				$validationHash = md5(implode('|', $validationFields));
 				$urlToStore = $validationHash . $url;
-				$this->bookCoverInfo->setOriginalUrl($urlToStore);
+				$this->bookCoverInfo->setOriginalUrl($urlToStore, $this->size);
 				$this->bookCoverInfo->update();
 
 				header("HTTP/1.1 301 Moved Permanently");
@@ -2621,7 +2672,7 @@ class BookCoverProcessor {
 	 */
 	private function checkForEarlyRedirect(): bool {
 		if ($this->bookCoverInfo &&
-			!empty($this->bookCoverInfo->getOriginalUrl()) &&
+			!empty($this->bookCoverInfo->getOriginalUrl($this->size)) &&
 			SystemVariables::getSystemVariables()->useOriginalCoverUrls &&
 			!str_starts_with($this->bookCoverInfo->getImageSource(), 'reference')
 		) {
@@ -2633,13 +2684,12 @@ class BookCoverProcessor {
 				$this->bookCoverInfo->getDisallowThirdPartyCover()
 			];
 			$currentHash = md5(implode('|', $validationFields));
-			$storedHash = substr($this->bookCoverInfo->getOriginalUrl(), 0, 32);
-			$url = substr($this->bookCoverInfo->getOriginalUrl(), 32);
+			$originalUrl = $this->bookCoverInfo->getOriginalUrl($this->size);
+			$storedHash = substr($originalUrl, 0, 32);
+			$url = substr($originalUrl, 32);
 
 			if ($currentHash === $storedHash && !empty($url)) {
-				// Check if URL needs to be validated based upon the expiration time; force validation if reload flag is set.
-				$forceValidation = $this->reload;
-				$validationResult = $this->validateCoverUrl($url, $this->bookCoverInfo->getImageSource(), $forceValidation);
+				$validationResult = $this->validateCoverUrl($url, $this->bookCoverInfo->getImageSource(), false);
 				if ($validationResult !== false) {
 					header("HTTP/1.1 301 Moved Permanently");
 					header("Location: $url");
@@ -2651,7 +2701,7 @@ class BookCoverProcessor {
 			}
 		} else {
 			$this->log("Debug - Early conditions failed: BookCoverInfo exists: " . ($this->bookCoverInfo ? "Yes" : "No") .
-				", Original URL exists: " . (!empty($this->bookCoverInfo) && !empty($this->bookCoverInfo->getOriginalUrl()) ? "Yes" : "No") .
+				", Original URL exists: " . (!empty($this->bookCoverInfo) && !empty($this->bookCoverInfo->getOriginalUrl($this->size)) ? "Yes" : "No") .
 				", useOriginalCoverUrls enabled: " . (SystemVariables::getSystemVariables()->useOriginalCoverUrls ? "Yes" : "No"));
 		}
 		return false;

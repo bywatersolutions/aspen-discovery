@@ -31,6 +31,9 @@
 						</p>
 					</div>
 				{/if}
+				{if array_key_exists('Events', $enabledModules) && $displayEventNotificationsInAccount && $userHasEventsToRegister}
+					{include file='events-notifications.tpl'}
+				{/if}
 				{if !empty($userHasCatalogConnection)}
 					<h2>{translate text='Account Summary' isPublicFacing=true}</h2>
 					{if array_key_exists('Community Engagement', $enabledModules) && $highlightCommunityEngagement}

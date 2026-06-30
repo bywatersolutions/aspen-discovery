@@ -390,7 +390,7 @@ class MaterialsRequest_ManageRequests extends Admin_Admin {
 				}
 			}
 			if($materialsRequestsPerPage == 'all') {
-				$materialsRequestsPerPage = $materialsRequests->count();
+				$materialsRequestsPerPage = max(1, $materialsRequests->count());
 				$interface->assign('showingAllRequests', true);
 			} else {
 				$interface->assign('showingAllRequests', false);

@@ -128,4 +128,32 @@ class StringUtils {
 		}
 		return substr($haystack, -$length) === $needle;
 	}
+
+	public static function extractTotalMinutes(string $input): int {
+		// Handle HH:mm:ss format (e.g., "06:02:00")
+		if (preg_match('/(\d+):(\d{2}):(\d{2})/', $input, $matches)) {
+			$hours = (int) $matches[1];
+			$minutes = (int) $matches[2];
+			// $matches[3] is seconds — ignored, but matched to confirm HH:mm:ss format
+			return $hours * 60 + $minutes;
+		}
+
+		// Handle "6 hr. 2 min." / "6h 2m 0s" formats
+		$hours = 0;
+		$minutes = 0;
+
+		if (preg_match('/(\d+)\s*(?:hr\.|h\b)/', $input, $hrMatches)) {
+			$hours = (int) $hrMatches[1];
+		}
+
+		if (preg_match('/(\d+)\s*(?:min\.|m(?!s))/', $input, $minMatches)) {
+			$minutes = (int) $minMatches[1];
+		}
+
+		if ($hours === 0 && $minutes === 0) {
+			return 0;
+		}
+
+		return $hours * 60 + $minutes;
+	}
 }

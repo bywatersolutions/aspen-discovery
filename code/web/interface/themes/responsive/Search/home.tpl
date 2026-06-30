@@ -2,6 +2,9 @@
 	{if !empty($showBrowseContent)}
 	<h1 class="hiddenTitle">{translate text='Browse the Catalog' isPublicFacing=true}</h1>
 	<div id="home-page-browse-header" class="row">
+		{if !empty($accountMessages)}
+			{include file='systemMessages.tpl' messages=$accountMessages}
+		{/if}
 	{if $accessibleBrowseCategories == '1'}
 		<div class="col-sm-12" id="browse-category-feed" role="feed">
 			<!-- Slider main container -->

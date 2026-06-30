@@ -21,6 +21,8 @@ class Koha extends AbstractIlsDriver {
 	/** @var CurlWrapper */
 	private $renewalsCurlWrapper;
 
+	private string $csrfPattern = '%<input type="hidden" name="csrf_token" value="(.*?)" />%s';
+
 	static $fineTypeTranslations = [
 		'A' => 'Account management fee',
 		'C' => 'Credit',
@@ -320,12 +322,8 @@ class Koha extends AbstractIlsDriver {
 				$loginResult = $this->loginToKohaOpac($patron);
 				if ($loginResult['success']) {
 
-					$updatePage = $this->getKohaPage($catalogUrl . '/cgi-bin/koha/opac-memberentry.pl?DISABLE_SYSPREF_OPACUserCSS=1');
 					//Get the csr token
-					$csr_token = '';
-					if (preg_match('%<input type="hidden" name="csrf_token" value="(.*?)" />%s', $updatePage, $matches)) {
-						$csr_token = $matches[1];
-					}
+					$csr_token = $this->getCSRFToken("$catalogUrl/cgi-bin/koha/opac-memberentry.pl?DISABLE_SYSPREF_OPACUserCSS=1");
 
 					$postVariables = [];
 					if (!isset($_REQUEST['borrower_branchcode']) || $_REQUEST['borrower_branchcode'] == -1) {
@@ -579,7 +577,7 @@ class Koha extends AbstractIlsDriver {
 			$curCheckout->dueDate = $dueTime;
 			$curCheckout->itemId = $itemNumber;
 
-			if( !$options['isNightlyUpdate'] ) {
+			if($options['isNightlyUpdate'] ) {
 				$checkouts[$curCheckout->source . $curCheckout->sourceId . $curCheckout->userId] = $curCheckout;
 				continue;
 			}
@@ -1470,6 +1468,9 @@ class Koha extends AbstractIlsDriver {
 				$user->update();
 			} else {
 				$user->created = date('Y-m-d');
+				if ($user->getHomeLibrary()->forceReadingHistoryOptIn){
+					$user->trackReadingHistory = false;
+				}
 				if (!$user->insert()) {
 					return null;
 				}
@@ -1941,7 +1942,7 @@ class Koha extends AbstractIlsDriver {
 				//If there is more than one item type for the variation, we don't know what to place a hold on so just do bib level.
 				//If there is just one, we can do an item type hold
 				if (count($allItemTypes) == 1) {
-					$holdParams['item_type'] = reset($allItemTypes);
+					$holdParams[$this->getKohaVersion() >= 25.11 ? 'item_type_id' : 'item_type'] = reset($allItemTypes);
 				}
 			}
 		}
@@ -3159,12 +3160,12 @@ class Koha extends AbstractIlsDriver {
 	/**
 	 * Get a list of fines for the user.
 	 * Code taken from C4::Account getcharges method
-	 *
-	 * @param User $patron
-	 * @param bool $includeMessages
-	 * @return array
 	 */
-	public function getFines($patron, $includeMessages = false): array {
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
+		$fines = [];
+//		if ($type == 'credit'){
+//			return $fines;
+//		}
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 
 		global $activeLanguage;
@@ -3185,7 +3186,6 @@ class Koha extends AbstractIlsDriver {
 
 		$allFeesRS = mysqli_query($this->dbConnection, $query);
 
-		$fines = [];
 		if ($allFeesRS->num_rows > 0) {
 			while ($allFeesRow = $allFeesRS->fetch_assoc()) {
 				if (isset($allFeesRow['accountType'])) {
@@ -3738,37 +3738,26 @@ class Koha extends AbstractIlsDriver {
 		//Setup post parameters to the login url
 		$postParams = [
 			'koha_login_context' => 'opac',
-			'password' => $user->ils_password,
-			'userid' => $user->ils_barcode,
+			'login_password' => $user->ils_password,
+			'login_userid' => $user->ils_barcode,
 		];
 
 		if (empty($user->ils_password)) {
-			if ($user->isLoggedInViaSSO) {
-				// This is a limitation of using Koha pages to perform logins rather than API requests.
-				// In the future, with an API request, user verification could be performed without a password when a user has logged in to Aspen via SSO.
-				$result['message'] = "Update Failed: Your password does not exist in Aspen because you performed a SSO without ever having performed a local login to Aspen."; // (i.e., local login = ILS-based login)
-			}
-			else {
-				$result['message'] = "Update Failed: The patron's password does not exist in Aspen because the patron has not logged in to Aspen for the first time yet.";
-			}
+			// This is a limitation of using Koha pages to perform logins rather than API requests.
+			// In the future, with an API request, user verification could be performed without a password when a user has logged in to Aspen via SSO.
+			$failureReason = $user->isLoggedInViaSSO ? 
+				"Your password does not exist in Aspen because you performed a SSO without ever having performed a local login to Aspen." :
+				"The patron's password does not exist in Aspen because the patron has not logged in to Aspen for the first time yet.";
+			$result['message'] = "Update Failed: $failureReason";
 		}
 
 		$kohaVersion = $this->getKohaVersion();
-		$csrfToken = '';
 		if ($kohaVersion >= 24.05) {
-			//First get the page to get the csrf token
-			$getResults = $this->getKohaPage("$catalogUrl/cgi-bin/koha/opac-user.pl");
-			if (preg_match('/<input type="hidden" name="csrf_token" value="(.*?)" \/>/', $getResults, $matches)) {
-				$csrfToken = $matches[1];
-			}
+			$postParams['csrf_token'] = $this->getCSRFToken("$catalogUrl/cgi-bin/koha/opac-user.pl");
 
-			$postParams = [
-				'koha_login_context' => 'opac',
-				'login_password' => $user->ils_password,
-				'login_userid' => $user->ils_barcode,
-				'csrf_token' => $csrfToken,
-				'op' => 'cud-login'
-			];
+			// After 25.11, op becomes login_op. Account for that here
+			$opKey = $kohaVersion >= "25.1104" ? "login_op" : "op";
+			$postParams[$opKey] = "cud-login";
 		}
 
 		$sResult = $this->postToKohaPage($loginUrl, $postParams);
@@ -3788,6 +3777,14 @@ class Koha extends AbstractIlsDriver {
 			];
 		}
 		return $result;
+	}
+
+	private function getCSRFToken(string $url) : string {
+		// This will only ever be called if Koha version is >= 24.05
+		//First get the page to get the csrf token
+		$getResults = $this->getKohaPage($url);
+		$validMatch = preg_match($this->csrfPattern, $getResults, $matches);
+		return  $validMatch ? $matches[1] : '';
 	}
 
 	/**
@@ -3832,11 +3829,7 @@ class Koha extends AbstractIlsDriver {
 		$kohaVersion = $this->getKohaVersion();
 		$csrfToken = '';
 		if ($kohaVersion >= 24.05) {
-			//First get the page to get the csrf token
-			$getResults = $this->getKohaPage($catalogUrl . '/cgi-bin/koha/opac-password-recovery.pl');
-			if (preg_match('/<input type="hidden" name="csrf_token" value="(.*?)" \/>/', $getResults, $matches)) {
-				$csrfToken = $matches[1];
-			}
+			$csrfToken = $this->getCSRFToken("$catalogUrl/cgi-bin/koha/opac-password-recovery.pl");
 		}
 
 
@@ -6395,6 +6388,7 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	public function findNewUser($patronBarcode, $patronUsername) {
+		global $library;
 		// Check the Koha database to see if the patron exists
 		//Use MySQL connection to load data
 		$this->initDatabaseConnection();
@@ -6810,10 +6804,10 @@ class Koha extends AbstractIlsDriver {
 
 			$postParams = [];
 			//Get the csr token
-			$updatePage = $this->getKohaPage($updateMessageUrl);
-			if (preg_match('%<input type="hidden" name="csrf_token" value="(.*?)" />%s', $updatePage, $matches)) {
-				$getParams[] = 'csrf_token=' . $matches[1];
-				$postParams['csrf_token'] = $matches[1];
+			$csrfToken = $this->getCSRFToken($updateMessageUrl);
+			if ($csrfToken) {
+				$getParams[] = 'csrf_token=' . $csrfToken;
+				$postParams['csrf_token'] = $csrfToken;
 			}
 
 			$kohaVersion = $this->getKohaVersion();

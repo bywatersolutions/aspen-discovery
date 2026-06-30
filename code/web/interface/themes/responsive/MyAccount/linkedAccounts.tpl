@@ -1,6 +1,7 @@
 {strip}
 	<div id="main-content">
 		{if !empty($loggedIn)}
+			<h1>{translate text='Linked Accounts' isPublicFacing=true}</h1>
 			{if !empty($profile->_web_note)}
 				<div class="row">
 					<div id="web_note" class="alert alert-info text-center col-xs-12">{$profile->_web_note}</div>
@@ -13,7 +14,6 @@
 				{include file='ilsMessages.tpl' messages=$ilsMessages}
 			{/if}
 
-			<h1>{translate text='Linked Accounts' isPublicFacing=true}</h1>
 			{if !empty($offline)}
 				<div class="alert alert-warning"><strong>{translate text=$offlineMessage isPublicFacing=true}</strong></div>
 			{elseif !empty($invalidSource)}

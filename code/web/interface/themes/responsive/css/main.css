@@ -6,6 +6,7 @@
 @import "simplemde.min.css";
 @import "lib/Chart.min.css";
 @import "lib/swiper-bundle.css";
+@import "lib/multiple-select.css";
 article,
 aside,
 details,
@@ -1984,17 +1985,17 @@ output {
   box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, 0.6);
 }
 .form-control:-moz-placeholder {
-  color: #999999;
+  color: #999;
 }
 .form-control::-moz-placeholder {
-  color: #999999;
+  color: #999;
   opacity: 1;
 }
 .form-control:-ms-input-placeholder {
-  color: #999999;
+  color: #999;
 }
 .form-control::-webkit-input-placeholder {
-  color: #999999;
+  color: #999;
 }
 .form-control[disabled],
 .form-control[readonly],
@@ -8062,6 +8063,7 @@ hr.menu {
   padding: 3px;
 }
 .system-message {
+  margin-top: 5px;
   padding: 5px;
 }
 .system-message-text {
@@ -10249,6 +10251,23 @@ td[data-entry-id]:has(.date-edit:focus)::after {
   border-bottom: 3px solid #d5d6da;
   padding-bottom: 6px;
 }
+.horizontal-filter-select {
+  break-inside: avoid-column;
+  -webkit-column-break-inside: avoid;
+  position: relative;
+  width: auto !important;
+  min-width: 175px;
+  display: inline-block;
+  flex-direction: column;
+}
+.horizontal-filter-button {
+  break-inside: avoid-column;
+  -webkit-column-break-inside: avoid;
+  position: relative;
+  width: auto !important;
+  display: inline-block;
+  flex-direction: column;
+}
 /**
  * Additional Styling related to the help system
  */
@@ -11362,6 +11381,9 @@ td[data-entry-id]:has(.date-edit:focus)::after {
 }
 .horizDisplayShelfLocations .col-tn-4:last-child {
   padding-right: 0;
+}
+#multiple-variations-column.formatDisplayHorizontal .horizDisplayShelfLocations .col-tn-4:first-child {
+  padding-left: 0;
 }
 .relatedRecord {
   font-size: small;

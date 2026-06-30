@@ -296,6 +296,7 @@ class GroupedWork_AJAX extends JSON_Action {
 	function getMoreLikeThis() : array {
 		$this->checkRequiredParameters(['id']);
 
+		global $library;
 		global $configArray;
 		global $memoryWatcher;
 
@@ -322,8 +323,19 @@ class GroupedWork_AJAX extends JSON_Action {
 				$db = new GroupedWorksSolrConnector2($url);
 			}
 
-			$db->disableScoping();
-			$similar = $db->getMoreLikeThis($id);
+			if ($library->moreLikeThisSettings == 1 || $library->moreLikeThisSettings == 4) {
+				$selectedAvailabilityToggle = 'global';
+			} else {
+				$selectedAvailabilityToggle = 'local';
+			}
+			UserAccount::getActiveUserObj();
+			$format = null;
+			if (($library->moreLikeThisSettings == 3 || $library->moreLikeThisSettings == 4) && !empty($_REQUEST['format']) && !str_contains($_REQUEST['requestUrl'], 'GroupedWork')) {
+				$format = $_REQUEST['format'];
+				$similar = $db->getMoreLikeThis($id, $selectedAvailabilityToggle, false, true, null, $format);
+			} else{
+				$similar = $db->getMoreLikeThis($id, $selectedAvailabilityToggle);
+			}
 			$memoryWatcher->logMemory('Loaded More Like This data from Solr');
 			// Send the similar items to the template; if there is only one, we need
 			// to force it to be an array or things will not display correctly.
@@ -331,7 +343,7 @@ class GroupedWork_AJAX extends JSON_Action {
 				$similarTitles = [];
 				foreach ($similar['response']['docs'] as $key => $similarTitle) {
 					$similarTitleDriver = new GroupedWorkDriver($similarTitle);
-					$similarTitles[] = $similarTitleDriver->getScrollerTitle($key, 'MoreLikeThis');
+					$similarTitles[] = $similarTitleDriver->getScrollerTitle($key, 'MoreLikeThis', $format);
 				}
 				$similarTitlesInfo = [
 					'titles' => $similarTitles,
@@ -631,10 +643,11 @@ class GroupedWork_AJAX extends JSON_Action {
 		}
 		$interface->assign('recordDriver', $recordDriver);
 
-		// if the grouped work consists of only 1 related item, return the record url, otherwise return the grouped-work url
+		//Load the Related Manifestations. This causes formats to be hidden appropriately
+		$recordDriver->getRelatedManifestations();
 		$relatedRecords = $recordDriver->getRelatedRecords();
 
-		// short version
+		// if the grouped work consists of only 1 related item, return the record url, otherwise return the grouped-work url
 		if (count($relatedRecords) == 1) {
 			$firstRecord = reset($relatedRecords);
 			$url = $firstRecord->getUrl();
@@ -2850,7 +2863,7 @@ class GroupedWork_AJAX extends JSON_Action {
 			$bookcoverInfo->setImageSource('');
 			require_once ROOT_DIR . '/sys/SystemVariables.php';
 			if (SystemVariables::getSystemVariables()->useOriginalCoverUrls) {
-				$bookcoverInfo->setOriginalUrl(null);
+				$bookcoverInfo->clearOriginalUrls();
 				$bookcoverInfo->setLastUrlValidation(null);
 			}
 			$bookcoverInfo->update();
@@ -2982,11 +2995,47 @@ class GroupedWork_AJAX extends JSON_Action {
 
 			if ($foundVariation) {
 				$relatedRecords = $variation->getRelatedRecords();
+				if (count($relatedRecords) > 1) {
+					// Extract and filter out null/empty durations
+					$durations = array_values(array_filter(
+						array_map(fn($item) => $item->duration ?? null, $relatedRecords),
+						fn($d) => $d !== null && $d !== ''
+					));
+
+					if (!empty($durations)) {
+						// Calculate median
+						sort($durations);
+						$count = count($durations);
+						$middle = (int)floor($count / 2);
+
+						$median = ($count % 2 === 0)
+							? (int)(($durations[$middle - 1] + $durations[$middle]) / 2)
+							: $durations[$middle];
+
+						// Check if all durations are within 60 minutes of the median
+						$withinOneHour = true;
+						foreach ($durations as $duration) {
+							if (abs($duration - $median) > 60) {
+								$withinOneHour = false; // Not all within range
+							}
+						}
+
+						$interface->assign('duration', $median);
+						$interface->assign('withinOneHour', $withinOneHour);
+						$interface->assign('multipleDurations', true);
+
+					}
+				}
+
 				/** @var Grouping_Record $firstRecord */
 				$firstRecord = reset($relatedRecords);
 				$interface->assign('firstRecord', $firstRecord);
 				$interface->assign('isEContent', $firstRecord->isEContent());
 				$interface->assign('itemSummary', $firstRecord->getItemSummary());
+				if (count($relatedRecords) === 1){
+					$interface->assign('duration', $firstRecord->duration);
+					$interface->assign('multipleDurations', false);
+				}
 				$interface->assign('relatedRecords', $relatedRecords);
 				$interface->assign('relatedManifestation', $relatedManifestation);
 				$interface->assign('variationId', $variation->databaseId);

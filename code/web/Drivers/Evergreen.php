@@ -1531,7 +1531,11 @@ class Evergreen extends AbstractIlsDriver {
 		return true;
 	}
 
-	public function getFines(User $patron, $includeMessages = false): array {
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
+		$fines = [];
+		if ($type == 'credit'){
+			return $fines;
+		}
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 
 		global $activeLanguage;
@@ -1543,8 +1547,6 @@ class Evergreen extends AbstractIlsDriver {
 		}
 
 		$currencyFormatter = new NumberFormatter($activeLanguage->locale . '@currency=' . $currencyCode, NumberFormatter::CURRENCY);
-
-		$fines = [];
 
 		$authToken = $this->getAPIAuthToken($patron, true);
 		if ($authToken != null) {

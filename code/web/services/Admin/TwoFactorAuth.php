@@ -97,4 +97,8 @@ class Admin_TwoFactorAuth extends ObjectEditor {
 	public function hasMultiStepAddNew() : bool {
 		return true;
 	}
+
+	function getInitializationJs(): string {
+		return 'AspenDiscovery.Admin.toggle2FATOTPOptions();';
+	}
 }

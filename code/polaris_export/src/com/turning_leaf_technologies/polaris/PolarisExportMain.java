@@ -192,8 +192,10 @@ public class PolarisExportMain {
 					if (authenticationResponse.isSuccess()) {
 						loadPolarisVersion();
 						if (!extractSingleWork) {
-							importLibraryBranchData(dbConn);
-							updateSublocationInfo(dbConn);
+							if (indexingProfile.loadLibrariesAndLocationsFromIls() == true) {
+								importLibraryBranchData(dbConn);
+								updateSublocationInfo(dbConn);
+							}
 							updatePatronCodes(dbConn);
 							updateTranslationMaps(dbConn);
 

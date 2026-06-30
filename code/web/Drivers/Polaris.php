@@ -1882,7 +1882,11 @@ class Polaris extends AbstractIlsDriver {
 		return $result;
 	}
 
-	public function getFines(User $patron, $includeMessages = false): array {
+	public function supportsCredits() : bool {
+		return true;
+	}
+
+	public function getFines(User $patron, $includeMessages = false, ?string $type = null): array {
 		require_once ROOT_DIR . '/sys/Utils/StringUtils.php';
 
 		global $activeLanguage;
@@ -1904,7 +1908,7 @@ class Polaris extends AbstractIlsDriver {
 			$finesRows = $jsonResponse->PatronAccountGetRows;
 			foreach ($finesRows as $fineRow) {
 				// TODO: It might be most accurate to use the TransactionTypeID for each, but I cannot find what the ID is for "Credit."
-				if ($fineRow->TransactionTypeDescription != "Credit" && $fineRow->TransactionTypeDescription != "Deposit") {
+				if ($fineRow->TransactionTypeDescription != "Credit" && $fineRow->TransactionTypeDescription != "Deposit" && is_null($type)) {
 					$curFine = [
 						'fineId' => $fineRow->TransactionID,
 						'date' => $this->parsePolarisDate($fineRow->TransactionDate),
@@ -1915,6 +1919,22 @@ class Polaris extends AbstractIlsDriver {
 						'amountOutstandingVal' => $fineRow->OutstandingAmount,
 						'amount' => $currencyFormatter->formatCurrency($fineRow->TransactionAmount, $currencyCode),
 						'amountOutstanding' => $currencyFormatter->formatCurrency($fineRow->OutstandingAmount, $currencyCode),
+					];
+					$fines[] = $curFine;
+				}
+				// Credits should have negative values since they reduce the amount owed.
+				elseif ($fineRow->TransactionTypeDescription == "Credit" && $type == 'credit') {
+					$curFine = [
+						'fineId' => $fineRow->TransactionID,
+						'date' => $this->parsePolarisDate($fineRow->TransactionDate),
+						'type' => $fineRow->TransactionTypeDescription,
+						'reason' => (!empty($fineRow->FeeDescription) ? $fineRow->FeeDescription : 'Credit'),
+						'message' => $fineRow->Title . " " . $fineRow->Author . ' ' . $fineRow->FreeTextNote,
+						'amountVal' => $fineRow->TransactionAmount,
+						'amountOutstandingVal' => $fineRow->OutstandingAmount,
+						'amount' => $currencyFormatter->formatCurrency($fineRow->TransactionAmount, $currencyCode),
+						'amountOutstanding' => $currencyFormatter->formatCurrency($fineRow->OutstandingAmount, $currencyCode),
+						'canPayFine' => false,
 					];
 					$fines[] = $curFine;
 				}

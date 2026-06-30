@@ -44,10 +44,19 @@
 								<td class="myAccountCell">
 									{if $event.isRegistered && empty($linkedUsers)}
 										<span>{translate text="You are registered" isPublicFacing=true}</span>
+										{if !empty($event.registeredByStaff)}
+											<br><small class="text-muted">{translate text="Registered by staff" isPublicFacing=true}</small>
+										{/if}
 									{else if $event.isRegistered}
 										<span>{translate text="There are registrations to view" isPublicFacing=true}</span>
+										{if !empty($event.registeredByStaff)}
+											<br><small class="text-muted">{translate text="Registered by staff" isPublicFacing=true}</small>
+										{/if}
 									{else if $event.regRequired}
-										<span>{translate text="Registration available" isPublicFacing=true}</span>
+										<span>{translate text=$event.registrationStatusMessage isPublicFacing=true}</span>
+										{if !empty($event.savedByStaff)}
+											<br><small class="text-muted">{translate text="Saved to your account by staff" isPublicFacing=true}</small>
+										{/if}
 									{else}
 										<span>{translate text="Registration unavailable" isPublicFacing=true}</span>
 									{/if}

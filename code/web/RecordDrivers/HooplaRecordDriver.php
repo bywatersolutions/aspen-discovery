@@ -461,7 +461,9 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 	}
 
 	public function getAuthor() {
-		if (!empty($this->hooplaRawMetadata->artist)) {
+		if (!empty($this->hooplaRawMetadata->artists[0]->artistFormal)) {
+			return $this->hooplaRawMetadata->artists[0]->artistFormal;
+		} elseif (!empty($this->hooplaRawMetadata->artist)) {
 			return $this->hooplaRawMetadata->artist;
 		} else {
 			return '';
@@ -603,6 +605,20 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 			$physicalDescriptions[] = $this->hooplaRawMetadata->duration;
 		}
 		return $physicalDescriptions;
+	}
+
+	/**
+	 * Get duration of the item.
+	 *
+	 * @access  protected
+	 * @return  string
+	 */
+	public function getDuration() {
+		$duration = '';
+		if (!empty($this->hooplaRawMetadata->duration)) {
+			$duration = StringUtils::extractTotalMinutes($this->hooplaRawMetadata->duration);
+		}
+		return $duration;
 	}
 
 	function getHooplaCoverUrl() {

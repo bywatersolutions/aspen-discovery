@@ -443,8 +443,8 @@ public class GroupedWorkIndexer implements AutoCloseable {
 			// 	queueSize = 1000;
 			// }
 
-			workerThreads = 10;
-			queueSize = 500;
+			workerThreads = 1;
+			queueSize = 25;
 
 			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder(solrUrl, http2Client)
 				.withThreadCount(workerThreads)

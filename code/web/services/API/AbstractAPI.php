@@ -36,7 +36,7 @@ abstract class AbstractAPI extends Action{
 		return null;
 	}
 
-	protected function checkIfLiDA(): bool {
+	public function checkIfLiDA(): bool {
 		$userAgent = $this->getHeader('User-Agent');
 		if (!is_null($userAgent) && str_contains($userAgent, "Aspen LiDA")) {
 			return true;

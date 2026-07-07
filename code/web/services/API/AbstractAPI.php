@@ -36,7 +36,7 @@ abstract class AbstractAPI extends Action{
 		return null;
 	}
 
-	public function checkIfLiDA(): bool {
+	protected function checkIfLiDA(): bool {
 		$userAgent = $this->getHeader('User-Agent');
 		if (!is_null($userAgent) && str_contains($userAgent, "Aspen LiDA")) {
 			return true;
@@ -71,7 +71,14 @@ abstract class AbstractAPI extends Action{
 		return false;
 	}
 
-	protected function getLiDAUserAgent() : bool {
+	/**
+	 * @oauth false
+	 * @token false
+	 * @public false
+	 *
+	 * @return bool
+	 */
+	public function getLiDAUserAgent() : bool {
 		$userAgent = $this->getHeader('User-Agent');
 		if (!is_null($userAgent) && (str_contains($userAgent, "Aspen LiDA") || str_contains($userAgent, 'aspen lida'))) {
 			return true;
@@ -396,9 +403,12 @@ abstract class AbstractAPI extends Action{
 	 */
 	protected function handleAPIRequestAuto($method, $rateLimitEndpoint = 'api'): void {
 		// Automatically discover method permissions from docblock annotations
-		$oauthMethods = $this->getOAuthMethods();
-		$tokenMethods = $this->getTokenMethods();
-		$publicMethods = $this->getPublicMethods();
+		// Convert method names to lowercase for comparison to allow method names to be case-insensitive
+		$oauthMethods = array_map('strtolower', $this->getOAuthMethods());
+		$tokenMethods = array_map('strtolower', $this->getTokenMethods());
+		$publicMethods = array_map('strtolower', $this->getPublicMethods());
+
+		$method = strtolower($method);
 
 		// Use the existing handleAPIRequest method
 		$this->handleAPIRequest($method, $oauthMethods, $tokenMethods, $publicMethods, $rateLimitEndpoint);
@@ -432,4 +442,3 @@ abstract class AbstractAPI extends Action{
 		}
 	}
 }
-

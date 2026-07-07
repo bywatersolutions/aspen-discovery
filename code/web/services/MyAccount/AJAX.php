@@ -3177,7 +3177,11 @@ class MyAccount_AJAX extends JSON_Action {
 		if (!empty($selectedHolds)) {
 			$allHolds = $this->filterHoldsBySelected($user->getHolds(true, $selectedUnavailableSortOption, $selectedAvailableSortOption, $source), $selectedHolds);
 		} else {
-			$allHolds = $this->filterHolds($user->getHolds(true, $selectedUnavailableSortOption, $selectedAvailableSortOption, $source), $selectedUser);
+			$filters = [];
+			if (!empty($selectedUser) && $selectedUser !== '[""]') {
+				$filters['userId'] = ['selected' => [$selectedUser]];
+			}
+			$allHolds = $this->filterHolds($user->getHolds(true, $selectedUnavailableSortOption, $selectedAvailableSortOption, $source), $filters);
 		}
 
 
@@ -10217,12 +10221,17 @@ class MyAccount_AJAX extends JSON_Action {
 				$interface->assign('qrCodeUri', $qrCodeUri);
 			}
 
+			$interface->assign('mandatoryEnrollment', $mandatoryEnrollment);
+			$interface->assign('method', $method);
+
 			if ($hasValidEmail && $method == 'email') {
+				$interface->assign('secretId', "");
 				$buttons = "<button class='tool btn btn-primary' onclick='AspenDiscovery.Account.show2FAEnrollmentVerify(\"$mandatoryEnrollment\", \"email\", null); return false;'>" . translate([
 						'text' => 'Next',
 						'isPublicFacing' => true,
 					]) . "</button>";
 			} elseif ($method == 'totp') {
+				$interface->assign('secretId', $secret->id);
 				$buttons = "<button class='tool btn btn-primary' onclick='AspenDiscovery.Account.show2FAEnrollmentVerify(\"$mandatoryEnrollment\", \"totp\", \"$secret->id\"); return false;'>" . translate([
 						'text' => 'Next',
 						'isPublicFacing' => true,
@@ -10257,6 +10266,10 @@ class MyAccount_AJAX extends JSON_Action {
 			$interface->assign('alert', $alert);
 			$interface->assign('twoFactorMethod', $method);
 
+			$interface->assign('secretId', $secretId);
+			$interface->assign('method', $method);
+			$interface->assign('mandatoryEnrollment', $mandatoryEnrollment);
+
 			return [
 				'success' => true,
 				'title' => translate([
@@ -10275,6 +10288,10 @@ class MyAccount_AJAX extends JSON_Action {
 			$twoFactorAuth->createCode();
 
 			$secretId = $_REQUEST['secretId'] ?? null;
+
+			$interface->assign('secretId', $secretId);
+			$interface->assign('method', $method);
+			$interface->assign('mandatoryEnrollment', $mandatoryEnrollment);
 
 			return [
 				'success' => true,
@@ -10361,9 +10378,13 @@ class MyAccount_AJAX extends JSON_Action {
 		require_once ROOT_DIR . '/sys/TwoFactorAuthTOTPSecret.php';
 		$twoFactorAuth = new TwoFactorAuthCode();
 
-		if ($secretId !== null) {
+		if (!empty($secretId)) {
 			// TOTP enrollment verification
-			return $twoFactorAuth->validateCode($code, $authMethod, $secretId);
+			$totpValidated = $twoFactorAuth->validateCode($code, $authMethod, $secretId);
+			//If we don't validate we can return the message. If we do validate we need to continue with the login
+			if (!$totpValidated['success']) {
+				return $totpValidated;
+			}
 		}
 
 		if ($isLoggingIn) {

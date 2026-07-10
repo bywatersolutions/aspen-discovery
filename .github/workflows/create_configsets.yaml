@@ -1,0 +1,26 @@
+name: Create Configsets For SolrCloud
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  create_tarball:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create tarball
+        run: |
+          tar -czf project-artifact.tar.gz \
+            src/ \
+            config/ \
+            package.json
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-tarball
+          path: project-artifact.tar.gz

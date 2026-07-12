@@ -5,22 +5,20 @@ on:
     types: [opened]
 
 jobs:
-  create_tarball:
+  create_configsets:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Create tarball
+      - name: Create ConfigSet Tarball
         run: |
-          tar -czf project-artifact.tar.gz \
-            src/ \
-            config/ \
-            package.json
+          cd data_dir_setup/solr7
+          tar -czf ../../configsets.tar.gz $(find . -maxdepth 1 -type d ! -name '.' -printf '%f\n')
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: project-tarball
-          path: project-artifact.tar.gz
+          name: configsets
+          path: configsets.tar.gz

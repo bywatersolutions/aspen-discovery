@@ -26,13 +26,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
+      # Create the Dockerfile dynamically on the runner
+      - name: Create Temporary Dockerfile
+        run: |
+          cat << 'EOF' > ./data_dir_setup/solr7/Dockerfile
+          FROM alpine:latest
+          COPY . /configsets
+          EOF
+
       - name: Build and Push Configsets Image
         uses: docker/build-push-action@v5
         with:
           context: ./data_dir_setup/solr7
-          # We use a simple inline Dockerfile to copy the files into a clean image
-          inline-file: |
-            FROM alpine:latest
-            COPY . /configsets
+          file: ./data_dir_setup/solr7/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/configsets:${{ env.OCI_TAG }}

@@ -1,5 +1,6 @@
 name: Create Configsets For SolrCloud
 
+# Natively triggers on PR creation, PR updates (synchronize), and PR reopens
 on: pull_request
 
 jobs:
@@ -10,27 +11,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      # Generates tarball in the root of the workspace
       - name: Create ConfigSet Tarball
         run: |
           cd data_dir_setup/solr7
           tar -czf ../../configsets.tar.gz $(find . -maxdepth 1 -type d ! -name '.' -printf '%f\n')
 
+      # FIX 1: Split into two steps. First, set up the tool...
       - name: Setup ORAS
         uses: oras-project/setup-oras@v1
+        
+      # ...then verify it runs.
+      - name: Verify ORAS version
         run: oras version
       
       # 1st: Safely resolve and sanitize the branch name
       - name: Sanitize Branch Name for OCI Tag
         shell: bash
         run: |
-          # Use head_ref for PRs, ref_name for pushes (fall back gracefully)
           RAW_BRANCH="${{ github.head_ref || github.ref_name }}"
-          
-          # 1. Replace all non-alphanumeric characters (like / or _) with dashes
-          # 2. Convert entire string to lowercase (OCI tags prefer lowercase)
           CLEAN_BRANCH=$(echo "$RAW_BRANCH" | sed 's/[^a-zA-Z0-9_.-]/-/g' | tr '[:upper:]' '[:lower:]')
-          
-          # Write it to the GITHUB_ENV so subsequent steps can access it
           echo "OCI_TAG=${CLEAN_BRANCH}" >> $GITHUB_ENV
 
       # 2nd: Authenticate to GHCR
@@ -39,9 +39,8 @@ jobs:
           echo "${{ github.token }}" | oras login ghcr.io -u ${{ github.actor }} --password-stdin
 
       # 3rd: Package and Push the Configsets using your dynamic tag
+      # FIX 2: Removed "cd" so it stays in the workspace, and added "$" to the echo context
       - name: Package & Push OCI Artifact
         run: |
-          cd
-          echo "{{ github.repository }}"
-          # Reference the sanitized tag using ${{ env.OCI_TAG }}
+          echo "${{ github.repository }}"
           oras push ghcr.io/${{ github.repository }}/configsets:${{ env.OCI_TAG }} ./configsets.tar.gz

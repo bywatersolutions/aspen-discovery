@@ -677,6 +677,7 @@
       -->
     <lst name="appends">
       <str name="fq">{!collapse field=id}</str>
+      <str name="collection">${readCollections:${solr.core.collection}}</str>
     </lst>
     <lst name="defaults">
       <str name="echoParams">explicit</str>

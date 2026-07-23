@@ -675,10 +675,10 @@
     <!-- default values for query parameters can be specified, these
          will be overridden by parameters in the request
       -->
-    <lst name="appends">
+    <!-- <lst name="appends">
       <str name="fq">{!collapse field=id}</str>
       <str name="collection">${readCollections:${solr.core.collection}}</str>
-    </lst>
+    </lst> -->
     <lst name="defaults">
       <str name="echoParams">explicit</str>
       <int name="rows">10</int>

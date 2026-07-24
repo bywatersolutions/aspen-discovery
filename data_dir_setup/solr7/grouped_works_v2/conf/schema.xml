@@ -189,7 +189,7 @@
 	</types>
 
 	<fields>
-		<field name="id" type="unchanged_string" indexed="true" stored="true" multiValued="false" required="true"/>
+		<field name="id" type="unchanged_string" indexed="true" stored="true" multiValued="false" required="true" docValues="true"/>
 		<field name="recordtype" type="unchanged_string" indexed="true" stored="true" multiValued="false" required="true"/>
 		<field name="_version_" type="long" indexed="true" stored="true"/>
 

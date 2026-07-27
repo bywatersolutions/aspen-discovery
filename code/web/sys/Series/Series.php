@@ -15,6 +15,7 @@ class Series extends DataObject {
 	public $groupedWorkSeriesTitle;
 	public $author;
 	public $seriesLanguage;
+	public $seriesToGroupWithId;
 
 
 	public $description;
@@ -56,6 +57,12 @@ class Series extends DataObject {
 				'property' => 'seriesPermanentId',
 				'type' => 'label',
 				'label' => 'Series Permanent Id',
+				'description' => 'The unique, permanent id for the series',
+			],
+			'seriesToGroupWithId' => [
+				'property' => 'seriesToGroupWithId',
+				'type' => 'label',
+				'label' => 'Grouped With Series Id',
 				'description' => 'The unique, permanent id for the series',
 			],
 			'seriesLanguage' => [
@@ -180,10 +187,9 @@ class Series extends DataObject {
 
 
 	public function update(string $context = '') : int|bool {
-
 		if (!empty($this->_changedFields)) {
-			$this->reloadCover();
 			$this->__set('dateUpdated', time());
+			$this->reloadCover();
 		}
 		$ret = parent::update();
 		if ($ret !== FALSE) {
@@ -363,7 +369,7 @@ class Series extends DataObject {
 	 *
 	 * @return SeriesMember[]      array of series members
 	 */
-	function getSeriesMembers($sortName = null, $showExcluded = true, $includePlaceholders = true) : array {
+	function getSeriesMembers($sortName = null, $showExcluded = true, $includePlaceholders = true, $seriesId = null) : array {
 		if (empty($this->id)) {
 			return [];
 		}

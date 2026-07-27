@@ -216,6 +216,7 @@ class HooplaDriver extends AbstractEContentDriver {
 					$hooplaErrorMessage = empty($hooplaPatronStatusResponse['body']->message) ? '' : ' Hoopla Message :' . $hooplaPatronStatusResponse['body']->message;
 					$logger->log('Error retrieving patron status from Hoopla. User ID : ' . $user->id . $hooplaErrorMessage, Logger::LOG_NOTICE);
 					$this->hooplaPatronStatuses[$user->id] = false; // Don't do status call again for this user
+					$summary->resetCounters();
 				}
 				// Get Holds status for only the patrons can access to Hoopla Flex
 				if ($user->isValidForEContentSource('hoopla_flex')) {
@@ -239,6 +240,8 @@ class HooplaDriver extends AbstractEContentDriver {
 						global $logger;
 						$errorMessage = empty($holdsResponse['body']->message) ? '' : ' Hoopla Message: ' . $holdsResponse['body']->message;
 						$logger->log('Error retrieving holds from Hoopla. User ID: ' . $user->id . $errorMessage, Logger::LOG_NOTICE);
+						$summary->numAvailableHolds = 0;
+						$summary->numUnavailableHolds = 0;
 					}
 				} else {
 					$summary->numAvailableHolds = 0;
@@ -909,7 +912,7 @@ class HooplaDriver extends AbstractEContentDriver {
 	 *                                title - the title of the record the user is placing a hold on
 	 * @access  public
 	 */
-	function placeHold($patron, $recordId, $pickupBranch = null, $cancelDate = null) : array {
+	function placeHold($patron, mixed $recordId, $pickupBranch = null, $cancelDate = null) : array {
 		$result = [
 			'success' => false,
 			'message' => translate(['text' => 'Unknown error', 'isPublicFacing' => true])

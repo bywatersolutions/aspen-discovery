@@ -1747,7 +1747,7 @@ AspenDiscovery.Admin = (function () {
 
 		deleteNYTList: function (id) {
 			var listId = id;
-			if (confirm("Are you sure you want to delete this list?")) {
+			if (confirm(__('Are you sure you want to delete this list?'))) {
 				$.getJSON(Globals.path + '/Admin/AJAX?method=deleteNYTList&id=' + listId, function (data) {
 					AspenDiscovery.showMessage("Success", data.message, true, true);
 				})
@@ -2591,10 +2591,10 @@ AspenDiscovery.Admin = (function () {
 					).fail(AspenDiscovery.ajaxFail);
 					return false;
 				} else {
-					alert("Select at least one library to copy to");
+					alert(__('Select at least one library to copy to'));
 				}
 			} else {
-				alert("Select at least one menu link to copy");
+				alert(__('Select at least one menu link to copy'));
 			}
 			return false;
 		},
@@ -2882,23 +2882,23 @@ AspenDiscovery.Admin = (function () {
 
 			if (scope === 'selected') {
 				if (!selected.length) {
-					AspenDiscovery.showMessage('Failed to Delete Selected Objects', 'Please select at least one object to delete.');
+					AspenDiscovery.showMessage(__('Failed to Delete Selected Objects'), __('Please select at least one object to delete.'));
 					return false;
 				}
 			}
 			if (scope === 'all') {
-				title = 'Permanently Delete All';
-				body = 'Are you sure you want to permanently delete ALL objects? This action cannot be undone.';
-				okLabel = 'Delete All';
+				title = __('Permanently Delete All');
+				body = __('Are you sure you want to permanently delete ALL objects? This action cannot be undone.');
+				okLabel = __('Delete All');
 			} else {
-				title = 'Permanently Delete Selected';
-				body = 'Are you sure you want to permanently delete ' + count + ' object(s)? This action cannot be undone.';
-				okLabel = 'Delete';
+				title = __('Permanently Delete Selected');
+				body = __('Are you sure you want to permanently delete {count} object(s)? This action cannot be undone.', { count: count });
+				okLabel = __('Delete');
 			}
 
 			const confirmJs = "$(\"#objectAction\").val(\"batchHardDelete\"); $(\"#propertiesListForm\").trigger('submit');";
 
-			AspenDiscovery.confirm(title, body, okLabel, 'Cancel', true, confirmJs, 'btn-danger');
+			AspenDiscovery.confirm(title, body, okLabel, __('Cancel'), false, confirmJs, 'btn-danger');
 			return false;
 		},
 
@@ -3259,6 +3259,106 @@ AspenDiscovery.Admin = (function () {
 				toggleButton.html('<i class="fas fa-eye-slash"></i> Hide Secret');
 				clientSecretField.data('visible', true);
 			}
+		},
+		populateFromILS: function (ils, objectType) {
+			function getMunicipalityTypeFromKey(key) {
+				var lastChar = key.charAt(key.length - 1);
+				if (lastChar === 'C') return 'city';
+				if (lastChar === 'T') return 'town';
+				if (lastChar === 'V') return 'village';
+				return null;
+			}
+
+			if (ils === "symphony") {
+				if (objectType === "municipalities") {
+					AspenDiscovery.Admin.showFullPageLoadingOverlay('Populating from ILS, this may take a while. Please wait...');
+
+					$.ajax({
+						url: Globals.path + "/Admin/AJAX",
+						type: 'GET',
+						data: {
+							method: 'getILSMetadata',
+						},
+						success: function (response) {
+							response.forEach(function (entry) {
+								var key = entry.key;
+								var municipalityType = getMunicipalityTypeFromKey(key);
+								var municipalityName = key.slice(2, -1);
+
+								if (municipalityType === null) {
+									return; // skip entries that don't end in C, T, or V
+								}
+
+								addNewmunicipalities(); // existing generated function
+
+								var $newRow = $('#municipalities tbody tr').last();
+
+								$newRow.find('input[name^="municipalities_municipality"]').val(municipalityName);
+								$newRow.find('input[name^="municipalities_ilsMunicipality"]').val(key);
+								$newRow.find('select[name^="municipalities_municipalityType"]').val(municipalityType);
+								$newRow.find('input[name^="municipalities_selfRegAllowed"]').prop('checked', true);
+							});
+
+							$('#aspenFullPageLoadingOverlay').remove();
+						},
+						error: function () {
+							$('#aspenFullPageLoadingOverlay').remove();
+							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
+						}
+					});
+				} else if (objectType === "countyCodes") {
+					AspenDiscovery.Admin.showFullPageLoadingOverlay('Populating from ILS, this may take a while. Please wait...');
+
+					$.ajax({
+						url: Globals.path + "/Admin/AJAX",
+						type: 'GET',
+						data: {
+							method: 'getILSMetadata',
+						},
+						success: function (response) {
+							var seenCodes = new Set();
+
+							response.forEach(function (entry) {
+								seenCodes.add(entry.key.slice(0, 2));
+							});
+
+							var sortedCodes = Array.from(seenCodes).sort();
+
+							sortedCodes.forEach(function (countyCode) {
+								addNewcountyCodes(); // existing generated function
+
+								var $newRow = $('#countyCodes tbody tr').last();
+
+								$newRow.find('input[name^="countyCodes_countyCode"]').val(countyCode);
+							});
+
+							$('#aspenFullPageLoadingOverlay').remove();
+						},
+						error: function () {
+							$('#aspenFullPageLoadingOverlay').remove();
+							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
+						}
+					});
+				}
+			}
+		},
+		showFullPageLoadingOverlay: function (message) {
+			if ($('#aspenFullPageLoadingOverlay').length) {
+				return; // already showing, don't stack multiple overlays
+			}
+			var $overlay = $(
+				'<div id="aspenFullPageLoadingOverlay" style="' +
+				'position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
+				'background: rgba(0, 0, 0, 0.5); z-index: 99999; ' +
+				'display: flex; align-items: center; justify-content: center; ' +
+				'flex-direction: column;">' +
+				'<i class="fas fa-spinner fa-spin fa-3x" style="color: #fff;"></i>' +
+				'<div style="color: #fff; margin-top: 15px; font-size: 1.1em;">' +
+				(message || 'Loading...') +
+				'</div>' +
+				'</div>'
+			);
+			$('body').append($overlay);
 		}
 	};
 }(AspenDiscovery.Admin || {}));

@@ -113,6 +113,7 @@ class Library extends DataObject {
 	public $showHoldButton;
 	public $showHoldButtonInSearchResults;
 	public $showHoldButtonForUnavailableOnly;
+	public $enableMultiCopyHolds;
 	public $allowRememberPickupLocation;
 	public $treatBibOrItemHoldsAs;
 	public $showVolumesWithLocalCopiesFirst;
@@ -204,8 +205,10 @@ class Library extends DataObject {
 	public $showHoldCancelDate;
 	public $showHoldPosition;
 	public $showLogMeOutAfterPlacingHolds;
+	public $showHoldFeeMessage;
 	public $displayItemBarcode;
 	public $displayHoldsOnCheckout;
+	public $showCheckoutRenewalFeeMessage;
 	public /** @noinspection PhpUnused */
 		$displayCallNumberInCheckoutHistory;
 	public /** @noinspection PhpUnused */
@@ -697,6 +700,10 @@ class Library extends DataObject {
 			'-1' => 'None',
 		];
 		$loral->orderBy('name');
+		$loral->find();
+		while ($loral->fetch()) {
+			$availableLoralSettings[$loral->id] = $loral->name;
+		}
 
 		$materialsRequestOptions = [
 			0 => 'None',
@@ -1113,9 +1120,14 @@ class Library extends DataObject {
 
 		$validCardRenewalOptions = [
 			0 => 'No Card Renewal',
-			//1 => 'ILS Based Card Renewal',
+			1 => 'ILS Based Card Renewal',
 			2 => 'Redirect to Card Renewal URL',
 		];
+
+		if ($catalog == null || !$catalog->hasCardRenewalSupport()) {
+			unset($validCardRenewalOptions[2]);
+		}
+
 		require_once ROOT_DIR . '/sys/Enrichment/QuipuECardSetting.php';
 		$quipuECardSettings = new QuipuECardSetting();
 		if (!$quipuECardSettings->find(true)) {
@@ -2255,6 +2267,13 @@ class Library extends DataObject {
 								'hideInLists' => true,
 								'default' => 0,
 							],
+							'enableMultiCopyHolds' => [
+								'property' => 'enableMultiCopyHolds',
+								'type' => 'checkbox',
+								'label' => 'Enable Multi-Copy Holds',
+								'description' => 'Whether the user can place multiple copies of a hold on the same item.',
+								'default' => 0,
+							],
 							'hidePickupLocationPrompt' => [
 								'property' => 'hidePickupLocationPrompt',
 								'type' => 'checkbox',
@@ -2530,6 +2549,24 @@ class Library extends DataObject {
 								'hideInLists' => true,
 								'default' => '0',
 								'permissions' => ['Library ILS Connection'],
+							],
+							'showCheckoutRenewalFeeMessage' => [
+								'property' => 'showCheckoutRenewalFeeMessage',
+								'type' => 'checkbox',
+								'label' => 'Show Checkout Renewal Fee Message',
+								'description' => 'Whether or not to display a fee message to patrons before renewing checkouts. Requires ILS support.',
+								'note' => 'Applies to Koha Only.',
+								'hideInLists' => true,
+								'default' => 1,
+							],
+							'showHoldFeeMessage' => [
+								'property' => 'showHoldFeeMessage',
+								'type' => 'checkbox',
+								'label' => 'Show Hold Fee Message',
+								'description' => 'Whether or not to display a fee message to patrons when placing holds. Requires ILS support.',
+								'note' => 'Applies to Koha Only. Requires the hold_fee circulation rule',
+								'hideInLists' => true,
+								'default' => 1,
 							],
 						],
 					],
@@ -7214,5 +7251,33 @@ class Library extends DataObject {
 			}
 		}
 		return $this->_palaceProjectSettings;
+	}
+
+	public function getCardRenewalConfig() : array {
+		$config = [
+			'useILSFlow' => false,
+			'externalLink' => null,
+		];
+
+		if ($this->enableCardRenewal == 1) {
+			$config['useILSFlow'] = true;
+			return $config;
+		}
+		
+		if ($this->enableCardRenewal == 2) {
+			if (!empty($this->cardRenewalUrl)) {
+				$config['externalLink'] = $this->cardRenewalUrl;
+			}
+			return $config;
+		}
+		
+		if ($this->enableCardRenewal == 3) {
+			require_once ROOT_DIR . '/sys/Enrichment/QuipuECardSetting.php';
+			$quipuECardSettings = new QuipuECardSetting();
+			if ($quipuECardSettings->find(true) && $quipuECardSettings->hasERenew) {
+				$config['externalLink'] = '/MyAccount/eRENEW';
+			}
+		}
+		return $config;
 	}
 }

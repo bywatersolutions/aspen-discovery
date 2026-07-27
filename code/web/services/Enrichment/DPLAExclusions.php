@@ -2,27 +2,27 @@
 
 require_once ROOT_DIR . '/Action.php';
 require_once ROOT_DIR . '/services/Admin/ObjectEditor.php';
-require_once ROOT_DIR . '/sys/VDX/VdxSetting.php';
+require_once ROOT_DIR . '/sys/Enrichment/DPLAExclusion.php';
 
-class VDX_VDXSettings extends ObjectEditor {
+class Enrichment_DPLAExclusions extends ObjectEditor {
 	function getObjectType(): string {
-		return 'VDXSetting';
+		return 'DPLAExclusion';
 	}
 
 	function getToolName(): string {
-		return 'VDXSettings';
+		return 'DPLAExclusions';
 	}
 
 	function getModule(): string {
-		return 'VDX';
+		return 'Enrichment';
 	}
 
 	function getPageTitle(): string {
-		return 'VDX Settings';
+		return 'DP.LA Exclusions';
 	}
 
 	function getAllObjects(int $page, int $recordsPerPage): array {
-		$object = new VDXSetting();
+		$object = new DPLAExclusion();
 		$object->limit(($page - 1) * $recordsPerPage, $recordsPerPage);
 		$this->applyFilters($object);
 		$object->orderBy($this->getSort());
@@ -39,7 +39,7 @@ class VDX_VDXSettings extends ObjectEditor {
 	}
 
 	function getObjectStructure($context = ''): array {
-		return VDXSetting::getObjectStructure($context);
+		return DPLAExclusion::getObjectStructure($context);
 	}
 
 	function getPrimaryKeyColumn(): string {
@@ -55,26 +55,22 @@ class VDX_VDXSettings extends ObjectEditor {
 	}
 
 	function getInstructions(): string {
-		return '';
+		return 'https://aspen-discovery.atlassian.net/wiki/spaces/Help/pages/328105985/Third+Party+Enrichment';
 	}
 
 	function getBreadcrumbs(): array {
 		$breadcrumbs = [];
 		$breadcrumbs[] = new Breadcrumb('/Admin/Home', 'Administration Home');
-		$breadcrumbs[] = new Breadcrumb('/Admin/Home#ill_integration', 'Interlibrary Loan');
-		$breadcrumbs[] = new Breadcrumb('/VDX/VDXSettings', 'VDX Settings');
+		$breadcrumbs[] = new Breadcrumb('/Admin/Home#third_party_enrichment', 'Third Party Enrichment');
+		$breadcrumbs[] = new Breadcrumb('/Enrichment/DPLAExclusions', 'DP.LA Exclusions');
 		return $breadcrumbs;
 	}
 
 	function getActiveAdminSection(): string {
-		return 'ill_integration';
+		return 'third_party_enrichment';
 	}
 
 	public function getViewPermissions() : array {
-		return ['Administer VDX Settings'];
-	}
-
-	function canAddNew() : bool {
-		return $this->getNumObjects() == 0;
+		return ['Administer DP.LA Exclusions'];
 	}
 }

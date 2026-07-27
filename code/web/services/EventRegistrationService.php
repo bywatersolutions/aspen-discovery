@@ -86,7 +86,18 @@ class EventRegistrationService {
 		return self::publicErrorResult(translate(['text' => 'Failed to cancel registration.', 'isPublicFacing' => true]));
 	}
 
-	public static function getAttendeeCategoryBreakdown(int $eventInstanceId): array {
+	public static function getAttendeeCategoryBreakdownForRegistration(int $eventInstanceId, int $eventRegistrationId): array {
+		$categories = self::getEventTypeAttendeeCategories($eventInstanceId);
+		if (empty($categories)) {
+			return [];
+		}
+
+		require_once ROOT_DIR . '/sys/Events/UserAspenEventInstanceRegistrationAttendee.php';
+		$countsByCategory = UserAspenEventInstanceRegistrationAttendee::getCountsForRegistration($eventRegistrationId);
+		return self::generateCategoryBreakdown($categories, $countsByCategory);
+	}
+
+	public static function getAttendeeCategoryBreakdownForInstance(int $eventInstanceId): array {
 		$categories = self::getEventTypeAttendeeCategories($eventInstanceId);
 		if (empty($categories)) {
 			return [];
@@ -94,7 +105,10 @@ class EventRegistrationService {
 
 		require_once ROOT_DIR . '/sys/Events/UserAspenEventInstanceRegistrationAttendee.php';
 		$countsByCategory = UserAspenEventInstanceRegistrationAttendee::getCategoryAttendeeCountsForInstance($eventInstanceId);
+		return self::generateCategoryBreakdown($categories, $countsByCategory);
+	}
 
+	private static function generateCategoryBreakdown(array $categories, array $countsByCategory): array {
 		$breakdown = [];
 		foreach ($categories as $eventTypeAttendeeCategory) {
 			$attendeeCategory = $eventTypeAttendeeCategory->getCategory();
@@ -205,8 +219,8 @@ class EventRegistrationService {
 		return "Registration unavailable";
 	}
 
-	public static function getRegistrationAction(bool $isRegistered, bool $isEventFull, bool $waitingListEnabled, bool $userOnWaitingList, bool $canRegister, bool $isWaitingListFull): string {
-		if ($isRegistered) {
+	public static function getRegistrationAction(bool $userIsRegistered, bool $isEventFull, bool $waitingListEnabled, bool $userOnWaitingList, bool $canRegister, bool $isWaitingListFull): string {
+		if ($userIsRegistered) {
 			return 'registered';
 		}
 
@@ -231,6 +245,21 @@ class EventRegistrationService {
 		}
 
 		return 'eventFull';
+	}
+
+	public static function getRegistrationActionForUser(EventInstance $instance, bool $userIsRegistered, bool $onWaitingList, bool $canRegister): string {
+		$registrationAction = self::getRegistrationAction(
+			$userIsRegistered,
+			!self::hasAvailableSeats($instance),
+			$instance->isWaitingListEnabled(),
+			$onWaitingList,
+			$canRegister,
+			self::isWaitingListFull($instance)
+		);
+		if ($registrationAction === 'showPosition' && self::hasUnregisteredLinkedUsers($instance)) {
+			$registrationAction = 'joinWaitingList';
+		}
+		return $registrationAction;
 	}
 
 	/**

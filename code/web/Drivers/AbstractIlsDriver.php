@@ -1035,6 +1035,14 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 		return false;
 	}
 
+	function placeHold(User $patron, mixed $recordId, ?string $pickupBranch = null, ?string $cancelDate = null, ?string $pickupSublocation = null, ?int $numberOfCopies = 1) : array {
+		return [
+			'success' => false,
+			'title' => 'An error occurred',
+			'message' => 'This functionality has not been implemented for this ILS',
+		];
+	}
+
 	public function submitLocalIllRequest(User $patron, LocalIllForm $localIllForm) : array {
 		return [
 			'success' => false,
@@ -1065,6 +1073,10 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 		return false;
 	}
 
+	public function updatePreferredPickupLocation($user, $pickupLocation, $fromMasquerade): bool {
+		return false;
+	}
+
 	public function isPatronAccountLocked(User $patron, $fine): bool {
 		return false;
 	}
@@ -1078,5 +1090,17 @@ abstract class AbstractIlsDriver extends AbstractDriver {
 
 	public function getPatronHoldGroups($patronId): ?array {
 		return null;
+	}
+
+	public function hasHoldFeeMessage(): bool {
+		return false;
+	}
+
+	public function hasCardRenewalSupport(): bool {
+		return false;
+	}
+
+	public function supportsMultiCopyHolds() : bool {
+		return false;
 	}
 }

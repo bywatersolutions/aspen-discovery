@@ -592,12 +592,15 @@ class SirsiDynixROA extends AbstractIlsDriver {
 
 			$selfRegistrationForm = null;
 			$formFields = null;
+			$municipalities = null;
+			$matchId = null;
 			if ($library->selfRegistrationFormId > 0){
 				require_once ROOT_DIR . '/sys/SelfRegistrationForms/SelfRegistrationForm.php';
 				$selfRegistrationForm = new SelfRegistrationForm();
 				$selfRegistrationForm->id = $library->selfRegistrationFormId;
 				if ($selfRegistrationForm->find(true)) {
 					$formFields = $selfRegistrationForm->getFields();
+					$municipalities = $selfRegistrationForm->getMunicipalities();
 				}else {
 					$selfRegistrationForm = null;
 				}
@@ -636,6 +639,8 @@ class SirsiDynixROA extends AbstractIlsDriver {
 			];
 
 			if ($formFields != null) {
+				$address = new stdClass();
+				$address->lines = [];
 				foreach ($formFields as $fieldObj){
 					$field = $fieldObj->ilsName;
 					//General Info
@@ -710,6 +715,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 					}
 					elseif ($field == 'street' && (!empty($_REQUEST['street']))) {
 						$this->setPatronUpdateField('STREET', $this->getPatronFieldValue($_REQUEST['street'], $library->useAllCapsWhenSubmittingSelfRegistration), $createPatronInfoParameters, $preferredAddress, $index);
+						$address->lines[] = $this->getPatronFieldValue($_REQUEST['street'], $library->useAllCapsWhenSubmittingSelfRegistration);
 					}
 					elseif ($field == 'mailingaddr' && (!empty($_REQUEST['mailingaddr']))) {
 						$this->setPatronUpdateField('MAILNGADDR', $this->getPatronFieldValue($_REQUEST['mailingaddr'], $library->useAllCapsWhenSubmittingSelfRegistration), $createPatronInfoParameters, $preferredAddress, $index);
@@ -726,9 +732,11 @@ class SirsiDynixROA extends AbstractIlsDriver {
 						} else {
 							$this->setPatronUpdateField('CITY/STATE', $this->getPatronFieldValue($_REQUEST['city'] . ' ' . $_REQUEST['state'], $library->useAllCapsWhenSubmittingSelfRegistration), $createPatronInfoParameters, $preferredAddress, $index);
 						}
+						$address->lines[] = $this->getPatronFieldValue($_REQUEST['city'] . ' ' . $_REQUEST['state'], $library->useAllCapsWhenSubmittingSelfRegistration);
 					}
 					elseif ($field == 'zip' && (!empty($_REQUEST['zip']))) {
 						$this->setPatronUpdateField('ZIP', $this->getPatronFieldValue($_REQUEST['zip'], $library->useAllCapsWhenSubmittingSelfRegistration), $createPatronInfoParameters, $preferredAddress, $index);
+						$address->lines[] = $this->getPatronFieldValue($_REQUEST['zip'], $library->useAllCapsWhenSubmittingSelfRegistration);
 					}
 
 					//unsure about these
@@ -752,6 +760,59 @@ class SirsiDynixROA extends AbstractIlsDriver {
 					}
 					elseif ($field == 'primaryPhone' && (!empty($_REQUEST['primaryPhone']))) {
 						$this->setPatronUpdateField('primaryPhone', $this->getPatronFieldValue($_REQUEST['primaryPhone'], $library->useAllCapsWhenSubmittingSelfRegistration), $createPatronInfoParameters, $preferredAddress, $index);
+					}
+				}
+				// Override with any municipality-specific settings
+				if (!empty($municipalities)) {
+					// Use Google Geocoding API to get patron's municipality
+					if (!empty($address->lines)) {
+						$address = implode(", ", $address->lines);
+						$address = str_replace("\r\n", ",", $address);
+						$address = str_replace(" ", "+", $address);
+						$address = str_replace("#", "", $address);
+
+						require_once ROOT_DIR . '/sys/Enrichment/GoogleApiSetting.php';
+						$googleSettings = new GoogleApiSetting();
+						if ($googleSettings->find(true)) {
+							if (!empty($googleSettings->googleMapsKey)) {
+								$apiKey = $googleSettings->googleMapsKey;
+								$data = SystemUtils::geocodeAddress($address, $apiKey);
+
+								if ($data) {
+									$location = $data['results'][0]['geometry']['location'];
+									$latitude = $location['lat'];
+									$longitude = $location['lng'];
+
+									$subdivisionInfo = SystemUtils::getCensusCountySubdivision($latitude, $longitude);
+
+									$matchId = null;
+									if ($subdivisionInfo['municipality_name'] != '') {
+										$matchId = $selfRegistrationForm->getMunicipalitySettingsByNameAndType($subdivisionInfo['municipality_name'], $subdivisionInfo['municipality_type'], $subdivisionInfo['county_name']);
+									}
+									if (!$matchId) {
+										$matchId = $selfRegistrationForm->getMunicipalitySettingsByNameAndType('other');
+									}
+									if ($matchId) {
+										// Abort if self-registration is not allowed
+										if (!$municipalities[$matchId]->selfRegAllowed) {
+											return [
+												'success' => false,
+												'message' => translate([
+													'text' => "Your address is not within the library’s service area. Please contact the library for more information.",
+													'isPublicFacing' => true
+												])
+											];
+										}
+										if (!empty($municipalities[$matchId]->ilsMunicipality)) {
+											$createPatronInfoParameters['fields']['category01'] = [
+												'key' => $municipalities[$matchId]->ilsMunicipality,
+												'resource' => '/policy/patronCategory01',
+											];
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -1068,21 +1129,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 			return $checkedOutTitles;
 		}
 
-		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroup.php';
-		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroupLocation.php';
-
-		$homeLocation = $patron->getHomeLocation();
-		$holdGroupsForLocation = new HoldGroupLocation();
-		$holdGroupsForLocation->locationId = $homeLocation->locationId;
-		$holdGroupIds = $holdGroupsForLocation->fetchAll('holdGroupId');
-		$holdGroups = [];
-		foreach ($holdGroupIds as $holdGroupId) {
-			$holdGroup = new HoldGroup();
-			$holdGroup->id = $holdGroupId;
-			if ($holdGroup->find(true)) {
-				$holdGroups[] = clone $holdGroup;
-			}
-		}
+		$holdGroups = $this->getHoldGroupsForUser($patron);
 
 		//Now that we have the session token, get holds information
 		$webServiceURL = $this->getWebServiceURL();
@@ -1228,21 +1275,7 @@ class SirsiDynixROA extends AbstractIlsDriver {
 			return $holds;
 		}
 
-		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroup.php';
-		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroupLocation.php';
-
-		$homeLocation = $patron->getHomeLocation();
-		$holdGroupsForLocation = new HoldGroupLocation();
-		$holdGroupsForLocation->locationId = $homeLocation->locationId;
-		$holdGroupIds = $holdGroupsForLocation->fetchAll('holdGroupId');
-		$holdGroups = [];
-		foreach ($holdGroupIds as $holdGroupId) {
-			$holdGroup = new HoldGroup();
-			$holdGroup->id = $holdGroupId;
-			if ($holdGroup->find(true)) {
-				$holdGroups[] = clone $holdGroup;
-			}
-		}
+		$holdGroups = $this->getHoldGroupsForUser($patron);
 
 		//Now that we have the session token, get holds information
 		$webServiceURL = $this->getWebServiceURL();
@@ -1411,8 +1444,97 @@ class SirsiDynixROA extends AbstractIlsDriver {
 		return $holds;
 	}
 
-	public function placeHold(User $patron, $recordId, $pickupBranch = null, $cancelDate = null) : array {
-		return $this->placeItemHold($patron, $recordId, null, $pickupBranch, $cancelDate);
+	public function placeHold(User $patron, mixed $recordId, ?string $pickupBranch = null, ?string $cancelDate = null, ?string $pickupSublocation = null, ?int $numberOfCopies = 1) : array {
+		if ($numberOfCopies == 1) {
+			return $this->placeSirsiHold($patron, $recordId, null, false, $pickupBranch, $cancelDate);
+		}else{
+			//Determine which items to place holds on
+			require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
+
+			$marcRecordDriver = RecordDriverFactory::initRecordDriverById($this->accountProfile->recordSource . ':' . $recordId);
+			$relatedRecord = $marcRecordDriver->getRelatedRecord();
+			//Get hold groups for the user so we can prefer
+			$holdGroups = $this->getHoldGroupsForUser($patron);
+			$itemsForRecord = $relatedRecord->getItems();
+			//Randomize the items so one library does not get all the holds
+			shuffle($itemsForRecord);
+
+			$holdableItemsAtHomeLocation = [];
+			$holdableItemsInHoldGroup = [];
+			$remainingHoldableItems = [];
+			foreach ($itemsForRecord as $item) {
+				if ($item->holdable && $item->available) {
+					if ($item->atUserHomeLocation) {
+						$holdableItemsAtHomeLocation[] = $item->itemId;
+					}else{
+						//Check to see if the item is in the hold group
+						$inHomeGroup = false;
+						foreach ($holdGroups as $holdGroup){
+							if (in_array($item->locationCode, $holdGroup->getLocationCodes())){
+								$inHomeGroup = true;
+								break;
+							}
+						}
+						if ($inHomeGroup) {
+							$holdableItemsInHoldGroup[] = $item->itemId;
+						}else{
+							$remainingHoldableItems[] = $item->itemId;
+						}
+					}
+				}
+			}
+			$itemsToHold = array_slice($holdableItemsAtHomeLocation, 0, $numberOfCopies);
+			$itemsToHold = array_merge($itemsToHold, $holdableItemsInHoldGroup);
+			$itemsToHold = array_merge($itemsToHold, $remainingHoldableItems);
+			$holdResults = [];
+			$numHoldsPlaced = 0;
+			$webServiceURL = $this->getWebServiceURL();
+			$staffSessionToken = $this->getStaffSessionToken();
+			foreach ($itemsToHold as $itemId) {
+				//Check that the item is available
+				$lookupItemResponse = $this->getWebServiceResponse('lookupItem', $webServiceURL . '/catalog/item/barcode/' . $itemId, null, $staffSessionToken);
+				//Make sure the item is not currently checked out or on the hold shelf
+				if (in_array($lookupItemResponse->fields->currentLocation->key, ['CHECKEDOUT', 'HOLDS'])) {
+					continue;
+				}
+				//Check for holds on the item (this query isn't working now, but would be nice to know if another item level hold has been placed).
+				//$holdsForItem = $this->getWebServiceResponse('holdsForItem', $webServiceURL . '/circulation/holdRecord/query?where=EQ(item.arcode," . $itemId . ")', null, $staffSessionToken);
+				$holdResult = $this->placeSirsiHold($patron, $recordId, $itemId, false, $pickupBranch, $cancelDate);
+				if ($holdResult['success'] === false) {
+					//Just skip this and move on to the next
+				}else {
+					$numHoldsPlaced++;
+				}
+				//Sleep for 20ms
+				usleep(20 * 1000);
+				$holdResults[] = $holdResult;
+				if ($numHoldsPlaced == $numberOfCopies) {
+					break;
+				}
+			}
+
+
+			//Update the first result since it's representative of all the holds
+			$firstResult = reset($holdResults);
+			if ($numHoldsPlaced === 0 || $numHoldsPlaced < $numberOfCopies) {
+				$firstResult['success'] = false;
+			}
+			if ($numHoldsPlaced < $numberOfCopies) {
+				$firstResult['message'] = translate([
+					'text' => "Placed %1% of %2% holds for you.",
+					'1' => $numHoldsPlaced,
+					'2' => $numberOfCopies,
+					'isPublicFacing' => true,
+				]);
+			}else{
+				$firstResult['message'] = translate([
+					'text' => "Placed %1% holds for you.",
+					'1' => $numHoldsPlaced,
+					'isPublicFacing' => true,
+				]);
+			}
+			return $firstResult;
+		}
 	}
 
 	/**
@@ -4448,5 +4570,49 @@ class SirsiDynixROA extends AbstractIlsDriver {
 		}
 
 		return 0;
+	}
+
+	public function getPatronMetadataOptions(): array {
+		//Get a list of locations for the system.
+		$sessionToken = $this->getStaffSessionToken();
+		if (!$sessionToken) {
+			return [
+				'success' => false,
+				'message' => 'Unable to authenticate with Symphony'
+			];
+		}
+
+		//Now that we have the session token, get information
+		$webServiceURL = $this->getWebServiceURL();
+		$response = $this->getWebServiceResponse('getPatronMetadataOptions', $webServiceURL . '/policy/patronCategory01/simpleQuery?key=*', null, $sessionToken);
+    return $response;
+  }
+
+	public function supportsMultiCopyHolds() : bool {
+		return true;
+	}
+
+	/**
+	 * @param User $patron
+	 * @return HoldGroup[]
+	 */
+	public function getHoldGroupsForUser(User $patron): array
+	{
+		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroup.php';
+		require_once ROOT_DIR . '/sys/InterLibraryLoan/HoldGroupLocation.php';
+
+		$homeLocation = $patron->getHomeLocation();
+		$holdGroupsForLocation = new HoldGroupLocation();
+		$holdGroupsForLocation->locationId = $homeLocation->locationId;
+		$holdGroupIds = $holdGroupsForLocation->fetchAll('holdGroupId');
+		$holdGroups = [];
+		foreach ($holdGroupIds as $holdGroupId) {
+			$holdGroup = new HoldGroup();
+			$holdGroup->id = $holdGroupId;
+			if ($holdGroup->find(true)) {
+				$holdGroups[] = clone $holdGroup;
+			}
+		}
+		return $holdGroups;
 	}
 }

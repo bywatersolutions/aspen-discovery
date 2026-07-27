@@ -932,9 +932,31 @@ var Globals = (function () {
 		cookiePolicyHTML: '',
 		timeUntilSessionExpiration: 0,
 		modalCloseDestination: '',
-		language: 'en'
+		language: 'en',
+		jsTranslations: {}
 	}
 })(Globals || {});
+
+function __(phrase, vars) {
+	if (Globals.jsTranslations[phrase] !== undefined) {
+		var result = Globals.jsTranslations[phrase];
+		if (vars) {
+			Object.keys(vars).forEach(function(varName) {
+				result = result.replace(new RegExp('\\{' + varName + '\\}', 'g'), vars[varName]);
+			});
+		}
+		return result;
+	}
+	console.warn('[i18n] Missing JS translation: "' + phrase + '" — run extract_js_translations.php');
+	if (vars) {
+		var result = phrase;
+		Object.keys(vars).forEach(function(varName) {
+			result = result.replace(new RegExp('\\{' + varName + '\\}', 'g'), vars[varName]);
+		});
+		return result;
+	}
+	return phrase;
+}
 var aspenJQ = $;
 var AspenDiscovery = (function(){
 	
@@ -1233,7 +1255,7 @@ var AspenDiscovery = (function(){
 				return aspenJQ(this).attr('name') + "=" + aspenJQ(this).val();
 			}).get().join("&");
 			if (selectedTitles.length === 0 && promptForProcessingAll){
-				var ret = confirm('You have not selected any items, process all items?');
+				var ret = confirm(__('You have not selected any items, process all items?'));
 				if (ret === true){
 					AspenDiscovery.selectAllTitles();
 					selectedTitles = titleSelect.map(function() {
@@ -1257,7 +1279,7 @@ var AspenDiscovery = (function(){
 				return aspenJQ(this).attr('name') + "=" + aspenJQ(this).val();
 			}).get().join("&");
 			if (selectedCategories.length === 0){
-				var ret = confirm('No browse categories were selected');
+				var ret = confirm(__('No browse categories were selected'));
 			}
 			return selectedCategories;
 		},
@@ -1453,6 +1475,10 @@ var AspenDiscovery = (function(){
 					buttons += "<button id='confirmCancelBtn' class='tool btn btn-default' onclick='AspenDiscovery.closeLightbox()'>" + cancelButtonLabel + "</button>";
 					AspenDiscovery.showMessageWithButtons(messageTitle, messageBody, buttons, false, '', false, messageTitle.length === 0,true);
 				});
+			} else {
+				var buttons = "<button id='confirmOkBtn' class='tool btn " + confirmStyle + "' onclick='" + confirmFunctionAsString + "'><i class='fas fa-spinner fa-spin hidden' role='status' aria-hidden='true'></i> " + okButtonLabel + "</button>";
+				buttons += "<button id='confirmCancelBtn' class='tool btn btn-default' onclick='AspenDiscovery.closeLightbox()'>" + cancelButtonLabel + "</button>";
+				AspenDiscovery.showMessageWithButtons(messageTitle, messageBody, buttons, false, '', false, messageTitle.length === 0, true);
 			}
 
 		},
@@ -2094,6 +2120,26 @@ jQuery.validator.addMethod("strongPassword", function(value, element) {
 
 	return '<ul class="password-error-list" style="margin-top:5px; margin-bottom:0; padding-left:1.25em; list-style-type:disc"><li>' + errors.join('</li><li>') + '</li></ul>';
 });
+
+document.addEventListener('blur', (e) => {
+	if (e.target && e.target.type === 'number') {
+		const input = e.target;
+		const value = parseInt(input.value, 10);
+
+		if (input.hasAttribute('min')) {
+			const min = parseInt(input.min, 10);
+			if (isNaN(value) || value < min) {
+				input.value = min;
+			}
+		}
+		if (input.hasAttribute('max')) {
+			const max = parseInt(input.max, 10);
+			if (isNaN(value) || value > max) {
+				input.value = max;
+			}
+		}
+	}
+}, true);
 AspenDiscovery.ToastNotifications = (function () {
   const debug = false;
   const POLL_INTERVAL = 10000; // 10 seconds
@@ -2403,7 +2449,7 @@ AspenDiscovery.Account = (function () {
 
 		followLinkIfLoggedIn: function (trigger, linkDestination) {
 			if (trigger === undefined) {
-				alert("You must provide the trigger to follow a link after logging in.");
+				alert(__('You must provide the trigger to follow a link after logging in.'));
 			}
 			var jqTrigger = $(trigger);
 			if (linkDestination === undefined) {
@@ -2803,16 +2849,6 @@ AspenDiscovery.Account = (function () {
 					}
 				});
 			}
-			if (Globals.hasInterlibraryLoanConnection) {
-				var interlibraryLoanUrl = Globals.path + "/MyAccount/AJAX?method=getMenuDataInterlibraryLoan&activeModule=" + Globals.activeModule + '&activeAction=' + Globals.activeAction;
-				$.getJSON(interlibraryLoanUrl, function (data) {
-					if (data.success) {
-						$(".interlibrary-loan-requests-placeholder").html(data.summary.numHolds);
-						totalHolds += parseInt(data.summary.numHolds);
-						$(".holds-placeholder").html(totalHolds);
-					}
-				});
-			}
 			var campaignsUrl = Globals.path + "/MyAccount/AJAX?method=getEnrolledCampaigns&activeModule=" + Globals.activeModule + '&activeAction=' + Globals.activeAction;
 			$.getJSON(campaignsUrl, function (data) {
 				if (data.success) {
@@ -2974,7 +3010,7 @@ AspenDiscovery.Account = (function () {
 
 
 		removeLinkedUser: function (idToRemove) {
-			if (confirm("Are you sure you want to stop managing this account?")) {
+			if (confirm(__('Are you sure you want to stop managing this account?'))) {
 				var url = Globals.path + "/MyAccount/AJAX?method=removeAccountLink&idToRemove=" + idToRemove;
 				$.getJSON(url, function (data) {
 					if (data.success === true) {
@@ -2988,7 +3024,7 @@ AspenDiscovery.Account = (function () {
 		},
 
 		removeManagingAccount: function (idToRemove) {
-			if (confirm("Are you sure you want to break the link with this account?")) {
+			if (confirm(__('Are you sure you want to break the link with this account?'))) {
 				var url = Globals.path + "/MyAccount/AJAX?method=removeManagingAccount&idToRemove=" + idToRemove;
 				$.getJSON(url, function (data) {
 					if (data.success === true) {
@@ -3086,7 +3122,7 @@ AspenDiscovery.Account = (function () {
 
 		renewAll: function () {
 			if (Globals.loggedIn) {
-				if (confirm('Renew All Items?')) {
+				if (confirm(__('Renew All Items?'))) {
 					AspenDiscovery.loadingMessage();
 					// noinspection JSUnresolvedFunction
 					$.getJSON(Globals.path + "/MyAccount/AJAX?method=renewAll", function (data) {
@@ -3128,7 +3164,7 @@ AspenDiscovery.Account = (function () {
 			if (Globals.loggedIn) {
 				var selectedTitles = AspenDiscovery.getSelectedTitles();
 				if (selectedTitles) {
-					if (confirm('Renew selected Items?')) {
+					if (confirm(__('Renew selected Items?'))) {
 						AspenDiscovery.loadingMessage();
 						// noinspection JSUnresolvedFunction
 						$.getJSON(Globals.path + "/MyAccount/AJAX?method=renewSelectedItems&" + selectedTitles, function (data) {
@@ -3328,32 +3364,6 @@ AspenDiscovery.Account = (function () {
 			}
 
 			return false
-		},
-
-		cancelVdxRequest: function (patronId, requestId, cancelId) {
-			if (confirm("Are you sure you want to cancel this request?")) {
-				var ajaxUrl = Globals.path + "/MyAccount/AJAX?method=cancelVdxRequest&patronId=" + patronId + "&requestId=" + requestId + "&cancelId=" + cancelId;
-				$.ajax({
-					url: ajaxUrl,
-					cache: false,
-					success: function (data) {
-						if (data.success) {
-							AspenDiscovery.showMessage("Request Cancelled", data.message, true);
-							//remove the row from the holds list
-							$("#vdxHold_" + requestId + "_" + cancelId).hide();
-							AspenDiscovery.Account.loadMenuData();
-						} else {
-							AspenDiscovery.showMessage("Error Cancelling Request", data.message, false);
-						}
-					},
-					dataType: 'json',
-					async: false,
-					error: function () {
-						AspenDiscovery.showMessage("Error Cancelling Request", "An error occurred processing your request.  Please try again in a few minutes.", false);
-					}
-				});
-			}
-			return false;
 		},
 
 		changeAccountSort: function (newSort, sortParameterName) {
@@ -3654,7 +3664,7 @@ AspenDiscovery.Account = (function () {
 				promptForSelectAll = true;
 			}
 			var selectedTitles = $("input.titleSelect:checked ");
-			if (selectedTitles.length === 0 && promptForSelectAll && confirm('You have not selected any items, process all items?')) {
+			if (selectedTitles.length === 0 && promptForSelectAll && confirm(__('You have not selected any items, process all items?'))) {
 				selectedTitles = $("input.titleSelect")
 					.attr('checked', 'checked');
 			}
@@ -4723,7 +4733,7 @@ AspenDiscovery.Account = (function () {
 		},
 
 		deleteSavedEvent: function (id, page, filter) {
-			if (confirm("Are you sure you want to remove this event?")) {
+			if (confirm(__('Are you sure you want to remove this event?'))) {
 				var url = Globals.path + '/MyAccount/AJAX?method=deleteSavedEvent&id=' + id;
 
 				$.getJSON(url, function (data) {
@@ -4840,7 +4850,7 @@ AspenDiscovery.Account = (function () {
 			return false;
 		},
 		deleteAllListTitles: function (id) {
-			AspenDiscovery.confirm("Delete All Titles?", "Are you sure you want to delete all items from this list? The titles will be permanently deleted.","Yes", "No", true, "AspenDiscovery.Account.doDeleteAllListTitles(" + id + ");", "btn-danger");
+			AspenDiscovery.confirm(__('Delete All Titles?'), __('Are you sure you want to delete all items from this list? The titles will be permanently deleted.'), __('Yes'), __('No'), false, "AspenDiscovery.Account.doDeleteAllListTitles(" + id + ");", "btn-danger");
 			return false;
 		},
 		doDeleteAllListTitles: function (id) {
@@ -4854,9 +4864,9 @@ AspenDiscovery.Account = (function () {
 		deleteSelectedListTitles: function (id) {
 			var selectedTitles = AspenDiscovery.getSelectedTitles(false);
 			if (selectedTitles) {
-				AspenDiscovery.confirm("Delete Selected Titles?", "Are you sure you want to delete the selected items from this list? The titles will be permanently deleted.","Yes", "No", true, "AspenDiscovery.Account.doDeleteSelectedListTitles(" + id + ");", "btn-danger");
+				AspenDiscovery.confirm(__('Delete Selected Titles?'), __('Are you sure you want to delete the selected items from this list? The titles will be permanently deleted.'), __('Yes'), __('No'), false, "AspenDiscovery.Account.doDeleteSelectedListTitles(" + id + ");", "btn-danger");
 			}else{
-				AspenDiscovery.confirm("Delete Selected Titles?", "No titles are selected, would you like to delete all titles on this page? The titles will be permanently deleted.","Yes", "No", true, "AspenDiscovery.selectAllTitles();AspenDiscovery.Account.doDeleteSelectedListTitles(" + id + ");", "btn-danger");
+				AspenDiscovery.confirm(__('Delete Selected Titles?'), __('No titles are selected, would you like to delete all titles on this page? The titles will be permanently deleted.'), __('Yes'), __('No'), false, "AspenDiscovery.selectAllTitles();AspenDiscovery.Account.doDeleteSelectedListTitles(" + id + ");", "btn-danger");
 			}
 			return false;
 		},
@@ -7613,7 +7623,7 @@ AspenDiscovery.Admin = (function () {
 
 		deleteNYTList: function (id) {
 			var listId = id;
-			if (confirm("Are you sure you want to delete this list?")) {
+			if (confirm(__('Are you sure you want to delete this list?'))) {
 				$.getJSON(Globals.path + '/Admin/AJAX?method=deleteNYTList&id=' + listId, function (data) {
 					AspenDiscovery.showMessage("Success", data.message, true, true);
 				})
@@ -8457,10 +8467,10 @@ AspenDiscovery.Admin = (function () {
 					).fail(AspenDiscovery.ajaxFail);
 					return false;
 				} else {
-					alert("Select at least one library to copy to");
+					alert(__('Select at least one library to copy to'));
 				}
 			} else {
-				alert("Select at least one menu link to copy");
+				alert(__('Select at least one menu link to copy'));
 			}
 			return false;
 		},
@@ -8748,23 +8758,23 @@ AspenDiscovery.Admin = (function () {
 
 			if (scope === 'selected') {
 				if (!selected.length) {
-					AspenDiscovery.showMessage('Failed to Delete Selected Objects', 'Please select at least one object to delete.');
+					AspenDiscovery.showMessage(__('Failed to Delete Selected Objects'), __('Please select at least one object to delete.'));
 					return false;
 				}
 			}
 			if (scope === 'all') {
-				title = 'Permanently Delete All';
-				body = 'Are you sure you want to permanently delete ALL objects? This action cannot be undone.';
-				okLabel = 'Delete All';
+				title = __('Permanently Delete All');
+				body = __('Are you sure you want to permanently delete ALL objects? This action cannot be undone.');
+				okLabel = __('Delete All');
 			} else {
-				title = 'Permanently Delete Selected';
-				body = 'Are you sure you want to permanently delete ' + count + ' object(s)? This action cannot be undone.';
-				okLabel = 'Delete';
+				title = __('Permanently Delete Selected');
+				body = __('Are you sure you want to permanently delete {count} object(s)? This action cannot be undone.', { count: count });
+				okLabel = __('Delete');
 			}
 
 			const confirmJs = "$(\"#objectAction\").val(\"batchHardDelete\"); $(\"#propertiesListForm\").trigger('submit');";
 
-			AspenDiscovery.confirm(title, body, okLabel, 'Cancel', true, confirmJs, 'btn-danger');
+			AspenDiscovery.confirm(title, body, okLabel, __('Cancel'), false, confirmJs, 'btn-danger');
 			return false;
 		},
 
@@ -9125,6 +9135,106 @@ AspenDiscovery.Admin = (function () {
 				toggleButton.html('<i class="fas fa-eye-slash"></i> Hide Secret');
 				clientSecretField.data('visible', true);
 			}
+		},
+		populateFromILS: function (ils, objectType) {
+			function getMunicipalityTypeFromKey(key) {
+				var lastChar = key.charAt(key.length - 1);
+				if (lastChar === 'C') return 'city';
+				if (lastChar === 'T') return 'town';
+				if (lastChar === 'V') return 'village';
+				return null;
+			}
+
+			if (ils === "symphony") {
+				if (objectType === "municipalities") {
+					AspenDiscovery.Admin.showFullPageLoadingOverlay('Populating from ILS, this may take a while. Please wait...');
+
+					$.ajax({
+						url: Globals.path + "/Admin/AJAX",
+						type: 'GET',
+						data: {
+							method: 'getILSMetadata',
+						},
+						success: function (response) {
+							response.forEach(function (entry) {
+								var key = entry.key;
+								var municipalityType = getMunicipalityTypeFromKey(key);
+								var municipalityName = key.slice(2, -1);
+
+								if (municipalityType === null) {
+									return; // skip entries that don't end in C, T, or V
+								}
+
+								addNewmunicipalities(); // existing generated function
+
+								var $newRow = $('#municipalities tbody tr').last();
+
+								$newRow.find('input[name^="municipalities_municipality"]').val(municipalityName);
+								$newRow.find('input[name^="municipalities_ilsMunicipality"]').val(key);
+								$newRow.find('select[name^="municipalities_municipalityType"]').val(municipalityType);
+								$newRow.find('input[name^="municipalities_selfRegAllowed"]').prop('checked', true);
+							});
+
+							$('#aspenFullPageLoadingOverlay').remove();
+						},
+						error: function () {
+							$('#aspenFullPageLoadingOverlay').remove();
+							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
+						}
+					});
+				} else if (objectType === "countyCodes") {
+					AspenDiscovery.Admin.showFullPageLoadingOverlay('Populating from ILS, this may take a while. Please wait...');
+
+					$.ajax({
+						url: Globals.path + "/Admin/AJAX",
+						type: 'GET',
+						data: {
+							method: 'getILSMetadata',
+						},
+						success: function (response) {
+							var seenCodes = new Set();
+
+							response.forEach(function (entry) {
+								seenCodes.add(entry.key.slice(0, 2));
+							});
+
+							var sortedCodes = Array.from(seenCodes).sort();
+
+							sortedCodes.forEach(function (countyCode) {
+								addNewcountyCodes(); // existing generated function
+
+								var $newRow = $('#countyCodes tbody tr').last();
+
+								$newRow.find('input[name^="countyCodes_countyCode"]').val(countyCode);
+							});
+
+							$('#aspenFullPageLoadingOverlay').remove();
+						},
+						error: function () {
+							$('#aspenFullPageLoadingOverlay').remove();
+							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
+						}
+					});
+				}
+			}
+		},
+		showFullPageLoadingOverlay: function (message) {
+			if ($('#aspenFullPageLoadingOverlay').length) {
+				return; // already showing, don't stack multiple overlays
+			}
+			var $overlay = $(
+				'<div id="aspenFullPageLoadingOverlay" style="' +
+				'position: fixed; top: 0; left: 0; width: 100%; height: 100%; ' +
+				'background: rgba(0, 0, 0, 0.5); z-index: 99999; ' +
+				'display: flex; align-items: center; justify-content: center; ' +
+				'flex-direction: column;">' +
+				'<i class="fas fa-spinner fa-spin fa-3x" style="color: #fff;"></i>' +
+				'<div style="color: #fff; margin-top: 15px; font-size: 1.1em;">' +
+				(message || 'Loading...') +
+				'</div>' +
+				'</div>'
+			);
+			$('body').append($overlay);
 		}
 	};
 }(AspenDiscovery.Admin || {}));
@@ -9215,7 +9325,7 @@ AspenDiscovery.Axis360 = (function () {
 					dataType: 'json',
 					async: false,
 					error: function () {
-						alert("An error occurred processing your request in Boundless.  Please try again in a few minutes.");
+						alert(__('An error occurred processing your request in Boundless.  Please try again in a few minutes.'));
 						//alert("ajaxUrl = " + ajaxUrl);
 						AspenDiscovery.closeLightbox();
 					}
@@ -9269,7 +9379,7 @@ AspenDiscovery.Axis360 = (function () {
 				dataType: 'json',
 				async: true,
 				error: function () {
-					alert("An error occurred processing your request.  Please try again in a few minutes.");
+					alert(__('An error occurred processing your request.  Please try again in a few minutes.'));
 					AspenDiscovery.closeLightbox();
 					if (callback) callback(false);
 				}
@@ -9293,7 +9403,7 @@ AspenDiscovery.Axis360 = (function () {
 				dataType: 'json',
 				async: false,
 				error: function () {
-					alert("An error occurred processing your request in Boundless.  Please try again in a few minutes.");
+					alert(__('An error occurred processing your request in Boundless.  Please try again in a few minutes.'));
 					AspenDiscovery.closeLightbox();
 				}
 			});
@@ -10336,7 +10446,7 @@ AspenDiscovery.CloudLibrary = (function () {
 					dataType: 'json',
 					async: false,
 					error: function () {
-						alert("An error occurred processing your request in cloudLibrary.  Please try again in a few minutes.");
+						alert(__('An error occurred processing your request in cloudLibrary.  Please try again in a few minutes.'));
 						//alert("ajaxUrl = " + ajaxUrl);
 						AspenDiscovery.closeLightbox();
 					}
@@ -10387,7 +10497,7 @@ AspenDiscovery.CloudLibrary = (function () {
 				dataType: 'json',
 				async: true,
 				error: function () {
-					alert("An error occurred processing your request.  Please try again in a few minutes.");
+					alert(__('An error occurred processing your request.  Please try again in a few minutes.'));
 					AspenDiscovery.closeLightbox();
 					if (callback) callback(false);
 				}
@@ -10411,7 +10521,7 @@ AspenDiscovery.CloudLibrary = (function () {
 				dataType: 'json',
 				async: false,
 				error: function () {
-					alert("An error occurred processing your request in cloudLibrary.  Please try again in a few minutes.");
+					alert(__('An error occurred processing your request in cloudLibrary.  Please try again in a few minutes.'));
 					AspenDiscovery.closeLightbox();
 				}
 			});
@@ -10457,7 +10567,7 @@ AspenDiscovery.CloudLibrary = (function () {
 					dataType: 'json',
 					async: false,
 					error: function () {
-						alert("An error occurred processing your request.  Please try again in a few minutes.");
+						alert(__('An error occurred processing your request.  Please try again in a few minutes.'));
 						AspenDiscovery.closeLightbox();
 					}
 				});
@@ -10486,7 +10596,7 @@ AspenDiscovery.CloudLibrary = (function () {
 					dataType: 'json',
 					async: false,
 					error: function () {
-						alert("An error occurred processing your request.  Please try again in a few minutes.");
+						alert(__('An error occurred processing your request.  Please try again in a few minutes.'));
 						AspenDiscovery.closeLightbox();
 					}
 				});
@@ -11956,9 +12066,20 @@ AspenDiscovery.Events = (function(){
 				setTimeout(function() { cell.css('background-color', ''); }, 1200);
 				checkbox.prop('checked', !attended);
 			});
+		},
+
+		lessEventDates: function() {
+			document.getElementById("moreEventDates").style.display = "block";
+			document.getElementById("narrowGroupHidden_eventDates").style.display = "none";
+		},
+
+		moreEventDates: function() {
+			document.getElementById("moreEventDates").style.display = "none";
+			document.getElementById("narrowGroupHidden_eventDates").style.display = "block";
 		}
 	};
 }(AspenDiscovery.Events || {}));
+
 /* global Swiper, $ */
 AspenDiscovery.HeroSlider = (function(){
 	return {
@@ -12303,7 +12424,7 @@ AspenDiscovery.GroupedWork = (function(){
 		},
 
 		deleteReview: function(id, reviewId){
-			if (confirm("Are you sure you want to delete this review?")){
+			if (confirm(__('Are you sure you want to delete this review?'))){
 				var url = Globals.path + '/GroupedWork/' + id + '/AJAX?method=deleteUserReview';
 				$.getJSON(url, function(data){
 					if (data.result === true){
@@ -12372,9 +12493,17 @@ AspenDiscovery.GroupedWork = (function(){
 			);
 		},
 
-		loadDescription: function (id){
-			var url = Globals.path + '/GroupedWork/' + id + '/AJAX?method=getDescription';
-			$.getJSON(url, function (data){
+		loadDescription: function (id, recordType, recordId){
+			console.log("BEGIN");
+			console.log(recordType);
+			console.log(recordId);
+			var url = Globals.path + '/GroupedWork/' + id + '/AJAX',
+				params = {'method':'getDescription'};
+			if (recordType && recordId) {
+				params['recordType'] = recordType;
+				params['recordId'] = recordId;
+			}
+			$.getJSON(url, params, function (data){
 					if (data.success){
 						$("#descriptionPlaceholder").html(data.description);
 					}
@@ -12805,6 +12934,26 @@ AspenDiscovery.GroupedWork = (function(){
 			if (Globals.loggedIn){
 				AspenDiscovery.loadingMessage();
 				var url = Globals.path + "/GroupedWork/" + id + "/AJAX?method=getGroupWithSearchForm&searchId=" + searchId + "&page=" + page;
+				$.getJSON(url, function(data){
+					if (data.success){
+						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
+					}else{
+						AspenDiscovery.showMessage("An error occurred", data.message);
+					}
+
+				}).fail(AspenDiscovery.ajaxFail);
+			}else{
+				AspenDiscovery.Account.ajaxLogin($(trigger), function (){
+					AspenDiscovery.GroupedWork.getGroupWithForm(id);
+				});
+			}
+			return false;
+		},
+
+		getGroupWithSeriesPageForm: function (trigger, id, seriesId) {
+			if (Globals.loggedIn){
+				AspenDiscovery.loadingMessage();
+				var url = Globals.path + "/GroupedWork/" + id + "/AJAX?method=getGroupWithSeriesPageForm&seriesId=" + seriesId;
 				$.getJSON(url, function(data){
 					if (data.success){
 						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
@@ -13648,7 +13797,7 @@ AspenDiscovery.Lists = (function () {
 		},
 
 		importListsFromClassic: function () {
-			AspenDiscovery.confirm("Import Lists?", "This will import any lists you had defined in the old catalog.  This may take several minutes depending on the size of your lists. Are you sure you want to continue?", "Yes", "No", true, "AspenDiscovery.Lists.doImportListsFromClassic()");
+			AspenDiscovery.confirm(__('Import Lists?'), __('This will import any lists you had defined in the old catalog.  This may take several minutes depending on the size of your lists. Are you sure you want to continue?'), __('Yes'), __('No'), false, "AspenDiscovery.Lists.doImportListsFromClassic()");
 			return false;
 		},
 		doImportListsFromClassic: function () {
@@ -14054,13 +14203,13 @@ AspenDiscovery.MaterialsRequest = (function(){
 		authorLabels: undefined,
 
 		cancelMaterialsRequest: function(id){
-			if (confirm("Are you sure you want to cancel this request?")){
+			if (confirm(__('Are you sure you want to cancel this request?'))){
 				var url = Globals.path + "/MaterialsRequest/AJAX?method=cancelRequest&id=" + id;
 				$.getJSON(
 						url,
 						function(data){
 							if (data.success){
-								alert("Your request was cancelled successfully.");
+								alert(__('Your request was cancelled successfully.'));
 								window.location.reload();
 							}else{
 								alert(data.error);
@@ -14094,7 +14243,7 @@ AspenDiscovery.MaterialsRequest = (function(){
 			var newStatus = $("#newStatus").val();
 			var newAssignee = $("#newAssignee").val();
 			if (newAssignee === "unselected" && newStatus === "unselected"){
-				alert("Please select a new assignee and/or status to update.");
+				alert(__('Please select a new assignee and/or status to update.'));
 				return false;
 			}
 			var selectedRequests = this.getSelectedRequests(false);
@@ -14114,7 +14263,7 @@ AspenDiscovery.MaterialsRequest = (function(){
 			console.log(selectedRequests);
 			if (selectedRequests.length === 0){
 				if (promptToSelectAll){
-					var ret = confirm('You have not selected any requests, process all requests?');
+					var ret = confirm(__('You have not selected any requests, process all requests?'));
 					if (ret === true){
 						selectedRequests = $("input.select").map(function() {
 							return $(this).attr('name') + "=on";
@@ -14122,7 +14271,7 @@ AspenDiscovery.MaterialsRequest = (function(){
 						$('.select').attr('checked', 'checked');
 					}
 				}else{
-					alert("Please select one or more requests to update");
+					alert(__('Please select one or more requests to update'));
 				}
 			}
 			return selectedRequests;
@@ -14317,15 +14466,15 @@ AspenDiscovery.MaterialsRequest = (function(){
 
 		validateManageRequestFilters: function () {
 			if ($('.statusFilter:checked').length === 0) {
-				alert("You must select at least one status to view.");
+				alert(__('You must select at least one status to view.'));
 				return false;
 			}
 			if ($('.formatFilter:checked').length === 0) {
-				alert("You must select at least one format to view.");
+				alert(__('You must select at least one format to view.'));
 				return false;
 			}
 			if ($('.assigneesFilter:checked').length === 0 && $('#showUnassigned:checked').length === 0) {
-				alert("You must select at least one assignee to view.");
+				alert(__('You must select at least one assignee to view.'));
 				return false;
 			}
 			return true;
@@ -14378,7 +14527,7 @@ AspenDiscovery.MaterialsRequest = (function(){
 			var newStatus = $("#newStatus").val();
 			var newAssignee = $("#newAssignee").val();
 			if (newAssignee === "unselected" && newStatus === "unselected"){
-				alert("Please select a new assignee and/or status to update.");
+				alert(__('Please select a new assignee and/or status to update.'));
 				return false;
 			}
 			var selectedRequests = this.getSelectedRequests(false, 'selectedObject');
@@ -14414,7 +14563,7 @@ AspenDiscovery.OverDrive = (function(){
 	// noinspection JSUnusedGlobalSymbols
 	return {
 		cancelOverDriveHold: function(patronId, overdriveId){
-			if (confirm("Are you sure you want to cancel this hold?")){
+			if (confirm(__('Are you sure you want to cancel this hold?'))){
 				var ajaxUrl = Globals.path + "/OverDrive/AJAX?method=cancelHold&patronId=" + patronId + "&overDriveId=" + overdriveId;
 				$.ajax({
 					url: ajaxUrl,
@@ -14691,7 +14840,7 @@ AspenDiscovery.OverDrive = (function(){
 		},
 
 		returnCheckout: function (patronId, overDriveId){
-			if (confirm('Are you sure you want to return this title?')){
+			if (confirm(__('Are you sure you want to return this title?'))){
 				AspenDiscovery.showMessage("Returning Title", "Returning your title in OverDrive.  This may take a minute.");
 				var ajaxUrl = Globals.path + "/OverDrive/AJAX?method=returnCheckout&patronId=" + patronId + "&overDriveId=" + overDriveId;
 				$.ajax({
@@ -14855,7 +15004,7 @@ AspenDiscovery.Hoopla = (function(){
 
 		returnCheckout(patronId, hooplaId) {
 			if (Globals.loggedIn) {
-				if (confirm('Are you sure you want to return this title?')) {
+				if (confirm(__('Are you sure you want to return this title?'))) {
 					AspenDiscovery.showMessage("Returning Title", "Returning your title in Hoopla.");
 					const url = Globals.path + "/Hoopla/" + hooplaId + "/AJAX",
 						params = {
@@ -14965,7 +15114,7 @@ AspenDiscovery.Hoopla = (function(){
 		},
 
 		cancelHold: function(patronId, recordId) {
-			if (confirm('Are you sure you want to cancel this hold?')) {
+			if (confirm(__('Are you sure you want to cancel this hold?'))) {
 				var url = Globals.path + "/Hoopla/AJAX?method=cancelHold&patronId=" + patronId + "&recordId=" + recordId;
 				$.ajax({
 					url: url,
@@ -15284,11 +15433,11 @@ AspenDiscovery.Account.ReadingHistory = (function(){
 
 		deleteEntry(patronId, id) {
 			AspenDiscovery.confirm(
-				'Delete Reading History Entry',
-				'The item will be irreversibly deleted from your reading history. Proceed?',
-				'Delete',
-				'Cancel',
-				true,
+				__('Delete Reading History Entry'),
+				__('The item will be irreversibly deleted from your reading history. Proceed?'),
+				__('Delete'),
+				__('Cancel'),
+				false,
 				`AspenDiscovery.Account.ReadingHistory.doDeleteEntry(${patronId}, ${id})`,
 				'btn-danger'
 			);
@@ -15321,11 +15470,11 @@ AspenDiscovery.Account.ReadingHistory = (function(){
 
 		deleteGroupedEntry(patronId, groupedWorkPermanentId, title, author, displayId) {
 			AspenDiscovery.confirm(
-				'Delete Reading History Entry',
-				'All checkout records for this title will be irreversibly deleted from your reading history. Proceed?',
-				'Delete',
-				'Cancel',
-				true,
+				__('Delete Reading History Entry'),
+				__('All checkout records for this title will be irreversibly deleted from your reading history. Proceed?'),
+				__('Delete'),
+				__('Cancel'),
+				false,
 				`AspenDiscovery.Account.ReadingHistory.doDeleteGroupedEntry(&quot;${patronId}&quot;, &quot;${groupedWorkPermanentId}&quot;, &quot;${title}&quot;, &quot;${author}&quot;, &quot;${displayId}&quot;)`,
 				'btn-danger'
 			);
@@ -15361,11 +15510,11 @@ AspenDiscovery.Account.ReadingHistory = (function(){
 
 		deleteIndividualEntry(patronId, entryId, groupId) {
 			AspenDiscovery.confirm(
-				'Delete Checkout Record',
-				'This checkout record will be irreversibly deleted from your reading history. Proceed?',
-				'Delete',
-				'Cancel',
-				true,
+				__('Delete Checkout Record'),
+				__('This checkout record will be irreversibly deleted from your reading history. Proceed?'),
+				__('Delete'),
+				__('Cancel'),
+				false,
 				`AspenDiscovery.Account.ReadingHistory.doDeleteIndividualEntry(&quot;${patronId}&quot;, &quot;${entryId}&quot;, &quot;${groupId}&quot;)`,
 				'btn-danger'
 			);
@@ -15417,16 +15566,16 @@ AspenDiscovery.Account.ReadingHistory = (function(){
 		deleteSelectedAction() {
 			const selectedItems = $('.titleSelect:checked');
 			if (selectedItems.length === 0) {
-				AspenDiscovery.showMessageWithButtons('Failed to Delete Reading History Entries', 'Please select one or more items to delete.', '', false, '', false, false, false);
+				AspenDiscovery.showMessageWithButtons(__('Failed to Delete Reading History Entries'), __('Please select one or more items to delete.'), '', false, '', false, false, false);
 				return false;
 			}
 
 			AspenDiscovery.confirm(
-				'Delete Selected Items',
-				`You have selected ${selectedItems.length} item(s) to delete from your reading history. This action is irreversible. Proceed?`,
-				'Delete',
-				'Cancel',
-				true,
+				__('Delete Selected Items'),
+				__('You have selected {count} item(s) to delete from your reading history. This action is irreversible. Proceed?', { count: selectedItems.length }),
+				__('Delete'),
+				__('Cancel'),
+				false,
 				'AspenDiscovery.Account.ReadingHistory.doDeleteSelected()',
 				'btn-danger'
 			);
@@ -15469,11 +15618,11 @@ AspenDiscovery.Account.ReadingHistory = (function(){
 
 		deleteAllAction() {
 			AspenDiscovery.confirm(
-				'Delete All Reading History',
-				'Your entire reading history will be irreversibly deleted. Proceed?',
-				'Delete All',
-				'Cancel',
-				true,
+				__('Delete All Reading History'),
+				__('Your entire reading history will be irreversibly deleted. Proceed?'),
+				__('Delete All'),
+				__('Cancel'),
+				false,
 				'AspenDiscovery.Account.ReadingHistory.doDeleteAllAction()',
 				'btn-danger'
 			);
@@ -15488,11 +15637,11 @@ AspenDiscovery.Account.ReadingHistory = (function(){
 
 		optOutAction() {
 			AspenDiscovery.confirm(
-				'Opt Out of Reading History',
-				'Opting out of Reading History will also delete your entire reading history irreversibly. Proceed?',
-				'Opt Out',
-				'Cancel',
-				true,
+				__('Opt Out of Reading History'),
+				__('Opting out of Reading History will also delete your entire reading history irreversibly. Proceed?'),
+				__('Opt Out'),
+				__('Cancel'),
+				false,
 				'AspenDiscovery.Account.ReadingHistory.doOptOutAction()',
 				'btn-danger'
 			);
@@ -15726,59 +15875,6 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		showVdxRequest: function (module, source, id) {
-			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getVdxRequestForm&recordSource=" + source;
-				$.getJSON(url, function (data) {
-					document.body.style.cursor = "default";
-					if (data.success) {
-						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message);
-					}
-				}).fail(AspenDiscovery.ajaxFail);
-			} else {
-				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showVdxRequest(module, source, id);
-				}, false);
-			}
-			return false;
-		},
-
-		submitVdxRequest: function (module, id) {
-			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var params = {
-					'method': 'submitVdxRequest',
-					title: $('#title').val(),
-					author: $('#author').val(),
-					publisher: $('#publisher').val(),
-					isbn: $('#isbn').val(),
-					oclcNumber: $('#oclcNumber').val(),
-					maximumFeeAmount: $('#maximumFeeAmount').val(),
-					acceptFee: $('#acceptFee').prop('checked'),
-					pickupLocation: $('#pickupLocationSelect').val(),
-					catalogKey: $('#catalogKey').val(),
-					note: $('#note').val()
-				};
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitVdxRequest";
-				$.getJSON(url, params, function (data) {
-					document.body.style.cursor = "default";
-					if (data.success) {
-						AspenDiscovery.showMessage(data.title, data.message, false, false);
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message, false, false);
-					}
-				}).fail(AspenDiscovery.ajaxFail);
-			} else {
-				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showVdxRequest(module, source, id, volume);
-				}, false);
-			}
-			return false;
-		},
-
 		showLocalIllRequest: function (module, source, id, volume) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
@@ -15808,7 +15904,7 @@ AspenDiscovery.Record = (function () {
 				var acceptFeeField = $('#acceptFee');
 				if (acceptFeeField !== undefined && acceptFeeField.prop("required")) {
 					if (!acceptFeeField.prop('checked')) {
-						alert("You must agree to pay any fees associated with this requests before continuing.");
+						alert(__('You must agree to pay any fees associated with this requests before continuing.'));
 						return false;
 					}
 				}
@@ -15946,6 +16042,7 @@ AspenDiscovery.Record = (function () {
 			const variationId = $('#variationId');
 			const pickupSublocation = $('#pickupSublocation');
 			const cancelDateInput = $('#cancelDate');
+			const numberOfCopies = $('#numberOfCopies');
 			let params = {
 				'method': 'placeHold',
 				pickupBranch: $('#pickupBranch').val(),
@@ -15957,7 +16054,7 @@ AspenDiscovery.Record = (function () {
 				rememberHoldPickupLocation: $('#rememberHoldPickupLocation').prop('checked'),
 				promptForEdition: $('#holdPromptForEditions').val(),
 				freezeHoldImmediately: $('#freezeHoldImmediately').prop('checked'),
-				reactivationDate: $('#reactivationDate').val()
+				reactivationDate: $('#reactivationDate').val(),
 			};
 			if (autoLogOut) {
 				params['autologout'] = true;
@@ -15972,19 +16069,22 @@ AspenDiscovery.Record = (function () {
 				params['variationId'] = variationId.val();
 			}
 			if (params['pickupBranch'] === 'undefined') {
-				alert("Please select a location to pick up your hold when it is ready.");
+				alert(__('Please select a location to pick up your hold when it is ready.'));
 				return false;
+			}
+			if (numberOfCopies.length > 0) {
+				params['numberOfCopies'] = numberOfCopies.val();
 			}
 			const holdType = $('#holdType');
 			if (holdType.length > 0) {
 				params['holdType'] = holdType.val();
 				if (holdType.val() === 'item' && selectedItem.val().length === 0) {
-					alert("Please select an item to place your hold on");
+					alert(__('Please select an item to place your hold on'));
 					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
 					return false;
 				} else if (holdType.val() === 'volume' && volume.val().length === 0) {
-					alert("Please select a volume to place your hold on");
+					alert(__('Please select a volume to place your hold on'));
 					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
 					return false;
@@ -15995,7 +16095,7 @@ AspenDiscovery.Record = (function () {
 				} else {
 					params['holdType'] = 'item';
 					if (selectedItem.val().length === 0) {
-						alert("Please select an item to place your hold on");
+						alert(__('Please select an item to place your hold on'));
 						AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 						document.body.style.cursor = "pointer";
 						return false;
@@ -16165,7 +16265,7 @@ AspenDiscovery.Record = (function () {
 				params['volume'] = selectedVolume;
 			}
 			if (params['pickupBranch'] === 'undefined') {
-				alert("Please select a location to pick up your hold when it is ready.");
+				alert(__('Please select a location to pick up your hold when it is ready.'));
 				this.volumeHoldInProgress = false;
 				AspenDiscovery.toggleButtonSpinner(button, false);
 				return false;
@@ -16288,7 +16388,7 @@ AspenDiscovery.Record = (function () {
 		},
 
 		deleteUploadedFile: function (id, fileId) {
-			if (confirm("Are you sure you want to delete this file?")) {
+			if (confirm(__('Are you sure you want to delete this file?'))) {
 				var url = Globals.path + '/Record/' + id + '/AJAX?method=deleteUploadedFile&fileId=' + fileId;
 				$.getJSON(url, function (data) {
 					AspenDiscovery.showMessage(data.title, data.message, true, data.success);
@@ -17372,6 +17472,31 @@ AspenDiscovery.Series = (function(){
 			window.location.href = "/Series/AdministerSeries?objectAction=edit&id=" + seriesId;
 			return false;
 		},
+		getGroupSeriesSearchForm: function (trigger, id, searchId, page) {
+			AspenDiscovery.loadingMessage();
+			var url = Globals.path + "/Series/" + id + "/AJAX?method=getGroupSeriesSearchForm&searchId=" + searchId + "&page=" + page;
+			$.getJSON(url, function(data){
+				if (data.success){
+					AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
+				}else{
+					AspenDiscovery.showMessage("An error occurred", data.message);
+				}
+			}).fail(AspenDiscovery.ajaxFail);
+			return false;
+		},
+		processGroupSeriesForm: function() {
+			var id = $('#id').val();
+			var groupSeriesId = $('#seriesToGroupWithId').val().trim();
+			var url = Globals.path + "/Series/" + id + "/AJAX?method=processGroupSeriesForm&groupSeriesId=" + groupSeriesId;
+			//AspenDiscovery.closeLightbox();
+			$.getJSON(url, function(data){
+				if (data.success){
+					AspenDiscovery.showMessage("Success", data.message, true, false);
+				}else{
+					AspenDiscovery.showMessage("An error occurred", data.message, false, false);
+				}
+			}).fail(AspenDiscovery.ajaxFail);
+		},
 		emailAction: function (seriesId) {
 			var urlToDisplay = Globals.path + '/Series/AJAX';
 			AspenDiscovery.loadingMessage();
@@ -17408,8 +17533,19 @@ AspenDiscovery.Series = (function(){
 		printAction: function (){
 			window.print();
 			return false;
-		}
+		},
 
+		ungroupSeries(id, groupedWithSeriesId) {
+			var url = Globals.path + "/Series/" + id + "/AJAX?method=ungroupSeries&groupedWithSeriesId=" + groupedWithSeriesId;
+			//AspenDiscovery.closeLightbox();
+			$.getJSON(url, function(data){
+				if (data.success){
+					AspenDiscovery.showMessage("Success", data.message, false, true);
+				}else{
+					AspenDiscovery.showMessage("An error occurred", data.message, false, false);
+				}
+			}).fail(AspenDiscovery.ajaxFail);
+		}
 	};
 }(AspenDiscovery.Series || {}));
 AspenDiscovery.SideLoads = (() => {
@@ -17422,11 +17558,11 @@ AspenDiscovery.SideLoads = (() => {
 			 */
 			const fileNameHtmlSafe = fileName.replace(/'/g, "&#39;");
 			AspenDiscovery.confirm(
-				'Confirm Delete',
-				`Are you sure you want to delete this <strong>${fileName}</strong>?`,
-				'Delete',
-				'Cancel',
-				true,
+				__('Confirm Delete'),
+				__('Are you sure you want to delete this {fileName}?', { fileName: '<strong>' + fileName + '</strong>' }),
+				__('Delete'),
+				__('Cancel'),
+				false,
 				`AspenDiscovery.closeLightbox();AspenDiscovery.SideLoads.doDeleteMarc(${sideLoadId}, \"${fileNameHtmlSafe}\", ${fileIndex});`,
 				'btn-danger'
 			);
@@ -17445,7 +17581,7 @@ AspenDiscovery.SideLoads = (() => {
 				if (success){
 					$("#file" + fileIndex).hide();
 				} else {
-					AspenDiscovery.showMessage('Delete Failed', message, false);
+					AspenDiscovery.showMessage(__('Delete Failed'), message, false);
 				}
 			}).fail(AspenDiscovery.ajaxFail);
 
@@ -18136,7 +18272,7 @@ AspenDiscovery.WebBuilder = function () {
 		},
 
 		deleteCell(id) {
-			AspenDiscovery.confirm('Delete Cell', `Are you sure you want to delete this cell (ID: ${id})?`, 'Delete', 'Cancel', true, `AspenDiscovery.WebBuilder.deleteCellConfirmed("${id}")`, 'btn-danger');
+			AspenDiscovery.confirm(__('Delete Cell'), __('Are you sure you want to delete this cell (ID: {id})?', { id: id }), __('Delete'), __('Cancel'), false, `AspenDiscovery.WebBuilder.deleteCellConfirmed("${id}")`, 'btn-danger');
 			return false;
 		},
 
@@ -18163,7 +18299,7 @@ AspenDiscovery.WebBuilder = function () {
 		},
 
 		deleteRow(id) {
-			AspenDiscovery.confirm('Delete Row', `Are you sure you want to delete this row (ID: ${id})?`, 'Delete', 'Cancel', true, `AspenDiscovery.WebBuilder.deleteRowConfirmed("${id}")`, 'btn-danger');
+			AspenDiscovery.confirm(__('Delete Row'), __('Are you sure you want to delete this row (ID: {id})?', { id: id }), __('Delete'), __('Cancel'), false, `AspenDiscovery.WebBuilder.deleteRowConfirmed("${id}")`, 'btn-danger');
 			return false;
 		},
 
@@ -18742,7 +18878,7 @@ AspenDiscovery.PalaceProject = (function () {
 				dataType: 'json',
 				async: true,
 				error: function () {
-					alert("An error occurred processing your request.  Please try again in a few minutes.");
+					alert(__('An error occurred processing your request.  Please try again in a few minutes.'));
 					AspenDiscovery.closeLightbox();
 					if (callback) callback(false);
 				}
@@ -18789,7 +18925,7 @@ AspenDiscovery.PalaceProject = (function () {
 					dataType: 'json',
 					async: false,
 					error: function () {
-						alert("An error occurred processing your request in Palace Project.  Please try again in a few minutes.");
+						alert(__('An error occurred processing your request in Palace Project.  Please try again in a few minutes.'));
 						//alert("ajaxUrl = " + ajaxUrl);
 						AspenDiscovery.closeLightbox();
 					}
@@ -18861,7 +18997,7 @@ AspenDiscovery.PalaceProject = (function () {
 				dataType: 'json',
 				async: false,
 				error: function () {
-					alert("An error occurred processing your request in Palace Project.  Please try again in a few minutes.");
+					alert(__('An error occurred processing your request in Palace Project.  Please try again in a few minutes.'));
 					AspenDiscovery.closeLightbox();
 				}
 			});
@@ -19685,7 +19821,7 @@ AspenDiscovery.CommunityEngagement = function() {
 					}
 				},
 				error: function () {
-					alert('Error communicating with server.');
+					alert(__('Error communicating with server.'));
 				}
 			});
 		},

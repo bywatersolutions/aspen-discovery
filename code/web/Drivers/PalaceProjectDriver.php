@@ -359,7 +359,7 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 		return $this->holds[$patron->id];
 	}
 
-	function placeHold(User $patron, $recordId, $pickupBranch = null, $cancelDate = null) : array {
+	function placeHold(User $patron, mixed $recordId, $pickupBranch = null, $cancelDate = null) : array {
 		$result = [
 			'success' => false,
 			'message' => translate([
@@ -705,7 +705,7 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 							'isPublicFacing' => true,
 						]);
 						$result['checkedOut'] = false;
-						$this->incrementStat('numHolds');
+						$this->incrementStat('numHoldsPlaced');
 						$this->trackRecordHold($titleId);
 					}
 
@@ -916,6 +916,7 @@ class PalaceProjectDriver extends AbstractEContentDriver {
 		$palaceProjectStats->instance = $aspenUsage->getInstance();
 		$palaceProjectStats->year = date('Y');
 		$palaceProjectStats->month = date('n');
+		$palaceProjectStats->day = date('d');
 		if ($palaceProjectStats->find(true)) {
 			$palaceProjectStats->$fieldName++;
 			$palaceProjectStats->update();

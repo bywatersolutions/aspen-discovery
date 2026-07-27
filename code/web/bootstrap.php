@@ -45,6 +45,7 @@ global $serverName;
 $aspenUsage = new AspenUsage();
 $aspenUsage->year = date('Y');
 $aspenUsage->month = date('n');
+$aspenUsage->day = date('d');
 
 global $errorHandlingEnabled;
 $errorHandlingEnabled = 0;
@@ -339,7 +340,9 @@ function loadLibraryAndLocation() {
 	$branch = $locationSingleton->getBranchLocationCode();
 	if (!isset($_COOKIE['branch']) || $branch != $_COOKIE['branch']) {
 		if ($branch == '') {
-			setcookie('branch', $branch, time() - 1000, '/');
+			if (!empty($_COOKIE['branch'])) {
+				setcookie('branch', $branch, time() - 1000, '/');
+			}
 		} else {
 			setcookie('branch', $branch, 0, '/');
 		}
@@ -349,7 +352,9 @@ function loadLibraryAndLocation() {
 	$subLocation = $locationSingleton->getSublocationCode();
 	if (!isset($_COOKIE['sublocation']) || $subLocation != $_COOKIE['sublocation']) {
 		if (empty($subLocation)) {
-			setcookie('sublocation', $subLocation, time() - 1000, '/');
+			if (!empty($_COOKIE['sublocation'])) {
+				setcookie('sublocation', $subLocation, time() - 1000, '/');
+			}
 		} else {
 			setcookie('sublocation', $subLocation, 0, '/');
 		}

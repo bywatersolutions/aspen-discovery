@@ -781,7 +781,7 @@ class Polaris extends AbstractIlsDriver {
 		return $holds;
 	}
 
-	function placeHold(User $patron, $recordId, $pickupBranch = null, $cancelDate = null, $pickupSublocation = null) : array {
+	function placeHold(User $patron, mixed $recordId, ?string $pickupBranch = null, ?string $cancelDate = null, ?string $pickupSublocation = null, ?int $numberOfCopies = 1) : array {
 		return $this->placeItemHold($patron, $recordId, null, $pickupBranch, $cancelDate, $pickupSublocation);
 	}
 
@@ -1167,6 +1167,11 @@ class Polaris extends AbstractIlsDriver {
 				$user->firstname = $firstName;
 				$forceDisplayNameUpdate = true;
 			}
+			$middleName = isset($patronBasicData->NameMiddle) ? $patronBasicData->NameMiddle : '';
+			if ($user->middlename != $middleName) {
+				$user->middlename = $middleName;
+				$forceDisplayNameUpdate = true;
+			}
 			$lastName = isset($patronBasicData->NameLast) ? $patronBasicData->NameLast : '';
 			if ($user->lastname != $lastName) {
 				$user->lastname = isset($lastName) ? $lastName : '';
@@ -1212,8 +1217,7 @@ class Polaris extends AbstractIlsDriver {
 				if (!$location->find(true)) {
 					$location = null;
 				}
-
-				if (empty($user->homeLocationId) || (isset($location) && $user->homeLocationId != $location->locationId)) { // When homeLocation isn't set or has changed
+				if (empty($user->homeLocationId) || (isset($location) && $user->homeLocationId != $location->locationId) || $user->pickupLocationId != $patronBasicData->RequestPickupBranchID) { // When homeLocation isn't set or has changed
 					if (empty($user->homeLocationId) && !isset($location)) {
 						// homeBranch Code not found in location table and the user doesn't have an assigned homelocation,
 						// try to find the main branch to assign to user
@@ -1256,9 +1260,20 @@ class Polaris extends AbstractIlsDriver {
 							}
 						}
 
-						if ($homeLocationChanged) {
+						if ($homeLocationChanged || $user->pickupLocationId != $patronBasicData->RequestPickupBranchID) {
 							//reset the patrons preferred pickup location to their new home library
-							$user->setPickupLocationId($user->homeLocationId);
+							//unless we get preferred pickup location from api response
+							if (isset($patronBasicData->RequestPickupBranchID)) {
+								$pickupLocation = new Location();
+								$pickupLocation->code = $patronBasicData->RequestPickupBranchID;
+								if ($pickupLocation->find(true)) {
+									$user->setPickupLocationId($pickupLocation->locationId);
+								} else {
+									$user->setPickupLocationId($user->homeLocationId);
+								}
+							} else {
+								$user->setPickupLocationId($user->homeLocationId);
+							}
 							$user->setRememberHoldPickupLocation(0);
 						}
 					}
@@ -1842,6 +1857,35 @@ class Polaris extends AbstractIlsDriver {
 		return $result;
 	}
 
+	function updatePreferredPickupLocation($patron, $pickupLocation, $fromMasquerade): bool {
+		$staffInfo = $this->getStaffUserInfo();
+		$polarisUrl = "/PAPIService/REST/public/v1/1033/100/1/patron/{$patron->getBarcode()}";
+		$body = new stdClass();
+		$body->LogonBranchID = $patron->getHomeLocationCode();
+		$body->LogonUserID = (string)$staffInfo['polarisId'];
+		$body->LogonWorkstationID = $this->getWorkstationID($patron);
+
+		//User the patron's home library rather than the active library just in case they are on the wrong interface
+		$library = $patron->getHomeLibrary();
+		$this->setupBodyForSelfRegAndPatronUpdateCall('patronUpdate', $body, $library);
+
+		// Update Preferred Pickup Location
+		if (!empty($pickupLocation)) {
+			$homeLibraryLocation = new Location();
+			if ($homeLibraryLocation->get('locationId', $pickupLocation)) {
+				$homeBranchCode = strtoupper($homeLibraryLocation->code);
+				$body->RequestPickupBranchID = $homeBranchCode;
+			}
+		}
+		$encodedBody = json_encode($body);
+		$response = $this->getWebServiceResponse($polarisUrl, 'PUT', $this->getAccessToken($patron->getBarcode(), $patron->getPasswordOrPin()), $encodedBody, $fromMasquerade || UserAccount::isUserMasquerading());
+		ExternalRequestLogEntry::logRequest('polaris.updatePatronInfo', 'PUT', $this->getWebServiceURL() . $polarisUrl, $this->apiCurlWrapper->getHeaders(), $encodedBody, $this->lastResponseCode, $response, []);
+		if ($response && $this->lastResponseCode == 200) {
+			return true;
+		}
+		return false;
+	}
+
 	function updatePin(User $patron, ?string $oldPin, string $newPin) {
 		if ($patron->ils_password != $oldPin && $patron->cat_password != $oldPin) {
 			return [
@@ -2401,8 +2445,8 @@ class Polaris extends AbstractIlsDriver {
 		if ($basicDataResponse != null) {
 			$user->branchcode = $user->getHomeLocationCode();
 			$user->firstName = $basicDataResponse->NameFirst;
+			$user->middleName = $user->middlename = $basicDataResponse->NameMiddle;
 			$user->lastName = $basicDataResponse->NameLast;
-			$user->middleName = $basicDataResponse->NameMiddle;
 			if (count($basicDataResponse->PatronAddresses) > 0) {
 				$address = reset($basicDataResponse->PatronAddresses);
 				$user->zipcode = $address->PostalCode;

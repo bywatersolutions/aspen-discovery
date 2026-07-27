@@ -58,59 +58,6 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		showVdxRequest: function (module, source, id) {
-			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getVdxRequestForm&recordSource=" + source;
-				$.getJSON(url, function (data) {
-					document.body.style.cursor = "default";
-					if (data.success) {
-						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message);
-					}
-				}).fail(AspenDiscovery.ajaxFail);
-			} else {
-				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showVdxRequest(module, source, id);
-				}, false);
-			}
-			return false;
-		},
-
-		submitVdxRequest: function (module, id) {
-			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var params = {
-					'method': 'submitVdxRequest',
-					title: $('#title').val(),
-					author: $('#author').val(),
-					publisher: $('#publisher').val(),
-					isbn: $('#isbn').val(),
-					oclcNumber: $('#oclcNumber').val(),
-					maximumFeeAmount: $('#maximumFeeAmount').val(),
-					acceptFee: $('#acceptFee').prop('checked'),
-					pickupLocation: $('#pickupLocationSelect').val(),
-					catalogKey: $('#catalogKey').val(),
-					note: $('#note').val()
-				};
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitVdxRequest";
-				$.getJSON(url, params, function (data) {
-					document.body.style.cursor = "default";
-					if (data.success) {
-						AspenDiscovery.showMessage(data.title, data.message, false, false);
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message, false, false);
-					}
-				}).fail(AspenDiscovery.ajaxFail);
-			} else {
-				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showVdxRequest(module, source, id, volume);
-				}, false);
-			}
-			return false;
-		},
-
 		showLocalIllRequest: function (module, source, id, volume) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
@@ -140,7 +87,7 @@ AspenDiscovery.Record = (function () {
 				var acceptFeeField = $('#acceptFee');
 				if (acceptFeeField !== undefined && acceptFeeField.prop("required")) {
 					if (!acceptFeeField.prop('checked')) {
-						alert("You must agree to pay any fees associated with this requests before continuing.");
+						alert(__('You must agree to pay any fees associated with this requests before continuing.'));
 						return false;
 					}
 				}
@@ -278,6 +225,7 @@ AspenDiscovery.Record = (function () {
 			const variationId = $('#variationId');
 			const pickupSublocation = $('#pickupSublocation');
 			const cancelDateInput = $('#cancelDate');
+			const numberOfCopies = $('#numberOfCopies');
 			let params = {
 				'method': 'placeHold',
 				pickupBranch: $('#pickupBranch').val(),
@@ -289,7 +237,7 @@ AspenDiscovery.Record = (function () {
 				rememberHoldPickupLocation: $('#rememberHoldPickupLocation').prop('checked'),
 				promptForEdition: $('#holdPromptForEditions').val(),
 				freezeHoldImmediately: $('#freezeHoldImmediately').prop('checked'),
-				reactivationDate: $('#reactivationDate').val()
+				reactivationDate: $('#reactivationDate').val(),
 			};
 			if (autoLogOut) {
 				params['autologout'] = true;
@@ -304,19 +252,22 @@ AspenDiscovery.Record = (function () {
 				params['variationId'] = variationId.val();
 			}
 			if (params['pickupBranch'] === 'undefined') {
-				alert("Please select a location to pick up your hold when it is ready.");
+				alert(__('Please select a location to pick up your hold when it is ready.'));
 				return false;
+			}
+			if (numberOfCopies.length > 0) {
+				params['numberOfCopies'] = numberOfCopies.val();
 			}
 			const holdType = $('#holdType');
 			if (holdType.length > 0) {
 				params['holdType'] = holdType.val();
 				if (holdType.val() === 'item' && selectedItem.val().length === 0) {
-					alert("Please select an item to place your hold on");
+					alert(__('Please select an item to place your hold on'));
 					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
 					return false;
 				} else if (holdType.val() === 'volume' && volume.val().length === 0) {
-					alert("Please select a volume to place your hold on");
+					alert(__('Please select a volume to place your hold on'));
 					AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 					document.body.style.cursor = "pointer";
 					return false;
@@ -327,7 +278,7 @@ AspenDiscovery.Record = (function () {
 				} else {
 					params['holdType'] = 'item';
 					if (selectedItem.val().length === 0) {
-						alert("Please select an item to place your hold on");
+						alert(__('Please select an item to place your hold on'));
 						AspenDiscovery.toggleButtonSpinner(requestTitleButton, false);
 						document.body.style.cursor = "pointer";
 						return false;
@@ -497,7 +448,7 @@ AspenDiscovery.Record = (function () {
 				params['volume'] = selectedVolume;
 			}
 			if (params['pickupBranch'] === 'undefined') {
-				alert("Please select a location to pick up your hold when it is ready.");
+				alert(__('Please select a location to pick up your hold when it is ready.'));
 				this.volumeHoldInProgress = false;
 				AspenDiscovery.toggleButtonSpinner(button, false);
 				return false;
@@ -620,7 +571,7 @@ AspenDiscovery.Record = (function () {
 		},
 
 		deleteUploadedFile: function (id, fileId) {
-			if (confirm("Are you sure you want to delete this file?")) {
+			if (confirm(__('Are you sure you want to delete this file?'))) {
 				var url = Globals.path + '/Record/' + id + '/AJAX?method=deleteUploadedFile&fileId=' + fileId;
 				$.getJSON(url, function (data) {
 					AspenDiscovery.showMessage(data.title, data.message, true, data.success);

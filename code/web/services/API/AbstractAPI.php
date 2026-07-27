@@ -154,18 +154,7 @@ abstract class AbstractAPI extends Action{
 			// Check if this is an OAuth2 authenticated request first
 			$oauthUser = OAuth2Middleware::getAuthenticatedUser();
 			if ($oauthUser) {
-				if (empty($_REQUEST['language'])) {
-					global $activeLanguage;
-					global $translator;
-					$userLanguage = new Language();
-					$userLanguage->code = $oauthUser->interfaceLanguage;
-					if ($userLanguage->find(true)) {
-						if ($userLanguage->code != $activeLanguage->code) {
-							$activeLanguage = $userLanguage;
-							$translator = new Translator('lang', $userLanguage->code);
-						}
-					}
-				}
+				$this->setupTranslatorForUser($oauthUser);
 				$this->_userForAPICall = $oauthUser;
 				return $oauthUser;
 			}
@@ -180,17 +169,8 @@ abstract class AbstractAPI extends Action{
 		}
 
 		//Set translations up based on the active user's desired language
-		if (empty($_REQUEST['language']) && $user !== false) {
-			global $activeLanguage;
-			global $translator;
-			$userLanguage = new Language();
-			$userLanguage->code = $user->interfaceLanguage;
-			if ($userLanguage->find(true)) {
-				if ($userLanguage->code != $activeLanguage->code) {
-					$activeLanguage = $userLanguage;
-					$translator = new Translator('lang', $userLanguage->code);
-				}
-			}
+		if ($user instanceof User) {
+			$this->setupTranslatorForUser($user);
 		}
 
 		if ($user !== false && $user->allowAppRequestLogging) {
@@ -439,6 +419,25 @@ abstract class AbstractAPI extends Action{
 			$language->code = $_GET['language'];
 			if ($language->find(true)) {
 				$activeLanguage = $language;
+			}
+		}
+	}
+
+	/**
+	 * @param User $activeUser
+	 */
+	public function setupTranslatorForUser(User $activeUser): void
+	{
+		if (empty($_REQUEST['language'])) {
+			global $activeLanguage;
+			global $translator;
+			$userLanguage = new Language();
+			$userLanguage->code = $activeUser->interfaceLanguage;
+			if ($userLanguage->find(true)) {
+				if ($userLanguage->code != $activeLanguage->code) {
+					$activeLanguage = $userLanguage;
+					$translator = new Translator('lang', $userLanguage->code);
+				}
 			}
 		}
 	}

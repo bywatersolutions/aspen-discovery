@@ -3399,15 +3399,8 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				/** @var Grouping_Record[] $allRecords */
 				$allRecords = [];
 				foreach ($records as $record) {
-
-					//Get all the variations that the record should be attached to
-					$itemQuery = "SELECT groupedWorkVariationId from grouped_work_record_items WHERE groupedWorkRecordId = {$record['id']}";
-					$res = $aspen_db->query($itemQuery, PDO::FETCH_ASSOC);
-					$allItems = $res->fetchAll();
-					$res->closeCursor();
-
                     $recordVariations = [];
-                    foreach ($allItems as $thisVariation) {
+                    foreach ($recordItemsMap[$record['id']] ?? [] as $thisVariation) {
                         if (isset($allVariations[$thisVariation])) {
                             $variation = $allVariations[$thisVariation];
                             $recordVariations[$variation->manifestation->format] = $variation;
@@ -3451,7 +3444,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
                 $allItemIds = array_filter(array_column($scopedItems, 'groupedWorkItemId'));
                 if (!empty($allItemIds)) {
                     $itemIdsStr = implode(',', array_map('intval', array_unique($allItemIds)));
-                    $itemUrlQuery = "SELECT groupedWorkItemId, url FROM grouped_work_record_item_url WHERE groupedWorkItemId IN ($itemIdsStr) AND (scopeId = -1 OR scopeId = $scopeId) ORDER BY scopeId ASC";
+                    $itemUrlQuery = "SELECT groupedWorkItemId, url FROM grouped_work_record_item_url WHERE groupedWorkItemId IN ($itemIdsStr) AND (scopeId = -1 OR scopeId = $scopeId) ORDER BY groupedWorkItemId, scopeId ASC";
                     $results = $aspen_db->query($itemUrlQuery, PDO::FETCH_ASSOC);
                     while ($urlRow = $results->fetch()) {
                         $itemUrlsMap[$urlRow['groupedWorkItemId']] = $urlRow['url'];
@@ -3475,14 +3468,9 @@ class GroupedWorkDriver extends IndexRecordDriver {
 								$scopedItem['dueDateFormat'] = $indexingProfile->dueDateFormat;
 							}
 						}
-						//Look for urls for the item
-						$itemUrlQuery = "SELECT url from grouped_work_record_item_url where groupedWorkItemId = {$scopedItem['groupedWorkItemId']} AND (scopeId = -1 OR scopeId = $scopeId) ORDER BY scopeId desc limit 1";
-						$results = $aspen_db->query($itemUrlQuery, PDO::FETCH_ASSOC);
-						$itemUrls = $results->fetchAll();
-						if (count($itemUrls) > 0) {
-							$scopedItem['localUrl'] = $itemUrls[0]['url'];
+						if (isset($itemUrlsMap[$scopedItem['groupedWorkItemId']])) {
+							$scopedItem['localUrl'] = $itemUrlsMap[$scopedItem['groupedWorkItemId']];
 						}
-						$results->closeCursor();
 						$itemData = new Grouping_Item($scopedItem, $searchLocation, GroupedWorkDriver::$activeLocationScopeId, GroupedWorkDriver::$mainLocationScopeId, GroupedWorkDriver::$homeLocationScopeId, GroupedWorkDriver::$userNearbyLocation1ScopeId, GroupedWorkDriver::$userNearbyLocation2ScopeId, GroupedWorkDriver::$atNearbyLocation1, GroupedWorkDriver::$atNearbyLocation2);
 						$relatedRecord->addItem($itemData);
 					}

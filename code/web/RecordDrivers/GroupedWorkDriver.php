@@ -3221,118 +3221,129 @@ class GroupedWorkDriver extends IndexRecordDriver {
 			$childRecords = [];
 			$searchLocation = Location::getSearchLocation();
 
-			if (!GroupedWorkDriver::$scopesLoaded) {
-				GroupedWorkDriver::$scopesLoaded = true;
+            if (!GroupedWorkDriver::$scopesLoaded) {
+                GroupedWorkDriver::$scopesLoaded = true;
 
-				//Check for the main location for the library
-				require_once ROOT_DIR . '/sys/Grouping/Scope.php';
-				//Get the scope for the main location for the library
-				foreach ($library->getLocations() as $mainLocation) {
-					if ($mainLocation->isMainBranch) {
-						$scope = new Grouping_Scope();
-						$mainLibraryScopeName = str_replace('-', '', !empty($mainLocation->subdomain) ? $mainLocation->subdomain : $mainLocation->code);
-						$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($mainLibraryScopeName)));
-						$scope->isLocationScope = 1;
-						if ($scope->find(true)) {
-							GroupedWorkDriver::$mainLocationScopeId = $scope->id;
-						}
-					}
-				}
-				global $locationSingleton;
-				$activeLocation = $locationSingleton->getActiveLocation();
-				if ($activeLocation != null) {
-					$scope = new Grouping_Scope();
-					$activeLocationScopeName = str_replace('-', '', !empty($activeLocation->subdomain) ? $activeLocation->subdomain : $activeLocation->code);
-					$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($activeLocationScopeName)));
-					$scope->isLocationScope = 1;
-					if ($scope->find(true)) {
-						GroupedWorkDriver::$activeLocationScopeId = $scope->id;
-					}
+                // Static cache helper for scope name lookups
+                static $scopeNameCache = [];
+                $lookupScopeId = function($scopeName) use (&$scopeNameCache) {
+                    $cleanName = strtolower(str_replace('-', '', $scopeName));
+                    if (isset($scopeNameCache[$cleanName])) {
+                        return $scopeNameCache[$cleanName];
+                    }
+                    $scope = new Grouping_Scope();
+                    $scope->whereAdd('LOWER(name) = ' . $scope->escape($cleanName));
+                    $scope->isLocationScope = 1;
+                    if ($scope->find(true)) {
+                        $scopeNameCache[$cleanName] = $scope->id;
+                        return $scope->id;
+                    }
+                    $scopeNameCache[$cleanName] = null;
+                    return null;
+                };
 
-					if ($activeLocation->nearbyLocation1 > 0) {
-						$altLocation1 = new Location();
-						$altLocation1->locationId = $activeLocation->nearbyLocation1;
-						if ($altLocation1->find(true)) {
-							$scope = new Grouping_Scope();
-							$altLocation1ScopeName = str_replace('-', '', !empty($altLocation1->subdomain) ? $altLocation1->subdomain : $altLocation1->code);
-							$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($altLocation1ScopeName)));
-							$scope->isLocationScope = 1;
-							if ($scope->find(true)) {
-								GroupedWorkDriver::$atNearbyLocation1 = $scope->id;
-							}
-						}
-					}
-					if ($activeLocation->nearbyLocation2 > 0) {
-						$altLocation2 = new Location();
-						$altLocation2->locationId = strtolower($activeLocation->nearbyLocation2);
-						if ($altLocation2->find(true)) {
-							$scope = new Grouping_Scope();
-							$altLocation2ScopeName = str_replace('-', '', !empty($altLocation2->subdomain) ? $altLocation2->subdomain : $altLocation2->code);
-							$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($altLocation2ScopeName)));
-							$scope->isLocationScope = 1;
-							if ($scope->find(true)) {
-								GroupedWorkDriver::$atNearbyLocation2 = $scope->id;
-							}
-						}
-					}
-				}
-				if (UserAccount::isLoggedIn()) {
-					$user = UserAccount::getActiveUserObj();
-					$userHomeLocation = $user->getPickupLocation();
-					if ($userHomeLocation != null) {
-						$scope = new Grouping_Scope();
-						$mainLibraryScopeName = str_replace('-', '', !empty($userHomeLocation->subdomain) ? $userHomeLocation->subdomain : $userHomeLocation->code);
-						$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($mainLibraryScopeName)));
-						$scope->isLocationScope = 1;
-						if ($scope->find(true)) {
-							GroupedWorkDriver::$homeLocationScopeId = $scope->id;
-						}
-					}
-					if ($user->myLocation1Id > 0) {
-						$myLocation1 = new Location();
-						$myLocation1->locationId = $user->myLocation1Id;
-						if ($myLocation1->find(true)) {
-							$mainLibraryScopeName = str_replace('-', '', !empty($myLocation1->subdomain) ? $myLocation1->subdomain : $myLocation1->code);
-							$scope = new Grouping_Scope();
-							$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($mainLibraryScopeName)));
-							$scope->isLocationScope = 1;
-							if ($scope->find(true)) {
-								GroupedWorkDriver::$userNearbyLocation1ScopeId = $scope->id;
-							}
-						}
-					}
-					if ($user->myLocation2Id > 0) {
-						$myLocation2 = new Location();
-						$myLocation2->locationId = $user->myLocation2Id;
-						if ($myLocation2->find(true)) {
-							$mainLibraryScopeName = str_replace('-', '', !empty($myLocation2->subdomain) ? $myLocation2->subdomain : $myLocation2->code);
-							$scope = new Grouping_Scope();
-							$scope->whereAdd('LOWER(name) = ' . $scope->escape(strtolower($mainLibraryScopeName)));
-							$scope->isLocationScope = 1;
-							if ($scope->find(true)) {
-								GroupedWorkDriver::$userNearbyLocation2ScopeId = $scope->id;
-							}
-						}
-					}
-				}
-			}
+                //Check for the main location for the library
+                require_once ROOT_DIR . '/sys/Grouping/Scope.php';
+                //Get the scope for the main location for the library
+                foreach ($library->getLocations() as $mainLocation) {
+                    if ($mainLocation->isMainBranch) {
+                        $mainLibraryScopeName = !empty($mainLocation->subdomain) ? $mainLocation->subdomain : $mainLocation->code;
+                        $scopeId = $lookupScopeId($mainLibraryScopeName);
+                        if ($scopeId !== null) {
+                            GroupedWorkDriver::$mainLocationScopeId = $scopeId;
+                        }
+                    }
+                }
+                global $locationSingleton;
+                $activeLocation = $locationSingleton->getActiveLocation();
+                if ($activeLocation != null) {
+                    $activeLocationScopeName = !empty($activeLocation->subdomain) ? $activeLocation->subdomain : $activeLocation->code;
+                    $scopeId = $lookupScopeId($activeLocationScopeName);
+                    if ($scopeId !== null) {
+                        GroupedWorkDriver::$activeLocationScopeId = $scopeId;
+                    }
 
-			require_once ROOT_DIR . '/sys/Grouping/GroupedWork.php';
-			require_once ROOT_DIR . '/sys/Grouping/Manifestation.php';
-			require_once ROOT_DIR . '/sys/Grouping/Variation.php';
-			require_once ROOT_DIR . '/sys/Grouping/Record.php';
-			require_once ROOT_DIR . '/sys/Grouping/Item.php';
-			$groupedWork = new GroupedWork();
-			$groupedWork->permanent_id = $this->getUniqueID();
-			if (!empty($groupedWork->permanent_id) && $groupedWork->find(true)) {
-				global $aspen_db;
-				//Get the scopeId for the active scope
-				$scopeIdQuery = "SELECT id from scope where name = '$solrScope'";
-				$scopeId = -1;
-				$results = $aspen_db->query($scopeIdQuery, PDO::FETCH_ASSOC);
-				if ($scopeResults = $results->fetch()) {
-					$scopeId = $scopeResults['id'];
-				}
+                    if ($activeLocation->nearbyLocation1 > 0) {
+                        $altLocation1 = new Location();
+                        $altLocation1->locationId = $activeLocation->nearbyLocation1;
+                        if ($altLocation1->find(true)) {
+                            $altLocation1ScopeName = !empty($altLocation1->subdomain) ? $altLocation1->subdomain : $altLocation1->code;
+                            $scopeId = $lookupScopeId($altLocation1ScopeName);
+                            if ($scopeId !== null) {
+                                GroupedWorkDriver::$atNearbyLocation1 = $scopeId;
+                            }
+                        }
+                    }
+                    if ($activeLocation->nearbyLocation2 > 0) {
+                        $altLocation2 = new Location();
+                        $altLocation2->locationId = strtolower($activeLocation->nearbyLocation2);
+                        if ($altLocation2->find(true)) {
+                            $altLocation2ScopeName = !empty($altLocation2->subdomain) ? $altLocation2->subdomain : $altLocation2->code;
+                            $scopeId = $lookupScopeId($altLocation2ScopeName);
+                            if ($scopeId !== null) {
+                                GroupedWorkDriver::$atNearbyLocation2 = $scopeId;
+                            }
+                        }
+                    }
+                }
+                if (UserAccount::isLoggedIn()) {
+                    $user = UserAccount::getActiveUserObj();
+                    $userHomeLocation = $user->getPickupLocation();
+                    if ($userHomeLocation != null) {
+                        $mainLibraryScopeName = !empty($userHomeLocation->subdomain) ? $userHomeLocation->subdomain : $userHomeLocation->code;
+                        $scopeId = $lookupScopeId($mainLibraryScopeName);
+                        if ($scopeId !== null) {
+                            GroupedWorkDriver::$homeLocationScopeId = $scopeId;
+                        }
+                    }
+                    if ($user->myLocation1Id > 0) {
+                        $myLocation1 = new Location();
+                        $myLocation1->locationId = $user->myLocation1Id;
+                        if ($myLocation1->find(true)) {
+                            $mainLibraryScopeName = !empty($myLocation1->subdomain) ? $myLocation1->subdomain : $myLocation1->code;
+                            $scopeId = $lookupScopeId($mainLibraryScopeName);
+                            if ($scopeId !== null) {
+                                GroupedWorkDriver::$userNearbyLocation1ScopeId = $scopeId;
+                            }
+                        }
+                    }
+                    if ($user->myLocation2Id > 0) {
+                        $myLocation2 = new Location();
+                        $myLocation2->locationId = $user->myLocation2Id;
+                        if ($myLocation2->find(true)) {
+                            $mainLibraryScopeName = !empty($myLocation2->subdomain) ? $myLocation2->subdomain : $myLocation2->code;
+                            $scopeId = $lookupScopeId($mainLibraryScopeName);
+                            if ($scopeId !== null) {
+                                GroupedWorkDriver::$userNearbyLocation2ScopeId = $scopeId;
+                            }
+                        }
+                    }
+                }
+            }
+
+            require_once ROOT_DIR . '/sys/Grouping/GroupedWork.php';
+            require_once ROOT_DIR . '/sys/Grouping/Manifestation.php';
+            require_once ROOT_DIR . '/sys/Grouping/Variation.php';
+            require_once ROOT_DIR . '/sys/Grouping/Record.php';
+            require_once ROOT_DIR . '/sys/Grouping/Item.php';
+            $groupedWork = new GroupedWork();
+            $groupedWork->permanent_id = $this->getUniqueID();
+            if (!empty($groupedWork->permanent_id) && $groupedWork->find(true)) {
+                global $aspen_db;
+                
+                // Static memory caching for Solr Scope ID lookup
+                static $scopeIdCache = [];
+                if (isset($scopeIdCache[$solrScope])) {
+                    $scopeId = $scopeIdCache[$solrScope];
+                } else {
+                    $scopeIdQuery = "SELECT id from scope where name = '$solrScope'";
+                    $scopeId = -1;
+                    $results = $aspen_db->query($scopeIdQuery, PDO::FETCH_ASSOC);
+                    if ($scopeResults = $results->fetch()) {
+                        $scopeId = $scopeResults['id'];
+                    }
+                    $scopeIdCache[$solrScope] = $scopeId;
+                }
 
 				//Get the ids of all the variations, records, and items attached to the work
 				$databaseIds = $this->getVariationRecordAndItemIdsFromDB($scopeId, $groupedWork->id, true);
@@ -3365,50 +3376,81 @@ class GroupedWorkDriver extends IndexRecordDriver {
 					$allRecordIdsWithSource[$record['source']][] = $record['source'] . ':' . $record['recordIdentifier'];
 				}
 
-				$this->preloadRequiredDataForActions($allRecordIdsBySource, $allRecordIdsWithSource);
+                $this->preloadRequiredDataForActions($allRecordIdsBySource, $allRecordIdsWithSource);
+
+                // Pre-fetch record items for all records
+                $recordItemsMap = [];
+                $allRecordDbIds = array_filter(array_column($records, 'id'));
+                if (!empty($allRecordDbIds)) {
+                    $recordIdsStr = implode(',', array_map('intval', array_unique($allRecordDbIds)));
+                    $itemQuery = "SELECT groupedWorkRecordId, groupedWorkVariationId FROM grouped_work_record_items WHERE groupedWorkRecordId IN ($recordIdsStr)";
+                    $res = $aspen_db->query($itemQuery, PDO::FETCH_ASSOC);
+                    while ($row = $res->fetch()) {
+                        $recordItemsMap[$row['groupedWorkRecordId']][] = $row['groupedWorkVariationId'];
+                    }
+                    $res->closeCursor();
+                }
+
+                // --- SPEEDUP: Move require_once outside the loop ---
+                require_once ROOT_DIR . '/RecordDrivers/RecordDriverFactory.php';
+                static $volumeDataCache = [];
 
 				//Load all records
 				/** @var Grouping_Record[] $allRecords */
 				$allRecords = [];
 				foreach ($records as $record) {
+                    $recordVariations = [];
+                    foreach ($recordItemsMap[$record['id']] ?? [] as $thisVariation) {
+                        if (isset($allVariations[$thisVariation])) {
+                            $variation = $allVariations[$thisVariation];
+                            $recordVariations[$variation->manifestation->format] = $variation;
+                        }
+                    }
 
-					//Get all the variations that the record should be attached to
-					$itemQuery = "SELECT groupedWorkVariationId from grouped_work_record_items WHERE groupedWorkRecordId = {$record['id']}";
-					$res = $aspen_db->query($itemQuery, PDO::FETCH_ASSOC);
-					$allItems = $res->fetchAll();
-					$res->closeCursor();
+                    // --- SPEEDUP: Hoist RecordDriver and Volume Lookups outside the variation loop ---
+                    if (!empty($recordVariations)) {
+                        $recordId = $record['source'];
+                        $recordId .= ($record['subSource'] != null ? ':' . $record['subSource'] : '');
+                        $recordId .= ':' . $record['recordIdentifier'];
 
-					$recordVariations = [];
-					foreach ($allItems as $item) {
-						$thisVariation = $item['groupedWorkVariationId'];
-						foreach ($allVariations as $variation) {
-							if ($thisVariation == $variation->databaseId) {
-								$recordVariations[$variation->manifestation->format] = $variation;
-							}
-						}
-					}
-					//Create different Grouping_Record objects for each variation
-					foreach ($recordVariations as $variation) {
-						/** GroupedWorkSubDriver $recordDriver */
-						require_once ROOT_DIR . '/RecordDrivers/RecordDriverFactory.php';
-						$recordId = $record['source'];
-						$recordId .= ($record['subSource'] != null ? ':' . $record['subSource'] : '');
-						$recordId .= ':' . $record['recordIdentifier'];
-						$recordDriver = RecordDriverFactory::initRecordDriverById($recordId, $groupedWork);
+                        $recordDriver = RecordDriverFactory::initRecordDriverById($recordId, $groupedWork);
 
-						//Do not add invalid records
-						if ($recordDriver != null) {
-							$volumeData = $this->getVolumeDataForRecord($record['source'], $recordId);
-							$relatedRecord = new Grouping_Record($recordId, $record, $recordDriver, $volumeData, $record['source'], true, $variation);
-							$relatedRecord->recordVariations = $recordVariations;
+                        if ($recordDriver != null) {
+                            // Static request cache for volume data
+                            $cacheKey = $record['source'] . '|' . $recordId;
+                            if (array_key_exists($cacheKey, $volumeDataCache)) {
+                                $volumeData = $volumeDataCache[$cacheKey];
+                            } else {
+                                $volumeData = $this->getVolumeDataForRecord($record['source'], $recordId);
+                                $volumeDataCache[$cacheKey] = $volumeData;
+                            }
 
-							$relatedRecords[$relatedRecord->id] = $relatedRecord;
-							$allRecords[$relatedRecord->databaseId . ':' . $variation->manifestation->format] = $relatedRecord;
-						}
-					}
-				}
+                            //Create different Grouping_Record objects for each variation
+                            foreach ($recordVariations as $variation) {
+                                $relatedRecord = new Grouping_Record($recordId, $record, $recordDriver, $volumeData, $record['source'], true, $variation);
+                                $relatedRecord->recordVariations = $recordVariations;
 
-				$scopedItems = $this->getRawItemDataFromDB($databaseIds['uniqueItemIds']);
+                                $relatedRecords[$relatedRecord->id] = $relatedRecord;
+                                $allRecords[$relatedRecord->databaseId . ':' . $variation->manifestation->format] = $relatedRecord;
+                            }
+                        }
+                    }
+                }
+
+                $scopedItems = $this->getRawItemDataFromDB($databaseIds['uniqueItemIds']);
+
+                // Pre-fetch item URLs
+                $itemUrlsMap = [];
+                $allItemIds = array_filter(array_column($scopedItems, 'groupedWorkItemId'));
+                if (!empty($allItemIds)) {
+                    $itemIdsStr = implode(',', array_map('intval', array_unique($allItemIds)));
+                    $itemUrlQuery = "SELECT groupedWorkItemId, url FROM grouped_work_record_item_url WHERE groupedWorkItemId IN ($itemIdsStr) AND (scopeId = -1 OR scopeId = $scopeId) ORDER BY groupedWorkItemId, scopeId ASC";
+                    $results = $aspen_db->query($itemUrlQuery, PDO::FETCH_ASSOC);
+                    while ($urlRow = $results->fetch()) {
+                        $itemUrlsMap[$urlRow['groupedWorkItemId']] = $urlRow['url'];
+                    }
+                    $results->closeCursor();
+                }
 
 				foreach ($scopedItems as $scopedItem) {
 					//Get the variation for the item
@@ -3426,14 +3468,9 @@ class GroupedWorkDriver extends IndexRecordDriver {
 								$scopedItem['dueDateFormat'] = $indexingProfile->dueDateFormat;
 							}
 						}
-						//Look for urls for the item
-						$itemUrlQuery = "SELECT url from grouped_work_record_item_url where groupedWorkItemId = {$scopedItem['groupedWorkItemId']} AND (scopeId = -1 OR scopeId = $scopeId) ORDER BY scopeId desc limit 1";
-						$results = $aspen_db->query($itemUrlQuery, PDO::FETCH_ASSOC);
-						$itemUrls = $results->fetchAll();
-						if (count($itemUrls) > 0) {
-							$scopedItem['localUrl'] = $itemUrls[0]['url'];
+						if (isset($itemUrlsMap[$scopedItem['groupedWorkItemId']])) {
+							$scopedItem['localUrl'] = $itemUrlsMap[$scopedItem['groupedWorkItemId']];
 						}
-						$results->closeCursor();
 						$itemData = new Grouping_Item($scopedItem, $searchLocation, GroupedWorkDriver::$activeLocationScopeId, GroupedWorkDriver::$mainLocationScopeId, GroupedWorkDriver::$homeLocationScopeId, GroupedWorkDriver::$userNearbyLocation1ScopeId, GroupedWorkDriver::$userNearbyLocation2ScopeId, GroupedWorkDriver::$atNearbyLocation1, GroupedWorkDriver::$atNearbyLocation2);
 						$relatedRecord->addItem($itemData);
 					}
@@ -3495,11 +3532,11 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				"compareRelatedRecords",
 			]);
 
-			$this->relatedRecords = $relatedRecords;
-			$this->childRecords = $childRecords;
-			$timer->logTime("Finished loading related records {$this->getUniqueID()}");
-		}
-	}
+            $this->relatedRecords = $relatedRecords;
+            $this->childRecords = $childRecords;
+            $timer->logTime("Finished loading related records {$this->getUniqueID()}");
+        }
+    }
 
 	private function getVariationRecordAndItemIdsFromDB($scopeId, $groupedWorkId) {
 		global $aspen_db;

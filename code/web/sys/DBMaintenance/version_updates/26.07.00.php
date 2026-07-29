@@ -120,7 +120,13 @@ function getUpdates26_07_00(): array {
 			'description' => 'Remove duplicate series members.',
 			'continueOnError' => false,
 			'sql' => [
-				'removeDuplicateSeriesMembers',
+				"DELETE sm1 FROM series_member sm1
+				INNER JOIN series_member sm2
+				ON sm1.seriesId = sm2.seriesId
+				AND sm1.groupedWorkPermanentId <=> sm2.groupedWorkPermanentId
+				AND sm1.volume <=> sm2.volume
+				AND sm1.displayName <=> sm2.displayName
+				AND sm1.id > sm2.id",
 			]
 		], //remove_duplicate_series_members
 		'unique_series_members' => [

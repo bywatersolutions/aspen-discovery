@@ -66,6 +66,7 @@ RUN apt -y update \
 	  php8.4-ssh2 \
 	  php8.4-ldap \
 	  php8.4-mysql \
+	  php8.4-xdebug \
 	&& rm -rf /var/cache/apt/archives/* \
 	&& rm -rf /var/lib/apt/lists/*
 

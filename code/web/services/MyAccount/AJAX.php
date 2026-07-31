@@ -4151,61 +4151,70 @@ class MyAccount_AJAX extends JSON_Action {
 	}
 
 	/** Hold Filtering Functions */
-	private function getHoldFilterValue(Hold|array $hold, string $field): ?array {
-		$fieldValue = is_array($hold)
-			? (string)($hold[$field] ?? '')
-			: (string)($hold->$field ?? '');
+	private function getHoldFilterValue(Hold|array $hold, string $field): array
+	{
+		$value = $this->getProperty($hold, $field);
 
-		$label = $fieldValue;
-		//Do special processing of some fields
-		switch ($field) {
-			case "userId":
-				$label = $hold->getUserName();
-				break;
-			case "status":
-				if ($hold->available) {
-					$label = translate(['text' => 'Available', 'isPublicFacing' => true]);
-				}else{
-					if (empty($hold->status)) {
-						$label = translate(['text' => 'Unavailable', 'isPublicFacing' => true]);
-					}else{
-						$label = translate(['text' => (string)$hold->$field, 'isPublicFacing' => true]);
-					}
-				}
-				break;
-			case "format":
-				$label = translate(['text' => (string)$hold->$field, 'isPublicFacing' => true]);
-				break;
-			case "source":
-				switch ($hold->source) {
-					case 'ils':
-						$sourceUntranslated = 'Physical Materials';
-						break;
-					case 'overdrive':
-						$readerName = new OverDriveDriver();
-						$sourceUntranslated = $readerName->getReaderName();
-						break;
-					case 'cloud_library':
-						$sourceUntranslated = 'Cloud Library';
-						break;
-					case 'hoopla':
-						$sourceUntranslated = 'Hoopla';
-						break;
-					case 'axis360':
-						$sourceUntranslated = 'Boundless';
-						break;
-					default:
-						$sourceUntranslated = 'Unknown';
-				}
-				$label = translate(['text' => $sourceUntranslated, 'isPublicFacing' => true]);
-				break;
-			default:
-				$label = (string)$hold->$field;
-		}
+		$label = match ($field) {
+			'userId' => $this->resolveUserLabel($hold) ?? (string)$value,
+			'status' => $this->resolveStatusLabel($hold),
+			'format' => translate(['text' => (string)$value, 'isPublicFacing' => true]),
+			'source' => translate(['text' => $this->resolveSourceLabel($hold), 'isPublicFacing' => true]),
+			default  => is_array($value) ? implode(', ', $value) : (string)($value ?? ''),
+		};
+
 		return [
-			'value' => $fieldValue,
-			'label' => $label
+			'value' => $value,
+			'label' => $label,
 		];
+	}
+
+	/**
+	 * Safely extracts a property or array key without throwing errors.
+	 */
+	private function getProperty(Hold|array $data, string $key): mixed
+	{
+		if (is_array($data)) {
+			return $data[$key] ?? null;
+		}
+		return $data->$key ?? null;
+	}
+
+	private function resolveUserLabel(Hold|array $hold): ?string
+	{
+		if ($hold instanceof Hold) {
+			return $hold->getUserName();
+		}
+		return $this->getProperty($hold, 'userName');
+	}
+
+	private function resolveStatusLabel(Hold|array $hold): string
+	{
+		if ($this->getProperty($hold, 'available')) {
+			return translate(['text' => 'Available', 'isPublicFacing' => true]);
+		}
+
+		$status = $this->getProperty($hold, 'status');
+		if (empty($status)) {
+			return translate(['text' => 'Unavailable', 'isPublicFacing' => true]);
+		}
+
+		$statusText = is_array($status) ? implode(', ', $status) : (string)$status;
+		return translate(['text' => $statusText, 'isPublicFacing' => true]);
+	}
+
+	private function resolveSourceLabel(Hold|array $hold): string
+	{
+		$source = $this->getProperty($hold, 'source');
+
+		return match ($source) {
+			'ils'           => 'Physical Materials',
+			'overdrive'     => (new OverDriveDriver())->getReaderName(),
+			'cloud_library' => 'Cloud Library',
+			'hoopla'        => 'Hoopla',
+			'axis360'       => 'Boundless',
+			default         => 'Unknown',
+		};
 	}
 
 	/**

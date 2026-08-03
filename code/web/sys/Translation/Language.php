@@ -1,5 +1,7 @@
 <?php /** @noinspection PhpMissingFieldTypeInspection */
 
+require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
+
 class Language extends DataObject {
 	public $__table = 'languages';
 	public $id;
@@ -11,6 +13,7 @@ class Language extends DataObject {
 	public $facetValue;
 	public $displayToTranslatorsOnly;
 	public $isDefault;
+	public $dateFormatIndex;
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
@@ -84,11 +87,41 @@ class Language extends DataObject {
 				'label' => 'Default Language',
 				'description' => 'Whether this is the default language for unauthenticated users. Only one language can be set as default.',
 				'default' => 0,
-			],
+			]
 		];
+
+		$structure = self::showDateFormattingDropdown($structure);
 
 		self::$_objectStructure[$context] = $structure;
 		return self::$_objectStructure[$context];
+	}
+
+	private static function showDateFormattingDropdown(array $structure) : array {
+		$locale = "en_US";
+		$lang = new Language();
+		$lang->id = $_REQUEST['id'];
+		if($lang->find(true)) {
+			$locale = $lang->locale; 
+		}
+
+		$now = time();
+		if($_REQUEST['objectAction'] === 'edit') {
+			$structure['dateFormatIndex'] = [
+				'property' => 'dateFormatIndex',
+				'type' => 'enum',
+				'values' => [
+					-1 => DateUtils::formatCustomLocale($now, IntlDateFormatter::NONE, $locale),
+					1 => DateUtils::formatCustomLocale($now, IntlDateFormatter::LONG, $locale),
+					2 => DateUtils::formatCustomLocale($now, IntlDateFormatter::MEDIUM, $locale),
+					3 => DateUtils::formatCustomLocale($now, IntlDateFormatter::SHORT, $locale)
+				],
+				'label' => 'Date Display Format',
+				'description' => "Date Display Format",
+				'default' => 2
+			];
+		}
+
+		return $structure;
 	}
 
 	/**
@@ -154,6 +187,8 @@ class Language extends DataObject {
 	}
 
 	public function update($context = ''): bool|int {
+		global $logger;
+		$logger->log($context, Logger::LOG_ERROR);
 		if ($this->isDefault) {
 			$other = new Language();
 			$other->whereAdd('id != ' . (int)$this->id);
@@ -165,6 +200,7 @@ class Language extends DataObject {
 				}
 			}
 		}
+		
 		self::$_validLanguages = null;
 		return parent::update($context);
 	}
@@ -215,6 +251,7 @@ class Language extends DataObject {
 			'id',
 			'weight',
 			'isDefault',
+			'dateFormatIndex'
 		];
 	}
 

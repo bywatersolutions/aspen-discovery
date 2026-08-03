@@ -99,6 +99,14 @@ function getUpdates26_08_00(): array {
 
 		//yanjun
 
+		//jonah
+		'DIS-2744_LibraryDate' => [
+			'title' => 'Custom Library Datetime',
+			'description' => 'Blah',
+			'sql' => [
+				'ALTER TABLE languages ADD COLUMN IF NOT EXISTS dateFormatIndex tinyint(1) NOT NULL DEFAULT -1',
+			]
+		], //localhop_images
 		//imani
 
 		//galen

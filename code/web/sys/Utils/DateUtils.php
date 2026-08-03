@@ -108,6 +108,11 @@ class DateUtils {
 		return $formatter->format($timestamp);
 	}
 
+	static function formatCustomLocale(mixed $dateString, int $dateStyle, string $locale) {
+		$formatter = new IntlDateFormatter($locale, $dateStyle, IntlDateFormatter::NONE);
+		return $formatter->format($dateString);
+	}
+
 	static function formatTimeRange($startTime, $endTime, $format = null): string {
 		$parts = self::formatTimeRangeParts($startTime, $endTime, $format);
 		if ($parts['start'] === '' && $parts['end'] === '') {

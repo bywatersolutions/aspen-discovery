@@ -1855,40 +1855,73 @@ var AspenDiscovery = (function(){
 			var wrapper = container.querySelector('.slider-wrapper');
 			var prevBtn = container.querySelector('.slider-button-prev');
 			var nextBtn = container.querySelector('.slider-button-next');
-			var slideWidth = wrapper.querySelector('.slider-slide').offsetWidth + 12;
 			var slides = wrapper.querySelectorAll('.slider-slide');
 			let currentIndex = 0;
-			// --- Accessibility ARIA setup ---
-			wrapper.setAttribute('role', 'listbox');
-			slides.forEach(function (slide, idx) {
-				slide.setAttribute('role', 'option');
-				slide.setAttribute('tabindex', '0');
-				slide.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
-				slide.id = slide.id || ('slide-' + container.id + '-' + idx);
-			});
-			wrapper.setAttribute('aria-activedescendant', slides[0].id);
 
-			function focusSlide(index, doFocus = false, doScroll = false) {
+			// Compute slide width fresh each time instead of caching it once at init,
+			// since offsetWidth is 0 while this is inside a display:none modal.
+			function getSlideWidth() {
+				var slide = wrapper.querySelector('.slider-slide');
+				return (slide ? slide.offsetWidth : 0) + 12;
+			}
+
+			// Focusable control should own focus/selection semantics.
+			// Layering role="option"/tabindex="0" on the slide as well
+			// creates nested focusable elements, which is invalid and confuses screen readers.
+			function getInnerControl(slide) {
+				return slide.querySelector('input, select, textarea, button, a[href]');
+			}
+			var hasInnerControls = slides.length > 0 && Array.prototype.every.call(slides, function (slide) {
+				return !!getInnerControl(slide);
+			});
+
+			// --- Accessibility ARIA setup ---
+			if (hasInnerControls) {
+				// Native controls (e.g. a radio group) provide semantics and keyboard behavior.
+				//  Don't add a redundant listbox pattern on top of them.
+				wrapper.removeAttribute('role');
+				wrapper.removeAttribute('aria-activedescendant');
+				slides.forEach(function (slide) {
+					slide.removeAttribute('role');
+					slide.removeAttribute('tabindex');
+					slide.removeAttribute('aria-selected');
+				});
+			} else {
+				wrapper.setAttribute('role', 'listbox');
+				slides.forEach(function (slide, idx) {
+					slide.setAttribute('role', 'option');
+					slide.setAttribute('tabindex', '0');
+					slide.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+					slide.id = slide.id || ('slide-' + container.id + '-' + idx);
+				});
+				wrapper.setAttribute('aria-activedescendant', slides[0].id);
+			}
+
+			function setActiveSlide(index, doFocus = false, doScroll = false) {
 				slides.forEach(function (slide, i) {
-					slide.setAttribute('aria-selected', i === index ? 'true' : 'false');
+					if (!hasInnerControls) {
+						slide.setAttribute('aria-selected', i === index ? 'true' : 'false');
+					}
 					if (i === index) {
 						slide.classList.add('active');
-						if (doFocus) slide.focus();
+						if (doFocus && !hasInnerControls) slide.focus();
 						if (doScroll) slides[index].scrollIntoView({block: 'nearest', inline: 'center'});
 					} else {
 						slide.classList.remove('active');
 					}
 				});
-				wrapper.setAttribute('aria-activedescendant', slides[index].id);
+				if (!hasInnerControls) {
+					wrapper.setAttribute('aria-activedescendant', slides[index].id);
+				}
 				currentIndex = index;
 			}
 
-			// Only scroll on button click, do not select/focus next slide
+			// Animated scroll on button click
 			prevBtn.addEventListener('click', function () {
-				wrapper.scrollLeft -= slideWidth;
+				wrapper.scrollTo({ left: wrapper.scrollLeft - getSlideWidth(), behavior: 'smooth' });
 			});
 			nextBtn.addEventListener('click', function () {
-				wrapper.scrollLeft += slideWidth;
+				wrapper.scrollTo({ left: wrapper.scrollLeft + getSlideWidth(), behavior: 'smooth' });
 			});
 
 			// Keyboard support for prev/next buttons
@@ -1905,94 +1938,165 @@ var AspenDiscovery = (function(){
 				}
 			});
 
-			slides.forEach(function (slide, i) {
-				slide.addEventListener('click', function (e) {
-					slides.forEach(function (s) {
-						s.classList.remove('active');
-						s.setAttribute('aria-selected', 'false');
+			if (hasInnerControls) {
+				// Let the inner control (radio) drive selection
+				// keep the visual "active" state and the callback in sync with it
+				// make sure the active slide scrolls into view
+				// This works for click, Space, and native radio-group arrow-key navigation
+				slides.forEach(function (slide, i) {
+					var control = getInnerControl(slide);
+					control.addEventListener('change', function () {
+						// Ignore the tail end of a real drag gesture
+						if (wrapper.dataset.dragMoved === 'true') return;
+						setActiveSlide(i, false, true);
+						onSlideClick(slide);
 					});
-					slide.classList.add('active');
-					slide.setAttribute('aria-selected', 'true');
-					wrapper.setAttribute('aria-activedescendant', slide.id);
-					currentIndex = i;
-					onSlideClick(slide);
 				});
+			} else {
+				slides.forEach(function (slide, i) {
+					slide.addEventListener('click', function () {
+						if (wrapper.dataset.dragMoved === 'true') return;
+						setActiveSlide(i, false, false);
+						slide.focus();
+						onSlideClick(slide);
+					});
 
-				// Keyboard navigation for slides
-				slide.addEventListener('keydown', function (e) {
-					if (e.key === 'ArrowRight') {
-						if (i < slides.length - 1) {
-							focusSlide(i + 1, true, true);
+					slide.addEventListener('keydown', function (e) {
+						if (e.key === 'ArrowRight') {
+							if (i < slides.length - 1) {
+								e.preventDefault();
+								setActiveSlide(i + 1, true, true);
+							}
+						} else if (e.key === 'ArrowLeft') {
+							if (i > 0) {
+								e.preventDefault();
+								setActiveSlide(i - 1, true, true);
+							}
+						} else if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							slide.click();
 						}
-					} else if (e.key === 'ArrowLeft') {
-						if (i > 0) {
-							focusSlide(i - 1, true, true);
-						}
-					} else if (e.key === 'Enter' || e.key === ' ') {
-						slide.click();
-					}
+					});
 				});
-			});
-
-			function updateButtonState() {
-				const hasOverflow = wrapper.scrollWidth > wrapper.clientWidth;
-				const atStart = wrapper.scrollLeft <= 0;
-				const atEnd = wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 1;
-
-				prevBtn.disabled = !hasOverflow || atStart;
-				nextBtn.disabled = !hasOverflow || atEnd;
-
-				prevBtn.classList.toggle('slider-button-disabled', !hasOverflow || atStart);
-				nextBtn.classList.toggle('slider-button-disabled', !hasOverflow || atEnd);
 			}
 
-			updateButtonState();
-			window.addEventListener('resize', updateButtonState);
-			wrapper.addEventListener('scroll', updateButtonState);
-
-			// --- Touch/drag support ---
-			let isDown = false;
-			let startX;
-			let scrollLeft;
-
-			wrapper.addEventListener('mousedown', (e) => {
-				isDown = true;
-				wrapper.classList.add('active');
-				startX = e.pageX - wrapper.offsetLeft;
-				scrollLeft = wrapper.scrollLeft;
-			});
-			wrapper.addEventListener('mouseleave', () => {
-				isDown = false;
-				wrapper.classList.remove('active');
-			});
-			wrapper.addEventListener('mouseup', () => {
-				isDown = false;
-				wrapper.classList.remove('active');
-			});
-			wrapper.addEventListener('mousemove', (e) => {
-				if (!isDown) return;
+			// Prevent native image/link drag from hijacking pointer gestures
+			wrapper.addEventListener('dragstart', function (e) {
 				e.preventDefault();
-				const x = e.pageX - wrapper.offsetLeft;
-				const walk = (x - startX) * 1.5;
-				wrapper.scrollLeft = scrollLeft - walk;
-			});
-			wrapper.addEventListener('touchstart', (e) => {
-				isDown = true;
-				startX = e.touches[0].pageX - wrapper.offsetLeft;
-				scrollLeft = wrapper.scrollLeft;
-			});
-			wrapper.addEventListener('touchend', () => {
-				isDown = false;
-			});
-			wrapper.addEventListener('touchmove', (e) => {
-				if (!isDown) return;
-				const x = e.touches[0].pageX - wrapper.offsetLeft;
-				const walk = (x - startX) * 1.5;
-				wrapper.scrollLeft = scrollLeft - walk;
 			});
 
-			// Initialize focus and ARIA
-			focusSlide(currentIndex, false, false);
+			// --- Pointer-based drag-to-scroll with momentum (mouse, touch, and pen) ---
+			(function enableDragScroll() {
+				var isDown = false;
+				var pointerId = null;
+				var startX = 0;
+				var startScrollLeft = 0;
+				var DRAG_THRESHOLD = 10; // px before a press counts as a drag, not a click
+
+				// Velocity tracking
+				var lastX = 0;
+				var lastTime = 0;
+				var velocity = 0; // px per ms
+
+				// Momentum animation
+				var momentumRAF = null;
+				var FRICTION = 0.95;      // lower = stops sooner, higher = coasts longer
+				var MIN_VELOCITY = 0.02;  // px/ms threshold to stop the animation
+
+				function stopMomentum() {
+					if (momentumRAF) {
+						cancelAnimationFrame(momentumRAF);
+						momentumRAF = null;
+					}
+				}
+
+				function runMomentum() {
+					wrapper.scrollLeft -= velocity * 16; // approximate px for a ~16ms frame
+					velocity *= FRICTION;
+
+					// Stop at the natural scroll boundaries too, rather than fighting them
+					if (wrapper.scrollLeft <= 0 || wrapper.scrollLeft >= wrapper.scrollWidth - wrapper.clientWidth) {
+						velocity = 0;
+					}
+
+					if (Math.abs(velocity) > MIN_VELOCITY) {
+						momentumRAF = requestAnimationFrame(runMomentum);
+					} else {
+						momentumRAF = null;
+					}
+				}
+
+				wrapper.addEventListener('pointerdown', function (e) {
+					if (e.button !== undefined && e.button !== 0) return;
+					stopMomentum(); // grabbing mid-coast should kill the momentum immediately
+
+					isDown = true;
+					pointerId = e.pointerId;
+					wrapper.dataset.dragMoved = 'false';
+					startX = e.clientX;
+					startScrollLeft = wrapper.scrollLeft;
+
+					lastX = e.clientX;
+					lastTime = performance.now();
+					velocity = 0;
+
+					// Do NOT capture the pointer yet — only once a real drag is confirmed,
+					// otherwise click events on slides stop firing entirely.
+				});
+
+				wrapper.addEventListener('pointermove', function (e) {
+					if (!isDown || e.pointerId !== pointerId) return;
+
+					var dx = e.clientX - startX;
+
+					if (Math.abs(dx) > DRAG_THRESHOLD && wrapper.dataset.dragMoved !== 'true') {
+						wrapper.dataset.dragMoved = 'true';
+						wrapper.classList.add('dragging');
+						wrapper.setPointerCapture(pointerId); // capture only now that it's a real drag
+					}
+
+					if (wrapper.dataset.dragMoved === 'true') {
+						wrapper.scrollLeft = startScrollLeft - dx;
+					}
+
+					var now = performance.now();
+					var dt = now - lastTime;
+					if (dt > 0) {
+						// px/ms since the last move event, smoothed slightly against the previous reading
+						var instVelocity = (e.clientX - lastX) / dt;
+						velocity = velocity * 0.7 + instVelocity * 0.3;
+					}
+					lastX = e.clientX;
+					lastTime = now;
+				});
+
+				function endDrag(e) {
+					if (!isDown || (pointerId !== null && e.pointerId !== pointerId)) return;
+					isDown = false;
+					wrapper.classList.remove('dragging');
+					if (pointerId !== null && wrapper.hasPointerCapture(pointerId)) {
+						wrapper.releasePointerCapture(pointerId);
+					}
+					pointerId = null;
+
+					if (Math.abs(velocity) > MIN_VELOCITY) {
+						momentumRAF = requestAnimationFrame(runMomentum);
+					}
+
+					setTimeout(function () { wrapper.dataset.dragMoved = 'false'; }, 0);
+				}
+
+				wrapper.addEventListener('pointerup', endDrag);
+				wrapper.addEventListener('pointercancel', endDrag);
+
+				// --- Mouse wheel / trackpad horizontal scroll ---
+				wrapper.addEventListener('wheel', function (e) {
+					var delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+					stopMomentum();
+					wrapper.scrollLeft += delta;
+					e.preventDefault();
+				}, { passive: false });
+			})();
 		},
 
 		/**
@@ -2120,6 +2224,26 @@ jQuery.validator.addMethod("strongPassword", function(value, element) {
 
 	return '<ul class="password-error-list" style="margin-top:5px; margin-bottom:0; padding-left:1.25em; list-style-type:disc"><li>' + errors.join('</li><li>') + '</li></ul>';
 });
+
+document.addEventListener('blur', (e) => {
+	if (e.target && e.target.type === 'number') {
+		const input = e.target;
+		const value = parseInt(input.value, 10);
+
+		if (input.hasAttribute('min')) {
+			const min = parseInt(input.min, 10);
+			if (isNaN(value) || value < min) {
+				input.value = min;
+			}
+		}
+		if (input.hasAttribute('max')) {
+			const max = parseInt(input.max, 10);
+			if (isNaN(value) || value > max) {
+				input.value = max;
+			}
+		}
+	}
+}, true);
 AspenDiscovery.ToastNotifications = (function () {
   const debug = false;
   const POLL_INTERVAL = 10000; // 10 seconds
@@ -2829,16 +2953,6 @@ AspenDiscovery.Account = (function () {
 					}
 				});
 			}
-			if (Globals.hasInterlibraryLoanConnection) {
-				var interlibraryLoanUrl = Globals.path + "/MyAccount/AJAX?method=getMenuDataInterlibraryLoan&activeModule=" + Globals.activeModule + '&activeAction=' + Globals.activeAction;
-				$.getJSON(interlibraryLoanUrl, function (data) {
-					if (data.success) {
-						$(".interlibrary-loan-requests-placeholder").html(data.summary.numHolds);
-						totalHolds += parseInt(data.summary.numHolds);
-						$(".holds-placeholder").html(totalHolds);
-					}
-				});
-			}
 			var campaignsUrl = Globals.path + "/MyAccount/AJAX?method=getEnrolledCampaigns&activeModule=" + Globals.activeModule + '&activeAction=' + Globals.activeAction;
 			$.getJSON(campaignsUrl, function (data) {
 				if (data.success) {
@@ -3354,32 +3468,6 @@ AspenDiscovery.Account = (function () {
 			}
 
 			return false
-		},
-
-		cancelVdxRequest: function (patronId, requestId, cancelId) {
-			if (confirm(__('Are you sure you want to cancel this request?'))) {
-				var ajaxUrl = Globals.path + "/MyAccount/AJAX?method=cancelVdxRequest&patronId=" + patronId + "&requestId=" + requestId + "&cancelId=" + cancelId;
-				$.ajax({
-					url: ajaxUrl,
-					cache: false,
-					success: function (data) {
-						if (data.success) {
-							AspenDiscovery.showMessage("Request Cancelled", data.message, true);
-							//remove the row from the holds list
-							$("#vdxHold_" + requestId + "_" + cancelId).hide();
-							AspenDiscovery.Account.loadMenuData();
-						} else {
-							AspenDiscovery.showMessage("Error Cancelling Request", data.message, false);
-						}
-					},
-					dataType: 'json',
-					async: false,
-					error: function () {
-						AspenDiscovery.showMessage("Error Cancelling Request", "An error occurred processing your request.  Please try again in a few minutes.", false);
-					}
-				});
-			}
-			return false;
 		},
 
 		changeAccountSort: function (newSort, sortParameterName) {
@@ -8156,7 +8244,6 @@ AspenDiscovery.Admin = (function () {
 					if (searchRegex.test(permissionSectionLabel)) {
 						curSection.show();
 						permissionsInSection.show();
-						console.log(permissionsInSection)
 					} else {
 						var numVisibleActions = 0;
 						permissionsInSection.each(function () {
@@ -8997,7 +9084,6 @@ AspenDiscovery.Admin = (function () {
 		},
 
 		getBatchUpdateHolidayForm: function (scope){
-			console.log(scope);
 			var url = Globals.path + "/Admin/AJAX?method=getBatchUpdateHolidayForm&scopeLevel=" + scope;
 			AspenDiscovery.Account.ajaxLightbox(url, true);
 		},
@@ -9041,6 +9127,22 @@ AspenDiscovery.Admin = (function () {
 				$('#propertyRowissuerTOTP').show();
 			} else {
 				$('#propertyRowissuerTOTP').hide();
+			}
+		},
+		toggle2FAAssignOptions: function () {
+			$('#propertyRowlibraries').hide();
+			$('#propertyRowptypes').hide();
+			$('#propertyRowroles').hide();
+
+			var assignBy = $("#assignToUsersBySelect").val();
+			if (assignBy === "role") {
+				$('#propertyRowlibraries').hide();
+				$('#propertyRowptypes').hide();
+				$('#propertyRowroles').show();
+			} else {
+				$('#propertyRowlibraries').show();
+				$('#propertyRowptypes').show();
+				$('#propertyRowroles').hide();
 			}
 		},
 		configureRateLimits: function () {
@@ -9198,6 +9300,39 @@ AspenDiscovery.Admin = (function () {
 							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
 						}
 					});
+				} else if (objectType === "countyCodes") {
+					AspenDiscovery.Admin.showFullPageLoadingOverlay('Populating from ILS, this may take a while. Please wait...');
+
+					$.ajax({
+						url: Globals.path + "/Admin/AJAX",
+						type: 'GET',
+						data: {
+							method: 'getILSMetadata',
+						},
+						success: function (response) {
+							var seenCodes = new Set();
+
+							response.forEach(function (entry) {
+								seenCodes.add(entry.key.slice(0, 2));
+							});
+
+							var sortedCodes = Array.from(seenCodes).sort();
+
+							sortedCodes.forEach(function (countyCode) {
+								addNewcountyCodes(); // existing generated function
+
+								var $newRow = $('#countyCodes tbody tr').last();
+
+								$newRow.find('input[name^="countyCodes_countyCode"]').val(countyCode);
+							});
+
+							$('#aspenFullPageLoadingOverlay').remove();
+						},
+						error: function () {
+							$('#aspenFullPageLoadingOverlay').remove();
+							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
+						}
+					});
 				}
 			}
 		},
@@ -9218,7 +9353,38 @@ AspenDiscovery.Admin = (function () {
 				'</div>'
 			);
 			$('body').append($overlay);
-		}
+		},
+		updateStaffRegFormForCategory: function() {
+			const container = document.getElementById('staffRegistrationFormContainer');
+			const categoryMeta = container ? JSON.parse(container.dataset.patronCategoryMeta || '{}') : {};
+			const childNeedsGuarantor = container ? container.dataset.childNeedsGuarantor === '1' : false;
+			const select = document.getElementById('category_idSelect');
+			const categoryId = select ? select.value : '';
+			const meta = categoryMeta[categoryId] || {};
+			const isOrg = meta.category_type === 'I';
+			const canBeGuarantee = !!meta.can_be_guarantee;
+			const guarantorRequired = childNeedsGuarantor && (meta.category_type === 'C' || canBeGuarantee);
+
+			['borrower_title', 'borrower_firstname', 'borrower_sex'].forEach(function(field) {
+				const row = document.getElementById('propertyRow' + field);
+				if (row) row.style.display = isOrg ? 'none' : '';
+			});
+
+			const surnameLabel = document.querySelector('label[for="borrower_surname"]');
+			if (surnameLabel) surnameLabel.textContent = isOrg ? 'Name' : 'Surname';
+
+			const identityTitle = document.getElementById('panelToggle_identitySection');
+			if (identityTitle) identityTitle.textContent = isOrg ? 'Organisation Identity' : 'Identity';
+
+			const guarantorPanel = document.getElementById('panelStatus_Guarantor');
+			if (guarantorPanel) guarantorPanel.style.display = canBeGuarantee ? '' : 'none';
+
+			const guarantorInput = document.getElementById('guarantorPatronId');
+			if (guarantorInput) {
+				guarantorInput.required = guarantorRequired;
+				guarantorInput.classList.toggle('required', guarantorRequired);
+			}
+		},
 	};
 }(AspenDiscovery.Admin || {}));
 AspenDiscovery.Authors = (function () {
@@ -11277,7 +11443,6 @@ AspenDiscovery.Events = (function(){
 		},
 
 		calculateEndTime: function () {
-			console.log("Calculating end time");
 			var startDate = moment($("#startDate").val());
 			var startTime = $("#startTime").val();
 			var length = $("#eventLength").val();
@@ -11669,7 +11834,6 @@ AspenDiscovery.Events = (function(){
 
 			$.getJSON(url, params, function (data) {
 				if (data.success && data.icsFile.length > 0) {
-					console.log(data.icsFile);
 					var filename = eventId + ".ics";
 					var element = document.createElement('a');
 					element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data.icsFile));
@@ -12477,9 +12641,6 @@ AspenDiscovery.GroupedWork = (function(){
 		},
 
 		loadDescription: function (id, recordType, recordId){
-			console.log("BEGIN");
-			console.log(recordType);
-			console.log(recordId);
 			var url = Globals.path + '/GroupedWork/' + id + '/AJAX',
 				params = {'method':'getDescription'};
 			if (recordType && recordId) {
@@ -13364,6 +13525,21 @@ AspenDiscovery.GroupedWork = (function(){
 				}
 			}
 		},
+		selectEditionOption: function (btn, value) {
+			var group = btn.closest('.edition-option-toggle');
+			var buttons = group.querySelectorAll('.edition-option-btn');
+
+			buttons.forEach(function (b) {
+				b.classList.remove('active');
+				b.setAttribute('aria-pressed', 'false');
+			});
+			btn.classList.add('active');
+			btn.setAttribute('aria-pressed', 'true');
+
+			document.getElementById('selectedEditionOption').value = value;
+
+			AspenDiscovery.GroupedWork.showEditionSwiper();
+		},
 		showEditionSwiper: function () {
 			var option = $('#selectedEditionOption').val();
 			if (option === '2') {
@@ -14243,7 +14419,6 @@ AspenDiscovery.MaterialsRequest = (function(){
 			var selectedRequests = $("input." + selectName + ":checked").map(function() {
 				return $(this).attr('name') + "=" + $(this).val();
 			}).get().join("&");
-			console.log(selectedRequests);
 			if (selectedRequests.length === 0){
 				if (promptToSelectAll){
 					var ret = confirm(__('You have not selected any requests, process all requests?'));
@@ -15858,59 +16033,6 @@ AspenDiscovery.Record = (function () {
 			return false;
 		},
 
-		showVdxRequest: function (module, source, id) {
-			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=getVdxRequestForm&recordSource=" + source;
-				$.getJSON(url, function (data) {
-					document.body.style.cursor = "default";
-					if (data.success) {
-						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message);
-					}
-				}).fail(AspenDiscovery.ajaxFail);
-			} else {
-				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showVdxRequest(module, source, id);
-				}, false);
-			}
-			return false;
-		},
-
-		submitVdxRequest: function (module, id) {
-			if (Globals.loggedIn) {
-				document.body.style.cursor = "wait";
-				var params = {
-					'method': 'submitVdxRequest',
-					title: $('#title').val(),
-					author: $('#author').val(),
-					publisher: $('#publisher').val(),
-					isbn: $('#isbn').val(),
-					oclcNumber: $('#oclcNumber').val(),
-					maximumFeeAmount: $('#maximumFeeAmount').val(),
-					acceptFee: $('#acceptFee').prop('checked'),
-					pickupLocation: $('#pickupLocationSelect').val(),
-					catalogKey: $('#catalogKey').val(),
-					note: $('#note').val()
-				};
-				var url = Globals.path + "/" + module + "/" + id + "/AJAX?method=submitVdxRequest";
-				$.getJSON(url, params, function (data) {
-					document.body.style.cursor = "default";
-					if (data.success) {
-						AspenDiscovery.showMessage(data.title, data.message, false, false);
-					} else {
-						AspenDiscovery.showMessage(data.title, data.message, false, false);
-					}
-				}).fail(AspenDiscovery.ajaxFail);
-			} else {
-				AspenDiscovery.Account.ajaxLogin(null, function () {
-					AspenDiscovery.Record.showVdxRequest(module, source, id, volume);
-				}, false);
-			}
-			return false;
-		},
-
 		showLocalIllRequest: function (module, source, id, volume) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
@@ -16658,8 +16780,6 @@ AspenDiscovery.Record = (function () {
 				selected.push($(this).val());
 			});
 
-			console.log("SELECTED RECORDS:", selected);
-			
 			const pickupBranch = $('#hyperholdPickupBranch').val();
 
 			const params = {
@@ -17150,6 +17270,45 @@ AspenDiscovery.Searches = (function(){
 			);
 		},
 
+		updateSearchTypeLayout() {
+			var searchSourceEl = document.getElementById('searchSource');
+			var searchSource = searchSourceEl ? searchSourceEl.value : '';
+			var showDropdown = (searchSource === 'events' || searchSource === 'lists' || searchSource === 'series' || searchSource === 'websites');
+
+			// search bar container sizing
+			var container = document.getElementById('searchTypeContainer');
+			if (container) {
+				var managedClasses = ['col-lg-10', 'col-md-10', 'col-lg-9', 'col-md-9', 'col-lg-7', 'col-md-7'];
+				managedClasses.forEach(function(cls) {
+					container.classList.remove(cls);
+				});
+
+				if (showDropdown) {
+					container.classList.add('col-lg-7', 'col-md-7');
+				} else {
+					var defaultClasses = container.getAttribute('data-default-class');
+					if (defaultClasses) {
+						defaultClasses.split(' ').forEach(function(cls) {
+							if (cls) {
+								container.classList.add(cls);
+							}
+						});
+					}
+				}
+			}
+
+			// searchIndex dropdown visibility
+			var indexContainer = document.getElementById('searchIndexContainer');
+			if (indexContainer) {
+				if (showDropdown) {
+					indexContainer.style.display = '';
+				} else {
+					var defaultHidden = indexContainer.getAttribute('data-default-hidden') === 'true';
+					indexContainer.style.display = defaultHidden ? 'none' : '';
+				}
+			}
+		},
+
 		loadExploreMoreBar: function(section, searchTerm){
 			var url = Globals.path + "/Search/AJAX";
 			var params = "method=loadExploreMoreBar&section=" + encodeURIComponent(section);
@@ -17512,8 +17671,19 @@ AspenDiscovery.Series = (function(){
 		printAction: function (){
 			window.print();
 			return false;
-		}
+		},
 
+		ungroupSeries(id, groupedWithSeriesId) {
+			var url = Globals.path + "/Series/" + id + "/AJAX?method=ungroupSeries&groupedWithSeriesId=" + groupedWithSeriesId;
+			//AspenDiscovery.closeLightbox();
+			$.getJSON(url, function(data){
+				if (data.success){
+					AspenDiscovery.showMessage("Success", data.message, false, true);
+				}else{
+					AspenDiscovery.showMessage("An error occurred", data.message, false, false);
+				}
+			}).fail(AspenDiscovery.ajaxFail);
+		}
 	};
 }(AspenDiscovery.Series || {}));
 AspenDiscovery.SideLoads = (() => {

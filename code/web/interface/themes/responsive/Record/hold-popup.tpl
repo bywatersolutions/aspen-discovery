@@ -276,25 +276,33 @@
 							<div class="alert alert-info">{translate text=$holdEditionPromptMessage isPublicFacing=true}</div>
 						{/if}
 						<div id="editionSelectionOptions" class="form-group">
-							<label class="control-label" for="selectedEditionOption">{translate text="Do you want to place a hold on the suggested edition or a specific edition?" isPublicFacing=true}</label>
-							<select name="selectedEditionOption" id="selectedEditionOption" class="form-control"  onchange="AspenDiscovery.GroupedWork.showEditionSwiper()">
-								<option value="1" {if $holdPromptForEditions == 1}selected{/if}>{translate text="Place hold on suggested edition" isPublicFacing=true}</option>
-								<option value="2" {if $holdPromptForEditions == 2}selected{/if}>{translate text="Place hold on specific edition" isPublicFacing=true}</option>
-							</select>
+							<label class="control-label">{translate text="Do you want to place a hold on the suggested edition or a specific edition?" isPublicFacing=true}</label>
+							<div class="btn-group btn-group-toggle edition-option-toggle" role="group" aria-label="{translate text="Edition hold option" isPublicFacing=true}">
+								<button type="button" class="btn btn-primary edition-option-btn{if $holdPromptForEditions == 2} active{/if}"
+										aria-pressed="{if $holdPromptForEditions == 2}true{else}false{/if}"
+										onclick="AspenDiscovery.GroupedWork.selectEditionOption(this, 2)">
+									{translate text="Place hold on specific edition" isPublicFacing=true}
+								</button>
+								<button type="button" class="btn btn-primary edition-option-btn{if $holdPromptForEditions == 1} active{/if}"
+										aria-pressed="{if $holdPromptForEditions == 1}true{else}false{/if}"
+										onclick="AspenDiscovery.GroupedWork.selectEditionOption(this, 1)">
+									{translate text="Place hold on suggested edition" isPublicFacing=true}
+								</button>
+							</div>
+							<input type="hidden" name="selectedEditionOption" id="selectedEditionOption" value="{$holdPromptForEditions|default:1}">
 						</div>
 						<div id="editionSelectionSlider" class="horizontalSliders" {if $holdPromptForEditions == 1}style="display: none"{/if}>
 							<div class="row horizontalEditionSelector">
 								<div class="col-xs-12">
-									<div class="slider-container" role="region" id="slider-edition">
-										<button type="button" class="slider-button slider-button-prev btn btn-editions" id="slider-prev-edition"></button>
-										<div class="slider-wrapper" role="listbox" aria-activedescendant="slide-edition-0">
+									<div class="slider-container" role="region" id="slider-edition" style="width: 0; min-width: 100%;">
+										<button type="button" class="slider-button slider-button-prev btn btn-editions" id="slider-prev-edition" aria-label="{translate text="Previous edition" isPublicFacing=true}"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>										<div class="slider-wrapper" role="radiogroup" aria-label="{translate text="Select edition" isPublicFacing=true}">
 											{assign var=firstEdition value=""}
 											{foreach from=$editionOptions item=edition name=editions}
-												{if $smarty.foreach.editions.index ==0}
+												{if $smarty.foreach.editions.index == 0}
 													{assign var=firstEdition value=$edition->databaseId}
 												{/if}
 												{assign var=current value=$smarty.foreach.editions.index + 1}
-												<div role="option" tabindex="0" class="slider-slide horizontal-edition-option{if $smarty.foreach.editions.index == 0} active{/if}">
+												<div class="slider-slide horizontal-edition-option{if $smarty.foreach.editions.index == 0} active{/if}">
 													<label for="editionOption{$edition->databaseId}">
 														<div class="edition-radio">
 															<input type="radio" name="editionOption" id="editionOption{$edition->databaseId}" value="{$edition->id}" {if $smarty.foreach.editions.index == 0}checked{/if}> {translate text="Select This Edition" isPublicFacing=true}
@@ -305,13 +313,13 @@
 														<div class="edition-data">
 															{$edition->publicationDate}. {$edition->publisher}. {$edition->physical}.<br/>
 															{include file='GroupedWork/statusIndicator.tpl' statusInformation=$edition->getStatusInformation() viewingIndividualRecord=1}
-															<span>{$current} of {count($editionOptions)}</span>
+															<span>{$current} of {count($editionOptions)} editions</span>
 														</div>
 													</label>
 												</div>
 											{/foreach}
 										</div>
-										<button type="button" class="slider-button slider-button-next btn btn-editions" id="slider-next-edition"></button>
+										<button type="button" class="slider-button slider-button-next btn btn-editions" id="slider-next-edition" aria-label="{translate text="Next edition" isPublicFacing=true}"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
 								</div>
 									<script>
 										$(document).ready(function(){ldelim}
@@ -333,16 +341,11 @@
 							</label>
 						</div>
 					{/if}
-					{if $holdType == 'bib' && $enableMultiCopyHolds}
+					{if $holdType == 'bib' && $enableMultiCopyHolds && $maxCopyHolds > 1}
 						<div id="numberOfCopiesRow" class="form-group">
-							<div class="row">
-								<div class="col-tn-6">
-									<label for="numberOfCopies">{translate text="Number of Copies" isPublicFacing=true}</label>
-								</div>
-								<div class="col-tn-6">
-									<input type="number" name="numberOfCopies" id="numberOfCopies" value="1" min="1" max="{$maxCopyHolds}" class="form-control"/>
-								</div>
-							</div>
+							<label for="numberOfCopies" class="control-label">{translate text="Number of Copies" isPublicFacing=true}</label>
+							<input type="number" name="numberOfCopies" id="numberOfCopies" value="1" min="1" max="{$maxCopyHolds}" class="form-control"/>
+							<span id="numberOfCopiesHelpBlock" class="help-block"><small><i class="fas fa-info-circle"></i> {translate text="A maximum of %1% copies may be requested." 1=$maxCopyHolds isPublicFacing=true}</small></span>
 						</div>
 					{/if}
 					{if !empty($promptForHoldNotifications)}

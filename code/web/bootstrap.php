@@ -308,6 +308,7 @@ function requireSystemLibraries() {
 	require_once ROOT_DIR . '/sys/Translation/Translator.php';
 	require_once ROOT_DIR . '/Drivers/AbstractIlsDriver.php';
 	require_once ROOT_DIR . '/sys/IP/IPAddress.php';
+	require_once ROOT_DIR . '/sys/Storage/StorageDriverFactory.php';
 }
 
 function initLocale() {
@@ -340,7 +341,7 @@ function loadLibraryAndLocation() {
 	$branch = $locationSingleton->getBranchLocationCode();
 	if (!isset($_COOKIE['branch']) || $branch != $_COOKIE['branch']) {
 		if ($branch == '') {
-			if (!empty($COOKIE['branch'])) {
+			if (!empty($_COOKIE['branch'])) {
 				setcookie('branch', $branch, time() - 1000, '/');
 			}
 		} else {
@@ -352,7 +353,7 @@ function loadLibraryAndLocation() {
 	$subLocation = $locationSingleton->getSublocationCode();
 	if (!isset($_COOKIE['sublocation']) || $subLocation != $_COOKIE['sublocation']) {
 		if (empty($subLocation)) {
-			if (!empty($COOKIE['sublocation'])) {
+			if (!empty($_COOKIE['sublocation'])) {
 				setcookie('sublocation', $subLocation, time() - 1000, '/');
 			}
 		} else {

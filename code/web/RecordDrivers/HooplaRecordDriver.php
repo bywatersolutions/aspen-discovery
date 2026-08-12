@@ -59,6 +59,24 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 		}
 	}
 
+	private ?array $detailedContributors = null;
+	/** @noinspection PhpUnused */
+	public function getDetailedContributors() : array {
+		if ($this->detailedContributors == null) {
+			$this->detailedContributors = [];
+			$rawData = $this->hooplaRawMetadata;
+			foreach ($rawData->artists as $artist) {
+				if (!array_key_exists($artist->name, $this->detailedContributors)) {
+					$this->detailedContributors[$artist->name] = [
+						'name' => $artist->name,
+						'role' =>  ucfirst(strtolower($artist->relationship)),
+					];
+				}
+			}
+		}
+		return $this->detailedContributors;
+	}
+
 	public function getModule(): string {
 		return 'Hoopla';
 	}
@@ -616,7 +634,9 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 	public function getDuration() {
 		$duration = '';
 		if (!empty($this->hooplaRawMetadata->duration)) {
-			$duration = StringUtils::extractTotalMinutes($this->hooplaRawMetadata->duration);
+			if (in_array('Audio Books', $this->getGroupedWorkDriver()->getFormatCategories())) {
+				$duration = StringUtils::extractTotalMinutes($this->hooplaRawMetadata->duration);
+			}
 		}
 		return $duration;
 	}

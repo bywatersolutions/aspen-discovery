@@ -210,6 +210,7 @@ class Series_AJAX extends JSON_Action {
 					$originalSeries->getSeriesMembers();
 					$originalSeries->seriesToGroupWithId = $seriesToGroupWithId;
 					$originalSeries->isIndexed = 0;
+					$originalSeries->dateUpdated = time();
 					$originalSeries->update();
 
 					$results['success'] = true;
@@ -227,6 +228,58 @@ class Series_AJAX extends JSON_Action {
 			} else {
 				$results['message'] = translate([
 					'text' => "Could not find series to group with.",
+					'isAdminFacing' => true,
+				]);
+			}
+		} else {
+			$results['message'] = translate([
+				'text' => "Could not find series for original id.",
+				'isAdminFacing' => true,
+			]);
+		}
+		return $results;
+	}
+
+	/** @noinspection PhpUnused */
+	function ungroupSeries(): array {
+		$this->requireLoggedInUser();
+		$this->checkRequiredPermission('Administer Series');
+		$this->checkRequiredParameters(['id']);
+
+		/** @noinspection PhpArrayIndexImmediatelyRewrittenInspection */
+		$results = [
+			'success' => false,
+			'message' => translate([
+				'text' => 'Unknown Error',
+				'isPublicFacing' => true,
+			]),
+		];
+
+		$seriesToUngroupId = $_REQUEST['id'];
+		$seriesGroupedOntoId = $_REQUEST['groupedWithSeriesId'];
+
+		require_once ROOT_DIR . '/sys/Series/Series.php';
+		$seriesToUngroup = new Series();
+		$seriesToUngroup->seriesPermanentId = $seriesToUngroupId;
+
+		if (!empty($seriesToUngroupId) && $seriesToUngroup->find(true)) {
+			$seriesGroupedOnto = new Series();
+			$seriesGroupedOnto->seriesPermanentId = $seriesGroupedOntoId;
+			if (!empty($seriesGroupedOntoId) && $seriesGroupedOnto->find(true)) {
+				$seriesToUngroup->getSeriesMembers();
+				$seriesToUngroup->seriesToGroupWithId = '';
+				$seriesToUngroup->isIndexed = 1;
+				$seriesToUngroup->dateUpdated = time();
+				$seriesToUngroup->update();
+
+				$results['success'] = true;
+				$results['message'] = translate([
+					'text' => "Your series have been ungrouped successfully, the index will update shortly.",
+					'isAdminFacing' => true,
+				]);
+			} else {
+				$results['message'] = translate([
+					'text' => "Could not find series to ungroup.",
 					'isAdminFacing' => true,
 				]);
 			}

@@ -52,6 +52,7 @@ abstract class SearchObject_BaseSearcher {
 	protected $resultsAction = 'Results';
 	// Facets information
 	protected $facetConfig;    // Array of valid facet fields=>labels
+	protected $fullFacetConfig;
 	protected $facetOptions = [];
 	// Available sort options
 	protected $sortOptions = [];
@@ -277,6 +278,7 @@ abstract class SearchObject_BaseSearcher {
 		$shortField = $field;
 		$shortField = $this->getUnscopedFieldName($shortField);
 		$facetConfig = $this->getFacetConfig();
+		$fullFacetConfig = $this->getFullFacetConfig();
 		if (isset($facetConfig[$field])) {
 			$facetConfig = $facetConfig[$field];
 			if ($facetConfig instanceof FacetSetting) {
@@ -290,6 +292,13 @@ abstract class SearchObject_BaseSearcher {
 				return $facetConfig->displayName;
 			} else {
 				return $facetConfig;
+			}
+		} elseif (isset($fullFacetConfig[$field])) {
+			$fullFacetConfig = $fullFacetConfig[$field];
+			if ($fullFacetConfig instanceof FacetSetting) {
+				return $fullFacetConfig->displayName;
+			} else {
+				return $fullFacetConfig;
 			}
 		} else {
 			return ucwords(str_replace("_", " ", translate([
@@ -369,7 +378,7 @@ abstract class SearchObject_BaseSearcher {
 					}else{
 						$display = translate(['text'=>'Between %1% and %2%', 1=>$startDate, 2=>$endDate, 'isPublicFacing'=>true]);
 					}
-				} elseif ($field == "accelerated_reader_point_value" || $field == "accelerated_reader_reading_level" || $field == "lexile_score"){
+				} elseif ($field == "accelerated_reader_point_value" || $field == "accelerated_reader_reading_level" || $field == "lexile_score" || $field == "publishDateSort"){
 					$display = translate(['text' => $facetLabel, 'isPublicFacing' => true])  . ' ' . $value ;
 				} elseif ($field == 'duration') {
 					//Update the Display value to be in hours rather than minutes
@@ -377,6 +386,8 @@ abstract class SearchObject_BaseSearcher {
 					$startValue = $rangeValues[1] == '*' ? '*' : $rangeValues[1] / 60;
 					$endValue = $rangeValues[2] == '*' ? '*' : $rangeValues[2] / 60;
 					$display = translate(['text' => $facetLabel, 'isPublicFacing' => true]) . ' ' . "[$startValue TO $endValue]";
+				} elseif ($field == 'author2-role') {
+					$display = preg_replace('/\s*\|\s*/', ' - ', $value);
 				} else {
 					$display = $translate ? translate([
 						'text' => $value,
@@ -1472,6 +1483,8 @@ abstract class SearchObject_BaseSearcher {
 	}
 
 	public abstract function getSearchIndexes();
+
+	public abstract function getAdvancedSearchIndexes();
 
 	public function getFilters() {
 		return $this->filterList;
@@ -2790,6 +2803,10 @@ abstract class SearchObject_BaseSearcher {
 			$this->facetConfig = [];
 		}
 		return $this->facetConfig;
+	}
+
+	public function getFullFacetConfig() {
+		return $this->fullFacetConfig;
 	}
 
 	abstract function getSearchName();

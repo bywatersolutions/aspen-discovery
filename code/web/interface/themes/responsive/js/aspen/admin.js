@@ -2264,7 +2264,6 @@ AspenDiscovery.Admin = (function () {
 					if (searchRegex.test(permissionSectionLabel)) {
 						curSection.show();
 						permissionsInSection.show();
-						console.log(permissionsInSection)
 					} else {
 						var numVisibleActions = 0;
 						permissionsInSection.each(function () {
@@ -3105,7 +3104,6 @@ AspenDiscovery.Admin = (function () {
 		},
 
 		getBatchUpdateHolidayForm: function (scope){
-			console.log(scope);
 			var url = Globals.path + "/Admin/AJAX?method=getBatchUpdateHolidayForm&scopeLevel=" + scope;
 			AspenDiscovery.Account.ajaxLightbox(url, true);
 		},
@@ -3149,6 +3147,22 @@ AspenDiscovery.Admin = (function () {
 				$('#propertyRowissuerTOTP').show();
 			} else {
 				$('#propertyRowissuerTOTP').hide();
+			}
+		},
+		toggle2FAAssignOptions: function () {
+			$('#propertyRowlibraries').hide();
+			$('#propertyRowptypes').hide();
+			$('#propertyRowroles').hide();
+
+			var assignBy = $("#assignToUsersBySelect").val();
+			if (assignBy === "role") {
+				$('#propertyRowlibraries').hide();
+				$('#propertyRowptypes').hide();
+				$('#propertyRowroles').show();
+			} else {
+				$('#propertyRowlibraries').show();
+				$('#propertyRowptypes').show();
+				$('#propertyRowroles').hide();
 			}
 		},
 		configureRateLimits: function () {
@@ -3306,6 +3320,39 @@ AspenDiscovery.Admin = (function () {
 							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
 						}
 					});
+				} else if (objectType === "countyCodes") {
+					AspenDiscovery.Admin.showFullPageLoadingOverlay('Populating from ILS, this may take a while. Please wait...');
+
+					$.ajax({
+						url: Globals.path + "/Admin/AJAX",
+						type: 'GET',
+						data: {
+							method: 'getILSMetadata',
+						},
+						success: function (response) {
+							var seenCodes = new Set();
+
+							response.forEach(function (entry) {
+								seenCodes.add(entry.key.slice(0, 2));
+							});
+
+							var sortedCodes = Array.from(seenCodes).sort();
+
+							sortedCodes.forEach(function (countyCode) {
+								addNewcountyCodes(); // existing generated function
+
+								var $newRow = $('#countyCodes tbody tr').last();
+
+								$newRow.find('input[name^="countyCodes_countyCode"]').val(countyCode);
+							});
+
+							$('#aspenFullPageLoadingOverlay').remove();
+						},
+						error: function () {
+							$('#aspenFullPageLoadingOverlay').remove();
+							AspenDiscovery.showMessage('Error', 'Could not populate from ILS.');
+						}
+					});
 				}
 			}
 		},
@@ -3326,6 +3373,37 @@ AspenDiscovery.Admin = (function () {
 				'</div>'
 			);
 			$('body').append($overlay);
-		}
+		},
+		updateStaffRegFormForCategory: function() {
+			const container = document.getElementById('staffRegistrationFormContainer');
+			const categoryMeta = container ? JSON.parse(container.dataset.patronCategoryMeta || '{}') : {};
+			const childNeedsGuarantor = container ? container.dataset.childNeedsGuarantor === '1' : false;
+			const select = document.getElementById('category_idSelect');
+			const categoryId = select ? select.value : '';
+			const meta = categoryMeta[categoryId] || {};
+			const isOrg = meta.category_type === 'I';
+			const canBeGuarantee = !!meta.can_be_guarantee;
+			const guarantorRequired = childNeedsGuarantor && (meta.category_type === 'C' || canBeGuarantee);
+
+			['borrower_title', 'borrower_firstname', 'borrower_sex'].forEach(function(field) {
+				const row = document.getElementById('propertyRow' + field);
+				if (row) row.style.display = isOrg ? 'none' : '';
+			});
+
+			const surnameLabel = document.querySelector('label[for="borrower_surname"]');
+			if (surnameLabel) surnameLabel.textContent = isOrg ? 'Name' : 'Surname';
+
+			const identityTitle = document.getElementById('panelToggle_identitySection');
+			if (identityTitle) identityTitle.textContent = isOrg ? 'Organisation Identity' : 'Identity';
+
+			const guarantorPanel = document.getElementById('panelStatus_Guarantor');
+			if (guarantorPanel) guarantorPanel.style.display = canBeGuarantee ? '' : 'none';
+
+			const guarantorInput = document.getElementById('guarantorPatronId');
+			if (guarantorInput) {
+				guarantorInput.required = guarantorRequired;
+				guarantorInput.classList.toggle('required', guarantorRequired);
+			}
+		},
 	};
 }(AspenDiscovery.Admin || {}));

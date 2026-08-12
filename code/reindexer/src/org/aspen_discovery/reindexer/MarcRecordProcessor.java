@@ -414,9 +414,11 @@ abstract class MarcRecordProcessor {
 		seriesFields = MarcUtil.getDataFields(record, seriesFieldsToIndexWith800);
 		for (DataField seriesField : seriesFields){
 			String subfields;
-			if (seriesField.getNumericTag() == 800 || seriesField.getNumericTag() == 896) {
+			if (seriesField.getNumericTag() == 800) {
 				subfields = "npt";
-			}else{
+			} else if (seriesField.getNumericTag() == 896) {
+				subfields = "anpt";
+			} else {
 				subfields = "abcdfnpt";
 			}
 			String series = AspenStringUtils.trimTrailingPunctuation(MarcUtil.getSpecifiedSubfieldsAsString(seriesField, subfields," ")).toString();
@@ -468,7 +470,6 @@ abstract class MarcRecordProcessor {
 			}
 		}
 
-		groupedWork.addDateSpan(MarcUtil.getFieldList(record, "362a"));
 		groupedWork.addContents(MarcUtil.getFieldList(record, "505a:505t"));
 		//Check to see if we have any child records and if so add them as well
 		groupedWork.addIssns(MarcUtil.getFieldList(record, "022a"));
@@ -477,7 +478,8 @@ abstract class MarcRecordProcessor {
 		List<DataField> upcFields = MarcUtil.getDataFields(record, 24);
 		for (DataField upcField : upcFields){
 			if (upcField.getSubfield('a') != null){
-				groupedWork.addUpc(upcField.getSubfield('a').getData());
+				String upc = upcField.getSubfield('a').getData().trim().replaceAll("[^0-9]+$", "");
+				groupedWork.addUpc(upc);
 			}
 		}
 
@@ -660,15 +662,17 @@ abstract class MarcRecordProcessor {
 			return "Not Rated";
 		}
 
+		// Check TV ratings first
+		String tvRating = getRatingFromPatterns(val, tvRatingRegex1, tvRatingRegex2, tvRatingRegex3, tvRatingRegex4);
+		if (tvRating != null) {
+			return normalizeTvRating(tvRating) + " Rated";
+		}
+
 		String mpaaRating = getRatingFromPatterns(val, mpaaRatingRegex1, mpaaRatingRegex2, mpaaRatingRegex3, mpaaRatingRegex4);
 		if (mpaaRating != null) {
 			return mpaaRating + " Rated";
 		}
 
-		String tvRating = getRatingFromPatterns(val, tvRatingRegex1, tvRatingRegex2, tvRatingRegex3, tvRatingRegex4);
-		if (tvRating != null) {
-			return normalizeTvRating(tvRating) + " Rated";
-		}
 		return null;
 	}
 
@@ -900,6 +904,7 @@ abstract class MarcRecordProcessor {
 			}else if (subjectForm.equalsIgnoreCase("Poetry")
 					|| subjectForm.equalsIgnoreCase("Juvenile Poetry")
 					){
+				addToMapWithCount(literaryFormsWithCount, "Fiction");
 				addToMapWithCount(literaryFormsWithCount, "Non Fiction");
 				addToMapWithCount(literaryFormsFull, "Poetry");
 				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Literary Form is non fiction/poetry based on 'poetry' in 650v, 651v", 2);}
@@ -911,10 +916,8 @@ abstract class MarcRecordProcessor {
 					|| subjectForm.equalsIgnoreCase("Humor, Juvenile")
 					|| subjectForm.equalsIgnoreCase("Humour")
 					){
-				addToMapWithCount(literaryFormsWithCount, "Fiction");
-				addToMapWithCount(literaryFormsFull, "Fiction");
 				addToMapWithCount(literaryFormsFull, "Humor, Satires, etc.");
-				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Literary Form is fiction/humor based on 650v, 651v", 2);}
+				if (groupedWork != null && groupedWork.isDebugEnabled()) {groupedWork.addDebugMessage("Literary Form is humor based on 650v, 651v", 2);}
 			}else if (subjectForm.equalsIgnoreCase("Correspondence")
 					){
 				addToMapWithCount(literaryFormsWithCount, "Non Fiction");
@@ -983,6 +986,7 @@ abstract class MarcRecordProcessor {
 			subjectForm = AspenStringUtils.trimTrailingPunctuation(subjectForm).toLowerCase();
 			if (subjectForm.startsWith("instructional film")
 					|| subjectForm.startsWith("educational film")
+					|| subjectForm.startsWith("nonfiction film")
 					) {
 				addToMapWithCount(literaryFormsWithCount, "Non Fiction");
 				addToMapWithCount(literaryFormsFull, "Non Fiction");
@@ -1544,12 +1548,12 @@ abstract class MarcRecordProcessor {
 			String languageBoost = indexer.translateSystemValue("language_boost", language, identifier);
 			if (languageBoost != null){
 				Long languageBoostVal = Long.parseLong(languageBoost);
-				groupedWork.setLanguageBoost(languageBoostVal);
+				groupedWork.setLanguageBoost(languageBoostVal, ilsRecords);
 			}
 			String languageBoostEs = indexer.translateSystemValue("language_boost_es", language, identifier);
 			if (languageBoostEs != null){
 				Long languageBoostVal = Long.parseLong(languageBoostEs);
-				groupedWork.setLanguageBoostSpanish(languageBoostVal);
+				groupedWork.setLanguageBoostSpanish(languageBoostVal, ilsRecords);
 			}
 		}
 		if (translatedLanguages.isEmpty()){
@@ -1560,15 +1564,15 @@ abstract class MarcRecordProcessor {
 			String languageBoost = indexer.translateSystemValue("language_boost", settings.getTreatUnknownLanguageAs(), identifier);
 			if (languageBoost != null){
 				Long languageBoostVal = Long.parseLong(languageBoost);
-				groupedWork.setLanguageBoost(languageBoostVal);
+				groupedWork.setLanguageBoost(languageBoostVal, ilsRecords);
 			}
 			String languageBoostEs = indexer.translateSystemValue("language_boost_es", settings.getTreatUnknownLanguageAs(), identifier);
 			if (languageBoostEs != null){
 				Long languageBoostVal = Long.parseLong(languageBoostEs);
-				groupedWork.setLanguageBoostSpanish(languageBoostVal);
+				groupedWork.setLanguageBoostSpanish(languageBoostVal, ilsRecords);
 			}
 		}
-		groupedWork.setLanguages(translatedLanguages);
+		groupedWork.setLanguages(translatedLanguages, ilsRecords);
 
 		String translationFields = "041b:041d:041h:041j";
 		Set<String> translations = MarcUtil.getFieldList(record, translationFields);
@@ -1634,7 +1638,11 @@ abstract class MarcRecordProcessor {
 			}
 			StringBuilder roles = MarcUtil.getSpecifiedSubfieldsAsString(contributorField, "e4", ",");
 			if (roles.length() > 0){
-				contributor.append("|").append(roles.toString().replaceAll(",,", ","));
+				if (roles.toString().contains("nrt")) {
+					contributor.append("|Narrator");
+				} else {
+					contributor.append("|").append(roles.toString().replaceAll(",,", ","));
+				}
 			}
 			contributors.add(contributor.toString());
 		}
@@ -1694,8 +1702,6 @@ abstract class MarcRecordProcessor {
 		//title alt
 		//noinspection SpellCheckingInspection
 		groupedWork.addAlternateTitles(MarcUtil.getFieldList(record, "130adfgklnpst:240a:246abfgnp:700tnr:730adfgklnpst:740a:505t"));
-		//title old
-		groupedWork.addOldTitles(MarcUtil.getFieldList(record, "780ast"));
 		//title new
 		groupedWork.addNewTitles(MarcUtil.getFieldList(record, "785ast"));
 	}

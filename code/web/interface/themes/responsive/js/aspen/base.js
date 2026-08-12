@@ -896,40 +896,73 @@ var AspenDiscovery = (function(){
 			var wrapper = container.querySelector('.slider-wrapper');
 			var prevBtn = container.querySelector('.slider-button-prev');
 			var nextBtn = container.querySelector('.slider-button-next');
-			var slideWidth = wrapper.querySelector('.slider-slide').offsetWidth + 12;
 			var slides = wrapper.querySelectorAll('.slider-slide');
 			let currentIndex = 0;
-			// --- Accessibility ARIA setup ---
-			wrapper.setAttribute('role', 'listbox');
-			slides.forEach(function (slide, idx) {
-				slide.setAttribute('role', 'option');
-				slide.setAttribute('tabindex', '0');
-				slide.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
-				slide.id = slide.id || ('slide-' + container.id + '-' + idx);
-			});
-			wrapper.setAttribute('aria-activedescendant', slides[0].id);
 
-			function focusSlide(index, doFocus = false, doScroll = false) {
+			// Compute slide width fresh each time instead of caching it once at init,
+			// since offsetWidth is 0 while this is inside a display:none modal.
+			function getSlideWidth() {
+				var slide = wrapper.querySelector('.slider-slide');
+				return (slide ? slide.offsetWidth : 0) + 12;
+			}
+
+			// Focusable control should own focus/selection semantics.
+			// Layering role="option"/tabindex="0" on the slide as well
+			// creates nested focusable elements, which is invalid and confuses screen readers.
+			function getInnerControl(slide) {
+				return slide.querySelector('input, select, textarea, button, a[href]');
+			}
+			var hasInnerControls = slides.length > 0 && Array.prototype.every.call(slides, function (slide) {
+				return !!getInnerControl(slide);
+			});
+
+			// --- Accessibility ARIA setup ---
+			if (hasInnerControls) {
+				// Native controls (e.g. a radio group) provide semantics and keyboard behavior.
+				//  Don't add a redundant listbox pattern on top of them.
+				wrapper.removeAttribute('role');
+				wrapper.removeAttribute('aria-activedescendant');
+				slides.forEach(function (slide) {
+					slide.removeAttribute('role');
+					slide.removeAttribute('tabindex');
+					slide.removeAttribute('aria-selected');
+				});
+			} else {
+				wrapper.setAttribute('role', 'listbox');
+				slides.forEach(function (slide, idx) {
+					slide.setAttribute('role', 'option');
+					slide.setAttribute('tabindex', '0');
+					slide.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+					slide.id = slide.id || ('slide-' + container.id + '-' + idx);
+				});
+				wrapper.setAttribute('aria-activedescendant', slides[0].id);
+			}
+
+			function setActiveSlide(index, doFocus = false, doScroll = false) {
 				slides.forEach(function (slide, i) {
-					slide.setAttribute('aria-selected', i === index ? 'true' : 'false');
+					if (!hasInnerControls) {
+						slide.setAttribute('aria-selected', i === index ? 'true' : 'false');
+					}
 					if (i === index) {
 						slide.classList.add('active');
-						if (doFocus) slide.focus();
+						if (doFocus && !hasInnerControls) slide.focus();
 						if (doScroll) slides[index].scrollIntoView({block: 'nearest', inline: 'center'});
 					} else {
 						slide.classList.remove('active');
 					}
 				});
-				wrapper.setAttribute('aria-activedescendant', slides[index].id);
+				if (!hasInnerControls) {
+					wrapper.setAttribute('aria-activedescendant', slides[index].id);
+				}
 				currentIndex = index;
 			}
 
-			// Only scroll on button click, do not select/focus next slide
+			// Animated scroll on button click
 			prevBtn.addEventListener('click', function () {
-				wrapper.scrollLeft -= slideWidth;
+				wrapper.scrollTo({ left: wrapper.scrollLeft - getSlideWidth(), behavior: 'smooth' });
 			});
 			nextBtn.addEventListener('click', function () {
-				wrapper.scrollLeft += slideWidth;
+				wrapper.scrollTo({ left: wrapper.scrollLeft + getSlideWidth(), behavior: 'smooth' });
 			});
 
 			// Keyboard support for prev/next buttons
@@ -946,94 +979,166 @@ var AspenDiscovery = (function(){
 				}
 			});
 
-			slides.forEach(function (slide, i) {
-				slide.addEventListener('click', function (e) {
-					slides.forEach(function (s) {
-						s.classList.remove('active');
-						s.setAttribute('aria-selected', 'false');
+			if (hasInnerControls) {
+				// Let the inner control (radio) drive selection
+				// keep the visual "active" state and the callback in sync with it
+				// make sure the active slide scrolls into view
+				// This works for click, Space, and native radio-group arrow-key navigation
+				slides.forEach(function (slide, i) {
+					var control = getInnerControl(slide);
+					control.addEventListener('change', function () {
+						// Ignore the tail end of a real drag gesture
+						if (wrapper.dataset.dragMoved === 'true') return;
+						setActiveSlide(i, false, true);
+						onSlideClick(slide);
 					});
-					slide.classList.add('active');
-					slide.setAttribute('aria-selected', 'true');
-					wrapper.setAttribute('aria-activedescendant', slide.id);
-					currentIndex = i;
-					onSlideClick(slide);
 				});
+			} else {
+				slides.forEach(function (slide, i) {
+					slide.addEventListener('click', function () {
+						if (wrapper.dataset.dragMoved === 'true') return;
+						setActiveSlide(i, false, false);
+						slide.focus();
+						onSlideClick(slide);
+					});
 
-				// Keyboard navigation for slides
-				slide.addEventListener('keydown', function (e) {
-					if (e.key === 'ArrowRight') {
-						if (i < slides.length - 1) {
-							focusSlide(i + 1, true, true);
+					// Keyboard navigation for slides
+					slide.addEventListener('keydown', function (e) {
+						if (e.key === 'ArrowRight') {
+							if (i < slides.length - 1) {
+								e.preventDefault();
+								setActiveSlide(i + 1, true, true);
+							}
+						} else if (e.key === 'ArrowLeft') {
+							if (i > 0) {
+								e.preventDefault();
+								setActiveSlide(i - 1, true, true);
+							}
+						} else if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							slide.click();
 						}
-					} else if (e.key === 'ArrowLeft') {
-						if (i > 0) {
-							focusSlide(i - 1, true, true);
-						}
-					} else if (e.key === 'Enter' || e.key === ' ') {
-						slide.click();
-					}
+					});
 				});
-			});
-
-			function updateButtonState() {
-				const hasOverflow = wrapper.scrollWidth > wrapper.clientWidth;
-				const atStart = wrapper.scrollLeft <= 0;
-				const atEnd = wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 1;
-
-				prevBtn.disabled = !hasOverflow || atStart;
-				nextBtn.disabled = !hasOverflow || atEnd;
-
-				prevBtn.classList.toggle('slider-button-disabled', !hasOverflow || atStart);
-				nextBtn.classList.toggle('slider-button-disabled', !hasOverflow || atEnd);
 			}
 
-			updateButtonState();
-			window.addEventListener('resize', updateButtonState);
-			wrapper.addEventListener('scroll', updateButtonState);
-
-			// --- Touch/drag support ---
-			let isDown = false;
-			let startX;
-			let scrollLeft;
-
-			wrapper.addEventListener('mousedown', (e) => {
-				isDown = true;
-				wrapper.classList.add('active');
-				startX = e.pageX - wrapper.offsetLeft;
-				scrollLeft = wrapper.scrollLeft;
-			});
-			wrapper.addEventListener('mouseleave', () => {
-				isDown = false;
-				wrapper.classList.remove('active');
-			});
-			wrapper.addEventListener('mouseup', () => {
-				isDown = false;
-				wrapper.classList.remove('active');
-			});
-			wrapper.addEventListener('mousemove', (e) => {
-				if (!isDown) return;
+			// Prevent native image/link drag from hijacking pointer gestures
+			wrapper.addEventListener('dragstart', function (e) {
 				e.preventDefault();
-				const x = e.pageX - wrapper.offsetLeft;
-				const walk = (x - startX) * 1.5;
-				wrapper.scrollLeft = scrollLeft - walk;
-			});
-			wrapper.addEventListener('touchstart', (e) => {
-				isDown = true;
-				startX = e.touches[0].pageX - wrapper.offsetLeft;
-				scrollLeft = wrapper.scrollLeft;
-			});
-			wrapper.addEventListener('touchend', () => {
-				isDown = false;
-			});
-			wrapper.addEventListener('touchmove', (e) => {
-				if (!isDown) return;
-				const x = e.touches[0].pageX - wrapper.offsetLeft;
-				const walk = (x - startX) * 1.5;
-				wrapper.scrollLeft = scrollLeft - walk;
 			});
 
-			// Initialize focus and ARIA
-			focusSlide(currentIndex, false, false);
+			// --- Pointer-based drag-to-scroll with momentum (mouse, touch, and pen) ---
+			(function enableDragScroll() {
+				var isDown = false;
+				var pointerId = null;
+				var startX = 0;
+				var startScrollLeft = 0;
+				var DRAG_THRESHOLD = 10; // px before a press counts as a drag, not a click
+
+				// Velocity tracking
+				var lastX = 0;
+				var lastTime = 0;
+				var velocity = 0; // px per ms
+
+				// Momentum animation
+				var momentumRAF = null;
+				var FRICTION = 0.95;      // lower = stops sooner, higher = coasts longer
+				var MIN_VELOCITY = 0.02;  // px/ms threshold to stop the animation
+
+				function stopMomentum() {
+					if (momentumRAF) {
+						cancelAnimationFrame(momentumRAF);
+						momentumRAF = null;
+					}
+				}
+
+				function runMomentum() {
+					wrapper.scrollLeft -= velocity * 16; // approximate px for a ~16ms frame
+					velocity *= FRICTION;
+
+					// Stop at the natural scroll boundaries too, rather than fighting them
+					if (wrapper.scrollLeft <= 0 || wrapper.scrollLeft >= wrapper.scrollWidth - wrapper.clientWidth) {
+						velocity = 0;
+					}
+
+					if (Math.abs(velocity) > MIN_VELOCITY) {
+						momentumRAF = requestAnimationFrame(runMomentum);
+					} else {
+						momentumRAF = null;
+					}
+				}
+
+				wrapper.addEventListener('pointerdown', function (e) {
+					if (e.button !== undefined && e.button !== 0) return;
+					stopMomentum(); // grabbing mid-coast should kill the momentum immediately
+
+					isDown = true;
+					pointerId = e.pointerId;
+					wrapper.dataset.dragMoved = 'false';
+					startX = e.clientX;
+					startScrollLeft = wrapper.scrollLeft;
+
+					lastX = e.clientX;
+					lastTime = performance.now();
+					velocity = 0;
+
+					// Do NOT capture the pointer yet — only once a real drag is confirmed,
+					// otherwise click events on slides stop firing entirely.
+				});
+
+				wrapper.addEventListener('pointermove', function (e) {
+					if (!isDown || e.pointerId !== pointerId) return;
+
+					var dx = e.clientX - startX;
+
+					if (Math.abs(dx) > DRAG_THRESHOLD && wrapper.dataset.dragMoved !== 'true') {
+						wrapper.dataset.dragMoved = 'true';
+						wrapper.classList.add('dragging');
+						wrapper.setPointerCapture(pointerId); // capture only now that it's a real drag
+					}
+
+					if (wrapper.dataset.dragMoved === 'true') {
+						wrapper.scrollLeft = startScrollLeft - dx;
+					}
+
+					var now = performance.now();
+					var dt = now - lastTime;
+					if (dt > 0) {
+						// px/ms since the last move event, smoothed slightly against the previous reading
+						var instVelocity = (e.clientX - lastX) / dt;
+						velocity = velocity * 0.7 + instVelocity * 0.3;
+					}
+					lastX = e.clientX;
+					lastTime = now;
+				});
+
+				function endDrag(e) {
+					if (!isDown || (pointerId !== null && e.pointerId !== pointerId)) return;
+					isDown = false;
+					wrapper.classList.remove('dragging');
+					if (pointerId !== null && wrapper.hasPointerCapture(pointerId)) {
+						wrapper.releasePointerCapture(pointerId);
+					}
+					pointerId = null;
+
+					if (Math.abs(velocity) > MIN_VELOCITY) {
+						momentumRAF = requestAnimationFrame(runMomentum);
+					}
+
+					setTimeout(function () { wrapper.dataset.dragMoved = 'false'; }, 0);
+				}
+
+				wrapper.addEventListener('pointerup', endDrag);
+				wrapper.addEventListener('pointercancel', endDrag);
+
+				// --- Mouse wheel / trackpad horizontal scroll ---
+				wrapper.addEventListener('wheel', function (e) {
+					var delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+					stopMomentum();
+					wrapper.scrollLeft += delta;
+					e.preventDefault();
+				}, { passive: false });
+			})();
 		},
 
 		/**

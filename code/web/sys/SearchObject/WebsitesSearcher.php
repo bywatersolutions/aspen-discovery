@@ -189,8 +189,9 @@ class SearchObject_WebsitesSearcher extends SearchObject_SolrSearcher {
                 foreach ($facets as &$facet) {
                     $facetConfig[$facet->facetName] = $facet;
                 }
-                $this->facetConfig = $facetConfig;
+                
             }
+            $this->facetConfig = $facetConfig;
         }
 
         return $this->facetConfig;
@@ -202,5 +203,10 @@ class SearchObject_WebsitesSearcher extends SearchObject_SolrSearcher {
 
 	public function getDefaultIndex() {
 		return 'WebsiteKeyword';
+	}
+
+	public function getAdvancedSearchIndexes()
+	{
+		// TODO: Implement getAdvancedSearchIndexes() method.
 	}
 }

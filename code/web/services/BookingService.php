@@ -4,7 +4,7 @@ require_once ROOT_DIR . '/sys/User/Booking.php';
 
 class BookingService {
 
-	public static function storeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch, ?string $notes, array $apiResponse): void {
+	public static function storeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch, array $apiResponse): void {
 		$booking = new Booking();
 		$booking->userId                = $patron->id;
 		$booking->recordId              = $recordId;
@@ -14,7 +14,6 @@ class BookingService {
 		$booking->ils_end_date          = $endDate;
 		$booking->ils_pickup_library_id = $pickupBranch;
 		$booking->ils_status            = $apiResponse['status'] ?? null;
-		$booking->ils_notes             = $notes;
 		$booking->createdAt             = time();
 		$booking->insert();
 	}

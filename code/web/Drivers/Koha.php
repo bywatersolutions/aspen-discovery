@@ -9750,7 +9750,7 @@ class Koha extends AbstractIlsDriver {
 		return !empty($library) && $library->enableBookings;
 	}
 
-	public function placeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch, ?string $notes): array {
+	public function placeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch): array {
 		$params = [
 			'patron_id'  => (int)$patron->unique_ils_id,
 			'item_id'    => (int)$itemId,
@@ -9760,9 +9760,6 @@ class Koha extends AbstractIlsDriver {
 		];
 		if ($pickupBranch !== null) {
 			$params['pickup_library_id'] = $pickupBranch;
-		}
-		if ($notes !== null) {
-			$params['notes'] = $notes;
 		}
 
 		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
@@ -9785,7 +9782,7 @@ class Koha extends AbstractIlsDriver {
 		}
 
 		require_once ROOT_DIR . '/services/BookingService.php';
-		BookingService::storeBooking($patron, $itemId, $recordId, $startDate, $endDate, $pickupBranch, $notes, $response['content']);
+		BookingService::storeBooking($patron, $itemId, $recordId, $startDate, $endDate, $pickupBranch, $response['content']);
 
 		return [
 			'success'    => true,

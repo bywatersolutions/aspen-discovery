@@ -3204,17 +3204,36 @@ class Koha extends AbstractIlsDriver {
 		return $currencyFormatter->formatCurrency($rawFee, $currencyCode);
 	}
 
-	private function getRawCirculationRule(string $ruleName, array $context): string|null {
+	private function getRawCirculationRule(string $ruleName, array $context): string|int|null {
+		return $this->getRawCirculationRules([$ruleName], $context)[$ruleName] ?? null;
+	}
+
+	/**
+	 * Fetch several effective circulation rules in a single API call.
+	 * Koha's circulation_rules endpoint accepts a comma-separated rules list
+	 * and returns them together in content[0], keyed by rule name.
+	 *
+	 * @param string[] $ruleNames
+	 * @return array<string, string|int|null>
+	 */
+	private function getRawCirculationRules(array $ruleNames, array $context): array {
 		['itemTypeId' => $itemTypeId, 'locationId' => $locationId, 'patronCategoryId' => $patronCategoryId] = $context;
 
-		$endpoint = "/api/v1/circulation_rules?effective=true&item_type_id=$itemTypeId&library_id=$locationId&patron_category_id=$patronCategoryId&rules=$ruleName";
-		$response = $this->kohaApiUserAgent->get($endpoint, "koha.getCirculationRule.$ruleName");
+		$rules = implode(',', $ruleNames);
+		$queryString = http_build_query([
+			'effective' => 'true',
+			'item_type_id' => $itemTypeId,
+			'library_id' => $locationId,
+			'patron_category_id' => $patronCategoryId,
+			'rules' => $rules,
+		]);
+		$response = $this->kohaApiUserAgent->get("/api/v1/circulation_rules?$queryString", 'koha.getCirculationRules');
 
 		if ($response && $response['code'] == 200) {
-			return $response['content'][0][$ruleName] ?? null;
+			return $response['content'][0] ?? [];
 		}
 
-		return null;
+		return [];
 	}
 
 	/**

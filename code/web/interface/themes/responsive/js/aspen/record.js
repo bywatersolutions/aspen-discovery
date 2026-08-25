@@ -59,7 +59,7 @@ AspenDiscovery.Record = (function () {
 		},
 
 		submitBookingForm: function (button) {
-			const form = document.getElementById('placeBookingForm');
+			const form = document.getElementById('place-booking-form');
 			const data = $(form).serialize();
 			AspenDiscovery.toggleButtonSpinner(button, true);
 			$.getJSON(Globals.path + '/Record/AJAX?method=placeBooking&' + data, function (result) {

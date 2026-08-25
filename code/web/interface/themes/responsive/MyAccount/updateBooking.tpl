@@ -19,7 +19,7 @@
 						<label class="control-label" for="itemId">{translate text="Item" isPublicFacing=true}</label>
 						<input type="text" id="itemId" class="form-control" value="{$itemLabel|escape}" disabled>
 					</div>
-					{include file='Record/booking-form-fields.tpl' startDate=$startDate endDate=$endDate notes=$notes}
+					{include file='Record/booking-form-fields.tpl' startDate=$startDate endDate=$endDate}
 				</fieldset>
 			</form>
 		</div>

@@ -64,12 +64,6 @@
 							<div class="col-tn-8 result-value">{translate text=$record.status isPublicFacing=true}</div>
 						</div>
 					{/if}
-					{if !empty($record.notes)}
-						<div class="row">
-							<div class="result-label col-tn-4">{translate text='Notes' isPublicFacing=true}</div>
-							<div class="col-tn-8 result-value">{$record.notes|escape}</div>
-						</div>
-					{/if}
 					{if !empty($record.staffModified)}
 						<div class="row">
 							<div class="col-xs-12">

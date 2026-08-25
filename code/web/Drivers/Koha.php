@@ -9802,6 +9802,11 @@ class Koha extends AbstractIlsDriver {
 			return ['success' => false, 'title' => $title, 'message' => translate(['text' => 'Invalid booking dates.', 'isPublicFacing' => true])];
 		}
 
+		$windowError = $this->enforceMaxBookingPeriod((int)$itemId, $patron, $startDate, $endDate);
+		if ($windowError !== null) {
+			return ['success' => false, 'title' => $title, 'message' => $windowError];
+		}
+
 		$params = [
 			'patron_id'  => (int)$patron->unique_ils_id,
 			'item_id'    => (int)$itemId,
@@ -9879,6 +9884,11 @@ class Koha extends AbstractIlsDriver {
 			return ['success' => false, 'message' => translate(['text' => 'Invalid booking dates.', 'isPublicFacing' => true])];
 		}
 
+		$windowError = $this->enforceMaxBookingPeriod($itemId, $patron, $startDate, $endDate);
+		if ($windowError !== null) {
+			return ['success' => false, 'message' => $windowError];
+		}
+
 		$params = ['start_date' => $startDateUtc, 'end_date' => $endDateUtc];
 		if ($pickupBranch !== null) {
 			$params['pickup_library_id'] = $pickupBranch;
@@ -9918,6 +9928,108 @@ class Koha extends AbstractIlsDriver {
 
 	private function getBookingApiHeaders(User $patron): array {
 		return ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
+	}
+
+	private function enforceMaxBookingPeriod(int $itemId, User $patron, string $startDate, string $endDate): ?string {
+		$maxEndDate = $this->calculateMaxBookingEndDate($itemId, $patron, $startDate);
+		if ($endDate > $maxEndDate) {
+			return translate([
+				'text' => 'The booking period is too long. For that start date the latest end date is %1%.',
+				1 => $maxEndDate,
+				'isPublicFacing' => true,
+			]);
+		}
+		return null;
+	}
+
+	/**
+	 * Latest permissible booking end date for a given start, as Y-m-d:
+	 * the rule-based period ceiling, clipped by the hardduedate and expiry caps.
+	 */
+	private function calculateMaxBookingEndDate(int $itemId, User $patron, string $startDate): string {
+		$end = new DateTime(substr($startDate, 0, 10));
+
+		$context = $this->getItemCirculationContext($itemId, $patron);
+		if ($context === null) {
+			return $end->format('Y-m-d');
+		}
+
+		$rules = $this->getRawCirculationRules(
+			['issuelength', 'renewalsallowed', 'renewalperiod', 'hardduedate', 'hardduedatecompare'],
+			$context
+		);
+		$end->modify('+' . self::getMaxBookingPeriod($rules) . ' days');
+		$end = self::applyHardDueDateCap($end, $rules);
+		$end = $this->applyReturnBeforeExpiryCap($end, $patron);
+
+		return $end->format('Y-m-d');
+	}
+
+	/**
+	 * Circulation-rule context (item type, home branch, patron category) for a
+	 * given item and patron. Returns null when the item can't be found.
+	 */
+	private function getItemCirculationContext(int $itemId, User $patron): ?array {
+		$this->initDatabaseConnection();
+		$row = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
+			"SELECT homebranch, itype FROM items WHERE itemnumber = $itemId LIMIT 1"
+		));
+		if (!$row) {
+			return null;
+		}
+		return [
+			'itemTypeId'       => $row['itype'],
+			'locationId'       => $row['homebranch'],
+			'patronCategoryId' => $patron->patronType,
+		];
+	}
+
+	/**
+	 * Mirrors Koha's place_booking.js:
+	 *   issuelength + (renewalsallowed * renewalperiod)
+	 * renewalperiod falls back to issuelength when unset, matching CalcDateDue.
+	 */
+	public static function getMaxBookingPeriod(array $rules): int {
+		$issueLength     = (int)($rules['issuelength']     ?? 0);
+		$renewalsAllowed = (int)($rules['renewalsallowed'] ?? 0);
+		$renewalPeriod   = ($rules['renewalperiod'] ?? null) === null ? $issueLength : (int)$rules['renewalperiod'];
+
+		return $issueLength + ($renewalsAllowed * $renewalPeriod);
+	}
+
+	/**
+	 * Cap a date at the hardduedate rule, matching Koha's CalcDateDue:
+	 * override when hardduedatecompare is 0 (exactly) or -1 (ceiling).
+	 * A compare of 1 is a floor (extends only) and never shortens.
+	 */
+	public static function applyHardDueDateCap(DateTime $date, array $rules): DateTime {
+		if (empty($rules['hardduedate'])) {
+			return $date;
+		}
+		$hard = new DateTime(substr($rules['hardduedate'], 0, 10));
+		$compareMode = (int)($rules['hardduedatecompare'] ?? 0);
+		$comparison = $hard <=> $date;
+		if ($compareMode === 0 || $compareMode === $comparison) {
+			return $hard;
+		}
+		return $date;
+	}
+
+	private function applyReturnBeforeExpiryCap(DateTime $date, User $patron): DateTime {
+		if (!$this->getKohaSystemPreference('ReturnBeforeExpiry')) {
+			return $date;
+		}
+		$this->initDatabaseConnection();
+		$expiryRow = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
+			"SELECT dateexpiry FROM borrowers WHERE borrowernumber = '" . mysqli_escape_string($this->dbConnection, $patron->unique_ils_id) . "' LIMIT 1"
+		));
+		if ($expiryRow && !empty($expiryRow['dateexpiry'])) {
+			$expiry = new DateTime($expiryRow['dateexpiry']);
+			if ($expiry < $date) {
+				return $expiry;
+			}
+		}
+		return $date;
 	}
 
 	public function getBookingsForUser(User $patron): array {

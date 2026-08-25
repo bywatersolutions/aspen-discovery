@@ -9747,10 +9747,35 @@ class Koha extends AbstractIlsDriver {
 
 	public function hasBookingsSupport(): bool {
 		global $library;
-		return !empty($library) && $library->enableBookings;
+		return !empty($library) && $library->enableBookingDisplay;
+	}
+
+	private function getOwningLibrariesForItems(array $itemIds): array {
+		$itemIds = array_unique(array_filter(array_map('intval', $itemIds)));
+		if (empty($itemIds)) {
+			return [];
+		}
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
+		$this->initDatabaseConnection();
+		$result = mysqli_query($this->dbConnection,
+			'SELECT itemnumber, homebranch FROM items WHERE itemnumber IN (' . implode(',', $itemIds) . ')'
+		);
+		$libraries = [];
+		while ($row = mysqli_fetch_assoc($result)) {
+			$libraries[(int)$row['itemnumber']] = empty($row['homebranch'])
+				? null
+				: Location::getLibraryForCode(strtolower($row['homebranch']));
+		}
+		return $libraries;
 	}
 
 	public function placeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch): array {
+		$title = translate(['text' => 'Unable to place booking', 'isPublicFacing' => true]);
+		$denied = $this->denyIfActionDisabled((int)$itemId, 'enableBookingPlacement', 'Booking placement is not enabled for the library that owns this item.');
+		if ($denied) {
+			return $denied + ['title' => $title];
+		}
+
 		$params = [
 			'patron_id'  => (int)$patron->unique_ils_id,
 			'item_id'    => (int)$itemId,
@@ -9762,8 +9787,7 @@ class Koha extends AbstractIlsDriver {
 			$params['pickup_library_id'] = $pickupBranch;
 		}
 
-		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
-		$response = $this->kohaApiUserAgent->post('/api/v1/bookings', $params, 'koha.placeBooking', [], $extraHeaders);
+		$response = $this->kohaApiUserAgent->post('/api/v1/bookings', $params, 'koha.placeBooking', [], $this->getBookingApiHeaders($patron));
 
 		if (!$response || $response['code'] !== 201) {
 			$message = translate([
@@ -9776,7 +9800,7 @@ class Koha extends AbstractIlsDriver {
 			}
 			return [
 				'success' => false,
-				'title'   => translate(['text' => 'Unable to place booking', 'isPublicFacing' => true]),
+				'title'   => $title,
 				'message' => $message,
 			];
 		}
@@ -9794,8 +9818,12 @@ class Koha extends AbstractIlsDriver {
 
 
 	public function cancelBooking(User $patron, int $bookingId): array {
-		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
-		$response = $this->kohaApiUserAgent->delete("/api/v1/bookings/$bookingId", 'koha.cancelBooking', [], $extraHeaders);
+		$denied = $this->denyIfActionDisabled($this->getItemIdForBooking($bookingId), 'enableBookingCancellations', 'Booking cancellation is not enabled for the library that owns this item.');
+		if ($denied) {
+			return $denied;
+		}
+
+		$response = $this->kohaApiUserAgent->delete("/api/v1/bookings/$bookingId", 'koha.cancelBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 204) {
 			require_once ROOT_DIR . '/services/BookingService.php';
@@ -9813,12 +9841,16 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	public function updateBooking(User $patron, int $bookingId, string $startDate, string $endDate, ?string $pickupBranch): array {
+		$itemId = $this->getItemIdForBooking($bookingId);
+		$denied = $this->denyIfActionDisabled($itemId, 'enableBookingUpdates', 'Booking updates are not enabled for the library that owns this item.');
+		if ($denied) {
+			return $denied;
+		}
 		$params = ['start_date' => $startDate . 'T00:00:00Z', 'end_date' => $endDate . 'T00:00:00Z'];
 		if ($pickupBranch !== null) {
 			$params['pickup_library_id'] = $pickupBranch;
 		}
-		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
-		$response = $this->kohaApiUserAgent->patch("/api/v1/bookings/$bookingId", $params, 'koha.updateBooking', [], $extraHeaders);
+		$response = $this->kohaApiUserAgent->patch("/api/v1/bookings/$bookingId", $params, 'koha.updateBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 200) {
 			require_once ROOT_DIR . '/services/BookingService.php';
@@ -9835,6 +9867,26 @@ class Koha extends AbstractIlsDriver {
 		];
 	}
 
+	private function getItemIdForBooking(int $bookingId): ?int {
+		$this->initDatabaseConnection();
+		$row = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
+			"SELECT item_id FROM bookings WHERE booking_id = " . (int)$bookingId . " LIMIT 1"
+		));
+		return empty($row['item_id']) ? null : (int)$row['item_id'];
+	}
+
+	private function denyIfActionDisabled(?int $itemId, string $flag, string $message): ?array {
+		$owningLibrary = empty($itemId) ? null : ($this->getOwningLibrariesForItems([$itemId])[$itemId] ?? null);
+		if (empty($owningLibrary) || empty($owningLibrary->$flag)) {
+			return ['success' => false, 'message' => translate(['text' => $message, 'isPublicFacing' => true])];
+		}
+		return null;
+	}
+
+	private function getBookingApiHeaders(User $patron): array {
+		return ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
+	}
+
 	public function getBookingsForUser(User $patron): array {
 		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
 		$response = $this->kohaApiUserAgent->get('/api/v1/bookings?patron_id=' . urlencode($patron->unique_ils_id), 'koha.getBookingsForUser', [], $extraHeaders);
@@ -9844,7 +9896,15 @@ class Koha extends AbstractIlsDriver {
 		}
 
 		require_once ROOT_DIR . '/services/BookingService.php';
-		return BookingService::syncAndMapBookings($patron, $response['content']);
+		$bookings = BookingService::syncAndMapBookings($patron, $response['content']);
+		$owningLibraries = $this->getOwningLibrariesForItems(array_column($bookings, 'itemId'));
+		foreach ($bookings as &$booking) {
+			$owningLibrary = $owningLibraries[(int)$booking['itemId']] ?? null;
+			$booking['canUpdate'] = !empty($owningLibrary) && !empty($owningLibrary->enableBookingUpdates);
+			$booking['canCancel'] = !empty($owningLibrary) && !empty($owningLibrary->enableBookingCancellations);
+		}
+		unset($booking);
+		return $bookings;
 	}
 
 	private function isDisplayAddHoldGroupsEnabledInKoha(): bool {

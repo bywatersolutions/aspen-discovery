@@ -6875,7 +6875,8 @@ class Library extends DataObject {
 			'allowRememberPickupLocation' => $this->allowRememberPickupLocation,
 			'allowPickupLocationUpdates' => $this->allowPickupLocationUpdates,
 			'offerImmediateHoldFreeze' => $this->offerImmediateHoldFreeze,
-			'enableBookings' => (int)$this->enableBookings,
+			'enableBookingDisplay' => (int)$this->enableBookingDisplay,
+			'enableBookingPlacement' => (int)$this->enableBookingPlacement,
 		];
 		if (empty($this->baseUrl)) {
 			$apiInfo['baseUrl'] = $configArray['Site']['url'];

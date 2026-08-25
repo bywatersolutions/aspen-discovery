@@ -2742,12 +2742,7 @@ class Record_AJAX extends JSON_Action {
 		$this->requireLoggedInUser(null, 'You must be logged in to place a booking. Please close this dialog and login.');
 		$this->checkRequiredParameters(['id']);
 
-		global $library;
 		global $interface;
-
-		if (empty($library) || !$library->enableBookings) {
-			return $this->failureResult('Unable to place booking', 'Bookings are not enabled for your library.');
-		}
 
 		$recordId = $_REQUEST['id'];
 		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
@@ -2760,7 +2755,8 @@ class Record_AJAX extends JSON_Action {
 			return $this->failureResult('Unable to place booking', 'Bookings are not supported for this record.');
 		}
 
-		$bookableItems = array_filter($marcRecord->getCopies(), fn($item) => !empty($item['bookable']));
+		require_once ROOT_DIR . '/services/BookingService.php';
+		$bookableItems = BookingService::filterBookableForPlacement($marcRecord->getCopies());
 		if (empty($bookableItems)) {
 			return $this->failureResult('Unable to place booking', 'No bookable items found for this record.');
 		}

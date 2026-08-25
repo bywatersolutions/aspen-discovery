@@ -2,6 +2,7 @@ AspenDiscovery.Record = (function () {
 	// noinspection JSUnusedGlobalSymbols
 	return {
 		volumeHoldInProgress: false,
+		dateRangePicker: null,
 		showPlaceHold: function (module, source, id, volume, variationId, button, allowEditionSelection, format) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
@@ -892,6 +893,67 @@ AspenDiscovery.Record = (function () {
 				}
 			}).fail(function(jqXHR, textStatus, errorThrown) {
 				AspenDiscovery.ajaxFail(jqXHR, textStatus, errorThrown);
+			});
+		},
+
+		initBookingForm: async function () {
+			const calendar = document.getElementById('booking-calendar');
+			if (!calendar) {
+				return;
+			}
+			const tomorrow = new Date();
+			tomorrow.setDate(tomorrow.getDate() + 1);
+			tomorrow.setHours(0, 0, 0, 0);
+
+			let picker;
+			try {
+				// The picker is an ES module, so it lives outside aspen.js and is fetched
+				// from the URL the template stamps on the container.
+				const module = await import(calendar.closest('.date-range-picker').dataset.pickerModule);
+				picker = await module.DateRangePicker.create(calendar, {
+					minDate: tomorrow,
+				});
+			} catch {
+				const error = document.createElement('span');
+				error.className = 'text-danger';
+				error.textContent = 'Unable to load the availability calendar.';
+				calendar.replaceWith(error);
+				return;
+			}
+			
+			AspenDiscovery.Record.dateRangePicker = picker;
+
+			const itemSelect = document.getElementById('booking-item-select');
+			itemSelect?.addEventListener('change', function () {
+				picker.clear();
+				AspenDiscovery.Record.loadItemBookingAvailability(this.value);
+			});
+			const selectedItem = itemSelect ?? document.getElementById('current-item-id');
+			AspenDiscovery.Record.loadItemBookingAvailability(selectedItem?.value ?? null);
+		},
+
+		loadItemBookingAvailability: function (itemId) {
+			const picker = AspenDiscovery.Record.dateRangePicker;
+			if (!itemId || !picker) {
+				return;
+			}
+
+			const loading = document.getElementById('booking-availability-loading');
+			if (loading) {
+				loading.hidden = false;
+			}
+
+			$.getJSON(Globals.path + '/Record/AJAX?method=getItemBookedDates&itemId=' + encodeURIComponent(itemId), function (data) {
+				const constraints = data.success ? data.constraints : null;
+				picker.update({
+					maxDate:        constraints?.maxDate ? new Date(constraints.maxDate + 'T00:00:00') : null,
+					maxRangeDays:   constraints?.maxPeriod ? parseInt(constraints.maxPeriod, 10) : 0,
+					disabledRanges: data.success ? data.bookedDates : [],
+				});
+			}).fail(AspenDiscovery.ajaxFail).always(function () {
+				if (loading) {
+					loading.hidden = true;
+				}
 			});
 		},
 	};

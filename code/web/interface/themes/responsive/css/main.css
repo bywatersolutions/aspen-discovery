@@ -12193,6 +12193,96 @@ td[data-entry-id]:has(.date-edit:focus)::after {
     text-align: left !important;
   }
 }
+/* Cally ships almost unstyled by design. This sizes the calendar to ~64% of the
+   modal, centred, with square day cells kept square by aspect-ratio — not by
+   container query units, which resolve to 0 while the modal is still opening */
+.date-range-picker {
+  width: 100%;
+}
+.date-range-picker calendar-range {
+  width: 100%;
+  /* Previous / next month buttons. */
+}
+.date-range-picker calendar-range::part(months) {
+  display: flex;
+  flex-wrap: wrap;
+}
+.date-range-picker calendar-range::part(heading) {
+  font-size: 1.5em;
+}
+.date-range-picker calendar-range::part(button) {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #adb5bd;
+  background-color: #fff;
+  border-radius: 3px;
+}
+.date-range-picker calendar-month {
+  --color-accent: var(--primary, #2b6cb0);
+  --color-text-on-accent: #fff;
+  display: block;
+  width: 64%;
+  margin: auto;
+  /* Equal columns, so a day cell can take its width from the column and its
+		   height from that width. */
+  /* unavailable days. */
+  /* Square the range interior, round only the ends. */
+}
+.date-range-picker calendar-month::part(table) {
+  width: 100%;
+  table-layout: fixed;
+}
+.date-range-picker calendar-month::part(button) {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  font-size: 1.5rem;
+  border-radius: 3px;
+}
+.date-range-picker calendar-month::part(th) {
+  font-size: 1.5rem;
+}
+.date-range-picker calendar-month::part(heading) {
+  font-size: 2.1rem;
+  margin-block: 0 0.75rem;
+}
+.date-range-picker calendar-month::part(disallowed) {
+  background: #ffe8cc;
+  color: #b35a00;
+  text-decoration: line-through;
+}
+.date-range-picker calendar-month::part(range-inner) {
+  border-radius: 0;
+}
+.date-range-picker calendar-month::part(range-start) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+.date-range-picker calendar-month::part(range-end) {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+.date-range-picker calendar-month::part(range-start range-end) {
+  border-radius: 3px;
+}
+/* Labelled From/To fields. */
+.date-range-picker-fields {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.date-range-picker-field {
+  flex: 1 1 140px;
+  min-width: 130px;
+}
+.date-range-picker-sep {
+  padding-bottom: 0.45rem;
+  color: #666;
+  font-size: 1.2em;
+  line-height: 2.2;
+}
 .blockhead {
   border-bottom: 1px solid #c0c0c0;
   color: #3e63a6;
@@ -12951,4 +13041,3 @@ html.hero-slider-signage {
     overflow: visible !important;
   }
 }
-/*# sourceMappingURL=main.css.map */

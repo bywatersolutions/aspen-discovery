@@ -2783,6 +2783,20 @@ class Record_AJAX extends JSON_Action {
 		];
 	}
 
+	/** @noinspection PhpUnused */
+	function getItemBookedDates(): array {
+		$this->requireLoggedInUser(null, 'You must be logged in to view booking availability. Please close this dialog and login.');
+		$this->checkRequiredParameters(['itemId']);
+
+		$user = UserAccount::getLoggedInUser();
+		$driver = $user->getCatalogDriver();
+		if (!$driver || !$driver->hasBookingsSupport()) {
+			return ['success' => true, 'bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
+		}
+
+		return ['success' => true] + $driver->getBookingAvailability((int)$_REQUEST['itemId'], $user);
+	}
+
 	function placeBooking(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to place a booking. Please close this dialog and login.');
 		$this->checkRequiredParameters(['id', 'itemId', 'startDate', 'endDate']);

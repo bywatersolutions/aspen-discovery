@@ -10032,6 +10032,64 @@ class Koha extends AbstractIlsDriver {
 		return $date;
 	}
 
+	/**
+	 * Everything the booking date picker needs for an item: the unavailable
+	 * ranges, and the limits on a selection. Both derive from the same
+	 * circulation rules, so they share one context lookup and one rules call.
+	 *
+	 * @return array{bookedDates: array[], constraints: array{maxPeriod: int, maxDate: ?string}}
+	 */
+	public function getBookingAvailability(int $itemId, User $patron): array {
+		$context = $this->getItemCirculationContext($itemId, $patron);
+		if ($context === null) {
+			return ['bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
+		}
+
+		$rules = $this->getRawCirculationRules([
+			'bookings_lead_period',
+			'bookings_trail_period',
+			'issuelength',
+			'renewalsallowed',
+			'renewalperiod',
+			'hardduedate',
+			'hardduedatecompare',
+		], $context);
+
+		return [
+			'bookedDates' => $this->buildBookedRanges(
+				$this->getBookingsForItem($itemId, $patron),
+				(int)($rules['bookings_lead_period'] ?? 0),
+				(int)($rules['bookings_trail_period'] ?? 0)
+			),
+			'constraints' => $this->buildBookingWindowConstraints($rules, $patron),
+		];
+	}
+
+	private function buildBookedRanges(array $bookings, int $lead, int $trail): array {
+		$ranges = [];
+		foreach ($bookings as $booking) {
+			$start = new DateTime(substr($booking['start_date'], 0, 10));
+			$end   = new DateTime(substr($booking['end_date'], 0, 10));
+			if ($lead > 0) {
+				$start->modify("-{$lead} days");
+			}
+			if ($trail > 0) {
+				$end->modify("+{$trail} days");
+			}
+			$ranges[] = ['start' => $start->format('Y-m-d'), 'end' => $end->format('Y-m-d')];
+		}
+		return $ranges;
+	}
+
+	private function getBookingsForItem(int $itemId, User $patron): array {
+		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
+		$response = $this->kohaApiUserAgent->get('/api/v1/bookings?item_id=' . $itemId, 'koha.getBookingsForItem', [], $extraHeaders);
+		if (!$response || $response['code'] !== 200) {
+			return [];
+		}
+		return $response['content'] ?? [];
+	}
+
 	public function getBookingsForUser(User $patron): array {
 		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
 		$response = $this->kohaApiUserAgent->get('/api/v1/bookings?patron_id=' . urlencode($patron->unique_ils_id), 'koha.getBookingsForUser', [], $extraHeaders);
@@ -10050,6 +10108,25 @@ class Koha extends AbstractIlsDriver {
 		}
 		unset($booking);
 		return $bookings;
+	}
+
+	/**
+	 * Selection limits for the booking date picker: the maximum span in days,
+	 * and the absolute latest selectable date from the hardduedate/expiry caps.
+	 * Both caps are independent of the chosen start, so the client can combine
+	 * them per selection as min(start + maxPeriod, maxDate) without a round trip.
+	 *
+	 * @return array{maxPeriod: int, maxDate: ?string}
+	 */
+	private function buildBookingWindowConstraints(array $rules, User $patron): array {
+		// Run the caps against a far-future sentinel to expose the absolute ceiling.
+		$sentinel = new DateTime('9999-12-31');
+		$capped = $this->applyReturnBeforeExpiryCap(self::applyHardDueDateCap($sentinel, $rules), $patron);
+
+		return [
+			'maxPeriod' => self::getMaxBookingPeriod($rules),
+			'maxDate'   => $capped == $sentinel ? null : $capped->format('Y-m-d'),
+		];
 	}
 
 	private function isDisplayAddHoldGroupsEnabledInKoha(): bool {

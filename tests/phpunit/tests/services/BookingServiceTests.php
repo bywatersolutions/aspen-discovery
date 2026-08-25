@@ -62,7 +62,6 @@ class BookingServiceTests extends TestCase {
 			'2026-06-01',
 			'2026-06-07',
 			'CPL',
-			'handle with care',
 			$this->defaultApiResponse($ilsId)
 		);
 
@@ -84,8 +83,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-2', 'BIB-2', '2026-07-01', '2026-07-03',
-			null, null,
+			$patron,
+			'ITEM-2',
+			'BIB-2',
+			'2026-07-01',
+			'2026-07-03',
+			null,
 			$this->defaultApiResponse($ilsId)
 		);
 
@@ -103,8 +106,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-3', 'BIB-3', '2026-06-01', '2026-06-07',
-			'CPL', null,
+			$patron,
+			'ITEM-3',
+			'BIB-3',
+			'2026-06-01',
+			'2026-06-07',
+			'CPL',
 			['booking_id' => $ilsId, 'status' => 'confirmed']
 		);
 
@@ -129,8 +136,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-4', 'BIB-4', '2026-06-01', '2026-06-07',
-			'CPL', null,
+			$patron, 
+			'ITEM-4', 
+			'BIB-4', 
+			'2026-06-01', 
+			'2026-06-07',
+			'CPL',
 			['booking_id' => $ilsId, 'status' => 'confirmed']
 		);
 
@@ -155,8 +166,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-5', 'BIB-5', '2026-06-01', '2026-06-07',
-			'CPL', null,
+			$patron,
+			'ITEM-5',
+			'BIB-5',
+			'2026-06-01',
+			'2026-06-07',
+			'CPL',
 			['booking_id' => $ilsId, 'status' => 'confirmed']
 		);
 
@@ -208,8 +223,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-7', 'BIB-7', '2026-06-01', '2026-06-07',
-			null, null,
+			$patron, 
+			'ITEM-7', 
+			'BIB-7', 
+			'2026-06-01', 
+			'2026-06-07',
+			null,
 			['booking_id' => $ilsId, 'status' => 'confirmed']
 		);
 
@@ -279,8 +298,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-10', 'BIB-10', '2026-06-01', '2026-06-07',
-			'CPL', null,
+			$patron,
+			'ITEM-10',
+			'BIB-10',
+			'2026-06-01',
+			'2026-06-07',
+			'CPL',
 			$this->defaultApiResponse($ilsId)
 		);
 
@@ -301,8 +324,12 @@ class BookingServiceTests extends TestCase {
 		$ilsId = $this->nextIlsId();
 
 		BookingService::storeBooking(
-			$patron, 'ITEM-11', 'BIB-11', '2026-06-01', '2026-06-07',
-			'CPL', null,
+			$patron,
+			'ITEM-11',
+			'BIB-11',
+			'2026-06-01',
+			'2026-06-07',
+			'CPL',
 			$this->defaultApiResponse($ilsId)
 		);
 

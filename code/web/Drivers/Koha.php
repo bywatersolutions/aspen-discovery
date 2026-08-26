@@ -9972,13 +9972,16 @@ class Koha extends AbstractIlsDriver {
 	private function getItemCirculationContext(int $itemId, User $patron): ?array {
 		$this->initDatabaseConnection();
 		$row = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
-			"SELECT homebranch, itype FROM items WHERE itemnumber = $itemId LIMIT 1"
+			"SELECT i.homebranch, i.itype, bi.itemtype FROM items i LEFT JOIN biblioitems bi ON bi.biblioitemnumber = i.biblioitemnumber WHERE i.itemnumber = $itemId LIMIT 1"
 		));
 		if (!$row) {
 			return null;
 		}
+
+		// Koha resolves an item's type as items.itype only when item-level_itypes is on and set, falling back to the biblio's itemtype.
+		$itemLevelItypes = $this->getKohaSystemPreference('item-level_itypes', '1') == '1';
 		return [
-			'itemTypeId'       => $row['itype'],
+			'itemTypeId'       => $itemLevelItypes && !empty($row['itype']) ? $row['itype'] : $row['itemtype'],
 			'locationId'       => $row['homebranch'],
 			'patronCategoryId' => $patron->patronType,
 		];

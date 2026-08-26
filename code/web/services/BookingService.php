@@ -135,20 +135,24 @@ class BookingService {
 	}
 
 	private static function syncBookingRow(?Booking $stored, array $raw): bool {
+		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
 		if ($stored === null) {
 			return false;
 		}
 
+		$startDate = DateUtils::formatUtcDate($raw['start_date']);
+		$endDate = DateUtils::formatUtcDate($raw['end_date']);
+
 		$changed =
 			$stored->ils_status !== ($raw['status'] ?? null) ||
-			$stored->ils_start_date !== $raw['start_date'] ||
-			$stored->ils_end_date !== $raw['end_date'] ||
+			!DateUtils::isSameInstant($stored->ils_start_date, $startDate) ||
+			!DateUtils::isSameInstant($stored->ils_end_date, $endDate) ||
 			$stored->ils_pickup_library_id !== ($raw['pickup_library_id'] ?? null);
 
 		if ($changed) {
 			$stored->ils_status            = $raw['status'] ?? null;
-			$stored->ils_start_date        = $raw['start_date'];
-			$stored->ils_end_date          = $raw['end_date'];
+			$stored->ils_start_date        = $startDate;
+			$stored->ils_end_date          = $endDate;
 			$stored->ils_pickup_library_id = $raw['pickup_library_id'] ?? null;
 			$stored->update();
 		}

@@ -23,6 +23,24 @@ class DateUtils {
 		return $dt->format('Y-m-d\T00:00:00\Z');
 	}
 
+	public static function isSameInstant(string $first, string $second): bool {
+		try {
+			$firstInstant = new DateTimeImmutable($first, new DateTimeZone('UTC'));
+			$secondInstant = new DateTimeImmutable($second, new DateTimeZone('UTC'));
+		} catch (Exception) {
+			return false;
+		}
+		return $firstInstant->getTimestamp() === $secondInstant->getTimestamp();
+	}
+
+	public static function formatUtcDate(string $value): string|false {
+		try {
+			return (new DateTimeImmutable($value, new DateTimeZone('UTC')))->format('Y-m-d');
+		} catch (Exception) {
+			return false;
+		}
+	}
+
 	static function formatHumanDate(string $date): string {
 		$dt = DateTimeImmutable::createFromFormat('Y-m-d', $date);
 		if (!$dt) {

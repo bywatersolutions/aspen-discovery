@@ -12283,6 +12283,10 @@ td[data-entry-id]:has(.date-edit:focus)::after {
   font-size: 1.2em;
   line-height: 2.2;
 }
+/* Status line for asynchronous availability loading. */
+.date-range-picker-status {
+  margin: 0.5rem 0 1rem;
+}
 .blockhead {
   border-bottom: 1px solid #c0c0c0;
   color: #3e63a6;

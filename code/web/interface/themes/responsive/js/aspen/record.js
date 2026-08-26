@@ -924,15 +924,16 @@ AspenDiscovery.Record = (function () {
 			AspenDiscovery.Record.dateRangePicker = picker;
 
 			const itemSelect = document.getElementById('booking-item-select');
+			const recordId =  document.getElementById('id').value;
 			itemSelect?.addEventListener('change', function () {
 				picker.clear();
-				AspenDiscovery.Record.loadItemBookingAvailability(this.value);
+				AspenDiscovery.Record.loadItemBookingAvailability(this.value, recordId);
 			});
 			const selectedItem = itemSelect ?? document.getElementById('current-item-id');
-			AspenDiscovery.Record.loadItemBookingAvailability(selectedItem?.value ?? null);
+			AspenDiscovery.Record.loadItemBookingAvailability(selectedItem?.value ?? null, recordId);
 		},
 
-		loadItemBookingAvailability: function (itemId) {
+		loadItemBookingAvailability: function (itemId, recordId) {
 			const picker = AspenDiscovery.Record.dateRangePicker;
 			if (!itemId || !picker) {
 				return;
@@ -943,7 +944,8 @@ AspenDiscovery.Record = (function () {
 				loading.hidden = false;
 			}
 
-			$.getJSON(Globals.path + '/Record/AJAX?method=getItemBookedDates&itemId=' + encodeURIComponent(itemId), function (data) {
+			const url = Globals.path + '/Record/AJAX?method=getItemBookedDates&id=' + encodeURIComponent(recordId) + '&itemId=' + encodeURIComponent(itemId);
+			$.getJSON(url, function (data) {
 				const constraints = data.success ? data.constraints : null;
 				picker.update({
 					maxDate:        constraints?.maxDate ? new Date(constraints.maxDate + 'T00:00:00') : null,

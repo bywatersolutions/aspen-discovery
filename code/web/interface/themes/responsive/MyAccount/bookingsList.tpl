@@ -1,7 +1,7 @@
 {foreach from=$recordList item=sectionData key=sectionKey}
 	<h2>
-		{if $sectionKey == 'active'}{translate text="Active Bookings" isPublicFacing=true}
-		{elseif $sectionKey == 'past'}{translate text="Past Bookings" isPublicFacing=true}
+		{if $sectionKey == 'active'}
+			{translate text="Active Bookings" isPublicFacing=true}
 		{/if}
 	</h2>
 	{if !is_array($recordList.$sectionKey) || !count($recordList.$sectionKey) > 0}

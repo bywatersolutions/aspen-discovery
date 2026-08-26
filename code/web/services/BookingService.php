@@ -107,6 +107,7 @@ class BookingService {
 			$booking['originalStartDate']       = $stored->ils_start_date ?? null;
 			$booking['originalEndDate']         = $stored->ils_end_date ?? null;
 			$booking['originalPickupLibraryId'] = $stored->ils_pickup_library_id ?? null;
+			$booking['pickupLibraryName']       = self::getPickupLibraryName($booking['pickupLibraryId'] ?? null);
 
 			$driver = new MarcRecordDriver($patron->source . ':' . $booking['recordId']);
 			if ($driver->isValid()) {
@@ -144,6 +145,17 @@ class BookingService {
 			$booking->ils_pickup_library_id = $pickupBranch;
 			$booking->update();
 		}
+	}
+
+	public static function getPickupLibraryName(?string $branchCode): ?string {
+		if (empty($branchCode)) {
+			return null;
+		}
+
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
+		$pickupBranch = new Location();
+		$pickupBranch->code = $branchCode;
+		return $pickupBranch->find(true) ? $pickupBranch->displayName : $branchCode;
 	}
 
 	public static function getBareRecordId(string $recordId): string {

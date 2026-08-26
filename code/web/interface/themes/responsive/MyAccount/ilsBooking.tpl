@@ -55,7 +55,7 @@
 					{if !empty($record.pickupLibraryId)}
 						<div class="row">
 							<div class="result-label col-tn-4">{translate text='Pickup Location' isPublicFacing=true}</div>
-							<div class="col-tn-8 result-value">{$record.pickupLibraryId|escape}</div>
+							<div class="col-tn-8 result-value">{$record.pickupLibraryName|default:$record.pickupLibraryId|escape}</div>
 						</div>
 					{/if}
 					{if !empty($record.status)}

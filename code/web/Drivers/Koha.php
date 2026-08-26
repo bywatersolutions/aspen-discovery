@@ -10081,21 +10081,43 @@ class Koha extends AbstractIlsDriver {
 		return $ranges;
 	}
 
-	private function getBookingsForItem(int $itemId, User $patron): array {
+	private function getPagedBookings(User $patron, array $filters, string $requestName): ?array {
 		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
-		$response = $this->kohaApiUserAgent->get('/api/v1/bookings?item_id=' . $itemId, 'koha.getBookingsForItem', [], $extraHeaders);
-		if (!$response || $response['code'] !== 200) {
-			return [];
+		$perPage = 100;
+		$page = 1;
+		$bookings = [];
+		$query = urlencode(json_encode($filters));
+
+		while (true) {
+			$endpoint = '/api/v1/bookings?q=' . $query . '&_page=' . $page . '&_per_page=' . $perPage;
+			$response = $this->kohaApiUserAgent->get($endpoint, $requestName . '.page' . $page, [], $extraHeaders);
+			if (!$response || $response['code'] !== 200) {
+				return null;
+			}
+
+			$pageBookings = $response['content'] ?? [];
+			$bookings = array_merge($bookings, $pageBookings);
+			if (count($pageBookings) < $perPage) {
+				return $bookings;
+			}
+			$page++;
 		}
-		return $response['content'] ?? [];
+	}
+
+	private function getBookingsForItem(int $itemId, User $patron): array {
+		$filters = [
+			'item_id'  => $itemId,
+			'end_date' => ['>=' => DateUtils::formatStartOfDayUtc(date('Y-m-d'))],
+		];
+		return $this->getPagedBookings($patron, $filters, 'koha.getBookingsForItem') ?? [];
 	}
 
 	public function getBookingsForUser(User $patron): array {
 		require_once ROOT_DIR . '/services/BookingService.php';
-		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
-		$response = $this->kohaApiUserAgent->get('/api/v1/bookings?patron_id=' . urlencode($patron->unique_ils_id), 'koha.getBookingsForUser', [], $extraHeaders);
+		$liveBookings = $this->getPagedBookings($patron, ['patron_id' => (int)$patron->unique_ils_id], 'koha.getBookingsForUser');
 
-		if (!$response || $response['code'] !== 200) {
+		// handle Koha connection failures. Bookings stored in Aspen will display, but actions (cancel/update) will be unavailable, and a message warning the user the booking details are outdated will display.
+		if ($liveBookings === null) {
 			$bookings = BookingService::mapStoredBookings($patron);
 			foreach ($bookings as &$booking) {
 				$booking['canUpdate'] = false;
@@ -10105,7 +10127,7 @@ class Koha extends AbstractIlsDriver {
 			return $bookings;
 		}
 
-		$bookings = BookingService::syncAndMapBookings($patron, $response['content']);
+		$bookings = BookingService::syncAndMapBookings($patron, $liveBookings);
 		$owningLibraries = $this->getOwningLibrariesForItems(array_column($bookings, 'itemId'));
 		foreach ($bookings as &$booking) {
 			$owningLibrary = $owningLibraries[(int)$booking['itemId']] ?? null;

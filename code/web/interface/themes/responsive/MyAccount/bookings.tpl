@@ -1,7 +1,7 @@
 {strip}
 	<div id="main-content">
-	{if empty($loggedIn)}
-		{translate text="You must sign in to view this information." isPublicFacing=true}<a href='/MyAccount/Login' class="btn btn-primary">{translate text="Sign In" isPublicFacing=true}</a>
+	{if !empty($accessWarningMessage)}
+		<div class="alert alert-danger" role="alert">{translate text=$accessWarningMessage isPublicFacing=true}</div>
 	{else}
 		{* alerts *}
 		{if !empty($profile->_web_note)}<div class="row"> <div id="web_note" class="alert alert-info text-center col-xs-12">{$profile->_web_note}</div></div>{/if}

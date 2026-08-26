@@ -3122,7 +3122,7 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	public function getPreRenewalFeeMessage(string $itemId): string|null {
-		$item = $this->getItemForRenewal($itemId);
+		$item = $this->getItemFromApi($itemId, 'koha.getItemForRenewal');
 		if (!$item) {
 			return null;
 		}
@@ -3185,8 +3185,8 @@ class Koha extends AbstractIlsDriver {
 		return null;
 	}
 
-	private function getItemForRenewal(string $itemId): array|null {
-		$response = $this->kohaApiUserAgent->get('/api/v1/items/' . (int)$itemId, 'koha.getItemForRenewal');
+	private function getItemFromApi(string $itemId, string $caller): array|null {
+		$response = $this->kohaApiUserAgent->get('/api/v1/items/' . (int)$itemId, $caller);
 		if ($response && $response['code'] == 200) {
 			return $response['content'];
 		}
@@ -9780,12 +9780,19 @@ class Koha extends AbstractIlsDriver {
 		$result = mysqli_query($this->dbConnection,
 			'SELECT itemnumber, homebranch FROM items WHERE itemnumber IN (' . implode(',', $itemIds) . ')'
 		);
+		if ($result === false) {
+			global $logger;
+			$logger->log("Error querying the Koha database: " . mysqli_error($this->dbConnection), Logger::LOG_ERROR);
+			return [];
+		}
+
 		$libraries = [];
 		while ($row = mysqli_fetch_assoc($result)) {
 			$libraries[(int)$row['itemnumber']] = empty($row['homebranch'])
 				? null
 				: Location::getLibraryForCode(strtolower($row['homebranch']));
 		}
+		$result->close();
 		return $libraries;
 	}
 
@@ -9910,11 +9917,21 @@ class Koha extends AbstractIlsDriver {
 		];
 	}
 
-	private function getItemIdForBooking(int $bookingId): ?int {
+	private function fetchKohaRow(string $sql): ?array {
 		$this->initDatabaseConnection();
-		$row = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
-			"SELECT item_id FROM bookings WHERE booking_id = " . (int)$bookingId . " LIMIT 1"
-		));
+		$result = mysqli_query($this->dbConnection, $sql);
+		if ($result === false) {
+			global $logger;
+			$logger->log("Error querying the Koha database: " . mysqli_error($this->dbConnection), Logger::LOG_ERROR);
+			return null;
+		}
+		$row = mysqli_fetch_assoc($result);
+		$result->close();
+		return $row;
+	}
+
+	private function getItemIdForBooking(int $bookingId): ?int {
+		$row = $this->fetchKohaRow("SELECT item_id FROM bookings WHERE booking_id = " . (int)$bookingId . " LIMIT 1");
 		return empty($row['item_id']) ? null : (int)$row['item_id'];
 	}
 
@@ -9970,19 +9987,14 @@ class Koha extends AbstractIlsDriver {
 	 * given item and patron. Returns null when the item can't be found.
 	 */
 	private function getItemCirculationContext(int $itemId, User $patron): ?array {
-		$this->initDatabaseConnection();
-		$row = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
-			"SELECT i.homebranch, i.itype, bi.itemtype FROM items i LEFT JOIN biblioitems bi ON bi.biblioitemnumber = i.biblioitemnumber WHERE i.itemnumber = $itemId LIMIT 1"
-		));
-		if (!$row) {
+		$item = $this->getItemFromApi((string)$itemId, 'koha.getItemCirculationContext');
+		if ($item === null) {
 			return null;
 		}
 
-		// Koha resolves an item's type as items.itype only when item-level_itypes is on and set, falling back to the biblio's itemtype.
-		$itemLevelItypes = $this->getKohaSystemPreference('item-level_itypes', '1') == '1';
 		return [
-			'itemTypeId'       => $itemLevelItypes && !empty($row['itype']) ? $row['itype'] : $row['itemtype'],
-			'locationId'       => $row['homebranch'],
+			'itemTypeId'       => $item['effective_item_type_id'] ?? null,
+			'locationId'       => $item['home_library_id'] ?? null,
 			'patronCategoryId' => $patron->patronType,
 		];
 	}
@@ -10023,16 +10035,13 @@ class Koha extends AbstractIlsDriver {
 			return $date;
 		}
 		$this->initDatabaseConnection();
-		$expiryRow = mysqli_fetch_assoc(mysqli_query($this->dbConnection,
-			"SELECT dateexpiry FROM borrowers WHERE borrowernumber = '" . mysqli_escape_string($this->dbConnection, $patron->unique_ils_id) . "' LIMIT 1"
-		));
-		if ($expiryRow && !empty($expiryRow['dateexpiry'])) {
-			$expiry = new DateTime($expiryRow['dateexpiry']);
-			if ($expiry < $date) {
-				return $expiry;
-			}
+		$expiryRow = $this->fetchKohaRow("SELECT dateexpiry FROM borrowers WHERE borrowernumber = '" . mysqli_escape_string($this->dbConnection, $patron->unique_ils_id) . "' LIMIT 1");
+		if (empty($expiryRow['dateexpiry'])) {
+			return $date;
 		}
-		return $date;
+
+		$expiry = new DateTime($expiryRow['dateexpiry']);
+		return $expiry < $date ? $expiry : $date;
 	}
 
 	/**

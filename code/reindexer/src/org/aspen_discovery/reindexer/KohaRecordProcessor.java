@@ -134,7 +134,12 @@ class KohaRecordProcessor extends IlsRecordProcessor {
 					onHoldShelfItemsStmt.close();
 
 					if (getKohaVersion(kohaConnection) >= 24.11) {
-						PreparedStatement bookableItemsStmt = kohaConnection.prepareStatement("SELECT i.itemnumber FROM items i JOIN itemtypes it ON it.itemtype = i.itype WHERE COALESCE(i.bookable, it.bookable) = 1");
+						PreparedStatement bookableItemsStmt;
+						if (isItemLevelItypesEnabled(kohaConnection)) {
+							bookableItemsStmt = kohaConnection.prepareStatement("SELECT i.itemnumber FROM items i LEFT JOIN itemtypes it ON it.itemtype = i.itype WHERE COALESCE(i.bookable, it.bookable) = 1");
+						}else{
+							bookableItemsStmt = kohaConnection.prepareStatement("SELECT i.itemnumber FROM items i LEFT JOIN biblioitems bi ON bi.biblioitemnumber = i.biblioitemnumber LEFT JOIN itemtypes it ON it.itemtype = bi.itemtype WHERE COALESCE(i.bookable, it.bookable) = 1");
+						}
 						ResultSet bookableItemsRS = bookableItemsStmt.executeQuery();
 						while (bookableItemsRS.next()) {
 							bookableItems.add(bookableItemsRS.getString("itemnumber"));
@@ -175,6 +180,24 @@ class KohaRecordProcessor extends IlsRecordProcessor {
 			}
 		}
 		return kohaVersion;
+	}
+
+	private Boolean itemLevelItypes = null;
+	private boolean isItemLevelItypesEnabled(Connection kohaConn){
+		if (itemLevelItypes != null) {
+			return itemLevelItypes;
+		}
+		itemLevelItypes = false;
+		try {
+			PreparedStatement itemLevelItypesStmt = kohaConn.prepareStatement("SELECT value FROM systempreferences WHERE variable='item-level_itypes'", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			ResultSet itemLevelItypesRS = itemLevelItypesStmt.executeQuery();
+			if (itemLevelItypesRS.next()){
+				itemLevelItypes = itemLevelItypesRS.getBoolean("value");
+			}
+		} catch (SQLException e) {
+			logger.error("Error loading item-level_itypes system preference", e);
+		}
+		return itemLevelItypes;
 	}
 
 	@Override

@@ -429,6 +429,15 @@ class User extends DataObject {
 				$systemMessageDismissals->delete();
 			}
 
+			// delete user_booking
+			require_once ROOT_DIR . '/sys/User/Booking.php';
+			$userBookings = new Booking();
+			$userBookings->userId = $this->id;
+			$userBookings->find();
+			while ($userBookings->fetch()) {
+				$userBookings->delete();
+			}
+
 			// delete user_checkout
 			require_once ROOT_DIR . '/sys/User/Checkout.php';
 			$userCheckouts = new Checkout();

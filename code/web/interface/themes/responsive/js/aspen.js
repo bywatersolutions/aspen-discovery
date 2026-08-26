@@ -2795,9 +2795,9 @@ AspenDiscovery.Account = (function () {
 			$.getJSON(url, function (data) {
 				document.body.style.cursor = 'default';
 				if (data.success) {
-					$('#bookingsPlaceholder').html(data.bookings);
+					$('#bookings-list').html(data.bookings);
 				} else {
-					$('#bookingsPlaceholder').html(data.message);
+					$('#bookings-list').html(data.message);
 				}
 			}).fail(AspenDiscovery.ajaxFail);
 			return false;
@@ -2812,7 +2812,7 @@ AspenDiscovery.Account = (function () {
 		},
 
 		submitUpdateBooking: function () {
-			const form = document.getElementById('updateBookingForm');
+			const form = document.getElementById('update-booking-form');
 			if (!form) return false;
 			const params = $(form).serialize();
 			AspenDiscovery.loadingMessage();
@@ -16155,6 +16155,7 @@ AspenDiscovery.Record = (function () {
 	// noinspection JSUnusedGlobalSymbols
 	return {
 		volumeHoldInProgress: false,
+		dateRangePicker: null,
 		showPlaceHold: function (module, source, id, volume, variationId, button, allowEditionSelection, format) {
 			if (Globals.loggedIn) {
 				document.body.style.cursor = "wait";
@@ -16206,6 +16207,43 @@ AspenDiscovery.Record = (function () {
 			} else {
 				AspenDiscovery.Account.ajaxLogin(null, function () {
 					AspenDiscovery.Record.showPlaceHold(module, source, id, volume, variationId, button, allowEditionSelection, format);
+				}, false);
+			}
+			return false;
+		},
+
+		submitBookingForm: function (button) {
+			const form = document.getElementById('place-booking-form');
+			const data = $(form).serialize();
+			AspenDiscovery.toggleButtonSpinner(button, true);
+			$.getJSON(Globals.path + '/Record/AJAX?method=placeBooking&' + data, function (result) {
+				AspenDiscovery.toggleButtonSpinner(button, false);
+				AspenDiscovery.showMessage(result.title, result.message);
+			}).fail(function () {
+				AspenDiscovery.toggleButtonSpinner(button, false);
+				AspenDiscovery.ajaxFail.apply(this, arguments);
+			});
+			return false;
+		},
+
+		showPlaceBooking: function (id, button) {
+			if (Globals.loggedIn) {
+				AspenDiscovery.toggleButtonSpinner(button, true);
+				const url = Globals.path + '/Record/' + id + '/AJAX?method=getBookingForm&id=' + encodeURIComponent(id);
+				$.getJSON(url, function (data) {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+					if (data.success) {
+						AspenDiscovery.showMessageWithButtons(data.title, data.modalBody, data.modalButtons);
+					} else {
+						AspenDiscovery.showMessage(data.title, data.message);
+					}
+				}).fail(function () {
+					AspenDiscovery.toggleButtonSpinner(button, false);
+					AspenDiscovery.ajaxFail.apply(this, arguments);
+				});
+			} else {
+				AspenDiscovery.Account.ajaxLogin(null, function () {
+					AspenDiscovery.Record.showPlaceBooking(id, button);
 				}, false);
 			}
 			return false;
@@ -17008,6 +17046,69 @@ AspenDiscovery.Record = (function () {
 				}
 			}).fail(function(jqXHR, textStatus, errorThrown) {
 				AspenDiscovery.ajaxFail(jqXHR, textStatus, errorThrown);
+			});
+		},
+
+		initBookingForm: async function () {
+			const calendar = document.getElementById('booking-calendar');
+			if (!calendar) {
+				return;
+			}
+			const tomorrow = new Date();
+			tomorrow.setDate(tomorrow.getDate() + 1);
+			tomorrow.setHours(0, 0, 0, 0);
+
+			let picker;
+			try {
+				// The picker is an ES module, so it lives outside aspen.js and is fetched
+				// from the URL the template stamps on the container.
+				const module = await import(calendar.closest('.date-range-picker').dataset.pickerModule);
+				picker = await module.DateRangePicker.create(calendar, {
+					minDate: tomorrow,
+				});
+			} catch {
+				const error = document.createElement('span');
+				error.className = 'text-danger';
+				error.textContent = 'Unable to load the availability calendar.';
+				calendar.replaceWith(error);
+				return;
+			}
+			
+			AspenDiscovery.Record.dateRangePicker = picker;
+
+			const itemSelect = document.getElementById('booking-item-select');
+			const recordId =  document.getElementById('id').value;
+			itemSelect?.addEventListener('change', function () {
+				picker.clear();
+				AspenDiscovery.Record.loadItemBookingAvailability(this.value, recordId);
+			});
+			const selectedItem = itemSelect ?? document.getElementById('current-item-id');
+			AspenDiscovery.Record.loadItemBookingAvailability(selectedItem?.value ?? null, recordId);
+		},
+
+		loadItemBookingAvailability: function (itemId, recordId) {
+			const picker = AspenDiscovery.Record.dateRangePicker;
+			if (!itemId || !picker) {
+				return;
+			}
+
+			const loading = document.getElementById('booking-calendar-status');
+			if (loading) {
+				loading.hidden = false;
+			}
+
+			const url = Globals.path + '/Record/AJAX?method=getItemBookedDates&id=' + encodeURIComponent(recordId) + '&itemId=' + encodeURIComponent(itemId);
+			$.getJSON(url, function (data) {
+				const constraints = data.success ? data.constraints : null;
+				picker.update({
+					maxDate:        constraints?.maxDate ? new Date(constraints.maxDate + 'T00:00:00') : null,
+					maxRangeDays:   constraints?.maxPeriod ? parseInt(constraints.maxPeriod, 10) : 0,
+					disabledRanges: data.success ? data.bookedDates : [],
+				});
+			}).fail(AspenDiscovery.ajaxFail).always(function () {
+				if (loading) {
+					loading.hidden = true;
+				}
 			});
 		},
 	};

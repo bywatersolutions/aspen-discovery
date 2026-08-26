@@ -133,7 +133,7 @@ class KohaRecordProcessor extends IlsRecordProcessor {
 					onHoldShelfItemsRS.close();
 					onHoldShelfItemsStmt.close();
 
-					if (getKohaVersion(kohaConnection) >= 23.11) {
+					if (getKohaVersion(kohaConnection) >= 24.11) {
 						PreparedStatement bookableItemsStmt = kohaConnection.prepareStatement("SELECT i.itemnumber FROM items i JOIN itemtypes it ON it.itemtype = i.itype WHERE COALESCE(i.bookable, it.bookable) = 1");
 						ResultSet bookableItemsRS = bookableItemsStmt.executeQuery();
 						while (bookableItemsRS.next()) {

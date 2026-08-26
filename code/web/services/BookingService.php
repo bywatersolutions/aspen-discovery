@@ -146,7 +146,7 @@ class BookingService {
 		}
 	}
 
-	private static function getBareRecordId(string $recordId): string {
+	public static function getBareRecordId(string $recordId): string {
 		return strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 	}
 

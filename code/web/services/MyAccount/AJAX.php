@@ -4501,8 +4501,11 @@ class MyAccount_AJAX extends JSON_Action {
 			return $this->failureResult('Update Booking', translate(['text' => 'Booking not found.', 'isPublicFacing' => true]));
 		}
 
+		require_once ROOT_DIR . '/services/BookingService.php';
+		$recordId = BookingService::getBareRecordId($stored->recordId);
+
 		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
-		$marcRecord = new MarcRecordDriver($user->source . ':' . $stored->recordId);
+		$marcRecord = new MarcRecordDriver($user->source . ':' . $recordId);
 		$itemLabel = $stored->itemId;
 		if ($marcRecord->isValid()) {
 			foreach ($marcRecord->getCopies() as $item) {
@@ -4520,6 +4523,8 @@ class MyAccount_AJAX extends JSON_Action {
 		global $interface;
 		$interface->assign('userId', $user->id);
 		$interface->assign('bookingId', $bookingId);
+		$interface->assign('recordId', $recordId);
+		$interface->assign('itemId', $stored->itemId);
 		$interface->assign('itemLabel', $itemLabel);
 		$interface->assign('startDate', $stored->ils_start_date);
 		$interface->assign('endDate', $stored->ils_end_date);

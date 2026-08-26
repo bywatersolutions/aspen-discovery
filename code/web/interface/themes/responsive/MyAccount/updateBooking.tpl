@@ -12,6 +12,8 @@
 			<form name="updateBookingForm" id="update-booking-form" method="post" class="form">
 				<input type="hidden" name="userId" id="user-id" value="{$userId|escape}">
 				<input type="hidden" name="bookingId" id="booking-id" value="{$bookingId|escape}">
+				<input type="hidden" id="id" value="{$recordId|escape}">
+				<input type="hidden" id="current-item-id" value="{$itemId|escape}">
 				<fieldset>
 					<div id="booking-error" class="pageWarning" style="display: none"></div>
 	

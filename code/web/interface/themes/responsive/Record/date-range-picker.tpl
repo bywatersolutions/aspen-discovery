@@ -5,6 +5,11 @@
 	   css/date-range-picker.less, compiled into main.css.*}
 	{assign var="drpId" value=$rangeId|default:'date-range-picker'}
 	<div class="date-range-picker" data-picker-module="/interface/themes/responsive/js/aspen/date-range-picker.js?v={$aspenVersion|urlencode}.{$cssJsCacheCounter}">
+		{if !empty($statusText)}
+			<div id="{$drpId}-status" class="date-range-picker-status text-muted" aria-live="polite" hidden>
+				<em>{translate text=$statusText isPublicFacing=true}</em>
+			</div>
+		{/if}
 		<div class="date-range-picker-fields form-group">
 			<div class="date-range-picker-field">
 				<label class="control-label" for="{$drpId}-start">{if !empty($startLabel)}{translate text=$startLabel isPublicFacing=true}{else}{translate text="From" isPublicFacing=true}{/if}</label>

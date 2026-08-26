@@ -938,7 +938,7 @@ AspenDiscovery.Record = (function () {
 				return;
 			}
 
-			const loading = document.getElementById('booking-availability-loading');
+			const loading = document.getElementById('booking-calendar-status');
 			if (loading) {
 				loading.hidden = false;
 			}

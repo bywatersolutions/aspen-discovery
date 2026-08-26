@@ -7,7 +7,7 @@ class BookingService {
 	public static function storeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch, array $apiResponse): void {
 		$booking = new Booking();
 		$booking->userId                = $patron->id;
-		$booking->recordId              = $recordId;
+		$booking->recordId              = self::getBareRecordId($recordId);
 		$booking->itemId                = $itemId;
 		$booking->ils_booking_id        = $apiResponse['booking_id'];
 		$booking->ils_start_date        = $startDate;
@@ -76,7 +76,7 @@ class BookingService {
 		foreach (self::loadStoredBookingsById($patron) as $stored) {
 			$bookings[] = [
 				'id'              => $stored->ils_booking_id,
-				'recordId'        => $stored->recordId,
+				'recordId'        => self::getBareRecordId($stored->recordId),
 				'itemId'          => $stored->itemId,
 				'startDate'       => $stored->ils_start_date,
 				'endDate'         => $stored->ils_end_date,
@@ -144,6 +144,10 @@ class BookingService {
 			$booking->ils_pickup_library_id = $pickupBranch;
 			$booking->update();
 		}
+	}
+
+	private static function getBareRecordId(string $recordId): string {
+		return strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 	}
 
 	private static function loadStoredBookingsById(User $patron): array {

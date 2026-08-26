@@ -10091,14 +10091,20 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	public function getBookingsForUser(User $patron): array {
+		require_once ROOT_DIR . '/services/BookingService.php';
 		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
 		$response = $this->kohaApiUserAgent->get('/api/v1/bookings?patron_id=' . urlencode($patron->unique_ils_id), 'koha.getBookingsForUser', [], $extraHeaders);
 
 		if (!$response || $response['code'] !== 200) {
-			return [];
+			$bookings = BookingService::mapStoredBookings($patron);
+			foreach ($bookings as &$booking) {
+				$booking['canUpdate'] = false;
+				$booking['canCancel'] = false;
+			}
+			unset($booking);
+			return $bookings;
 		}
 
-		require_once ROOT_DIR . '/services/BookingService.php';
 		$bookings = BookingService::syncAndMapBookings($patron, $response['content']);
 		$owningLibraries = $this->getOwningLibrariesForItems(array_column($bookings, 'itemId'));
 		foreach ($bookings as &$booking) {

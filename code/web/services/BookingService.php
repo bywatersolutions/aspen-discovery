@@ -34,7 +34,8 @@ class BookingService {
 	 * Diff live ILS bookings against Aspen's stored copies, update any that changed,
 	 * delete rows for bookings that no longer exist in Koha, and return a mapped array
 	 * ready for display. The $staffModified flag surfaces bookings that were altered
-	 * by staff after the patron placed them.
+	 * by staff after the patron placed them, and is null when the comparison could
+	 * not be made.
 	 */
 	public static function syncAndMapBookings(User $patron, array $liveBookings): array {
 		$storedById = self::loadStoredBookingsById($patron);
@@ -62,6 +63,28 @@ class BookingService {
 			$orphan->delete();
 		}
 
+		return $bookings;
+	}
+
+	/**
+	 * Map Aspen's stored copies on their own, for when the ILS could not be reached.
+	 * Nothing is written or deleted, and $staffModified is null throughout because
+	 * there is no live data to compare against.
+	 */
+	public static function mapStoredBookings(User $patron): array {
+		$bookings = [];
+		foreach (self::loadStoredBookingsById($patron) as $stored) {
+			$bookings[] = [
+				'id'              => $stored->ils_booking_id,
+				'recordId'        => $stored->recordId,
+				'itemId'          => $stored->itemId,
+				'startDate'       => $stored->ils_start_date,
+				'endDate'         => $stored->ils_end_date,
+				'status'          => $stored->ils_status,
+				'pickupLibraryId' => $stored->ils_pickup_library_id,
+				'staffModified'   => null,
+			];
+		}
 		return $bookings;
 	}
 
@@ -134,14 +157,23 @@ class BookingService {
 		return $storedById;
 	}
 
-	private static function syncBookingRow(?Booking $stored, array $raw): bool {
+	private static function syncBookingRow(?Booking $stored, array $raw): ?bool {
 		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
 		if ($stored === null) {
 			return false;
 		}
 
+		if (empty($raw)) {
+			return null;
+		}
+
 		$startDate = DateUtils::formatUtcDate($raw['start_date']);
 		$endDate = DateUtils::formatUtcDate($raw['end_date']);
+		if ($startDate === false || $endDate === false) {
+			global $logger;
+			$logger->log("Unable to parse dates for booking {$raw['booking_id']} from the ILS: {$raw['start_date']} to {$raw['end_date']}", Logger::LOG_ERROR);
+			return null;
+		}
 
 		$changed =
 			$stored->ils_status !== ($raw['status'] ?? null) ||

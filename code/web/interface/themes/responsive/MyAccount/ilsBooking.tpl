@@ -64,7 +64,13 @@
 							<div class="col-tn-8 result-value">{translate text=$record.status isPublicFacing=true}</div>
 						</div>
 					{/if}
-					{if !empty($record.staffModified)}
+					{if $record.staffModified === null}
+						<div class="row">
+							<div class="col-xs-12">
+								<div class="alert alert-warning">{translate text='We could not check this booking against the library system. Please contact library staff to confirm the details.' isPublicFacing=true}</div>
+							</div>
+						</div>
+					{elseif $record.staffModified}
 						<div class="row">
 							<div class="col-xs-12">
 								<span class="label label-warning">{translate text='Updated by staff' isPublicFacing=true}</span>

@@ -317,6 +317,12 @@ public class DatabaseCleanup implements IProcessHandler {
 				processLog.incUpdated();
 				processLog.addNote("Deleted " + numUpdates + " user_work_review where the user does not exist");
 			}
+
+			numUpdates = dbConn.prepareStatement("DELETE ub FROM user_booking ub LEFT JOIN user u ON ub.userId = u.id WHERE u.id IS NULL").executeUpdate();
+			if (numUpdates > 0){
+				processLog.incUpdated();
+				processLog.addNote("Deleted " + numUpdates + " user_booking where the user does not exist");
+			}
 			processLog.saveResults();
 		}catch (Exception e){
 			processLog.incErrors("Unable to cleanup user data for deleted users. ", e);

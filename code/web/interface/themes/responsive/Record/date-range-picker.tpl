@@ -22,7 +22,7 @@
 			</div>
 		</div>
 
-		<calendar-range id="{$drpId}" months="{$months|default:1}"{if !empty($locale)} locale="{$locale}"{/if}>
+		<calendar-range id="{$drpId}" months="{$months|default:1}" locale="{$userLang->locale|default:'en-US'|replace:'_':'-'}">
 			<svg slot="previous" aria-label="{translate text='Previous month' isPublicFacing=true}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M15.75 19.5 8.25 12l7.5-7.5"></path></svg>
 			<svg slot="next" aria-label="{translate text='Next month' isPublicFacing=true}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="m8.25 4.5 7.5 7.5-7.5 7.5"></path></svg>
 			{section name=month loop=$months|default:1}

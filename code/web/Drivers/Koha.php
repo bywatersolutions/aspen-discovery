@@ -9767,7 +9767,11 @@ class Koha extends AbstractIlsDriver {
 
 	public function hasBookingsSupport(): bool {
 		global $library;
-		return !empty($library) && $library->enableBookingDisplay;
+		if (empty($library) || empty($library->enableBookingDisplay)) {
+			return false;
+		}
+		// EnableBooking arrives in Koha 25.11, so an absent preference also rules out every earlier version.
+		return !empty($this->getKohaSystemPreference('EnableBooking'));
 	}
 
 	private function getOwningLibrariesForItems(array $itemIds): array {

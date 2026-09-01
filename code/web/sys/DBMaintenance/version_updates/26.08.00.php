@@ -15,6 +15,95 @@ function getUpdates26_08_00(): array {
 			 ]
 		 ], //name*/
 
+		'restore_opac_admin_role' => [
+			'title' => 'Restore opacAdmin role if missing',
+			'description' => 'Recreate the built-in opacAdmin role if it has been deleted, restore its existing default permissions, and assign it to aspen_admin.',
+			'continueOnError' => false,
+			'sql' => [
+				"INSERT INTO roles (name, description)
+					SELECT 'opacAdmin', 'Allows full administration of Aspen settings for all libraries/locations.'
+					WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'opacAdmin')",
+				"INSERT IGNORE INTO role_permissions (roleId, permissionId)
+					SELECT r.roleId, p.id
+					FROM roles r
+					INNER JOIN permissions p ON p.name IN (
+						'Administer Account Profiles',
+						'Administer All Browse Categories',
+						'Administer All Collection Spotlights',
+						'Administer All Explore More',
+						'Administer All Grouped Work Display Settings',
+						'Administer All Grouped Work Facets',
+						'Administer All Layout Settings',
+						'Administer All Libraries',
+						'Administer All Locations',
+						'Administer All Placards',
+						'Administer All Themes',
+						'Administer Boundless',
+						'Administer Cloud Library',
+						'Administer CloudSource OA',
+						'Administer EBSCO EDS',
+						'Administer Community Engagement Module',
+						'Administer Summon',
+						'Administer Gale',
+						'Administer Genealogy',
+						'Administer Hoopla',
+						'Administer IP Addresses',
+						'Administer Indexing Profiles',
+						'Administer Languages',
+						'Administer LibraryMarket LibraryCalendar Settings',
+						'Administer List Indexing Settings',
+						'Administer Modules',
+						'Administer Open Archives',
+						'Administer OverDrive',
+						'Administer Patron Types',
+						'Administer Amazon SES',
+						'Administer SendGrid',
+						'Administer All Side Loads',
+						'Administer Springshare LibCal',
+						'Administer System Variables',
+						'Administer Third Party Enrichment API Keys',
+						'Administer Translation Maps',
+						'Administer Website Indexing Settings',
+						'Administer Wikipedia Integration',
+						'Block Patron Account Linking',
+						'Download MARC Records',
+						'Edit All Lists',
+						'Edit Payment Status',
+						'Force Reindexing of Records',
+						'Include Lists In Search Results',
+						'Import Materials Requests',
+						'Manually Group and Ungroup Works',
+						'Moderate User Reviews',
+						'Run Database Maintenance',
+						'Set Grouped Work Display Information',
+						'Translate Aspen',
+						'Upload Covers',
+						'Upload List Covers',
+						'Upload PDFs',
+						'Upload Supplemental Files',
+						'View Archive Authorship Claims',
+						'View Archive Material Requests',
+						'View Community Engagement Dashboard',
+						'View Dashboards',
+						'View Indexing Logs',
+						'View ILS records in native OPAC',
+						'View ILS records in native Staff Client',
+						'View New York Times Lists',
+						'View Offline Holds Report',
+						'View OverDrive Test Interface',
+						'View System Reports',
+						'View Community Engagement Admin View'
+					)
+					WHERE r.name = 'opacAdmin'",
+				"INSERT IGNORE INTO user_roles (userId, roleId)
+					SELECT u.id, r.roleId
+					FROM user u
+					INNER JOIN roles r ON r.name = 'opacAdmin'
+					WHERE u.source = 'admin'
+						AND u.username = 'aspen_admin'",
+			],
+		], //restore_opac_admin_role
+
 		//mark n
 		'increase_user_username_column' => [
 			'title' => 'Increase username column in user table',

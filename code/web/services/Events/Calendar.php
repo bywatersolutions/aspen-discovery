@@ -14,6 +14,7 @@ class Events_Calendar extends Action {
 		// Include Search Engine Class
 		require_once ROOT_DIR . '/sys/SolrConnector/Solr.php';
 		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
+		require_once ROOT_DIR . '/sys/Events/EventsFacet.php';
 
 		$today = new DateTime();
 		$useWeek = 0;
@@ -47,6 +48,14 @@ class Events_Calendar extends Action {
 		//Print settings
 		$printEndTime = isset($_REQUEST['endTime']) ? filter_var($_REQUEST['endTime'], FILTER_VALIDATE_BOOLEAN) : false;
 		$interface->assign("printEndTime", $printEndTime);
+
+		// Embedded Event Calendar
+		$embedSuffix = !empty($_REQUEST['embed']) ? '&embed=true' : '';
+		if (!empty($_REQUEST['resizeIframe'])) {
+			$embedSuffix .= '&resizeIframe=on';
+		}
+		$interface->assign('embedSuffix', $embedSuffix);
+
 		if ($useWeek) {
 			$paddedWeek = str_pad($week, 2, '0', STR_PAD_LEFT);
 			$weekFilter = $year . '-' . $paddedWeek;
@@ -56,7 +65,7 @@ class Events_Calendar extends Action {
 			$formattedWeekYear = DateUtils::formatDateLocale($calendarStartDay, 'medium') . " - " . DateUtils::formatDateLocale($calendarEndDay, 'medium');
 			$month = date("n", strtotime($calendarStart));
 			$interface->assign('calendarMonth', $formattedWeekYear);
-			$monthLink = "/Events/Calendar?month=$month&year=$year";
+			$monthLink = "/Events/Calendar?month=$month&year=$year$embedSuffix";
 			$interface->assign("monthLink", $monthLink);
 
 			$prevWeek = $week - 1;
@@ -66,7 +75,7 @@ class Events_Calendar extends Action {
 				$prevWeek = $lastWeekLastYear;
 				$prevYear--;
 			}
-			$prevLink = "/Events/Calendar?week=$prevWeek&year=$prevYear";
+			$prevLink = "/Events/Calendar?week=$prevWeek&year=$prevYear$embedSuffix";
 			$interface->assign('prevLink', $prevLink);
 
 			$nextWeek = $week + 1;
@@ -76,7 +85,7 @@ class Events_Calendar extends Action {
 				$nextWeek = 1;
 				$nextYear++;
 			}
-			$nextLink = "/Events/Calendar?week=$nextWeek&year=$nextYear";
+			$nextLink = "/Events/Calendar?week=$nextWeek&year=$nextYear$embedSuffix";
 		} else {
 			$paddedMonth = str_pad($month, 2, '0', STR_PAD_LEFT);
 			$monthFilter = $year . '-' . $paddedMonth;
@@ -87,7 +96,7 @@ class Events_Calendar extends Action {
 			$formattedMonthYear = DateUtils::formatDateLocale($calendarStartDay, 'medium', 'none', $monthDisplay ? 'MMMM yyyy' : 'MMM yyyy');
 			$week = (int)$calendarStartDay->format("W") + 1;
 			$interface->assign('calendarMonth', $formattedMonthYear);
-			$weekLink = "/Events/Calendar?week=$week&year=$year";
+			$weekLink = "/Events/Calendar?week=$week&year=$year$embedSuffix";
 			$interface->assign("weekLink", $weekLink);
 
 			$prevMonth = $month - 1;
@@ -96,7 +105,7 @@ class Events_Calendar extends Action {
 				$prevMonth = 12;
 				$prevYear--;
 			}
-			$prevLink = "/Events/Calendar?month=$prevMonth&year=$prevYear";
+			$prevLink = "/Events/Calendar?month=$prevMonth&year=$prevYear$embedSuffix";
 			$interface->assign('prevLink', $prevLink);
 
 			$nextMonth = $month + 1;
@@ -105,7 +114,7 @@ class Events_Calendar extends Action {
 				$nextMonth = 1;
 				$nextYear++;
 			}
-			$nextLink = "/Events/Calendar?month=$nextMonth&year=$nextYear";
+			$nextLink = "/Events/Calendar?month=$nextMonth&year=$nextYear$embedSuffix";
 		}
 		$interface->assign('nextLink', $nextLink);
 
@@ -210,25 +219,7 @@ class Events_Calendar extends Action {
 		} else {
 			$searchObject->addHiddenFilter("event_month", '"' . $monthFilter . '"');
 		}
-		// Check permissions before showing private events
-		if (!UserAccount::userHasPermission('View Private Events for All Locations')) {
-			if (!UserAccount::userHasPermission([
-				'View Private Events for Home Library Locations',
-				'View Private Events for Home Location'
-			])) {
-				$searchObject->addHiddenFilter('-private', "private");
-			} else {
-				if (!UserAccount::userHasPermission('View Private Events for Home Library Locations')) {
-					$user = UserAccount::getLoggedInUser();
-					$locations = array_values($user->getAdditionalAdministrationLocations());
-					$locations[] = $user->getHomeLocationName();
-					$searchObject->addHiddenFilter('private', '("' . implode('" OR "private_', $locations) . '" OR "public")');
-				} else {
-					$locations = array_values(Location::getLocationList(true));
-					$searchObject->addHiddenFilter('private', '("private_' . implode('" OR "private_', $locations) . '" OR "public")');
-				}
-			}
-		}
+		$searchObject->addPrivateEventFilters();
 		$searchObject->setSort('start_date_sort asc, title_sort asc');
 
 		$timer->logTime('Setup Search');
@@ -257,7 +248,7 @@ class Events_Calendar extends Action {
 		$dropdownSearchObject = SearchObjectFactory::initSearchObject('Events');
 		$dropdownSearchObject->init();
 		$dropdownSearchObject->setPrimarySearch(false);
-		$dropdownSearchObject->setLimit(1000);
+		$dropdownSearchObject->setLimit(0);
 		$dropdownSearchObject->clearHiddenFilters();
 
 		if ($useWeek) {
@@ -275,21 +266,19 @@ class Events_Calendar extends Action {
 			}
 		}
 
-		$dropdownSearchObject->processSearch(true, true);
-		$allEvents = $dropdownSearchObject->getResultRecordSet();
+		$dropdownSearchObject->addPrivateEventFilters();
+
+		EventsFacet::addToSearchObject($dropdownSearchObject, ['branch']);
+
+		$dropdownResult = $dropdownSearchObject->processSearch(true, false);
+		if ($dropdownResult instanceof AspenError) {
+			AspenError::raiseError($dropdownResult->getMessage());
+		}
+
+		$locationFacets = $dropdownSearchObject->getFacetList(['branch' => 'Branch']);
 		$dropdownSearchObject->close();
 
-		$locationsWithEvents = [];
-		foreach ($allEvents as $result) {
-			if (!empty($result['branch'])) {
-				foreach ($result['branch'] as $branchName) {
-					$locationCode = array_search($branchName, $allLocations);
-					if ($locationCode !== false && !isset($locationsWithEvents[$locationCode])) {
-						$locationsWithEvents[$locationCode] = $branchName;
-					}
-				}
-			}
-		}
+		$locationsWithEvents = array_intersect($allLocations, array_column($locationFacets['branch']['list'] ?? [], 'value'));
 
 		if (!empty($locationsWithEvents)) {
 			if (isset($allLocations['all'])) {
@@ -469,6 +458,17 @@ class Events_Calendar extends Action {
 
 		$calendarTitle = $this->getCalendarTitle($calendarDisplaySettingId);
 		$interface->assign('calendarTitle', $calendarTitle);
+
+		// Embedded Event Calendar
+		if (!empty($_REQUEST['embed'])) {
+			global $interface;
+			if (!empty($_REQUEST['resizeIframe'])) {
+				$interface->assign('resizeIframe', true);
+			}
+			header('Content-type: text/html');
+			echo $interface->fetch('Events/embeddedEventCalendar.tpl');
+			die();
+		}
 
 		if ($useWeek) {
 			$this->display('calendar.tpl', 'Events Calendar ' . $formattedWeekYear, '');

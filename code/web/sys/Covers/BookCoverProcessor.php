@@ -590,6 +590,8 @@ class BookCoverProcessor {
 
 	private function returnImage($localPath) : void {
 		header('Content-type: image/png');
+		//Remove all cookies
+		header_remove("Set-Cookie");
 		if ($this->addModificationHeaders($localPath)) {
 			$this->logTime("Added modification headers");
 			$this->addCachingHeader();
@@ -602,8 +604,6 @@ class BookCoverProcessor {
 		} else {
 			$this->logTime("Added modification headers");
 		}
-		//Remove all cookies
-		header_remove("Set-Cookie");
 	}
 
 	private function getCoverFromProvider() : bool {
@@ -650,6 +650,10 @@ class BookCoverProcessor {
 						return true;
 					}
 				}
+			}
+
+			if ($this->tryBds()) {
+				return true;
 			}
 
 			require_once ROOT_DIR . '/sys/Enrichment/CoceServerSetting.php';
@@ -1124,6 +1128,48 @@ class BookCoverProcessor {
 			}
 		}
 
+		return false;
+	}
+
+	private function tryBds() : bool {
+		global $library;
+		require_once ROOT_DIR . '/sys/Enrichment/BDSSetting.php';
+		$settings = new BDSSetting();
+		$settings->id = $library->bdsSettingId;
+		$configured = $settings->find(true) && $settings->enabled;
+		if (!$configured) {
+			return false;
+		}
+		return $this->bds($settings);
+	}
+
+	function bds(BDSSetting $settings) : bool {
+		$hasRequiredInputs = !empty($this->isn) && !empty($settings->dbmCode);
+		if (!$hasRequiredInputs) {
+			return false;
+		}
+		// BDS endpoint only confirmed for small (s) and large (l); map medium to large rather than guess an unverified size.
+		$size = match ($this->size) {
+			'large', 'medium' => 'l',
+			default => 's',
+		};
+		$isbnsToTry = [$this->isn];
+		if (strlen($this->isn) == 13) {
+			require_once ROOT_DIR . '/Drivers/marmot_inc/ISBNConverter.php';
+			$isbn10 = ISBNConverter::convertISBN13to10($this->isn);
+			if (!empty($isbn10)) {
+				$isbnsToTry[] = $isbn10;
+			}
+		}
+		foreach ($isbnsToTry as $isbn) {
+			$url = 'https://www.bibdsl.co.uk/xmla/image-service.asp?ISBN=' . urlencode($isbn)
+				. '&SIZE=' . $size
+				. '&DBM=' . urlencode($settings->dbmCode)
+				. '&err=no-placeholder';
+			if ($this->processImageURL('bds', $url)) {
+				return true;
+			}
+		}
 		return false;
 	}
 

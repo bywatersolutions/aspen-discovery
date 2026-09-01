@@ -683,7 +683,7 @@ class UserAccount {
 			if(!$localAuthOnly) {
 				$tempUser = $authN->authenticate($validatedViaSSO, $accountProfile);
 			} else {
-				$tempUser = UserAccount::findNewAspenUser('username', $_POST['username']);
+				$tempUser = UserAccount::findNewAspenUser('username', $_POST['username'], $accountProfile->name);
 			}
 
 			// If we authenticated, store the user in the session:
@@ -707,8 +707,8 @@ class UserAccount {
 						//DON'T mark this as a failed login in the IP table since they were actually valid and we're blocking them
 						return $cardExpired;
 					} elseif ($library->allowLoginToPatronsOfThisLibraryOnly && ($tempUser->getHomeLibrary() != null && ($tempUser->getHomeLibrary()->libraryId != $library->libraryId))) {
-						$disallowedMessage = empty(trim(strip_tags($library->messageForPatronsOfOtherLibraries))) ? 'Sorry, this catalog can only be accessed by patrons of ' . $library->displayName : $library->messageForPatronsOfOtherLibraries;
-						$disallowedMessage .= ' Your home library is ' . $tempUser->getHomeLibrary()->displayName . '. <a href="' . $tempUser->getHomeLibrary()->baseUrl . '">Go to your library’s website to login</a>.';
+						$disallowedMessage = empty(trim(strip_tags($library->messageForPatronsOfOtherLibraries))) ? 'Sorry, this catalog can only be accessed by patrons of ' . $library->displayName . '.' : $library->messageForPatronsOfOtherLibraries . '.';
+						$disallowedMessage .= ' Your home library is ' . $tempUser->getHomeLibrary()->displayName . '. <a href="' . $tempUser->getHomeLibrary()->baseUrl . '">Please go to your library’s website to continue</a>.';
 						return new AspenError($disallowedMessage);
 					} elseif ($tempUser->getHomeLibrary() != null && ($tempUser->getHomeLibrary()->preventLogin)) {
 						$disallowedMessage = empty(trim(strip_tags($tempUser->getHomeLibrary()->preventLoginMessage))) ? 'Sorry, patrons of ' . $library->displayName . ' cannot login at this time.' : $tempUser->getHomeLibrary()->preventLoginMessage;
@@ -1142,12 +1142,16 @@ class UserAccount {
 	 *
 	 * @param string $key The column in the User table to search
 	 * @param string $value Value needed to match the given key to find the user
+	 * @param ?string $source the source of the user (from account profile name)
 	 *
 	 * @return false|User
 	 */
-	public static function findNewAspenUser(string $key, string $value) {
+	public static function findNewAspenUser(string $key, string $value, ?string $source = null) : User|false {
 		$newUser = new User();
 		$newUser->$key = $value;
+		if ($source != null) {
+			$newUser->source = $source;
+		}
 		if($newUser->find(true)) {
 			return $newUser;
 		}

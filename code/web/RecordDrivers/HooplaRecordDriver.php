@@ -59,6 +59,30 @@ class HooplaRecordDriver extends GroupedWorkSubDriver {
 		}
 	}
 
+	private ?array $detailedContributors = null;
+	/** @noinspection PhpUnused */
+	public function getDetailedContributors() : array {
+		if ($this->detailedContributors == null) {
+			$this->detailedContributors = [];
+			$rawData = $this->hooplaRawMetadata;
+			foreach ($rawData->artists as $artist) {
+				if (!array_key_exists($artist->name, $this->detailedContributors)) {
+					$normalizedRole = strtolower(trim($artist->relationship));
+					if ($normalizedRole == 'reader') {
+						$role = 'Narrator';
+					} else {
+						$role = ucfirst(strtolower($artist->relationship));
+					}
+					$this->detailedContributors[$artist->name] = [
+						'name' => $artist->name,
+						'role' => $role,
+					];
+				}
+			}
+		}
+		return $this->detailedContributors;
+	}
+
 	public function getModule(): string {
 		return 'Hoopla';
 	}

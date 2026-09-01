@@ -67,6 +67,7 @@ class SystemVariables extends DataObject {
 	public $userAgentRetentionMonths;
 	public $logFrequentCrons;
 	public $hooplaVersion;
+	public $readingHistoryBaseUrl;
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
@@ -187,11 +188,11 @@ class SystemVariables extends DataObject {
 						'property' => 'indexVersion',
 						'type' => 'enum',
 						'values' => [
-							1 => 'Version 1 (No edition information)',
 							2 => 'Version 2 (Edition information)',
+							//3 => 'Version 3 (Optimization of solr fields)'
 						],
 						'label' => 'Grouped Work Indexing Version',
-						'description' => 'The Solr Core Version to index with.  In 22.06 and above this should be version 2 in most cases.',
+						'description' => 'The Solr Core Version to index with.  In 26.08 and above this should be version 3 in most cases.',
 						'required' => true,
 						'default' => 2,
 					],
@@ -199,11 +200,11 @@ class SystemVariables extends DataObject {
 						'property' => 'searchVersion',
 						'type' => 'enum',
 						'values' => [
-							1 => 'Version 1 (No edition information)',
 							2 => 'Version 2 (Edition information)',
+							//3 => 'Version 3 (Optimization of solr fields)'
 						],
 						'label' => 'Grouped Work Search Version',
-						'description' => 'The Solr Core Version to search with.  In 22.06 and above this should be version 2 in most cases.',
+						'description' => 'The Solr Core Version to search with.  In 26.08 and above this should be version 3 in most cases.',
 						'required' => true,
 						'default' => 2,
 					],
@@ -537,13 +538,22 @@ class SystemVariables extends DataObject {
 				'note' => 'Frequent jobs include: ' . implode(', ', $frequentJobs) . '.',
 				'default' => false,
 			],
+			'readingHistoryBaseUrl' => [
+				'property' => 'readingHistoryBaseUrl',
+				'type' => 'enum',
+				'values' => [
+					0 => 'Use localhost as the base URL',
+					1 => 'Use server URL as the base URL',
+				],
+				'label' => 'Reading History Base URL',
+				'description' => 'Determines how reading history URLs are constructed in cron. Most systems should be fine using localhost, but more complex systems may need the base url.',
+				'default' => 0,
+			]
 		];
 
 		if (!UserAccount::isLoggedIn() || !UserAccount::getActiveUserObj()->isAspenAdminUser()) {
 			$objectStructure['indexingSection']['properties']['storeRecordDetailsInSolr']['type'] = 'hidden';
 			$objectStructure['indexingSection']['properties']['storeRecordDetailsInDatabase']['type'] = 'hidden';
-			$objectStructure['indexingSection']['properties']['indexVersion']['type'] = 'hidden';
-			$objectStructure['indexingSection']['properties']['searchVersion']['type'] = 'hidden';
 			$objectStructure['indexingSection']['properties']['hooplaVersion']['type'] = 'hidden';
 		}
 

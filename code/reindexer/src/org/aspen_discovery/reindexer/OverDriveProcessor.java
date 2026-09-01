@@ -4,6 +4,7 @@ import com.turning_leaf_technologies.indexing.OverDriveScope;
 import com.turning_leaf_technologies.indexing.Scope;
 import com.turning_leaf_technologies.logging.BaseIndexingLogEntry;
 import com.turning_leaf_technologies.strings.AspenStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -217,8 +218,10 @@ class OverDriveProcessor implements AutoCloseable {
 									HashSet<String> authorsWithRole = new HashSet<>();
 									for (int i = 0; i < creators.length(); i++) {
 										JSONObject creator = creators.getJSONObject(i);
-										authors.add(creator.getString("fileAs"));
-										authorsWithRole.add(creator.getString("fileAs") + "|" + creator.getString("role"));
+										String author = creator.getString("fileAs").replaceAll("\\s+$", "");
+										String role = StringUtils.capitalize(creator.getString("role").toLowerCase());
+										authors.add(author);
+										authorsWithRole.add(author + "|" + role);
 									}
 									groupedWork.addAuthor2(authors);
 									groupedWork.addAuthor2Role(authorsWithRole);
@@ -245,7 +248,7 @@ class OverDriveProcessor implements AutoCloseable {
 								String primaryLanguage = "English";
 								String targetAudience = "Adult";
 								if (rawMetadataDecoded != null) {
-									primaryLanguage = loadOverDriveLanguages(groupedWork, rawMetadataDecoded, identifier);
+									primaryLanguage = loadOverDriveLanguages(groupedWork, rawMetadataDecoded, identifier, overDriveRecord);
 									targetAudience = loadOverDriveSubjects(groupedWork, rawMetadataDecoded);
 								}
 
@@ -373,7 +376,7 @@ class OverDriveProcessor implements AutoCloseable {
 									boolean isTeen = targetAudience.equals("Young Adult");
 									boolean isKids = targetAudience.equals("Juvenile");
 
-									for (Scope scope : indexer.getScopes()) {
+									for (Scope scope : indexer.getScopes().values()) {
 										if (scope.isIncludeOverDriveCollection(settingId)) {
 											OverDriveScope overDriveScope = scope.getOverDriveScope(settingId);
 											String readerName = overDriveScope.getReaderName();
@@ -723,7 +726,7 @@ class OverDriveProcessor implements AutoCloseable {
 		return targetAudience;
 	}
 
-	private String loadOverDriveLanguages(AbstractGroupedWorkSolr groupedWork, JSONObject productMetadata, String identifier) throws JSONException {
+	private String loadOverDriveLanguages(AbstractGroupedWorkSolr groupedWork, JSONObject productMetadata, String identifier, RecordInfo recordInfo) throws JSONException {
 		String primaryLanguage = null;
 		if (productMetadata.has("languages")) {
 			JSONArray languagesFromMetadata = productMetadata.getJSONArray("languages");
@@ -747,17 +750,17 @@ class OverDriveProcessor implements AutoCloseable {
 				String languageBoost = indexer.translateSystemValue("language_boost", languageCode, identifier);
 				if (languageBoost != null) {
 					Long languageBoostVal = Long.parseLong(languageBoost);
-					groupedWork.setLanguageBoost(languageBoostVal);
+					groupedWork.setLanguageBoost(languageBoostVal, recordInfo);
 				}
 				String languageBoostEs = indexer.translateSystemValue("language_boost_es", languageCode, identifier);
 				if (languageBoostEs != null) {
 					Long languageBoostVal = Long.parseLong(languageBoostEs);
-					groupedWork.setLanguageBoostSpanish(languageBoostVal);
+					groupedWork.setLanguageBoostSpanish(languageBoostVal, recordInfo);
 				}
 			}
-			groupedWork.setLanguages(languages);
+			groupedWork.setLanguages(languages, recordInfo);
 		} else {
-			groupedWork.addLanguage("English");
+			groupedWork.addLanguage("English", recordInfo);
 		}
 
 		if (primaryLanguage == null) {

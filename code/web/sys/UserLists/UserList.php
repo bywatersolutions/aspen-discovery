@@ -531,11 +531,19 @@ class UserList extends DataObject {
 		}
 
 		$searchObject->setSort($this->getSolrSort($sort));
+		global $module;
+		global $action;
+		if ($module == 'MyAccount' && $action == 'MyList') {
+			$searchObject->setPrimarySearch(true);
+		}
 
 		$result = $searchObject->processSearch(true, true);
 
 		global $interface;
 		$searchObject->close();
+		if (!empty($result['error'])) {
+			$interface->assign('solrError', $result['error']);
+		}
 		$interface->assign('time', round($searchObject->getTotalSpeed(), 2));
 		$interface->assign('savedSearch', $searchObject->isSavedSearch());
 		$interface->assign('searchId', $searchObject->getSearchId());
@@ -587,7 +595,7 @@ class UserList extends DataObject {
 		return [
 			'listEntries' => $listEntries,
 			'idsBySource' => $idsBySource,
-			'numFilteredEntries' => $result['response']['numFound'],
+			'numFilteredEntries' => $result['response']['numFound'] ?? 0,
 		];
 	}
 
@@ -768,29 +776,56 @@ class UserList extends DataObject {
 			$filteredIdsBySource[$listItemEntry['source']][] = $listItemEntry['sourceId'];
 		}
 
-		//Load the actual items from each source
-		$listResults = [];
-		foreach ($filteredIdsBySource as $sourceType => $sourceIds) {
-			if (!$forLiDA || ($forLiDA && in_array($sourceType, AbstractAPI::getValidSourcesForLiDA()))) {
+	// Load the actual items from each source
+	$listResults = [];
+	foreach ($filteredIdsBySource as $sourceType => $sourceIds) {
+		if (!$forLiDA || ($forLiDA && in_array($sourceType, AbstractAPI::getValidSourcesForLiDA()))) {
+			// Nested lists
+			if ($sourceType === 'Lists') {
+				require_once ROOT_DIR . '/RecordDrivers/ListsRecordDriver.php';
+				$records = [];
+				foreach ($sourceIds as $id) {
+					$userList = new UserList();
+					$userList->id = $id;
+					
+					if ($userList->find(true)) {
+						if ($userList->public) {
+							$records[] = new ListsRecordDriver([
+								'id' => $userList->id,
+								'title_display' => $userList->title,
+							]);
+						} else {
+							// Don't display private nested lists
+							foreach ($filteredListEntries as $key => $entry) {
+								if ($entry['sourceId'] === $id) {
+									unset($filteredListEntries[$key]);
+									break;
+								}
+							}
+						}
+					}
+				} 
+			} else {
 				$searchObject = SearchObjectFactory::initSearchObject($sourceType);
 				if ($searchObject === false) {
 					AspenError::raiseError("Unknown List Entry Source $sourceType");
 				} else {
 					$records = $searchObject->getRecords($sourceIds);
-					if ($format == 'html') {
-						$listResults = $listResults + $this->getResultListHTML($records, $filteredListEntries, $allowEdit, $start);
-					} elseif ($format == 'summary') {
-						$listResults = $listResults + $this->getResultListSummary($records, $filteredListEntries);
-					} elseif ($format == 'recordDrivers') {
-						$listResults = $listResults + $this->getResultListRecordDrivers($records, $filteredListEntries);
-					} elseif ($format == 'citations') {
-						$listResults = $listResults + $this->getResultListCitations($records, $filteredListEntries, $citationFormat);
-					} else {
-						AspenError::raiseError("Unknown display format $format in getListRecords");
-					}
 				}
 			}
+			if ($format == 'html') {
+				$listResults = $listResults + $this->getResultListHTML($records, $filteredListEntries, $allowEdit, $start);
+			} elseif ($format == 'summary') {
+				$listResults = $listResults + $this->getResultListSummary($records, $filteredListEntries);
+			} elseif ($format == 'recordDrivers') {
+				$listResults = $listResults + $this->getResultListRecordDrivers($records, $filteredListEntries);
+			} elseif ($format == 'citations') {
+				$listResults = $listResults + $this->getResultListCitations($records, $filteredListEntries, $citationFormat);
+			} else {
+				AspenError::raiseError("Unknown display format $format in getListRecords");
+			}
 		}
+	}
 
 		if ($format == 'html') {
 			//Add in non-owned results for anything that is left
@@ -1218,9 +1253,6 @@ class UserList extends DataObject {
 						// invalid event source
 					}
 				}
-
-			} else {
-				require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 			}
 			$searchObject = SearchObjectFactory::initSearchObject($sourceType);
 			if ($searchObject === false) {
@@ -2027,18 +2059,35 @@ class UserList extends DataObject {
 	}
 
 	private function getSolrSort(string $sort) : string {
-		global $solrScope;
-		return match ($sort) {
-			'title' => 'title asc',
-			'author' => 'author asc,title asc',
-			'dateAdded' => "list_entry_date_added_$this->id asc",
-			'recentlyAdded' => "list_entry_date_added_$this->id desc",
-			'call_number' => "callnumber_sort_$solrScope asc,title asc",
-			'copies_available', 'availability_desc' => "available_copies_$solrScope desc,title asc",
-			'copies_available_asc', 'availability' => "available_copies_$solrScope asc,title asc",
-			'custom' => "list_entry_weight_$this->id asc",
-			'publication_date' => "year asc,title asc",
-			'publication_date_desc' => "year desc,title asc"
-		};
+		require_once ROOT_DIR . '/sys/SystemVariables.php';
+		$systemVariables = SystemVariables::getSystemVariables();
+		if ($systemVariables->searchVersion == 2) {
+			global $solrScope;
+			return match ($sort) {
+				'title' => 'title asc',
+				'author' => 'author asc,title asc',
+				'dateAdded' => "list_entry_date_added_$this->id asc",
+				'recentlyAdded' => "list_entry_date_added_$this->id desc",
+				'call_number' => "callnumber_sort_$solrScope asc,title asc",
+				'copies_available', 'availability_desc' => "available_copies_$solrScope desc,title asc",
+				'copies_available_asc', 'availability' => "available_copies_$solrScope asc,title asc",
+				'custom' => "list_entry_weight_$this->id asc",
+				'publication_date' => "year asc,title asc",
+				'publication_date_desc' => "year desc,title asc"
+			};
+		}else {
+			return match ($sort) {
+				'title' => 'title asc',
+				'author' => 'author asc,title asc',
+				'dateAdded' => "list_entry_date_added_$this->id asc",
+				'recentlyAdded' => "list_entry_date_added_$this->id desc",
+				'call_number' => "callnumber_sort asc,title asc",
+				'copies_available', 'availability_desc' => "available_copies desc,title asc",
+				'copies_available_asc', 'availability' => "available_copies asc,title asc",
+				'custom' => "list_entry_weight_$this->id asc",
+				'publication_date' => "year asc,title asc",
+				'publication_date_desc' => "year desc,title asc"
+			};
+		}
 	}
 }

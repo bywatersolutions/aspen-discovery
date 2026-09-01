@@ -1017,9 +1017,10 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		return "";
 	}
 
-	private $detailedContributors = null;
+	private ?array $detailedContributors = null;
 
-	public function getDetailedContributors() {
+	/** @noinspection PhpUnused */
+	public function getDetailedContributors(): array {
 		if ($this->detailedContributors == null) {
 			$this->detailedContributors = [];
 			if (isset($this->fields['author2-role'])) {
@@ -1031,9 +1032,19 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				foreach ($contributorsInIndex as $contributor) {
 					if (strpos($contributor, '|')) {
 						$contributorInfo = explode('|', $contributor);
+						$roles = explode(',', $contributorInfo[1]);
+						foreach ($roles as &$role) {
+							$normalizedRole = strtolower(rtrim(trim($role), '.'));
+							if ($normalizedRole == "reader") {
+								$role = 'Narrator';
+							} else {
+								$role = ucfirst(strtolower(trim($role)));
+							}
+						}
+						unset($role);
 						$curContributor = [
 							'name' => $contributorInfo[0],
-							'roles' => explode(',', $contributorInfo[1]),
+							'roles' => $roles,
 						];
 						ksort($curContributor['roles']);
 					} else {
@@ -1110,18 +1121,9 @@ class GroupedWorkDriver extends IndexRecordDriver {
 	 * This expects to return a string or null, but IndexRecordDriver returns an array
 	 */
 	public function getFormatCategory(): string|array|null {
-		global $solrScope;
 		require_once ROOT_DIR . '/sys/SystemVariables.php';
 		$systemVariables = SystemVariables::getSystemVariables();
-		if ($systemVariables->searchVersion == 1) {
-			if (isset($this->fields['format_category_' . $solrScope])) {
-				if (is_array($this->fields['format_category_' . $solrScope])) {
-					return reset($this->fields['format_category_' . $solrScope]);
-				} else {
-					return $this->fields['format_category_' . $solrScope];
-				}
-			}
-		} else {
+		if ($systemVariables->searchVersion == 2) {
 			if (isset($this->fields['format_category'])) {
 				if (is_array($this->fields['format_category'])) {
 					return reset($this->fields['format_category']);
@@ -1134,18 +1136,9 @@ class GroupedWorkDriver extends IndexRecordDriver {
 	}
 
 	public function getFormatCategories(): array {
-		global $solrScope;
 		require_once ROOT_DIR . '/sys/SystemVariables.php';
 		$systemVariables = SystemVariables::getSystemVariables();
-		if ($systemVariables->searchVersion == 1) {
-			if (isset($this->fields['format_category_' . $solrScope])) {
-				if (is_array($this->fields['format_category_' . $solrScope])) {
-					return $this->fields['format_category_' . $solrScope];
-				} else {
-					return [$this->fields['format_category_' . $solrScope]];
-				}
-			}
-		} else {
+		if ($systemVariables->searchVersion == 2) {
 			if (isset($this->fields['format_category'])) {
 				if (is_array($this->fields['format_category'])) {
 					return $this->fields['format_category'];
@@ -1154,7 +1147,7 @@ class GroupedWorkDriver extends IndexRecordDriver {
 				}
 			}
 		}
-		return "";
+		return [];
 	}
 
 	protected array|null|false $_indexedSeries = false;
@@ -2269,6 +2262,14 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$groupedWorkDisplaySettings = $library->getGroupedWorkDisplaySettings();
 		$interface->assign('formatDisplayStyle', $groupedWorkDisplaySettings->formatDisplayStyle);
 		$interface->assign('hideManifestationsInMobileView', $groupedWorkDisplaySettings->hideManifestationsInMobileView);
+		$interface->assign('displaySortTermValues', $groupedWorkDisplaySettings->displaySortTermValue);
+
+		// Sort variables to show
+		$interface->assign('sortValue', $_REQUEST['sort'] ?? null);
+		$interface->assign('datePurchased', $this->getDatePurchased());
+		$interface->assign('callNumber', $this->getCallNumber());
+		$interface->assign('totalCheckouts', $this->getTotalCheckouts());
+		$interface->assign('totalHolds', $this->getNumberOfHolds());
 
 		//Get Rating
 		$interface->assign('summRating', $this->getRatingData());
@@ -3649,7 +3650,6 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		//Load Similar titles (from Solr)
 		global $configArray;
 		global $interface;
-		require_once ROOT_DIR . '/sys/SolrConnector/GroupedWorksSolrConnector.php';
 		/** @var SearchObject_AbstractGroupedWorkSearcher $searchObject */
 		$searchObject = SearchObjectFactory::initSearchObject();
 		$searchObject->init();
@@ -3992,5 +3992,26 @@ class GroupedWorkDriver extends IndexRecordDriver {
 		$manualGroupedWork = new ManualGroupedWork();
 		$manualGroupedWork->grouped_work_permanent_id = $this->permanentId;
 		return $manualGroupedWork->find(true) !== false;
+	}
+
+	private function getCallNumber() {
+		foreach (array_keys(($this->fields)) as $key) {
+			if (str_contains($key, 'callnumber')) {
+				return $this->fields[$key][0] ?? null;
+			}
+		}
+		return null;
+	}
+
+	private function getDatePurchased() {
+		return $this->fields['date_added'] ?? null;
+	}
+
+	private function getTotalCheckouts() {
+		return $this->fields['popularity'] ?? null;
+	}
+
+	private function getNumberOfHolds() {
+		return $this->fields['total_holds'] ?? null;
 	}
 }

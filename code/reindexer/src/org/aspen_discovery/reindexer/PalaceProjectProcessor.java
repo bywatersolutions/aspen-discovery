@@ -163,11 +163,11 @@ public class PalaceProjectProcessor {
 					String threeLetterLanguage = indexer.translateSystemValue("two_to_three_character_language_codes", languageCode, identifier);
 					String language = indexer.translateSystemValue("language", threeLetterLanguage, identifier);
 					palaceProjectRecord.setPrimaryLanguage(language);
-					groupedWork.addLanguage(language);
+					groupedWork.addLanguage(language, palaceProjectRecord);
 					if (language.equalsIgnoreCase("English")){
-						groupedWork.setLanguageBoost(10L);
+						groupedWork.setLanguageBoost(10L, palaceProjectRecord);
 					}else if (language.equalsIgnoreCase("Spanish")){
-						groupedWork.setLanguageBoostSpanish(10L);
+						groupedWork.setLanguageBoostSpanish(10L, palaceProjectRecord);
 					}
 				}
 
@@ -255,9 +255,9 @@ public class PalaceProjectProcessor {
 				if (metadata.has("narrator")) {
 					String narrator;
 					if (metadata.get("narrator") instanceof String) {
-						narrator = metadata.getString("narrator");
+						narrator = metadata.getString("narrator").replaceAll("\\s+$", "");
 					}else{
-						narrator = metadata.getJSONObject("narrator").getString("name");
+						narrator = metadata.getJSONObject("narrator").getString("name").replaceAll("\\s+$", "");
 					}
 					HashSet<String> artistsToAdd = new HashSet<>();
 					HashSet<String> artistsWithRoleToAdd = new HashSet<>();
@@ -321,7 +321,7 @@ public class PalaceProjectProcessor {
 						//Account for cases where audience is Unknown, General, etc
 						boolean isAdult = !isKids && !isTeen;
 
-						for (Scope scope : indexer.getScopes()) {
+						for (Scope scope : indexer.getScopes().values()) {
 							boolean okToAdd;
 							PalaceProjectScope palaceProjectScope = scope.getPalaceProjectScope();
 							if (palaceProjectScope != null) {

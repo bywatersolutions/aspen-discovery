@@ -60,6 +60,7 @@ class UserAccount {
 	}
 
 	public static function get2FAMethodStatus(): array {
+		$activeLibrary = null;
 		$user = UserAccount::getActiveUserObj();
 		if ($user !== null) {
 

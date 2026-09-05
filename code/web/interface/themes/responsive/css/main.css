@@ -11535,6 +11535,9 @@ td[data-entry-id]:has(.date-edit:focus)::after {
 #multiple-variations-column.formatDisplayHorizontal .horizDisplayShelfLocations .col-tn-4:first-child {
   padding-left: 0;
 }
+#multiple-variations-column.formatDisplayHorizontal .horizDisplayShelfLocations .col-tn-4:first-child {
+  padding-left: 0;
+}
 .relatedRecord {
   font-size: small;
 }

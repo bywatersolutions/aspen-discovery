@@ -43,6 +43,6 @@ Class-Path: ../java_shared_libraries/commons-beanutils-1.9.3.jar ../java
  -native-epoll-4.1.68.Final.jar ../../sites/default/solr-8.11.2/dist/sol
  rj-lib/netty-transport-native-unix-common-4.1.68.Final.jar ../../sites/
  default/solr-8.11.2/dist/solrj-lib/snappy-java-1.1.7.6.jar ../../sites/
- default/solr-8.11.2/dist/solrj-lib/zookeeper-jute-3.6.2.jar
+ default/solr-8.11.2/dist/solrj-lib/zookeeper-jute-3.6.2.jar ../marcMergeUtility/lib/marc4j-pika.jar
 Main-Class: org.aspen_discovery.reindexer.GroupedReindexMain
 

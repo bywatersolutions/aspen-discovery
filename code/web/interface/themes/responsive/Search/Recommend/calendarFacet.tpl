@@ -10,9 +10,10 @@
 		</div>
 
 		{* To make sure that applying this filter does not remove existing filters we need to copy the get variables as hidden variables *}
-		{foreach from=$smarty.get item=parmValue key=paramName}
-			{if is_array($smarty.get.$paramName)}
-				{foreach from=$smarty.get.$paramName item=parmValue2}
+		{assign var="facetParamsToPreserve" value=$facetFormQueryParams|default:$smarty.get}
+		{foreach from=$facetParamsToPreserve item=parmValue key=paramName}
+			{if is_array($facetParamsToPreserve.$paramName)}
+				{foreach from=$facetParamsToPreserve.$paramName item=parmValue2}
 				{* Do not include the filter that this form is for. *}
 					{if strpos($parmValue2, $title) === FALSE}
 						<input type="hidden" name="{$paramName}[]" value="{$parmValue2|escape}" />

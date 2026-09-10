@@ -293,10 +293,13 @@
 	</indexReaderFactory >
 	-->
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		 Query section - these settings control query time things like caches
-		 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<query>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+       Query section - these settings control query time things like caches
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <query>
+
+		<!-- Log Slow Queries -->
+		<slowQueryThresholdMillis>7500</slowQueryThresholdMillis>
 
 		<!-- Maximum number of clauses in each BooleanQuery,  an exception
 			 is thrown if exceeded.  It is safe to increase or remove this setting,

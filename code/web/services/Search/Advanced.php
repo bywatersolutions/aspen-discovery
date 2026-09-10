@@ -13,6 +13,12 @@ class Search_Advanced extends Search_AdvancedBase {
 			$searchObject = SearchObjectFactory::initSearchObject();
 		}
 		$searchObject->initAdvancedFacets();
+		
+		// Advanced Search needs full facet value sets regardless of async facet loading.
+		if (method_exists($searchObject, 'setBypassAsyncFacetLogic')) {
+			$searchObject->setBypassAsyncFacetLogic(true);
+		}
+
 		// We don't want this search in the search history
 		$searchObject->disableLogging();
 		// Go get the facets

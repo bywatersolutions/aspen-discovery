@@ -63,9 +63,15 @@ if (count($_SERVER['argv']) > 1) {
 	if ($fhnd) {
 		$lines = [];
 		$changed = false;
+		$insertSolrRequestLogDeletion = true;
+		$solrRequestLogDeletionInserted = false;
 
 		// Go through each line of the cron settings file
 		while (($line = fgets($fhnd)) !== false) {
+			if (str_contains($line, 'Schedule Solr Request Log Deletion')) {
+				$insertSolrRequestLogDeletion = false;
+			}
+
 			// Detect if this is a line we should update
 			$matched = false;
 			foreach($jobsToChange as $needle) {
@@ -87,10 +93,39 @@ if (count($_SERVER['argv']) > 1) {
 				}
 
 			}
+
+			// Insert the Solr request log deletion job before the end-of-file marker.
+			if ($insertSolrRequestLogDeletion && str_contains($line, 'Debian needs a blank line at the end of cron')) {
+				if (!empty($lines) && trim(end($lines)) !== '') {
+					$lines[] = "\n";
+				}
+				$lines[] = "######################################\n";
+				$lines[] = "# Schedule Solr Request Log Deletion\n";
+				$lines[] = "######################################\n";
+				$lines[] = '10 0 * * * root find /var/solr/logs -type f -name \'*.request.log*\' ! -name "$(date +\%Y_\%m_\%d).request.log" -delete' . "\n";
+				$lines[] = "\n";
+				$changed = true;
+				$solrRequestLogDeletionInserted = true;
+			}
+
 			$lines[] = $line;
 		}
 
 		fclose($fhnd);
+
+		// Fallback: If the marker was not found, add the job at the end.
+		if ($insertSolrRequestLogDeletion && !$solrRequestLogDeletionInserted) {
+			if (!empty($lines) && trim(end($lines)) !== '') {
+				$lines[] = "\n";
+			}
+			$lines[] = "######################################\n";
+			$lines[] = "# Schedule Solr Request Log Deletion\n";
+			$lines[] = "######################################\n";
+			$lines[] = '10 0 * * * root find /var/solr/logs -type f -name \'*.request.log*\' ! -name "$(date +\%Y_\%m_\%d).request.log" -delete' . "\n";
+			$lines[] = "\n";
+			$changed = true;
+		}
+
 		// Write the updated content back into the crontab settings file
 		if ($changed) {
 			$newContent = implode('', $lines);

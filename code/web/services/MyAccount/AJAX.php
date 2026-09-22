@@ -4465,7 +4465,6 @@ class MyAccount_AJAX extends JSON_Action {
 		$user = UserAccount::getActiveUserObj();
 		$this->setShowCovers();
 
-		require_once ROOT_DIR . '/services/BookingService.php';
 		$recordList = ['active' => [], 'past' => []];
 		foreach (BookingService::enrichBookings($user, $user->getBookings()) as $booking) {
 			$recordList[$booking['isPast'] ? 'past' : 'active'][] = $booking;
@@ -4493,7 +4492,6 @@ class MyAccount_AJAX extends JSON_Action {
 			return $this->failureResult('Update Booking', translate(['text' => 'You do not have access to update bookings for the supplied user.', 'isPublicFacing' => true]));
 		}
 
-		require_once ROOT_DIR . '/sys/User/Booking.php';
 		$stored = new Booking();
 		$stored->userId = $user->id;
 		$stored->ils_booking_id = $bookingId;
@@ -4501,10 +4499,8 @@ class MyAccount_AJAX extends JSON_Action {
 			return $this->failureResult('Update Booking', translate(['text' => 'Booking not found.', 'isPublicFacing' => true]));
 		}
 
-		require_once ROOT_DIR . '/services/BookingService.php';
 		$recordId = BookingService::getBareRecordId($stored->recordId);
 
-		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 		$marcRecord = new MarcRecordDriver($user->source . ':' . $recordId);
 		$itemLabel = $stored->itemId;
 		if ($marcRecord->isValid()) {
@@ -4516,7 +4512,6 @@ class MyAccount_AJAX extends JSON_Action {
 			}
 		}
 
-		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 

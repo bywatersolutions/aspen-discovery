@@ -2744,7 +2744,6 @@ class Record_AJAX extends JSON_Action {
 		$recordId = $_REQUEST['id'];
 		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 
-		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 		$marcRecord = new MarcRecordDriver($shortId);
 
 		$catalogDriver = $marcRecord->getCatalogDriver();
@@ -2752,7 +2751,6 @@ class Record_AJAX extends JSON_Action {
 			return $this->failureResult('Unable to place booking', 'Bookings are not supported for this record.');
 		}
 
-		require_once ROOT_DIR . '/services/BookingService.php';
 		$bookableItems = BookingService::filterBookableForPlacement($marcRecord->getCopies());
 		if (empty($bookableItems)) {
 			return $this->failureResult('Unable to place booking', 'No bookable items found for this record.');
@@ -2763,7 +2761,6 @@ class Record_AJAX extends JSON_Action {
 			return $this->failureResult('Unable to place booking', 'You need an ILS account to use this feature.');
 		}
 
-		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 

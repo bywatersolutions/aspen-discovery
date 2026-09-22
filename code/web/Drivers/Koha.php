@@ -5,7 +5,6 @@
 require_once ROOT_DIR . '/Drivers/KohaApiUserAgent.php';
 require_once ROOT_DIR . '/sys/CurlWrapper.php';
 require_once ROOT_DIR . '/Drivers/AbstractIlsDriver.php';
-require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
 
 class Koha extends AbstractIlsDriver {
 	private mysqli|null $dbConnection = null;
@@ -9693,7 +9692,6 @@ class Koha extends AbstractIlsDriver {
 		if (empty($itemIds)) {
 			return [];
 		}
-		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$this->initDatabaseConnection();
 		$result = mysqli_query($this->dbConnection,
 			'SELECT itemnumber, homebranch FROM items WHERE itemnumber IN (' . implode(',', $itemIds) . ')'
@@ -9761,7 +9759,6 @@ class Koha extends AbstractIlsDriver {
 			];
 		}
 
-		require_once ROOT_DIR . '/services/BookingService.php';
 		BookingService::storeBooking($patron, $itemId, $recordId, $startDate, $endDate, $pickupBranch, $response['content']);
 
 		return [
@@ -9782,7 +9779,6 @@ class Koha extends AbstractIlsDriver {
 		$response = $this->kohaApiUserAgent->delete("/api/v1/bookings/$bookingId", 'koha.cancelBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 204) {
-			require_once ROOT_DIR . '/services/BookingService.php';
 			BookingService::deleteStoredBooking($patron, $bookingId);
 			return [
 				'success' => true,
@@ -9821,7 +9817,6 @@ class Koha extends AbstractIlsDriver {
 		$response = $this->kohaApiUserAgent->patch("/api/v1/bookings/$bookingId", $params, 'koha.updateBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 200) {
-			require_once ROOT_DIR . '/services/BookingService.php';
 			BookingService::updateStoredBooking($patron, $bookingId, $startDate, $endDate, $pickupBranch);
 			return [
 				'success' => true,
@@ -10061,7 +10056,6 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	public function getBookingsForUser(User $patron): array {
-		require_once ROOT_DIR . '/services/BookingService.php';
 		$liveBookings = $this->getPagedBookings($patron, ['patron_id' => (int)$patron->unique_ils_id], 'koha.getBookingsForUser');
 
 		// handle Koha connection failures. Bookings stored in Aspen will display, but actions (cancel/update) will be unavailable, and a message warning the user the booking details are outdated will display.

@@ -1,7 +1,5 @@
 <?php
 
-require_once ROOT_DIR . '/services/MyAccount/MyAccount.php';
-
 class MyAccount_Bookings extends MyAccount {
 	function launch(): void {
 		global $interface;

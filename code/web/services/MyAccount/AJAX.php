@@ -4520,16 +4520,21 @@ class MyAccount_AJAX extends JSON_Action {
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 
+		$driver = $user->getCatalogDriver();
+		$availability = $driver && $driver->hasBookingsSupport()
+			? $driver->getBookingAvailability((int)$stored->itemId, $user, $bookingId)
+			: null;
+
 		global $interface;
 		$interface->assign('userId', $user->id);
 		$interface->assign('bookingId', $bookingId);
 		$interface->assign('recordId', $recordId);
-		$interface->assign('itemId', $stored->itemId);
 		$interface->assign('itemLabel', $itemLabel);
 		$interface->assign('startDate', $stored->ils_start_date);
 		$interface->assign('endDate', $stored->ils_end_date);
 		$interface->assign('pickupLocations', $pickupLocations);
 		$interface->assign('preSelectedPickupBranch', $stored->ils_pickup_library_id);
+		$interface->assign('bookingAvailability', $availability);
 		$interface->assign('user', $user);
 
 		return [

@@ -9969,7 +9969,7 @@ class Koha extends AbstractIlsDriver {
 	 *
 	 * @return array{bookedDates: array[], constraints: array{maxPeriod: int, maxDate: ?string}}
 	 */
-	public function getBookingAvailability(int $itemId, User $patron): array {
+	public function getBookingAvailability(int $itemId, User $patron, ?int $excludeBookingId = null): array {
 		$context = $this->getItemCirculationContext($itemId, $patron);
 		if ($context === null) {
 			return ['bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
@@ -9985,14 +9985,32 @@ class Koha extends AbstractIlsDriver {
 			'hardduedatecompare',
 		], $context);
 
+		$bookings = $this->excludeBooking($this->getBookingsForItem($itemId, $patron), $excludeBookingId);
+
 		return [
 			'bookedDates' => $this->buildBookedRanges(
-				$this->getBookingsForItem($itemId, $patron),
+				$bookings,
 				(int)($rules['bookings_lead_period'] ?? 0),
 				(int)($rules['bookings_trail_period'] ?? 0)
 			),
 			'constraints' => $this->buildBookingWindowConstraints($rules, $patron),
 		];
+	}
+
+	private function excludeBooking(array $bookings, ?int $bookingId): array {
+		if ($bookingId === null) {
+			return $bookings;
+		}
+
+		$remaining = [];
+		foreach ($bookings as $booking) {
+			if ((int)$booking['booking_id'] === $bookingId) {
+				continue;
+			}
+			$remaining[] = $booking;
+		}
+
+		return $remaining;
 	}
 
 	private function buildBookedRanges(array $bookings, int $lead, int $trail): array {

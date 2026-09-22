@@ -13,7 +13,6 @@
 				<input type="hidden" name="userId" id="user-id" value="{$userId|escape}">
 				<input type="hidden" name="bookingId" id="booking-id" value="{$bookingId|escape}">
 				<input type="hidden" id="id" value="{$recordId|escape}">
-				<input type="hidden" id="current-item-id" value="{$itemId|escape}">
 				<fieldset>
 					<div id="booking-error" class="pageWarning" style="display: none"></div>
 	
@@ -21,7 +20,7 @@
 						<label class="control-label" for="booking-item-label">{translate text="Item" isPublicFacing=true}</label>
 						<input type="text" id="booking-item-label" class="form-control" value="{$itemLabel|escape}" disabled>
 					</div>
-					{include file='Record/booking-form-fields.tpl' startDate=$startDate endDate=$endDate}
+					{include file='Record/booking-form-fields.tpl' startDate=$startDate endDate=$endDate availability=$bookingAvailability}
 				</fieldset>
 			</form>
 		</div>

@@ -17186,7 +17186,7 @@ AspenDiscovery.Record = (function () {
 			});
 		},
 
-		initBookingForm: async function () {
+		initBookingForm: async function (availability) {
 			const calendar = document.getElementById('booking-calendar');
 			if (!calendar) {
 				return;
@@ -17219,8 +17219,25 @@ AspenDiscovery.Record = (function () {
 				picker.clear();
 				AspenDiscovery.Record.loadItemBookingAvailability(this.value, recordId);
 			});
-			const selectedItem = itemSelect ?? document.getElementById('current-item-id');
-			AspenDiscovery.Record.loadItemBookingAvailability(selectedItem?.value ?? null, recordId);
+
+			if (availability) {
+				AspenDiscovery.Record.applyBookingAvailability(availability);
+				return;
+			}
+			AspenDiscovery.Record.loadItemBookingAvailability(itemSelect?.value ?? null, recordId);
+		},
+
+		applyBookingAvailability: function (availability) {
+			const picker = AspenDiscovery.Record.dateRangePicker;
+			if (!picker) {
+				return;
+			}
+			const constraints = availability?.constraints;
+			picker.update({
+				maxDate:        constraints?.maxDate ? new Date(constraints.maxDate + 'T00:00:00') : null,
+				maxRangeDays:   constraints?.maxPeriod ? parseInt(constraints.maxPeriod, 10) : 0,
+				disabledRanges: availability?.bookedDates ?? [],
+			});
 		},
 
 		loadItemBookingAvailability: function (itemId, recordId) {
@@ -17236,12 +17253,7 @@ AspenDiscovery.Record = (function () {
 
 			const url = Globals.path + '/Record/AJAX?method=getItemBookedDates&id=' + encodeURIComponent(recordId) + '&itemId=' + encodeURIComponent(itemId);
 			$.getJSON(url, function (data) {
-				const constraints = data.success ? data.constraints : null;
-				picker.update({
-					maxDate:        constraints?.maxDate ? new Date(constraints.maxDate + 'T00:00:00') : null,
-					maxRangeDays:   constraints?.maxPeriod ? parseInt(constraints.maxPeriod, 10) : 0,
-					disabledRanges: data.success ? data.bookedDates : [],
-				});
+				AspenDiscovery.Record.applyBookingAvailability(data.success ? data : null);
 			}).fail(AspenDiscovery.ajaxFail).always(function () {
 				if (loading) {
 					loading.hidden = true;

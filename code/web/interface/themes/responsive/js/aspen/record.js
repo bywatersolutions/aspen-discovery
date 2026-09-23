@@ -950,6 +950,19 @@ AspenDiscovery.Record = (function () {
 			});
 		},
 
+		// Availability could not be established, so there is nothing trustworthy to select
+		// against. Leaving the picker untouched would show every date as free.
+		disableBookingForm: function (message) {
+			const error = document.getElementById('booking-error');
+			if (error) {
+				error.textContent = message;
+				error.style.display = '';
+			}
+			document.querySelectorAll('#place-booking-form input, #place-booking-form select, #update-booking-form input, #update-booking-form select')
+				.forEach(field => field.disabled = true);
+			AspenDiscovery.Record.dateRangePicker?.clear();
+		},
+
 		loadItemBookingAvailability: function (itemId, recordId) {
 			const picker = AspenDiscovery.Record.dateRangePicker;
 			if (!itemId || !picker) {
@@ -963,7 +976,11 @@ AspenDiscovery.Record = (function () {
 
 			const url = Globals.path + '/Record/AJAX?method=getItemBookedDates&id=' + encodeURIComponent(recordId) + '&itemId=' + encodeURIComponent(itemId);
 			$.getJSON(url, function (data) {
-				AspenDiscovery.Record.applyBookingAvailability(data.success ? data : null);
+				if (!data.success) {
+					AspenDiscovery.Record.disableBookingForm(data.message);
+					return;
+				}
+				AspenDiscovery.Record.applyBookingAvailability(data);
 			}).fail(AspenDiscovery.ajaxFail).always(function () {
 				if (loading) {
 					loading.hidden = true;

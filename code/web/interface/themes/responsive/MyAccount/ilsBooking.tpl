@@ -46,11 +46,11 @@
 				<div class="resultDetails col-xs-12 col-md-8 col-lg-9">
 					<div class="row">
 						<div class="result-label col-tn-4">{translate text='Start Date' isPublicFacing=true}</div>
-						<div class="col-tn-8 result-value">{$record.startDate|date_format:"%b %d, %Y"}</div>
+						<div class="col-tn-8 result-value">{$record.startDate|format_date_locale:'medium'}</div>
 					</div>
 					<div class="row">
 						<div class="result-label col-tn-4">{translate text='End Date' isPublicFacing=true}</div>
-						<div class="col-tn-8 result-value">{$record.endDate|date_format:"%b %d, %Y"}</div>
+						<div class="col-tn-8 result-value">{$record.endDate|format_date_locale:'medium'}</div>
 					</div>
 					{if !empty($record.pickupLibraryId)}
 						<div class="row">

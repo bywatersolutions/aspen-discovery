@@ -9992,6 +9992,37 @@ class Koha extends AbstractIlsDriver {
 		];
 	}
 
+	/**
+	 * Koha's own booking availability, from the endpoint added by bug 43108. It is the
+	 * server-side source of truth, so it supersedes the ranges this driver derives itself:
+	 * as well as bookings and their lead/trail windows it blocks days taken by a checkout,
+	 * which nothing here can see.
+	 *
+	 */
+	private function requestBookingAvailability(?int $biblioId, int $itemId, User $patron, ?int $excludeBookingId): array|bool {
+		if (empty($biblioId)) {
+			return false;
+		}
+
+		$params = [
+			'from_date' => date('Y-m-d'),
+			// The endpoint caps the range at 366 days.
+			'to_date'   => date('Y-m-d', strtotime('+365 days')),
+			'item_id'   => $itemId,
+			'patron_id' => (int)$patron->unique_ils_id,
+		];
+		if ($excludeBookingId !== null) {
+			$params['excluded_booking_id'] = $excludeBookingId;
+		}
+
+		return $this->kohaApiUserAgent->get(
+			'/api/v1/biblios/' . $biblioId . '/booking_availability?' . http_build_query($params),
+			'koha.getBookingAvailability',
+			[],
+			$this->getBookingApiHeaders($patron)
+		);
+	}
+
 	private function excludeBooking(array $bookings, ?int $bookingId): array {
 		if ($bookingId === null) {
 			return $bookings;

@@ -10023,6 +10023,22 @@ class Koha extends AbstractIlsDriver {
 		);
 	}
 
+	/**
+	 * Turn the endpoint's sparse date => item => reasons map into the contiguous ranges the
+	 * picker disables. Only blockers count, warnings are ignored.
+	 */
+	private function collapseBlockedDates(array $availability, int $itemId): array {
+		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
+		$blockedDates = [];
+		foreach ($availability as $date => $items) {
+			if (!empty($items[$itemId]['blockers'])) {
+				$blockedDates[] = $date;
+			}
+		}
+
+		return DateUtils::collapseToRanges($blockedDates);
+	}
+
 	private function excludeBooking(array $bookings, ?int $bookingId): array {
 		if ($bookingId === null) {
 			return $bookings;

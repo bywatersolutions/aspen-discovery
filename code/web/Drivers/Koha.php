@@ -23,6 +23,10 @@ class Koha extends AbstractIlsDriver {
 
 	private string $csrfPattern = '%<input type="hidden" name="csrf_token" value="(.*?)" />%s';
 
+	// How far ahead a booking may be made. Koha's availability endpoint reports on at most
+	// 366 days at a time, so raising this past a year means requesting several windows.
+	private const BOOKING_AVAILABILITY_HORIZON_DAYS = 365;
+
 	private const PATRON_POST_FIELDS = [
 		'address' => 'borrower_address',
 		'address2' => 'borrower_address2',
@@ -9987,6 +9991,9 @@ class Koha extends AbstractIlsDriver {
 			return ['apiAccessDenied' => true, 'bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
 		}
 
+		$constraints = $this->buildBookingWindowConstraints($rules, $patron);
+		$constraints['maxDate'] = $this->capToAvailabilityHorizon($constraints['maxDate']);
+
 		if ($response && $response['code'] == 200) {
 			$bookedDates = $this->collapseBlockedDates($response['content']['availability'] ?? [], $itemId);
 		} else {
@@ -10000,8 +10007,17 @@ class Koha extends AbstractIlsDriver {
 
 		return [
 			'bookedDates' => $bookedDates,
-			'constraints' => $this->buildBookingWindowConstraints($rules, $patron),
+			'constraints' => $constraints,
 		];
+	}
+
+	/**
+	 * Bookings cannot be made past the horizon, whether or not the availability endpoint
+	 * was the source: beyond it nothing is known to be booked, so every date would look free.
+	 */
+	private function capToAvailabilityHorizon(?string $maxDate): string {
+		$horizon = date('Y-m-d', strtotime('+' . self::BOOKING_AVAILABILITY_HORIZON_DAYS . ' days'));
+		return ($maxDate === null || $maxDate > $horizon) ? $horizon : $maxDate;
 	}
 
 	/**
@@ -10018,8 +10034,7 @@ class Koha extends AbstractIlsDriver {
 
 		$params = [
 			'from_date' => date('Y-m-d'),
-			// The endpoint caps the range at 366 days.
-			'to_date'   => date('Y-m-d', strtotime('+365 days')),
+			'to_date'   => date('Y-m-d', strtotime('+' . self::BOOKING_AVAILABILITY_HORIZON_DAYS . ' days')),
 			'item_id'   => $itemId,
 			'patron_id' => (int)$patron->unique_ils_id,
 		];

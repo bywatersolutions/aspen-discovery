@@ -23,6 +23,24 @@ class DateUtils {
 		return $dt->format('Y-m-d\T00:00:00\Z');
 	}
 
+	/**
+	 * Group ascending Y-m-d dates into contiguous ranges: [['start' => , 'end' => ], ...].
+	 * Unsorted input yields the same dates as more, smaller ranges, never a range
+	 * spanning a date that was absent.
+	 */
+	public static function collapseToRanges(array $dates): array {
+		$ranges = [];
+		foreach ($dates as $date) {
+			$lastIndex = count($ranges) - 1;
+			if ($lastIndex >= 0 && self::isNextDay($ranges[$lastIndex]['end'], $date)) {
+				$ranges[$lastIndex]['end'] = $date;
+				continue;
+			}
+			$ranges[] = ['start' => $date, 'end' => $date];
+		}
+		return $ranges;
+	}
+
 	private static function isNextDay(string $date, string $candidate): bool {
 		return (new DateTime($date))->modify('+1 day')->format('Y-m-d') === $candidate;
 	}

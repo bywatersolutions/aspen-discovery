@@ -187,4 +187,56 @@ class DateUtilsTests extends TestCase {
 	public function testFormatDateLocaleSkeletonOverridesPattern(): void {
 		$this->assertSame('Mar 2025', \DateUtils::formatDateLocale('2025-03-15', 'medium', 'none', 'yyyy-MM-dd', 'yMMM'));
 	}
+
+	public static function collapseToRangesProvider(): array {
+		return [
+			'no dates' => [
+				[],
+				[],
+			],
+			'single date is its own range' => [
+				['2026-09-23'],
+				[['start' => '2026-09-23', 'end' => '2026-09-23']],
+			],
+			'consecutive days merge' => [
+				['2026-09-23', '2026-09-24', '2026-09-25'],
+				[['start' => '2026-09-23', 'end' => '2026-09-25']],
+			],
+			'a gap starts a new range' => [
+				['2026-09-23', '2026-09-24', '2026-10-11'],
+				[
+					['start' => '2026-09-23', 'end' => '2026-09-24'],
+					['start' => '2026-10-11', 'end' => '2026-10-11'],
+				],
+			],
+			'month boundary is contiguous' => [
+				['2026-09-30', '2026-10-01'],
+				[['start' => '2026-09-30', 'end' => '2026-10-01']],
+			],
+			'leap day is contiguous' => [
+				['2028-02-28', '2028-02-29', '2028-03-01'],
+				[['start' => '2028-02-28', 'end' => '2028-03-01']],
+			],
+			'unsorted input never spans an absent date' => [
+				['2026-09-25', '2026-09-23'],
+				[
+					['start' => '2026-09-25', 'end' => '2026-09-25'],
+					['start' => '2026-09-23', 'end' => '2026-09-23'],
+				],
+			],
+		];
+	}
+
+	#[DataProvider('collapseToRangesProvider')]
+	public function testCollapseToRanges(array $dates, array $expected): void {
+		$this->assertSame($expected, \DateUtils::collapseToRanges($dates));
+	}
+
+	public function testCollapseToRangesIsUnaffectedByDaylightSaving(): void {
+		date_default_timezone_set('Europe/London');
+		$this->assertSame(
+			[['start' => '2026-03-28', 'end' => '2026-03-30']],
+			\DateUtils::collapseToRanges(['2026-03-28', '2026-03-29', '2026-03-30'])
+		);
+	}
 }

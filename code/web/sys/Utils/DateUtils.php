@@ -23,6 +23,10 @@ class DateUtils {
 		return $dt->format('Y-m-d\T00:00:00\Z');
 	}
 
+	private static function isNextDay(string $date, string $candidate): bool {
+		return (new DateTime($date))->modify('+1 day')->format('Y-m-d') === $candidate;
+	}
+
 	public static function isSameInstant(string $first, string $second): bool {
 		try {
 			$firstInstant = new DateTimeImmutable($first, new DateTimeZone('UTC'));

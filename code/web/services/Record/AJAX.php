@@ -2788,7 +2788,12 @@ class Record_AJAX extends JSON_Action {
 			return ['success' => true, 'bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
 		}
 
-		return ['success' => true] + $driver->getBookingAvailability((int)$_REQUEST['itemId'], $user);
+		$availability = $driver->getBookingAvailability((int)$_REQUEST['itemId'], $user);
+		if (!empty($availability['apiAccessDenied'])) {
+			return $this->failureResult('Bookings', 'Bookings are not available at the moment. Please contact the library.');
+		}
+
+		return ['success' => true] + $availability;
 	}
 
 	function placeBooking(): array {

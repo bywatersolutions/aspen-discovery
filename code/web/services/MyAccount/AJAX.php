@@ -4520,6 +4520,10 @@ class MyAccount_AJAX extends JSON_Action {
 			? $driver->getBookingAvailability((int)$stored->itemId, $user, $bookingId)
 			: null;
 
+		if (!empty($availability['apiAccessDenied'])) {
+			return $this->failureResult('Update Booking', 'Bookings are not available at the moment. Please contact the library.');
+		}
+
 		global $interface;
 		$interface->assign('userId', $user->id);
 		$interface->assign('bookingId', $bookingId);

@@ -9909,6 +9909,7 @@ class Koha extends AbstractIlsDriver {
 			'itemTypeId'       => $item['effective_item_type_id'] ?? null,
 			'locationId'       => $item['home_library_id'] ?? null,
 			'patronCategoryId' => $patron->patronType,
+			'biblioId'         => $item['biblio_id'] ?? null,
 		];
 	}
 
@@ -9980,14 +9981,25 @@ class Koha extends AbstractIlsDriver {
 			'hardduedatecompare',
 		], $context);
 
-		$bookings = $this->excludeBooking($this->getBookingsForItem($itemId, $patron), $excludeBookingId);
+		$response = $this->requestBookingAvailability($context['biblioId'], $itemId, $patron, $excludeBookingId);
 
-		return [
-			'bookedDates' => $this->buildBookedRanges(
+		if ($response && in_array($response['code'], [401, 403])) {
+			return ['apiAccessDenied' => true, 'bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
+		}
+
+		if ($response && $response['code'] == 200) {
+			$bookedDates = $this->collapseBlockedDates($response['content']['availability'] ?? [], $itemId);
+		} else {
+			$bookings = $this->excludeBooking($this->getBookingsForItem($itemId, $patron), $excludeBookingId);
+			$bookedDates = $this->buildBookedRanges(
 				$bookings,
 				(int)($rules['bookings_lead_period'] ?? 0),
 				(int)($rules['bookings_trail_period'] ?? 0)
-			),
+			);
+		}
+
+		return [
+			'bookedDates' => $bookedDates,
 			'constraints' => $this->buildBookingWindowConstraints($rules, $patron),
 		];
 	}

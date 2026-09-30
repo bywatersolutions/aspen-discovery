@@ -27,6 +27,7 @@ class Checkout extends CircEntry {
 	public $isIll;
 	public $outOfHoldGroupMessage;
 	public $ilsStatus;
+	public $isLost;
 	public $showFineButton;
 
 	//For OverDrive

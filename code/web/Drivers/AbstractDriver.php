@@ -12,6 +12,10 @@ abstract class AbstractDriver {
 		return false;
 	}
 
+	public function getCheckoutsForReadingHistory(User $patron, array $options = []): array {
+		return $this->getCheckouts($patron, $options);
+	}
+
 	public function getReadingHistory(User $patron): array {
 		return [
 			'historyActive' => false,

@@ -781,6 +781,7 @@ class CatalogConnection {
 						'checkOutDate' => $detailQuery->checkOutDate,
 						'checkInDate' => $detailQuery->checkInDate,
 						'editedCheckInDate' => $detailQuery->editedCheckInDate,
+						'ilsStatus' => $detailQuery->ilsStatus,
 						'format' => $detailQuery->format,
 						'source' => $detailQuery->source,
 						'sourceId' => $detailQuery->sourceId,
@@ -1301,17 +1302,22 @@ class CatalogConnection {
 			}
 		}
 
-		$checkouts = $patron->getCheckouts(false, isNightlyUpdate: $isNightlyUpdate);
+		// Use the driver's history-specific checkout view. Evergreen lost items are
+		// still open circulations, even though they are hidden from the normal
+		// checkout display, and must not receive an Aspen-generated check-in date.
+		$checkouts = $this->driver->getCheckoutsForReadingHistory($patron, ['isNightlyUpdate' => $isNightlyUpdate]);
 		foreach ($checkouts as $checkout) {
 			$source = $checkout->source;
 			$sourceId = $checkout->sourceId;
 			$barcode = $checkout->barcode;
+			$readingHistoryIlsStatus = !empty($checkout->isLost) ? $checkout->ilsStatus : null;
 			if (!empty($barcode)) {
 				$key = strtolower($source . ':' . $sourceId . '_' . $barcode);
 			} else {
 				$key = strtolower($source . ':' . $sourceId);
 			}
 			if (array_key_exists($key, $activeHistoryTitles)) {
+				$this->setReadingHistoryIlsStatus($activeHistoryTitles[$key]['ids'], $readingHistoryIlsStatus);
 				unset($activeHistoryTitles[$key]);
 			} else {
 				// If a checkout is currently active and there is already an active history entry for the same title without a barcode,
@@ -1319,6 +1325,7 @@ class CatalogConnection {
 				if (!empty($barcode)) {
 					$noBarcodeKey = strtolower($source . ':' . $sourceId);
 					if (array_key_exists($noBarcodeKey, $activeHistoryTitles)) {
+						$this->setReadingHistoryIlsStatus($activeHistoryTitles[$noBarcodeKey]['ids'], $readingHistoryIlsStatus);
 						unset($activeHistoryTitles[$noBarcodeKey]);
 						continue;
 					}
@@ -1339,6 +1346,7 @@ class CatalogConnection {
 				$historyEntryDB->title = !empty($checkout->title) ? StringUtils::trimStringToLengthAtWordBoundary($checkout->title, 150, true) : "";
 				$historyEntryDB->author = !empty($checkout->author) ? StringUtils::trimStringToLengthAtWordBoundary($checkout->author, 75, true) : "";
 				$historyEntryDB->format = substr($checkout->format ?? "", 0, 50);
+				$historyEntryDB->ilsStatus = $readingHistoryIlsStatus;
 				$historyEntryDB->checkOutDate = $checkout->checkoutDate ?? time();
 				$historyEntryDB->costSavings = $checkout->getReplacementCost();
 				if (!$historyEntryDB->insert()) {
@@ -1366,6 +1374,7 @@ class CatalogConnection {
 				$historyEntryDB = new ReadingHistoryEntry();
 				$historyEntryDB->id = $id;
 				if ($historyEntryDB->find(true)) {
+					$historyEntryDB->ilsStatus = null;
 					$historyEntryDB->checkInDate = time();
 					$numUpdates = $historyEntryDB->update();
 					if (IPAddress::showDebuggingInformation()) {
@@ -1387,6 +1396,22 @@ class CatalogConnection {
 			'message' => 'Reading history updated',
 			'skipped' => false
 		];
+	}
+
+	/**
+	 * Set the ILS status for open reading-history entries that match a current checkout.
+	 *
+	 * @param int[] $historyEntryIds
+	 */
+	private function setReadingHistoryIlsStatus(array $historyEntryIds, ?string $ilsStatus): void {
+		foreach ($historyEntryIds as $id) {
+			$historyEntryDB = new ReadingHistoryEntry();
+			$historyEntryDB->id = $id;
+			if ($historyEntryDB->find(true) && $historyEntryDB->ilsStatus !== $ilsStatus) {
+				$historyEntryDB->ilsStatus = $ilsStatus;
+				$historyEntryDB->update();
+			}
+		}
 	}
 
 	/**

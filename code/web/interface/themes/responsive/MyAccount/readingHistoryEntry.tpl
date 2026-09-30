@@ -189,7 +189,9 @@
 													{if !empty($detail.editedCheckInDate)}
 														{assign var="displayDate" value=$detail.editedCheckInDate}
 													{/if}
-													{if empty($detail.checkInDate) && empty($detail.editedCheckInDate)}
+													{if $detail.ilsStatus == 'Lost'}
+														<span class="date-display label label-danger">{translate text="LOST" isPublicFacing=true}</span>
+													{elseif empty($detail.checkInDate) && empty($detail.editedCheckInDate)}
 														<div class="editable-return-date-inline">
 															<span class="date-display label label-success">{translate text="Currently Checked Out" isPublicFacing=true}</span>
 															<input type="text" class="date-edit form-control" style="display:none;" value="" placeholder="YYYY-MM-DD">

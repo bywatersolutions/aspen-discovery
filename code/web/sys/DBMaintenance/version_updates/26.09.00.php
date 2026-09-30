@@ -178,6 +178,15 @@ function getUpdates26_09_00(): array {
 				'ALTER TABLE hoopla_export ADD INDEX responseIndex(hooplaId, rawChecksum, rawResponseLength)',
 			],
 		], //hoopla_store_raw_response_length
+		//jonah
+		'reading_history_add_ils_status' => [
+			'title' => 'Reading History - Add ILS Status Field',
+			'description' => 'Add a field to retain ILS checkout statuses, such as Lost, in reading history.',
+			'continueOnError' => false,
+			'sql' => [
+				"ALTER TABLE user_reading_history_work ADD COLUMN IF NOT EXISTS ilsStatus VARCHAR(50) DEFAULT NULL AFTER format",
+			]
+		],//reading_history_add_ils_status
 		'add_staff_members_display_order' => [
 			'title' => 'Add staff members display order column',
 			'description' => 'Add staff members display order',

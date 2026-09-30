@@ -14,6 +14,7 @@ class ReadingHistoryEntry extends DataObject {
 	public $title;
 	public $author;
 	public $format;
+	public $ilsStatus;
 	public $checkOutDate;
 	public $checkInDate;
 	public $editedCheckInDate;

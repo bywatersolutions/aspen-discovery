@@ -29,6 +29,25 @@ class Evergreen extends AbstractIlsDriver {
 	 * @return Checkout[] Array of the patron's transactions on success.
 	 */
 	public function getCheckouts(User $patron, array $options = []): array {
+		return $this->getCheckoutsInternal($patron, $options, false);
+	}
+
+	/**
+	 * Get checkouts for reading-history reconciliation.
+	 *
+	 * Lost Evergreen circulations remain open and have no check-in time. Include
+	 * them here so reading history does not incorrectly treat them as returned.
+	 * They remain excluded from the normal checkout display.
+	 *
+	 * @param User $patron The user for which to load transactions.
+	 * @param array $options Additional options.
+	 * @return Checkout[] Array of the patron's transactions on success.
+	 */
+	public function getCheckoutsForReadingHistory(User $patron, array $options = []): array {
+		return $this->getCheckoutsInternal($patron, $options, true);
+	}
+
+	private function getCheckoutsInternal(User $patron, array $options, bool $includeLostForReadingHistory): array {
 		require_once ROOT_DIR . '/sys/User/Checkout.php';
 		$checkedOutTitles = [];
 
@@ -52,8 +71,13 @@ class Evergreen extends AbstractIlsDriver {
 					//Process circulations
 					foreach ($apiResponse->payload as $payload) {
 						$mappedCheckout = $this->mapEvergreenFields($payload->circ->__p, $this->fetchIdl('circ'));
+						$mappedCopy = $this->mapEvergreenFields($payload->copy->__p, $this->fetchIdl('acp'));
+						$isLost = ($mappedCheckout['stop_fines'] ?? null) === 'LOST'
+							&& (int)($mappedCopy['status'] ?? 0) === 3
+							&& empty($mappedCheckout['checkin_time']);
+						$isHiddenTerminalLoan = in_array($mappedCheckout['stop_fines'] ?? null, ['LOST', 'CLAIMSRETURNED', 'LONGOVERDUE'], true);
 
-						if (in_array($mappedCheckout['stop_fines'], ['LOST', 'CLAIMSRETURNED', 'LONGOVERDUE'])) {
+						if ($isHiddenTerminalLoan && !($includeLostForReadingHistory && $isLost)) {
 							// no expectation that the item is coming back and Evergreen's OPAC wouldn't
 							// display it on the patron's loan list, so we won't display it in Aspen either
 							continue;
@@ -66,7 +90,6 @@ class Evergreen extends AbstractIlsDriver {
 						}
 
 						$mappedRecord = $this->mapEvergreenFields($payload->record->__p, $this->fetchIdl('mvr'));
-						$mappedCopy = $this->mapEvergreenFields($payload->copy->__p, $this->fetchIdl('acp'));
 						$callNumber = $this->getCallNumberForCopy($mappedCopy, $authToken);
 
 						$checkout = new Checkout();
@@ -90,6 +113,10 @@ class Evergreen extends AbstractIlsDriver {
 						$checkout->author = $mappedRecord['author'];
 						$checkout->callNumber = !empty($callNumber) ? $callNumber : null;
 						$checkout->volume = $this->getVolumeForCopy($mappedCopy);
+						if ($isLost) {
+							$checkout->ilsStatus = 'Lost';
+							$checkout->isLost = true;
+						}
 						require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 						$recordDriver = new MarcRecordDriver((string)$checkout->recordId);
 						if ($recordDriver->isValid()) {

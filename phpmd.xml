@@ -18,6 +18,7 @@
         <exclude name="BooleanArgumentFlag" />
         <exclude name="StaticAccess" />
         <exclude name="MissingImport" />
+        <exclude name="ElseExpression" />
     </rule>
 
     <!-- Using subset of rules from CodeSize -->

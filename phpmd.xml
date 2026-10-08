@@ -27,12 +27,7 @@
     <rule ref="rulesets/codesize.xml/ExcessiveParameterList" />
 
     <!-- Design Rules -->
-    <rule ref="rulesets/design.xml">
-        <exclude name="ExitExpression" />
-        <exclude name="EvalExpression" />
-        <exclude name="GotoStatement" />
-        <exclude name="NumberOfChildren" />
-        <exclude name="DepthOfInheritance" />
-        <exclude name="CouplingBetweenObjects" />
-    </rule>
+    <rule ref="rulesets/design.xml/CountInLoopExpression" />
+    <rule ref="rulesets/design.xml/EmptyCatchBlock" />
+    <rule ref="rulesets/design.xml/DevelopmentCodeFragment" />
 </ruleset>

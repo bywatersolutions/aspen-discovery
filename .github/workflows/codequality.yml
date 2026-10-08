@@ -40,7 +40,6 @@ jobs:
   phpmd:
     name: Run PHPMD on PR Lines Only
     runs-on: ubuntu-latest
-    needs: phpstan
 
     steps:
       - name: Checkout code

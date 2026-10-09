@@ -34,8 +34,23 @@ jobs:
       - name: Install Dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
+      - name: Restore result cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tmp # same as in phpstan.neon
+          key: "phpstan-result-cache-${{ github.run_id }}"
+          restore-keys: |
+            phpstan-result-cache-
+
       - name: Run PHPStan
         run: phpstan analyse --memory-limit=1G -vv
+
+      - name: Save result cache
+        uses: actions/cache/save@v4
+        if: ${{ !cancelled() }}
+        with:
+          path: tmp # same as in phpstan.neon
+          key: "phpstan-result-cache-${{ github.run_id }}"
 
   phpmd:
     name: Run PHPMD on PR Lines Only

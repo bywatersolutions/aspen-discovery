@@ -38,69 +38,6 @@ class BookCoverProcessor {
 	private Timer $timer;
 	private bool $doTimings;
 
-	// Adding complex if-branching
-	function testFunction() {
-
-
-
-
-
-
-
-		// function is < 100 lines, should not error.  Will add it more in a minute to see if it breaks
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-		return;
-	}
-	
-
 	public function loadCover(array $configArray, Timer $timer, Logger $logger) : bool {
 		$this->configArray = $configArray;
 		$this->timer = $timer;

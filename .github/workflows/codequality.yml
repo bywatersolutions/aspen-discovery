@@ -82,4 +82,4 @@ jobs:
 
       - name: Run PHPMD
         run: |
-          phpmd . github phpmd.xml --baseline-file phpmd.baseline.xml
+          phpmd analyze . github phpmd.xml --baseline-file phpmd.baseline.xml

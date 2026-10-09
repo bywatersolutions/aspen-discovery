@@ -69,17 +69,6 @@ jobs:
           tools: composer, phpmd
           coverage: none
 
-      - name: Setup Reviewdog
-        uses: reviewdog/action-setup@v1
-
-      - name: Get Changed PHP Files
-        id: changed-files
-        uses: tj-actions/changed-files@v45
-        with:
-          files: |
-            **.php
-          separator: ','
-
       - name: Run PHPMD
         run: |
           phpmd analyze --format xml --ruleset phpmd.xml --exclude vendor --baseline-file phpmd.baseline.xml .

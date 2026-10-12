@@ -9889,7 +9889,7 @@ class Koha extends AbstractIlsDriver {
 		}
 
 		$rules = $this->getRawCirculationRules(
-			['issuelength', 'renewalsallowed', 'renewalperiod', 'hardduedate', 'hardduedatecompare'],
+			['issuelength', 'renewalsallowed', 'renewalperiod', 'lengthunit', 'hardduedate', 'hardduedatecompare'],
 			$context
 		);
 		$end->modify('+' . self::getMaxBookingPeriod($rules) . ' days');
@@ -9927,7 +9927,12 @@ class Koha extends AbstractIlsDriver {
 		$renewalsAllowed = (int)($rules['renewalsallowed'] ?? 0);
 		$renewalPeriod   = ($rules['renewalperiod'] ?? null) === null ? $issueLength : (int)$rules['renewalperiod'];
 
-		return $issueLength + ($renewalsAllowed * $renewalPeriod);
+		$period = $issueLength + ($renewalsAllowed * $renewalPeriod);
+		if (($rules['lengthunit'] ?? 'days') !== 'hours') {
+			return $period;
+		}
+
+		return (int)ceil($period / 24);
 	}
 
 	/**
@@ -9981,6 +9986,7 @@ class Koha extends AbstractIlsDriver {
 			'issuelength',
 			'renewalsallowed',
 			'renewalperiod',
+			'lengthunit',
 			'hardduedate',
 			'hardduedatecompare',
 		], $context);

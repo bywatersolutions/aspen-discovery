@@ -3809,13 +3809,13 @@ class UserAPI extends AbstractAPI {
 			];
 		}
 
-		$recordId = $_REQUEST['recordId'];
-		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
-		$itemId = $_REQUEST['itemId'];
-		$startDate = $_REQUEST['startDate'];
-		$endDate = $_REQUEST['endDate'];
-		$pickupBranch = $_REQUEST['pickupBranch'];
-		return $user->placeBooking($itemId, $shortId, $startDate, $endDate, $pickupBranch);
+		return $user->placeBooking(
+			$_REQUEST['itemId'],
+			BookingService::getBareRecordId($_REQUEST['recordId']),
+			$_REQUEST['startDate'],
+			$_REQUEST['endDate'],
+			$_REQUEST['pickupBranch']
+		);
 	}
 
 	/**

@@ -2809,14 +2809,12 @@ class Record_AJAX extends JSON_Action {
 
 		$user = UserAccount::getLoggedInUser();
 
-		$recordId     = $_REQUEST['id'];
-		$itemId       = $_REQUEST['itemId'];
-		$startDate    = $_REQUEST['startDate'];
-		$endDate      = $_REQUEST['endDate'];
-		$pickupBranch = $_REQUEST['pickupBranch'];
-
-		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
-
-		return $user->placeBooking($itemId, $shortId, $startDate, $endDate, $pickupBranch);
+		return $user->placeBooking(
+			$_REQUEST['itemId'],
+			BookingService::getBareRecordId($_REQUEST['id']),
+			$_REQUEST['startDate'],
+			$_REQUEST['endDate'],
+			$_REQUEST['pickupBranch']
+		);
 	}
 }

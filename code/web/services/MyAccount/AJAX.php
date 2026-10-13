@@ -4547,18 +4547,17 @@ class MyAccount_AJAX extends JSON_Action {
 			return $this->failureResult('Update Booking', translate(['text' => 'An invalid pickup location was provided.', 'isPublicFacing' => true]));
 		}
 
-		$bookingId    = (int)$_REQUEST['bookingId'];
-		$userId       = $_REQUEST['userId'];
-		$startDate    = $_REQUEST['startDate'];
-		$endDate      = $_REQUEST['endDate'];
-		$pickupBranch = $_REQUEST['pickupBranch'];
-		$user         = UserAccount::getLoggedInUser();
-		$user         = $user->getUserReferredTo($userId);
+		$user = UserAccount::getLoggedInUser()->getUserReferredTo($_REQUEST['userId']);
 
 		if ($user === false) {
 			$result = $this->failureResult('Update Booking', translate(['text' => 'You do not have access to update bookings for the supplied user.', 'isPublicFacing' => true]));
 		} else {
-			$result = $user->updateBooking($bookingId, $startDate, $endDate, $pickupBranch);
+			$result = $user->updateBooking(
+				(int)$_REQUEST['bookingId'],
+				$_REQUEST['startDate'],
+				$_REQUEST['endDate'],
+				$_REQUEST['pickupBranch']
+			);
 		}
 
 		global $interface;

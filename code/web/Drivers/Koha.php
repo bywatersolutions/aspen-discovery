@@ -10013,10 +10013,10 @@ class Koha extends AbstractIlsDriver {
 		$constraints['maxDate'] = $this->capToAvailabilityHorizon($constraints['maxDate']);
 
 		if ($response && $response['code'] == 200) {
-			$bookedDates = $this->collapseBlockedDates($response['content']['availability'] ?? [], $itemId);
+			$bookedDates = self::collapseBlockedDates($response['content']['availability'] ?? [], $itemId);
 		} else {
 			$bookings = $this->excludeBooking($this->getBookingsForItem($itemId, $patron), $excludeBookingId);
-			$bookedDates = $this->buildBookedRanges(
+			$bookedDates = self::buildBookedRanges(
 				$bookings,
 				(int)($rules['bookings_lead_period'] ?? 0),
 				(int)($rules['bookings_trail_period'] ?? 0)
@@ -10073,7 +10073,7 @@ class Koha extends AbstractIlsDriver {
 	 * Turn the endpoint's sparse date => item => reasons map into the contiguous ranges the
 	 * picker disables. Only blockers count, warnings are ignored.
 	 */
-	private function collapseBlockedDates(array $availability, int $itemId): array {
+	public static function collapseBlockedDates(array $availability, int $itemId): array {
 		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
 		$blockedDates = [];
 		foreach ($availability as $date => $items) {
@@ -10103,7 +10103,7 @@ class Koha extends AbstractIlsDriver {
 
 	// One lead/trail pair for every booking, not each booking's own pickup branch
 	// rules. Matches Koha's place_booking.js and bug 43108's endpoint.
-	private function buildBookedRanges(array $bookings, int $lead, int $trail): array {
+	public static function buildBookedRanges(array $bookings, int $lead, int $trail): array {
 		$ranges = [];
 		foreach ($bookings as $booking) {
 			$start = new DateTime(substr($booking['start_date'], 0, 10));

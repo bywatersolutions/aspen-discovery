@@ -17,7 +17,8 @@
 	</php>
 	<testsuite name="Aspen Discovery Unit Tests">
 		<directory suffix="InitializationTests.php">./tests</directory>
-		<directory suffix="Tests.php">./tests/services/API</directory>
+		<directory suffix="Tests.php">./tests/Drivers</directory>
+		<directory suffix="Tests.php">./tests/services</directory>
 		<directory suffix="Tests.php">./tests/sys/Util</directory>
 		<directory suffix="Tests.php">./tests/sys/Events</directory>
 		<directory suffix="Tests.php">./tests/sys/ECommerce</directory>

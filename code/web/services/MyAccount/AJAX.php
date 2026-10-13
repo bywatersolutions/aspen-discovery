@@ -4466,9 +4466,12 @@ class MyAccount_AJAX extends JSON_Action {
 		$this->setShowCovers();
 
 		require_once ROOT_DIR . '/services/BookingService.php';
-		$recordList = ['active' => [], 'past' => []];
+
+		$recordList = ['active' => []];
 		foreach (BookingService::enrichBookings($user, $user->getBookings()) as $booking) {
-			$recordList[$booking['isPast'] ? 'past' : 'active'][] = $booking;
+			if (empty($booking['isPast'])) {
+				$recordList['active'][] = $booking;
+			}
 		}
 
 		$interface->assign('recordList', $recordList);

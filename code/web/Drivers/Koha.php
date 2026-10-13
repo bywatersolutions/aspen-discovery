@@ -10133,14 +10133,17 @@ class Koha extends AbstractIlsDriver {
 		return $ranges;
 	}
 
-	private function getPagedBookings(User $patron, array $filters, string $requestName): ?array {
+	private function getPagedCurrentBookings(User $patron, array $filters, string $requestName): ?array {
 		$extraHeaders = ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
 		$perPage = 100;
 		$page = 1;
 		$bookings = [];
+
+		$filters['end_date'] = ['>=' => DateUtils::formatStartOfDayUtc(date('Y-m-d'))];
 		$query = urlencode(json_encode($filters));
 
-		while (true) {
+		$maxPages = 50;
+		while ($page <= $maxPages) {
 			$endpoint = '/api/v1/bookings?q=' . $query . '&_page=' . $page . '&_per_page=' . $perPage;
 			$response = $this->kohaApiUserAgent->get($endpoint, $requestName . '.page' . $page, [], $extraHeaders);
 			if (!$response || $response['code'] !== 200) {
@@ -10154,19 +10157,19 @@ class Koha extends AbstractIlsDriver {
 			}
 			$page++;
 		}
+
+		global $logger;
+		$logger->log("Capped paging $requestName at $maxPages pages", Logger::LOG_WARNING);
+		return $bookings;
 	}
 
 	private function getBookingsForItem(int $itemId, User $patron): array {
-		$filters = [
-			'item_id'  => $itemId,
-			'end_date' => ['>=' => DateUtils::formatStartOfDayUtc(date('Y-m-d'))],
-		];
-		return $this->getPagedBookings($patron, $filters, 'koha.getBookingsForItem') ?? [];
+		return $this->getPagedCurrentBookings($patron, ['item_id' => $itemId], 'koha.getBookingsForItem') ?? [];
 	}
 
 	public function getBookingsForUser(User $patron): array {
 		require_once ROOT_DIR . '/services/BookingService.php';
-		$liveBookings = $this->getPagedBookings($patron, ['patron_id' => (int)$patron->unique_ils_id], 'koha.getBookingsForUser');
+		$liveBookings = $this->getPagedCurrentBookings($patron, ['patron_id' => (int)$patron->unique_ils_id], 'koha.getBookingsForUser');
 
 		// handle Koha connection failures. Bookings stored in Aspen will display, but actions (cancel/update) will be unavailable, and a message warning the user the booking details are outdated will display.
 		if ($liveBookings === null) {

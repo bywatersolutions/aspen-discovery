@@ -431,6 +431,7 @@ class User extends DataObject {
 			}
 
 			// delete user_booking
+			require_once ROOT_DIR . '/sys/User/Booking.php';
 			$userBookings = new Booking();
 			$userBookings->userId = $this->id;
 			$userBookings->find();

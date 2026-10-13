@@ -2744,6 +2744,7 @@ class Record_AJAX extends JSON_Action {
 		$recordId = $_REQUEST['id'];
 		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 
+		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 		$marcRecord = new MarcRecordDriver($shortId);
 
 		$catalogDriver = $marcRecord->getCatalogDriver();
@@ -2751,6 +2752,7 @@ class Record_AJAX extends JSON_Action {
 			return $this->failureResult('Unable to place booking', 'Bookings are not supported for this record.');
 		}
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		$bookableItems = BookingService::filterBookableForPlacement($marcRecord->getCopies());
 		if (empty($bookableItems)) {
 			return $this->failureResult('Unable to place booking', 'No bookable items found for this record.');
@@ -2761,6 +2763,7 @@ class Record_AJAX extends JSON_Action {
 			return $this->failureResult('Unable to place booking', 'You need an ILS account to use this feature.');
 		}
 
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 
@@ -2781,12 +2784,14 @@ class Record_AJAX extends JSON_Action {
 	function getItemBookedDates(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to view booking availability. Please close this dialog and login.');
 		$this->checkRequiredParameters(['itemId', 'pickupBranch']);
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
 			return $this->failureResult('Bookings', 'An invalid pickup location was provided.');
 		}
 
 		$user = UserAccount::getLoggedInUser();
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		$availability = BookingService::getAvailability(
 			$user,
 			(int)$_REQUEST['itemId'],
@@ -2803,12 +2808,14 @@ class Record_AJAX extends JSON_Action {
 	function placeBooking(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to place a booking. Please close this dialog and login.');
 		$this->checkRequiredParameters(['id', 'itemId', 'startDate', 'endDate', 'pickupBranch']);
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
 			return $this->failureResult('Unable to place booking', 'An invalid pickup location was provided.');
 		}
 
 		$user = UserAccount::getLoggedInUser();
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		return $user->placeBooking(
 			$_REQUEST['itemId'],
 			BookingService::getBareRecordId($_REQUEST['id']),

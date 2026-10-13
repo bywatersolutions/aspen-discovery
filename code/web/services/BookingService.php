@@ -1,5 +1,7 @@
 <?php
 
+require_once ROOT_DIR . '/sys/User/Booking.php';
+
 class BookingService {
 
 	public static function storeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch, array $apiResponse): void {
@@ -17,6 +19,7 @@ class BookingService {
 	}
 
 	public static function filterBookableForPlacement(array $copies): array {
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$bookable = array_filter($copies, function ($item): bool {
 			if (empty($item['bookable']) || empty($item['isLibraryItem']) || empty($item['locationCode'])) {
 				return false;
@@ -92,6 +95,7 @@ class BookingService {
 	 * and the API.
 	 */
 	public static function enrichBookings(User $patron, array $liveBookings): array {
+		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 		$storedById = self::loadStoredBookingsById($patron);
 		$today = date('Y-m-d');
 		$enriched = [];
@@ -165,6 +169,7 @@ class BookingService {
 			return null;
 		}
 
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$pickupBranch = new Location();
 		$pickupBranch->code = $branchCode;
 		return $pickupBranch->find(true) ? $pickupBranch->displayName : $branchCode;
@@ -186,6 +191,7 @@ class BookingService {
 	}
 
 	private static function syncBookingRow(?Booking $stored, array $raw): ?bool {
+		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
 		if ($stored === null) {
 			return false;
 		}

@@ -4465,6 +4465,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$user = UserAccount::getActiveUserObj();
 		$this->setShowCovers();
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		$recordList = ['active' => [], 'past' => []];
 		foreach (BookingService::enrichBookings($user, $user->getBookings()) as $booking) {
 			$recordList[$booking['isPast'] ? 'past' : 'active'][] = $booking;
@@ -4492,6 +4493,7 @@ class MyAccount_AJAX extends JSON_Action {
 			return $this->failureResult('Update Booking', translate(['text' => 'You do not have access to update bookings for the supplied user.', 'isPublicFacing' => true]));
 		}
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		$stored = BookingService::getStoredBooking($user, $bookingId);
 		if ($stored === null) {
 			return $this->failureResult('Update Booking', translate(['text' => 'Booking not found.', 'isPublicFacing' => true]));
@@ -4499,6 +4501,7 @@ class MyAccount_AJAX extends JSON_Action {
 
 		$recordId = BookingService::getBareRecordId($stored->recordId);
 
+		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 		$marcRecord = new MarcRecordDriver($user->source . ':' . $recordId);
 		$itemLabel = $stored->itemId;
 		if ($marcRecord->isValid()) {
@@ -4510,6 +4513,7 @@ class MyAccount_AJAX extends JSON_Action {
 			}
 		}
 
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 
@@ -4543,6 +4547,7 @@ class MyAccount_AJAX extends JSON_Action {
 	function submitUpdateBooking(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to update a booking. Please close this dialog and login again.');
 		$this->checkRequiredParameters(['userId', 'bookingId', 'startDate', 'endDate', 'pickupBranch']);
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
 			return $this->failureResult('Update Booking', translate(['text' => 'An invalid pickup location was provided.', 'isPublicFacing' => true]));
 		}

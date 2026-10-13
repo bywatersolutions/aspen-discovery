@@ -3754,6 +3754,7 @@ class UserAPI extends AbstractAPI {
 		$user = $this->requireBookingsApiUser(true);
 		if (is_array($user)) return $user;
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		return [
 			'success' => true,
 			'bookings' => BookingService::enrichBookings($user, $user->getBookings()),
@@ -3802,6 +3803,7 @@ class UserAPI extends AbstractAPI {
 			}
 		}
 
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
 			return [
 				'success' => false,
@@ -3809,6 +3811,7 @@ class UserAPI extends AbstractAPI {
 			];
 		}
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		return $user->placeBooking(
 			$_REQUEST['itemId'],
 			BookingService::getBareRecordId($_REQUEST['recordId']),
@@ -3894,6 +3897,7 @@ class UserAPI extends AbstractAPI {
 			}
 		}
 
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
 			return [
 				'success' => false,
@@ -3942,6 +3946,7 @@ class UserAPI extends AbstractAPI {
 		$recordId = $_REQUEST['recordId'];
 		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 
+		require_once ROOT_DIR . '/RecordDrivers/MarcRecordDriver.php';
 		$marcRecord = new MarcRecordDriver($shortId);
 		if (!$marcRecord->isValid()) {
 			return [
@@ -3958,7 +3963,9 @@ class UserAPI extends AbstractAPI {
 			];
 		}
 
+		require_once ROOT_DIR . '/services/BookingService.php';
 		$bookableItems = BookingService::filterBookableForPlacement($marcRecord->getCopies());
+		require_once ROOT_DIR . '/sys/LibraryLocation/Location.php';
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 

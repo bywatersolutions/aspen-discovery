@@ -73,12 +73,11 @@ class BookingServiceTests extends TestCase {
 		];
 	}
 
-	private function findStored(int $ilsId): Booking {
+	private function findStored(int $ilsId): ?Booking {
 		$booking = new Booking();
 		$booking->userId = self::$userId;
 		$booking->ils_booking_id = $ilsId;
-		$booking->find(true);
-		return $booking;
+		return $booking->find(true) ? $booking : null;
 	}
 
 	// -------------------------------------------------------------------------
@@ -145,6 +144,43 @@ class BookingServiceTests extends TestCase {
 		$stored = $this->findStored($ilsId);
 		$this->assertEquals('2026-06-01', $stored->ils_start_date);
 		$this->assertEquals('2026-06-07', $stored->ils_end_date);
+	}
+
+	// Cancel and update are gated on the cached row existing, so a booking the patron
+	// made elsewhere has to be stored on sight or they could never act on it.
+
+	public function testSyncAndMapBookingsCachesABookingItHasNeverSeen(): void {
+		$patron = new User();
+		$patron->id = self::$userId;
+		$ilsId = $this->nextIlsId();
+
+		$result = BookingService::syncAndMapBookings($patron, [$this->liveBooking($ilsId)]);
+
+		$stored = $this->findStored($ilsId);
+		$this->assertNotNull($stored, 'A booking placed at the desk or in the staff client must still be cached');
+		$this->assertEquals('ITEM-' . $ilsId, $stored->itemId);
+		$this->assertEquals('2026-06-01', $stored->ils_start_date);
+		$this->assertEquals('CPL', $stored->ils_pickup_library_id);
+		$this->assertFalse(
+			$result[0]['staffModified'],
+			'Storing it for the first time gives nothing to compare against, so nothing is flagged'
+		);
+	}
+
+	public function testSyncAndMapBookingsTracksTheItemWhenStaffReassignTheBooking(): void {
+		$ilsId = $this->nextIlsId();
+		$patron = $this->setUpSyncTest($ilsId);
+
+		$result = BookingService::syncAndMapBookings($patron, [
+			$this->liveBooking($ilsId, ['item_id' => 'ITEM-REASSIGNED']),
+		]);
+
+		$this->assertTrue($result[0]['staffModified']);
+		$this->assertEquals(
+			'ITEM-REASSIGNED',
+			$this->findStored($ilsId)->itemId,
+			'The cached item is the key the toggle and circulation-rule lookups use'
+		);
 	}
 
 	public function testSyncAndMapBookingsReportsUnknownWhenIlsDatesCannotBeParsed(): void {

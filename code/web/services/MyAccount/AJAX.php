@@ -4492,10 +4492,8 @@ class MyAccount_AJAX extends JSON_Action {
 			return $this->failureResult('Update Booking', translate(['text' => 'You do not have access to update bookings for the supplied user.', 'isPublicFacing' => true]));
 		}
 
-		$stored = new Booking();
-		$stored->userId = $user->id;
-		$stored->ils_booking_id = $bookingId;
-		if (!$stored->find(true)) {
+		$stored = BookingService::getStoredBooking($user, $bookingId);
+		if ($stored === null) {
 			return $this->failureResult('Update Booking', translate(['text' => 'Booking not found.', 'isPublicFacing' => true]));
 		}
 

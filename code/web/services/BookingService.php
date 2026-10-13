@@ -122,25 +122,33 @@ class BookingService {
 		return $enriched;
 	}
 
-	public static function deleteStoredBooking(User $patron, int $bookingId): void {
+	public static function getStoredBooking(User $patron, int $bookingId): ?Booking {
 		$booking = new Booking();
 		$booking->userId = $patron->id;
 		$booking->ils_booking_id = $bookingId;
-		if ($booking->find(true)) {
-			$booking->delete();
+
+		return $booking->find(true) ? $booking : null;
+	}
+
+	public static function deleteStoredBooking(User $patron, int $bookingId): void {
+		$booking = self::getStoredBooking($patron, $bookingId);
+		if ($booking === null) {
+			return;
 		}
+
+		$booking->delete();
 	}
 
 	public static function updateStoredBooking(User $patron, int $bookingId, string $startDate, string $endDate, ?string $pickupBranch): void {
-		$booking = new Booking();
-		$booking->userId = $patron->id;
-		$booking->ils_booking_id = $bookingId;
-		if ($booking->find(true)) {
-			$booking->ils_start_date        = $startDate;
-			$booking->ils_end_date          = $endDate;
-			$booking->ils_pickup_library_id = $pickupBranch;
-			$booking->update();
+		$booking = self::getStoredBooking($patron, $bookingId);
+		if ($booking === null) {
+			return;
 		}
+
+		$booking->ils_start_date        = $startDate;
+		$booking->ils_end_date          = $endDate;
+		$booking->ils_pickup_library_id = $pickupBranch;
+		$booking->update();
 	}
 
 	public static function getPickupLibraryName(?string $branchCode): ?string {

@@ -31,11 +31,11 @@ class BookingService {
 	}
 
 	/**
-	 * Diff live ILS bookings against Aspen's stored copies, update any that changed,
-	 * delete rows for bookings that no longer exist in Koha, and return a mapped array
-	 * ready for display. The $staffModified flag surfaces bookings that were altered
-	 * by staff after the patron placed them, and is null when the comparison could
-	 * not be made.
+	 * Diff live ILS bookings against Aspen's stored copies, store any the patron made
+	 * elsewhere, update any that changed, delete rows for bookings that no longer
+	 * exist in Koha, and return a mapped array ready for display. The $staffModified
+	 * flag surfaces bookings that were altered by staff after the patron placed them,
+	 * and is null when the comparison could not be made.
 	 */
 	public static function syncAndMapBookings(User $patron, array $liveBookings): array {
 		$storedById = self::loadStoredBookingsById($patron);
@@ -44,7 +44,7 @@ class BookingService {
 		foreach ($liveBookings as $raw) {
 			$bookingId = $raw['booking_id'];
 			$entry = $storedById[$bookingId] ?? null;
-			$changed = self::syncBookingRow($entry, $raw);
+			$changed = self::syncBookingRow($entry, $raw, $patron);
 
 			$bookings[] = [
 				'id'              => $bookingId,
@@ -190,12 +190,8 @@ class BookingService {
 		return $storedById;
 	}
 
-	private static function syncBookingRow(?Booking $stored, array $raw): ?bool {
+	private static function syncBookingRow(?Booking $stored, array $raw, User $patron): ?bool {
 		require_once ROOT_DIR . '/sys/Utils/DateUtils.php';
-		if ($stored === null) {
-			return false;
-		}
-
 		if (empty($raw)) {
 			return null;
 		}
@@ -206,6 +202,21 @@ class BookingService {
 			global $logger;
 			$logger->log("Unable to parse dates for booking {$raw['booking_id']} from the ILS: {$raw['start_date']} to {$raw['end_date']}", Logger::LOG_ERROR);
 			return null;
+		}
+
+		// Placed outside this Aspen, at the desk or in the staff client. Store it so the
+		// patron's cached bookings are the whole set, not only the ones placed via Aspen.
+		if ($stored === null) {
+			self::storeBooking(
+				$patron,
+				(string)($raw['item_id'] ?? ''),
+				(string)$raw['biblio_id'],
+				$startDate,
+				$endDate,
+				$raw['pickup_library_id'] ?? null,
+				$raw
+			);
+			return false;
 		}
 
 		$changed =

@@ -9776,7 +9776,12 @@ class Koha extends AbstractIlsDriver {
 
 
 	public function cancelBooking(User $patron, int $bookingId): array {
-		$denied = $this->denyIfActionDisabled($this->getItemIdForBooking($bookingId), 'enableBookingCancellations', 'Booking cancellation is not enabled for the library that owns this item.');
+		require_once ROOT_DIR . '/services/BookingService.php';
+		$denied = $this->denyBookingAction(
+			BookingService::getStoredBooking($patron, $bookingId),
+			'enableBookingCancellations',
+			'Booking cancellation is not enabled for the library that owns this item.'
+		);
 		if ($denied) {
 			return $denied;
 		}
@@ -9784,7 +9789,6 @@ class Koha extends AbstractIlsDriver {
 		$response = $this->kohaApiUserAgent->delete("/api/v1/bookings/$bookingId", 'koha.cancelBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 204) {
-			require_once ROOT_DIR . '/services/BookingService.php';
 			BookingService::deleteStoredBooking($patron, $bookingId);
 			return [
 				'success' => true,
@@ -9799,11 +9803,13 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	public function updateBooking(User $patron, int $bookingId, string $startDate, string $endDate, string $pickupBranch): array {
-		$itemId = $this->getItemIdForBooking($bookingId);
-		$denied = $this->denyIfActionDisabled($itemId, 'enableBookingUpdates', 'Booking updates are not enabled for the library that owns this item.');
+		require_once ROOT_DIR . '/services/BookingService.php';
+		$stored = BookingService::getStoredBooking($patron, $bookingId);
+		$denied = $this->denyBookingAction($stored, 'enableBookingUpdates', 'Booking updates are not enabled for the library that owns this item.');
 		if ($denied) {
 			return $denied;
 		}
+		$itemId = (int)$stored->itemId;
 
 		$startDateUtc = DateUtils::formatStartOfDayUtc($startDate);
 		$endDateUtc = DateUtils::formatStartOfDayUtc($endDate);
@@ -9824,7 +9830,6 @@ class Koha extends AbstractIlsDriver {
 		$response = $this->kohaApiUserAgent->patch("/api/v1/bookings/$bookingId", $params, 'koha.updateBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 200) {
-			require_once ROOT_DIR . '/services/BookingService.php';
 			BookingService::updateStoredBooking($patron, $bookingId, $startDate, $endDate, $pickupBranch);
 			return [
 				'success' => true,
@@ -9851,9 +9856,18 @@ class Koha extends AbstractIlsDriver {
 		return $row;
 	}
 
-	private function getItemIdForBooking(int $bookingId): ?int {
-		$row = $this->fetchKohaRow("SELECT item_id FROM bookings WHERE booking_id = " . (int)$bookingId . " LIMIT 1");
-		return empty($row['item_id']) ? null : (int)$row['item_id'];
+	/**
+	 * Koha cannot vet this for us: the API user agent authenticates as staff, so it
+	 * acts on any booking id it is given. Aspen therefore gates every action on its
+	 * own cache, which deliberately means a patron can only change a booking that has
+	 * appeared in their Aspen account.
+	 */
+	private function denyBookingAction(?Booking $booking, string $flag, string $message): ?array {
+		if ($booking === null) {
+			return ['success' => false, 'message' => translate(['text' => 'Booking not found.', 'isPublicFacing' => true])];
+		}
+
+		return $this->denyIfActionDisabled((int)$booking->itemId, $flag, $message);
 	}
 
 	private function denyIfActionDisabled(?int $itemId, string $flag, string $message): ?array {

@@ -63,7 +63,6 @@ abstract class Action
 
 	function loadAccountSidebarVariables(){
 		global $interface;
-		global $library;
 		$twoFactor = UserAccount::has2FAEnabledForPType();
 		$interface->assign('twoFactorEnabled', $twoFactor);
 

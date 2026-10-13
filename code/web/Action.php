@@ -99,7 +99,8 @@ abstract class Action
 			$showAccountSettings = true;
 		}
 
-		$showBookings = $user->getCatalogDriver() && $user->getCatalogDriver()->hasBookingsSupport();
+		$catalogDriver = $user->getCatalogDriver();
+		$showBookings = $catalogDriver && $catalogDriver->hasBookingsSupport();
 
 		$interface->assign('showMyAccount', $showMyAccount);
 		$interface->assign('showAccountSettings', $showAccountSettings);

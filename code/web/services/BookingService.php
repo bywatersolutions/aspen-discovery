@@ -219,14 +219,20 @@ class BookingService {
 			return false;
 		}
 
+		// Cancel and update key their owning-library and circulation-rule lookups on the
+		// cached itemId, so a staff reassignment has to land here too.
+		$itemId = (string)($raw['item_id'] ?? '');
+
 		$changed =
 			$stored->ils_status !== ($raw['status'] ?? null) ||
+			$stored->itemId !== $itemId ||
 			!DateUtils::isSameInstant($stored->ils_start_date, $startDate) ||
 			!DateUtils::isSameInstant($stored->ils_end_date, $endDate) ||
 			$stored->ils_pickup_library_id !== ($raw['pickup_library_id'] ?? null);
 
 		if ($changed) {
 			$stored->ils_status            = $raw['status'] ?? null;
+			$stored->itemId                = $itemId;
 			$stored->ils_start_date        = $startDate;
 			$stored->ils_end_date          = $endDate;
 			$stored->ils_pickup_library_id = $raw['pickup_library_id'] ?? null;

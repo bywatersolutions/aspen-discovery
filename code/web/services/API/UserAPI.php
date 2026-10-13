@@ -3793,7 +3793,7 @@ class UserAPI extends AbstractAPI {
 		$user = $this->requireBookingsApiUser();
 		if (is_array($user)) return $user;
 
-		foreach (['recordId', 'itemId', 'startDate', 'endDate'] as $required) {
+		foreach (['recordId', 'itemId', 'startDate', 'endDate', 'pickupBranch'] as $required) {
 			if (empty($_REQUEST[$required])) {
 				return [
 					'success' => false,
@@ -3802,13 +3802,19 @@ class UserAPI extends AbstractAPI {
 			}
 		}
 
+		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
+			return [
+				'success' => false,
+				'message' => 'An invalid pickup location was provided',
+			];
+		}
+
 		$recordId = $_REQUEST['recordId'];
 		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 		$itemId = $_REQUEST['itemId'];
 		$startDate = $_REQUEST['startDate'];
 		$endDate = $_REQUEST['endDate'];
-		$pickupBranch = !empty($_REQUEST['pickupBranch']) ? $_REQUEST['pickupBranch'] : null;
-
+		$pickupBranch = $_REQUEST['pickupBranch'];
 		return $user->placeBooking($itemId, $shortId, $startDate, $endDate, $pickupBranch);
 	}
 
@@ -3879,7 +3885,7 @@ class UserAPI extends AbstractAPI {
 		$user = $this->requireBookingsApiUser();
 		if (is_array($user)) return $user;
 
-		foreach (['bookingId', 'startDate', 'endDate'] as $required) {
+		foreach (['bookingId', 'startDate', 'endDate', 'pickupBranch'] as $required) {
 			if (empty($_REQUEST[$required])) {
 				return [
 					'success' => false,
@@ -3888,8 +3894,14 @@ class UserAPI extends AbstractAPI {
 			}
 		}
 
-		$pickupBranch = !empty($_REQUEST['pickupBranch']) ? $_REQUEST['pickupBranch'] : null;
-		return $user->updateBooking((int)$_REQUEST['bookingId'], $_REQUEST['startDate'], $_REQUEST['endDate'], $pickupBranch);
+		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
+			return [
+				'success' => false,
+				'message' => 'An invalid pickup location was provided',
+			];
+		}
+
+		return $user->updateBooking((int)$_REQUEST['bookingId'], $_REQUEST['startDate'], $_REQUEST['endDate'], $_REQUEST['pickupBranch']);
 	}
 
 	/**

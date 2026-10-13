@@ -923,18 +923,20 @@ AspenDiscovery.Record = (function () {
 			
 			AspenDiscovery.Record.dateRangePicker = picker;
 
-			const itemSelect = document.getElementById('booking-item-select');
 			const recordId =  document.getElementById('id').value;
-			itemSelect?.addEventListener('change', function () {
+			const reload = () => {
 				picker.clear();
-				AspenDiscovery.Record.loadItemBookingAvailability(this.value, recordId);
-			});
+				AspenDiscovery.Record.loadItemBookingAvailability(recordId);
+			};
+
+			document.getElementById('booking-item-select')?.addEventListener('change', reload);
+			document.getElementById('pickupBranch')?.addEventListener('change', reload);
 
 			if (availability) {
 				AspenDiscovery.Record.applyBookingAvailability(availability);
 				return;
 			}
-			AspenDiscovery.Record.loadItemBookingAvailability(itemSelect?.value ?? null, recordId);
+			AspenDiscovery.Record.loadItemBookingAvailability(recordId);
 		},
 
 		applyBookingAvailability: function (availability) {
@@ -963,9 +965,21 @@ AspenDiscovery.Record = (function () {
 			AspenDiscovery.Record.dateRangePicker?.clear();
 		},
 
-		loadItemBookingAvailability: function (itemId, recordId) {
+		loadItemBookingAvailability: function (recordId) {
 			const picker = AspenDiscovery.Record.dateRangePicker;
-			if (!itemId || !picker) {
+			if (!picker) {
+				return;
+			}
+
+			const itemId = document.getElementById('booking-item-select')?.value
+				|| document.getElementById('booking-item-id')?.value;
+			if (!itemId) {
+				return;
+			}
+
+			const pickupBranch = document.getElementById('pickupBranch')?.value;
+			if (!pickupBranch || pickupBranch === 'undefined') {
+				AspenDiscovery.Record.disableBookingForm(__('A pickup location is required to show availability.'));
 				return;
 			}
 
@@ -974,7 +988,16 @@ AspenDiscovery.Record = (function () {
 				loading.hidden = false;
 			}
 
-			const url = Globals.path + '/Record/AJAX?method=getItemBookedDates&id=' + encodeURIComponent(recordId) + '&itemId=' + encodeURIComponent(itemId);
+			let url = Globals.path + '/Record/AJAX?method=getItemBookedDates&id=' + encodeURIComponent(recordId)
+				+ '&itemId=' + encodeURIComponent(itemId)
+				+ '&pickupBranch=' + encodeURIComponent(pickupBranch);
+
+			// Editing an existing booking: its own dates must not block the picker.
+			const bookingId = document.getElementById('booking-id')?.value;
+			if (bookingId) {
+				url += '&excludeBookingId=' + encodeURIComponent(bookingId);
+			}
+
 			$.getJSON(url, function (data) {
 				if (!data.success) {
 					AspenDiscovery.Record.disableBookingForm(data.message);

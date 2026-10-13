@@ -1,7 +1,7 @@
 {if count($pickupLocations) > 0}
 	<div class="form-group">
 		<label class="control-label" for="pickupBranch">{translate text="Pickup Location" isPublicFacing=true}</label>
-		<select name="pickupBranch" id="pickupBranch" class="form-control">
+		<select name="pickupBranch" id="pickupBranch" class="form-control required" required>
 			{foreach from=$pickupLocations item=location}
 				{if is_string($location)}
 					<option value="undefined">{$location}</option>

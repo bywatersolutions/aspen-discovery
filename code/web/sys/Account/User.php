@@ -2742,7 +2742,7 @@ class User extends DataObject {
 		return $this->getCatalogDriver()->getBookingsForUser($this);
 	}
 
-	public function placeBooking(string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch): array {
+	public function placeBooking(string $itemId, string $recordId, string $startDate, string $endDate, string $pickupBranch): array {
 		global $library;
 		if (empty($library) || !$library->enableBookingDisplay) {
 			return ['success' => false, 'message' => translate(['text' => 'Bookings are not enabled for your library.', 'isPublicFacing' => true])];
@@ -2750,7 +2750,7 @@ class User extends DataObject {
 		return $this->getCatalogDriver()->placeBooking($this, $itemId, $recordId, $startDate, $endDate, $pickupBranch);
 	}
 
-	public function updateBooking(int $bookingId, string $startDate, string $endDate, ?string $pickupBranch): array {
+	public function updateBooking(int $bookingId, string $startDate, string $endDate, string $pickupBranch): array {
 		global $library;
 		if (empty($library) || !$library->enableBookingDisplay) {
 			return ['success' => false, 'message' => translate(['text' => 'Bookings are not enabled for your library.', 'isPublicFacing' => true])];

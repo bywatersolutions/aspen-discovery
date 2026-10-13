@@ -2932,6 +2932,10 @@ class Location extends DataObject {
 		return $this->_parentLibrary;
 	}
 
+	static function isValidCodeFormat(mixed $code): bool {
+		return is_string($code) && preg_match('/^[A-Za-z0-9_-]{1,10}$/', $code) === 1;
+	}
+
 	static function getLibraryForCode(string $code): ?Library {
 		$location = new Location();
 		$location->code = $code;

@@ -18,6 +18,7 @@
 	
 					<div class="form-group">
 						<label class="control-label" for="booking-item-label">{translate text="Item" isPublicFacing=true}</label>
+						<input type="hidden" id="booking-item-id" value="{$itemId|escape}">
 						<input type="text" id="booking-item-label" class="form-control" value="{$itemLabel|escape}" disabled>
 					</div>
 					{include file='Record/booking-form-fields.tpl' startDate=$startDate endDate=$endDate availability=$bookingAvailability}

@@ -9716,7 +9716,7 @@ class Koha extends AbstractIlsDriver {
 		return $libraries;
 	}
 
-	public function placeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, ?string $pickupBranch): array {
+	public function placeBooking(User $patron, string $itemId, string $recordId, string $startDate, string $endDate, string $pickupBranch): array {
 		$title = translate(['text' => 'Unable to place booking', 'isPublicFacing' => true]);
 		$denied = $this->denyIfActionDisabled((int)$itemId, 'enableBookingPlacement', 'Booking placement is not enabled for the library that owns this item.');
 		if ($denied) {
@@ -9729,21 +9729,19 @@ class Koha extends AbstractIlsDriver {
 			return ['success' => false, 'title' => $title, 'message' => translate(['text' => 'Invalid booking dates.', 'isPublicFacing' => true])];
 		}
 
-		$windowError = $this->enforceMaxBookingPeriod((int)$itemId, $patron, $startDate, $endDate);
+		$windowError = $this->enforceMaxBookingPeriod((int)$itemId, $patron, $startDate, $endDate, $pickupBranch);
 		if ($windowError !== null) {
 			return ['success' => false, 'title' => $title, 'message' => $windowError];
 		}
 
 		$params = [
-			'patron_id'  => (int)$patron->unique_ils_id,
-			'item_id'    => (int)$itemId,
-			'biblio_id'  => (int)$recordId,
-			'start_date' => $startDateUtc,
-			'end_date'   => $endDateUtc,
+			'patron_id'         => (int)$patron->unique_ils_id,
+			'item_id'           => (int)$itemId,
+			'biblio_id'         => (int)$recordId,
+			'start_date'        => $startDateUtc,
+			'end_date'          => $endDateUtc,
+			'pickup_library_id' => $pickupBranch,
 		];
-		if ($pickupBranch !== null) {
-			$params['pickup_library_id'] = $pickupBranch;
-		}
 
 		$response = $this->kohaApiUserAgent->post('/api/v1/bookings', $params, 'koha.placeBooking', [], $this->getBookingApiHeaders($patron));
 
@@ -9796,7 +9794,7 @@ class Koha extends AbstractIlsDriver {
 		];
 	}
 
-	public function updateBooking(User $patron, int $bookingId, string $startDate, string $endDate, ?string $pickupBranch): array {
+	public function updateBooking(User $patron, int $bookingId, string $startDate, string $endDate, string $pickupBranch): array {
 		$itemId = $this->getItemIdForBooking($bookingId);
 		$denied = $this->denyIfActionDisabled($itemId, 'enableBookingUpdates', 'Booking updates are not enabled for the library that owns this item.');
 		if ($denied) {
@@ -9809,15 +9807,16 @@ class Koha extends AbstractIlsDriver {
 			return ['success' => false, 'message' => translate(['text' => 'Invalid booking dates.', 'isPublicFacing' => true])];
 		}
 
-		$windowError = $this->enforceMaxBookingPeriod($itemId, $patron, $startDate, $endDate);
+		$windowError = $this->enforceMaxBookingPeriod($itemId, $patron, $startDate, $endDate, $pickupBranch);
 		if ($windowError !== null) {
 			return ['success' => false, 'message' => $windowError];
 		}
 
-		$params = ['start_date' => $startDateUtc, 'end_date' => $endDateUtc];
-		if ($pickupBranch !== null) {
-			$params['pickup_library_id'] = $pickupBranch;
-		}
+		$params = [
+			'start_date'        => $startDateUtc,
+			'end_date'          => $endDateUtc,
+			'pickup_library_id' => $pickupBranch,
+		];
 		$response = $this->kohaApiUserAgent->patch("/api/v1/bookings/$bookingId", $params, 'koha.updateBooking', [], $this->getBookingApiHeaders($patron));
 
 		if ($response && $response['code'] === 200) {
@@ -9864,8 +9863,8 @@ class Koha extends AbstractIlsDriver {
 		return ['Accept-Encoding: gzip, deflate', 'x-koha-library: ' . $patron->getHomeLocationCode()];
 	}
 
-	private function enforceMaxBookingPeriod(int $itemId, User $patron, string $startDate, string $endDate): ?string {
-		$maxEndDate = $this->calculateMaxBookingEndDate($itemId, $patron, $startDate);
+	private function enforceMaxBookingPeriod(int $itemId, User $patron, string $startDate, string $endDate, string $pickupBranch): ?string {
+		$maxEndDate = $this->calculateMaxBookingEndDate($itemId, $patron, $startDate, $pickupBranch);
 		if ($endDate > $maxEndDate) {
 			return translate([
 				'text' => 'The booking period is too long. For that start date the latest end date is %1%.',
@@ -9880,10 +9879,10 @@ class Koha extends AbstractIlsDriver {
 	 * Latest permissible booking end date for a given start, as Y-m-d:
 	 * the rule-based period ceiling, clipped by the hardduedate and expiry caps.
 	 */
-	private function calculateMaxBookingEndDate(int $itemId, User $patron, string $startDate): string {
+	private function calculateMaxBookingEndDate(int $itemId, User $patron, string $startDate, string $pickupBranch): string {
 		$end = new DateTime(substr($startDate, 0, 10));
 
-		$context = $this->getItemCirculationContext($itemId, $patron);
+		$context = $this->getItemCirculationContext($itemId, $patron, $pickupBranch);
 		if ($context === null) {
 			return $end->format('Y-m-d');
 		}
@@ -9900,10 +9899,14 @@ class Koha extends AbstractIlsDriver {
 	}
 
 	/**
-	 * Circulation-rule context (item type, home branch, patron category) for a
-	 * given item and patron. Returns null when the item can't be found.
+	 * Circulation-rule context (item type, branch, patron category) for a given
+	 * item and patron. Returns null when the item can't be found.
+	 * 
+	 * We apply rule sets based on the selected pickup branch. This is consistent
+	 * with Koha's own behaviour, and with its booking availability API
+	 * endpoint introduced by bug 43108.
 	 */
-	private function getItemCirculationContext(int $itemId, User $patron): ?array {
+	private function getItemCirculationContext(int $itemId, User $patron, string $pickupBranch): ?array {
 		$item = $this->getItemFromApi((string)$itemId, 'koha.getItemCirculationContext');
 		if ($item === null) {
 			return null;
@@ -9911,7 +9914,7 @@ class Koha extends AbstractIlsDriver {
 
 		return [
 			'itemTypeId'       => $item['effective_item_type_id'] ?? null,
-			'locationId'       => $item['home_library_id'] ?? null,
+			'locationId'       => $pickupBranch,
 			'patronCategoryId' => $patron->patronType,
 			'biblioId'         => $item['biblio_id'] ?? null,
 		];
@@ -9972,10 +9975,14 @@ class Koha extends AbstractIlsDriver {
 	 * ranges, and the limits on a selection. Both derive from the same
 	 * circulation rules, so they share one context lookup and one rules call.
 	 *
+	 * Lead/trail come from the pickup branch being chosen here and are applied to
+	 * every existing booking, rather than each one using its own pickup branch's
+	 * rules. Koha does the same in place_booking.js and in bug 43108's endpoint.
+	 *
 	 * @return array{bookedDates: array[], constraints: array{maxPeriod: int, maxDate: ?string}}
 	 */
-	public function getBookingAvailability(int $itemId, User $patron, ?int $excludeBookingId = null): array {
-		$context = $this->getItemCirculationContext($itemId, $patron);
+	public function getBookingAvailability(int $itemId, User $patron, string $pickupBranch, ?int $excludeBookingId = null): array {
+		$context = $this->getItemCirculationContext($itemId, $patron, $pickupBranch);
 		if ($context === null) {
 			return ['bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
 		}
@@ -9991,7 +9998,7 @@ class Koha extends AbstractIlsDriver {
 			'hardduedatecompare',
 		], $context);
 
-		$response = $this->requestBookingAvailability($context['biblioId'], $itemId, $patron, $excludeBookingId);
+		$response = $this->requestBookingAvailability($context['biblioId'], $itemId, $patron, $pickupBranch, $excludeBookingId);
 
 		if ($response && in_array($response['code'], [401, 403])) {
 			return ['apiAccessDenied' => true, 'bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
@@ -10033,16 +10040,17 @@ class Koha extends AbstractIlsDriver {
 	 * which nothing here can see.
 	 *
 	 */
-	private function requestBookingAvailability(?int $biblioId, int $itemId, User $patron, ?int $excludeBookingId): array|bool {
+	private function requestBookingAvailability(?int $biblioId, int $itemId, User $patron, string $pickupBranch, ?int $excludeBookingId): array|bool {
 		if (empty($biblioId)) {
 			return false;
 		}
 
 		$params = [
-			'from_date' => date('Y-m-d'),
-			'to_date'   => date('Y-m-d', strtotime('+' . self::BOOKING_AVAILABILITY_HORIZON_DAYS . ' days')),
-			'item_id'   => $itemId,
-			'patron_id' => (int)$patron->unique_ils_id,
+			'from_date'         => date('Y-m-d'),
+			'to_date'           => date('Y-m-d', strtotime('+' . self::BOOKING_AVAILABILITY_HORIZON_DAYS . ' days')),
+			'item_id'           => $itemId,
+			'patron_id'         => (int)$patron->unique_ils_id,
+			'pickup_library_id' => $pickupBranch,
 		];
 		if ($excludeBookingId !== null) {
 			$params['excluded_booking_id'] = $excludeBookingId;
@@ -10088,6 +10096,8 @@ class Koha extends AbstractIlsDriver {
 		return $remaining;
 	}
 
+	// One lead/trail pair for every booking, not each booking's own pickup branch
+	// rules. Matches Koha's place_booking.js and bug 43108's endpoint.
 	private function buildBookedRanges(array $bookings, int $lead, int $trail): array {
 		$ranges = [];
 		foreach ($bookings as $booking) {

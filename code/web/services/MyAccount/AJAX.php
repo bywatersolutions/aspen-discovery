@@ -4513,10 +4513,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$location = new Location();
 		$pickupLocations = $location->getPickupBranches($user);
 
-		$driver = $user->getCatalogDriver();
-		$availability = $driver && $driver->hasBookingsSupport()
-			? $driver->getBookingAvailability((int)$stored->itemId, $user, $bookingId)
-			: null;
+		$availability = BookingService::getAvailability($user, (int)$stored->itemId, $stored->ils_pickup_library_id, $bookingId);
 
 		if (!empty($availability['apiAccessDenied'])) {
 			return $this->failureResult('Update Booking', 'Bookings are not available at the moment. Please contact the library.');
@@ -4526,6 +4523,7 @@ class MyAccount_AJAX extends JSON_Action {
 		$interface->assign('userId', $user->id);
 		$interface->assign('bookingId', $bookingId);
 		$interface->assign('recordId', $recordId);
+		$interface->assign('itemId', $stored->itemId);
 		$interface->assign('itemLabel', $itemLabel);
 		$interface->assign('startDate', $stored->ils_start_date);
 		$interface->assign('endDate', $stored->ils_end_date);
@@ -4544,20 +4542,23 @@ class MyAccount_AJAX extends JSON_Action {
 	/** @noinspection PhpUnused */
 	function submitUpdateBooking(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to update a booking. Please close this dialog and login again.');
-		$this->checkRequiredParameters(['userId', 'bookingId', 'startDate', 'endDate']);
+		$this->checkRequiredParameters(['userId', 'bookingId', 'startDate', 'endDate', 'pickupBranch']);
+		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
+			return $this->failureResult('Update Booking', translate(['text' => 'An invalid pickup location was provided.', 'isPublicFacing' => true]));
+		}
 
 		$bookingId    = (int)$_REQUEST['bookingId'];
 		$userId       = $_REQUEST['userId'];
 		$startDate    = $_REQUEST['startDate'];
 		$endDate      = $_REQUEST['endDate'];
-		$pickupBranch = $_REQUEST['pickupBranch'] ?? null;
+		$pickupBranch = $_REQUEST['pickupBranch'];
 		$user         = UserAccount::getLoggedInUser();
-		$user       = $user->getUserReferredTo($userId);
+		$user         = $user->getUserReferredTo($userId);
 
 		if ($user === false) {
 			$result = $this->failureResult('Update Booking', translate(['text' => 'You do not have access to update bookings for the supplied user.', 'isPublicFacing' => true]));
 		} else {
-			$result = $user->updateBooking($bookingId, $startDate, $endDate, $pickupBranch ?: null);
+			$result = $user->updateBooking($bookingId, $startDate, $endDate, $pickupBranch);
 		}
 
 		global $interface;

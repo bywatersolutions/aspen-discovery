@@ -2780,15 +2780,19 @@ class Record_AJAX extends JSON_Action {
 	/** @noinspection PhpUnused */
 	function getItemBookedDates(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to view booking availability. Please close this dialog and login.');
-		$this->checkRequiredParameters(['itemId']);
-
-		$user = UserAccount::getLoggedInUser();
-		$driver = $user->getCatalogDriver();
-		if (!$driver || !$driver->hasBookingsSupport()) {
-			return ['success' => true, 'bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
+		$this->checkRequiredParameters(['itemId', 'pickupBranch']);
+		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
+			return $this->failureResult('Bookings', 'An invalid pickup location was provided.');
 		}
 
-		$availability = $driver->getBookingAvailability((int)$_REQUEST['itemId'], $user);
+		$user = UserAccount::getLoggedInUser();
+
+		$availability = BookingService::getAvailability(
+			$user,
+			(int)$_REQUEST['itemId'],
+			$_REQUEST['pickupBranch'],
+			(int)($_REQUEST['excludeBookingId'] ?? 0) ?: null
+		);
 		if (!empty($availability['apiAccessDenied'])) {
 			return $this->failureResult('Bookings', 'Bookings are not available at the moment. Please contact the library.');
 		}
@@ -2798,7 +2802,10 @@ class Record_AJAX extends JSON_Action {
 
 	function placeBooking(): array {
 		$this->requireLoggedInUser(null, 'You must be logged in to place a booking. Please close this dialog and login.');
-		$this->checkRequiredParameters(['id', 'itemId', 'startDate', 'endDate']);
+		$this->checkRequiredParameters(['id', 'itemId', 'startDate', 'endDate', 'pickupBranch']);
+		if (!Location::isValidCodeFormat($_REQUEST['pickupBranch'])) {
+			return $this->failureResult('Unable to place booking', 'An invalid pickup location was provided.');
+		}
 
 		$user = UserAccount::getLoggedInUser();
 
@@ -2806,10 +2813,10 @@ class Record_AJAX extends JSON_Action {
 		$itemId       = $_REQUEST['itemId'];
 		$startDate    = $_REQUEST['startDate'];
 		$endDate      = $_REQUEST['endDate'];
-		$pickupBranch = $_REQUEST['pickupBranch'] ?? null;
+		$pickupBranch = $_REQUEST['pickupBranch'];
 
 		$shortId = strpos($recordId, ':') > 0 ? explode(':', $recordId, 2)[1] : $recordId;
 
-		return $user->placeBooking($itemId, $shortId, $startDate, $endDate, $pickupBranch ?: null);
+		return $user->placeBooking($itemId, $shortId, $startDate, $endDate, $pickupBranch);
 	}
 }

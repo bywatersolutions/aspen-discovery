@@ -122,6 +122,15 @@ class BookingService {
 		return $enriched;
 	}
 
+	public static function getAvailability(User $patron, int $itemId, string $pickupBranch, ?int $excludeBookingId): array {
+		$driver = $patron->getCatalogDriver();
+		if (!$driver || !$driver->hasBookingsSupport()) {
+			return ['bookedDates' => [], 'constraints' => ['maxPeriod' => 0, 'maxDate' => null]];
+		}
+
+		return $driver->getBookingAvailability($itemId, $patron, $pickupBranch, $excludeBookingId);
+	}
+
 	public static function getStoredBooking(User $patron, int $bookingId): ?Booking {
 		$booking = new Booking();
 		$booking->userId = $patron->id;

@@ -113,3 +113,22 @@ docker compose up -d --force-recreate
 docker compose down -v
 rm -rf data/
 ```
+
+## Publishing Images from a Fork
+
+The `Publish Docker image to hub.docker.com` GitHub Actions workflow (`.github/workflows/main.yml`) reads these repository variables (Settings → Secrets and variables → Actions → Variables), so a fork can publish images to its own registries without changing the workflow:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DOCKER_ORG` | `aspendiscovery` | Docker Hub namespace |
+| `GHCR_ORG` | `aspen-discovery` | GitHub Container Registry namespace (must be lowercase) |
+| `QUAY_ORG` | `aspen-discovery` | Quay.io namespace |
+| `DOCKER_PUSH` | `true` | Set to `false` to skip Docker Hub |
+| `GHCR_PUSH` | `true` | Set to `false` to skip GitHub Container Registry |
+| `QUAY_PUSH` | `true` | Set to `false` to skip Quay.io |
+| `IMAGE_PREFIX` | _(empty)_ | Prepended to each image name (`aspen`, `solr`, `tunnel`) |
+| `PUSH_BRANCH_PATTERN` | _(empty)_ | Bash regex; pushes to matching branches publish images tagged with the branch name |
+
+Images are always published for git tags and manual workflow runs. Registry credentials come from the `DOCKER_USERNAME`/`DOCKER_PASSWORD`, `GHCR_USERNAME`/`GHCR_PASSWORD` and `QUAY_USERNAME`/`QUAY_PASSWORD` secrets (a `QUAY_USER` secret is used if `QUAY_USERNAME` isn't set), and only the registries being pushed to need them.
+
+For example, to publish only to Quay.io for every push to a release branch such as `26.10.00`, set `QUAY_ORG=example-org`, `IMAGE_PREFIX=aspen-discovery-`, `DOCKER_PUSH=false`, `GHCR_PUSH=false` and `PUSH_BRANCH_PATTERN=^[0-9]{2}\.[0-9]{2}\.[0-9]{2}`. That publishes `quay.io/example-org/aspen-discovery-aspen:26.10.00`, `quay.io/example-org/aspen-discovery-solr:26.10.00` and `quay.io/example-org/aspen-discovery-tunnel:26.10.00`.

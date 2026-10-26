@@ -5,14 +5,25 @@ require_once ROOT_DIR . '/Action.php';
 /**
  * Landing page used to clear a Cloudflare challenge that was issued to an AJAX request.
  *
- * Challenges cannot be solved inside an XHR, so when one is detected the browser is sent here as a
- * top-level navigation. Cloudflare is configured to always challenge this path, so the challenge is
- * rendered full-page, the visitor receives a cf_clearance cookie, and this action sends them back
- * to the page they were on.
+ * Challenges cannot be solved inside an XHR, so when one is detected the browser loads this page instead.
+ * Cloudflare is configured to always challenge this path, so the challenge is rendered as a page and the
+ * visitor receives a cf_clearance cookie before this action runs.
+ *
+ * With frame=1 the page is loaded in an iframe inside the challenge modal and tells the parent page the
+ * challenge was cleared so it can retry the challenged requests. Otherwise this is a full page navigation
+ * and the visitor is sent back to the page they were on.
  */
 class Help_Verify extends Action {
 	function launch() {
 		header('Cache-Control: no-store');
+		if (($_REQUEST['frame'] ?? '') === '1') {
+			header('Content-Type: text/html; charset=utf-8');
+			header('X-Frame-Options: SAMEORIGIN');
+			echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Verified</title></head><body><script>'
+				. 'window.parent.postMessage({aspenCloudflareVerified: true}, window.location.origin);'
+				. '</script></body></html>';
+			exit;
+		}
 		header('Location: ' . self::getSafeReturnUrl($_REQUEST['returnUrl'] ?? ''));
 		exit;
 	}

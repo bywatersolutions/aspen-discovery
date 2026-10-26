@@ -76,6 +76,8 @@
 			Globals.requestFailedBody = '{translate text="There was an error with this AJAX Request." inAttribute=true isPublicFacing=true}';
 			Globals.cloudflareChallengeTitle = '{translate text="Security Check Required" inAttribute=true isPublicFacing=true}';
 			Globals.cloudflareChallengeBody = '{translate text="Please complete a quick security check to continue. You will be returned to this page afterward." inAttribute=true isPublicFacing=true}';
+			Globals.cloudflareChallengeFrameBody = '{translate text="Please wait while we complete a quick security check. This should only take a moment." inAttribute=true isPublicFacing=true}';
+			Globals.cloudflareChallengeRetryBody = '{translate text="Thank you. Please try that again." inAttribute=true isPublicFacing=true}';
 			Globals.cloudflareChallengeButton = '{translate text="Continue" inAttribute=true isPublicFacing=true}';
 			Globals.validationInvalidValue = '{translate text="Invalid value entered." inAttribute=true isAdminFacing=true}';
 			Globals.rtl = {if $userLang->isRTL()}true{else}false{/if};

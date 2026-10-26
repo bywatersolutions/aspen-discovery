@@ -6,9 +6,93 @@ var AspenDiscovery = (function(){
 		Globals.LeavingPage = true;
 	};
 
-	// Catch Cloudflare challenges on AJAX calls that use their own failure handlers instead of ajaxFail.
-	aspenJQ(document).ajaxError(function(event, jqXHR){
-		AspenDiscovery.handleCloudflareChallenge(jqXHR);
+	// Cloudflare challenges cannot be solved inside an AJAX request. Hold challenged requests while the patron
+	// clears the challenge in the modal (see handleCloudflareChallenge), then send them again so the caller's
+	// callbacks only see the final result. Challenged requests never reach Aspen, so resending is safe.
+	var cloudflareRetryQueue = [];
+	var cloudflareVerifying = false;
+	var cloudflareNeedsRetryMessage = false;
+	var originalAjax = aspenJQ.ajax;
+	aspenJQ.ajax = function(url, options) {
+		if (typeof url === 'object') {
+			options = url;
+			url = undefined;
+		}
+		var settings = aspenJQ.extend({}, options);
+		if (url !== undefined) {
+			settings.url = url;
+		}
+
+		if (settings.async === false) {
+			// Synchronous callers read their result as soon as this returns, so they cannot wait for a retry.
+			return originalAjax(settings).fail(function(jqXHR) {
+				AspenDiscovery.handleCloudflareChallenge(jqXHR, null);
+			});
+		}
+
+		var success = settings.success;
+		var error = settings.error;
+		var complete = settings.complete;
+		delete settings.success;
+		delete settings.error;
+		delete settings.complete;
+
+		var deferred = aspenJQ.Deferred();
+		var currentRequest;
+		var aborted = false;
+		var send = function(canRetry) {
+			currentRequest = originalAjax(settings)
+				.done(function() {
+					deferred.resolveWith(this, arguments);
+				})
+				.fail(function(jqXHR) {
+					if (canRetry && !aborted && AspenDiscovery.handleCloudflareChallenge(jqXHR, function() {
+						return aborted ? aspenJQ.Deferred().reject() : send(false);
+					})) {
+						return;
+					}
+					deferred.rejectWith(this, arguments);
+					// Still challenged after clearing one, so fall back to a full page challenge.
+					if (!canRetry && AspenDiscovery.isCloudflareChallenge(jqXHR)) {
+						AspenDiscovery.showCloudflareFullPageChallenge();
+					}
+				});
+			return currentRequest;
+		};
+
+		var promise = deferred.promise({
+			abort: function(statusText) {
+				aborted = true;
+				currentRequest.abort(statusText);
+				// Aborted while held for a challenge, so there is no request in flight to reject it.
+				if (deferred.state() === 'pending') {
+					deferred.rejectWith(settings.context || settings, [promise, statusText || 'abort', statusText || 'abort']);
+				}
+				return promise;
+			}
+		});
+		if (success) {
+			promise.done(success);
+		}
+		if (error) {
+			promise.fail(error);
+		}
+		if (complete) {
+			promise.done(function(data, textStatus, jqXHR) {
+				complete.call(this, jqXHR, textStatus);
+			}).fail(function(jqXHR, textStatus) {
+				complete.call(this, jqXHR, textStatus);
+			});
+		}
+		send(true);
+		return promise;
+	};
+
+	// Posted by /Help/Verify?frame=1 once Cloudflare lets the challenge iframe through.
+	window.addEventListener('message', function(event) {
+		if (event.origin === window.location.origin && event.data && event.data.aspenCloudflareVerified === true) {
+			AspenDiscovery.cloudflareChallengeCleared();
+		}
 	});
 
 	aspenJQ(document).ready(function(){
@@ -536,7 +620,8 @@ var AspenDiscovery = (function(){
 
 		// common message for when an AJAX call has failed.
 		ajaxFail: function(jqXHR) {
-			if (AspenDiscovery.handleCloudflareChallenge(jqXHR)) return;
+			// The aspenJQ.ajax wrapper shows its own prompt for Cloudflare challenges.
+			if (AspenDiscovery.isCloudflareChallenge(jqXHR)) return;
 			if (!Globals.LeavingPage) AspenDiscovery.showMessage(Globals.requestFailedTitle, Globals.requestFailedBody);
 		},
 
@@ -545,17 +630,61 @@ var AspenDiscovery = (function(){
 				&& jqXHR.getResponseHeader('cf-mitigated') === 'challenge';
 		},
 
-		// Challenges cannot be solved inside an AJAX request, so prompt the patron to complete one
-		// as a full page load via /Help/Verify, which returns them to the current page afterward.
-		handleCloudflareChallenge: function(jqXHR) {
+		// Runs the challenge in an iframe inside the modal. Once /Help/Verify loads in the frame, the patron has a
+		// cf_clearance cookie and cloudflareChallengeCleared resends the held requests. retry is null for
+		// synchronous requests, which the patron has to repeat themselves.
+		handleCloudflareChallenge: function(jqXHR, retry) {
 			if (!AspenDiscovery.isCloudflareChallenge(jqXHR)) return false;
-			if (Globals.LeavingPage || Globals.cloudflareChallengeShown) return true;
-			Globals.cloudflareChallengeShown = true;
+			if (Globals.LeavingPage) return true;
+			if (retry) {
+				cloudflareRetryQueue.push(retry);
+			} else {
+				cloudflareNeedsRetryMessage = true;
+			}
+			// The patron may have closed the modal or something else replaced it, so show it again if needed.
+			if (cloudflareVerifying && aspenJQ('#cloudflareChallengeFrame').length > 0) return true;
+			cloudflareVerifying = true;
+			var body = '<p>' + Globals.cloudflareChallengeFrameBody + '</p>'
+				+ '<iframe id="cloudflareChallengeFrame" src="/Help/Verify?frame=1" title="' + Globals.cloudflareChallengeTitle + '" style="width:100%;height:320px;border:0;"></iframe>';
+			AspenDiscovery.showMessageWithButtons(Globals.cloudflareChallengeTitle, body, AspenDiscovery.getCloudflareFullPageButton());
+			return true;
+		},
+
+		cloudflareChallengeCleared: function() {
+			if (!cloudflareVerifying) return;
+			cloudflareVerifying = false;
+			var retries = cloudflareRetryQueue;
+			cloudflareRetryQueue = [];
+			if (cloudflareNeedsRetryMessage) {
+				cloudflareNeedsRetryMessage = false;
+				AspenDiscovery.showMessage(Globals.cloudflareChallengeTitle, Globals.cloudflareChallengeRetryBody);
+			}
+			var remaining = retries.length;
+			if (remaining === 0 && aspenJQ('#cloudflareChallengeFrame').length > 0) {
+				AspenDiscovery.closeLightbox();
+			}
+			aspenJQ.each(retries, function(index, retry) {
+				retry().always(function() {
+					// Close the challenge modal unless a retried request's handler already replaced it.
+					remaining--;
+					if (remaining === 0 && aspenJQ('#cloudflareChallengeFrame').length > 0) {
+						AspenDiscovery.closeLightbox();
+					}
+				});
+			});
+		},
+
+		// Fallback when the challenge cannot be cleared in the modal: complete it as a full page load via
+		// /Help/Verify, which returns the patron to the current page afterward.
+		getCloudflareFullPageButton: function() {
 			var returnUrl = window.location.pathname + window.location.search + window.location.hash;
 			var verifyUrl = '/Help/Verify?returnUrl=' + encodeURIComponent(returnUrl);
-			var button = '<a class="btn btn-primary" href="' + verifyUrl + '">' + Globals.cloudflareChallengeButton + '</a>';
-			AspenDiscovery.showMessageWithButtons(Globals.cloudflareChallengeTitle, Globals.cloudflareChallengeBody, button);
-			return true;
+			return '<a class="btn btn-primary" href="' + verifyUrl + '">' + Globals.cloudflareChallengeButton + '</a>';
+		},
+
+		showCloudflareFullPageChallenge: function() {
+			if (Globals.LeavingPage) return;
+			AspenDiscovery.showMessageWithButtons(Globals.cloudflareChallengeTitle, Globals.cloudflareChallengeBody, AspenDiscovery.getCloudflareFullPageButton());
 		},
 
 		showElementInPopup: function(title, elementId, buttonsElementId){

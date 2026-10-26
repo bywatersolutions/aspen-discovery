@@ -926,6 +926,10 @@ var Globals = (function () {
 		loadingBody: 'Loading, please wait',
 		requestFailedTitle: 'Request Failed',
 		requestFailedBody: 'There was an error with this AJAX Request.',
+		cloudflareChallengeTitle: 'Security Check Required',
+		cloudflareChallengeBody: 'Please complete a quick security check to continue. You will be returned to this page afterward.',
+		cloudflareChallengeButton: 'Continue',
+		cloudflareChallengeShown: false,
 		validationInvalidValue: 'Invalid value entered.',
 		rtl:false,
 		bypassAspenLoginForSSO:false,
@@ -965,6 +969,11 @@ var AspenDiscovery = (function(){
 	 window.onbeforeunload = function(){
 		Globals.LeavingPage = true;
 	};
+
+	// Catch Cloudflare challenges on AJAX calls that use their own failure handlers instead of ajaxFail.
+	aspenJQ(document).ajaxError(function(event, jqXHR){
+		AspenDiscovery.handleCloudflareChallenge(jqXHR);
+	});
 
 	aspenJQ(document).ready(function(){
 		AspenDiscovery.initializeModalDialogs();
@@ -1490,8 +1499,27 @@ var AspenDiscovery = (function(){
 		},
 
 		// common message for when an AJAX call has failed.
-		ajaxFail: function() {
+		ajaxFail: function(jqXHR) {
+			if (AspenDiscovery.handleCloudflareChallenge(jqXHR)) return;
 			if (!Globals.LeavingPage) AspenDiscovery.showMessage(Globals.requestFailedTitle, Globals.requestFailedBody);
+		},
+
+		isCloudflareChallenge: function(jqXHR) {
+			return jqXHR !== undefined && jqXHR !== null && typeof jqXHR.getResponseHeader === 'function'
+				&& jqXHR.getResponseHeader('cf-mitigated') === 'challenge';
+		},
+
+		// Challenges cannot be solved inside an AJAX request, so prompt the patron to complete one
+		// as a full page load via /Help/Verify, which returns them to the current page afterward.
+		handleCloudflareChallenge: function(jqXHR) {
+			if (!AspenDiscovery.isCloudflareChallenge(jqXHR)) return false;
+			if (Globals.LeavingPage || Globals.cloudflareChallengeShown) return true;
+			Globals.cloudflareChallengeShown = true;
+			var returnUrl = window.location.pathname + window.location.search + window.location.hash;
+			var verifyUrl = '/Help/Verify?returnUrl=' + encodeURIComponent(returnUrl);
+			var button = '<a class="btn btn-primary" href="' + verifyUrl + '">' + Globals.cloudflareChallengeButton + '</a>';
+			AspenDiscovery.showMessageWithButtons(Globals.cloudflareChallengeTitle, Globals.cloudflareChallengeBody, button);
+			return true;
 		},
 
 		showElementInPopup: function(title, elementId, buttonsElementId){
@@ -8427,29 +8455,38 @@ AspenDiscovery.Admin = (function () {
 		searchProperties: function () {
 			var searchValue = $("#propertySearch").val();
 			var searchRegex = new RegExp(searchValue, 'i');
+			var propertyRows = $(".propertyRow");
 			if (searchValue.length === 0) {
-				$(".propertyRow").show();
+				propertyRows.show();
 				$(".propertySectionHeading").show();
 				$(".propertySection").show();
+				if ($("#activeIls").length > 0) {
+					AspenDiscovery.Admin.toggleIlsSpecificFields();
+				}
 				//Collapse all panels
 				$(".editor .panel-title a").removeClass('expanded').addClass('collapsed').attr("aria-expanded", "false");
 				$(".editor .panel").removeClass('active').attr("aria-expanded", "false");
 				$(".editor .accordion_body").removeClass('in').hide();
 			} else {
-				var allAPropertyRows = $(".propertyRow");
-				allAPropertyRows.each(function () {
-					var curRow = $(this);
-					var rowText = curRow.text();
-					if (searchRegex.test(rowText)) {
-						curRow.show();
-					} else {
-						curRow.hide();
-					}
+				var activeIls = $("#activeIls").val();
+				propertyRows.hide();
+				propertyRows.filter(function () {
+					var row = $(this);
+					var isSection = row.find(".propertyRow").length > 0;
+					var relatedIls = row.closest("[data-related-ils]").data("related-ils");
+					var appliesToIls = relatedIls === undefined || relatedIls.includes("~" + activeIls + "~");
+
+					return !isSection && appliesToIls && searchRegex.test(row.text());
+				}).each(function () {
+					var row = $(this);
+					// Show the matching field and parent section
+					row.show();
+					row.parents(".propertyRow").show();
 				});
-				//Expand all panels
-				$(".editor .panel-title a").removeClass('collapsed').addClass('expanded').attr("aria-expanded", "true");
-				$(".editor .panel").addClass('active').attr("aria-expanded", "true");
-				$(".editor .accordion_body").addClass('in').show();
+				//Expand only sections that contain a matching visible field
+				$(".propertySection:visible .panel-title a").removeClass("collapsed").addClass("expanded").attr("aria-expanded", "true");
+				$(".propertySection:visible .panel").addClass("active").attr("aria-expanded", "true");
+				$(".propertySection:visible .accordion_body").addClass("in").show();
 			}
 		},
 

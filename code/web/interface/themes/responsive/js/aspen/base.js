@@ -6,6 +6,11 @@ var AspenDiscovery = (function(){
 		Globals.LeavingPage = true;
 	};
 
+	// Catch Cloudflare challenges on AJAX calls that use their own failure handlers instead of ajaxFail.
+	aspenJQ(document).ajaxError(function(event, jqXHR){
+		AspenDiscovery.handleCloudflareChallenge(jqXHR);
+	});
+
 	aspenJQ(document).ready(function(){
 		AspenDiscovery.initializeModalDialogs();
 		AspenDiscovery.setupFieldSetToggles();
@@ -530,8 +535,27 @@ var AspenDiscovery = (function(){
 		},
 
 		// common message for when an AJAX call has failed.
-		ajaxFail: function() {
+		ajaxFail: function(jqXHR) {
+			if (AspenDiscovery.handleCloudflareChallenge(jqXHR)) return;
 			if (!Globals.LeavingPage) AspenDiscovery.showMessage(Globals.requestFailedTitle, Globals.requestFailedBody);
+		},
+
+		isCloudflareChallenge: function(jqXHR) {
+			return jqXHR !== undefined && jqXHR !== null && typeof jqXHR.getResponseHeader === 'function'
+				&& jqXHR.getResponseHeader('cf-mitigated') === 'challenge';
+		},
+
+		// Challenges cannot be solved inside an AJAX request, so prompt the patron to complete one
+		// as a full page load via /Help/Verify, which returns them to the current page afterward.
+		handleCloudflareChallenge: function(jqXHR) {
+			if (!AspenDiscovery.isCloudflareChallenge(jqXHR)) return false;
+			if (Globals.LeavingPage || Globals.cloudflareChallengeShown) return true;
+			Globals.cloudflareChallengeShown = true;
+			var returnUrl = window.location.pathname + window.location.search + window.location.hash;
+			var verifyUrl = '/Help/Verify?returnUrl=' + encodeURIComponent(returnUrl);
+			var button = '<a class="btn btn-primary" href="' + verifyUrl + '">' + Globals.cloudflareChallengeButton + '</a>';
+			AspenDiscovery.showMessageWithButtons(Globals.cloudflareChallengeTitle, Globals.cloudflareChallengeBody, button);
+			return true;
 		},
 
 		showElementInPopup: function(title, elementId, buttonsElementId){

@@ -564,7 +564,7 @@ class EventRegistrationService {
 		];
 	}
 
-	private static function hasPermissionForLocation(int $locationId, string $systemLevelPermission, string $locationLevelPermission, string $libraryLevelPermission): bool {
+	private static function hasPermissionForLocation(int $locationId, string $systemLevelPermission, string $libraryLevelPermission, string $locationLevelPermission): bool {
 		if (!UserAccount::userHasPermission([$systemLevelPermission, $locationLevelPermission, $libraryLevelPermission])) {
 			return false;
 		}

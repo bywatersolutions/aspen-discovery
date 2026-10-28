@@ -432,10 +432,13 @@ public class GroupedWorkIndexer implements AutoCloseable {
 		//Set a longer timeout
 		http2Client = new Http2SolrClient.Builder()
 			.idleTimeout(60000)
-			.connectionTimeout(15000)
+			.connectionTimeout(60000)
 			.build();
 		try {
-			updateServer = new ConcurrentUpdateHttp2SolrClient.Builder(solrUrl, http2Client)
+
+		System.setProperty("solr.cloud.client.stallTime", "60000");	
+		
+		updateServer = new ConcurrentUpdateHttp2SolrClient.Builder(solrUrl, http2Client)
 				.withThreadCount(solrThreadCount)
 				.withQueueSize(solrQueueSize)
 				.build();

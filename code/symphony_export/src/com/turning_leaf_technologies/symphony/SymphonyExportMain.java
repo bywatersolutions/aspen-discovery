@@ -101,7 +101,10 @@ public class SymphonyExportMain {
 				//Remove log entries older than 45 days
 				long earliestLogToKeep = (reindexStartTime.getTime() / 1000) - (60 * 60 * 24 * 45);
 				try {
-					int numDeletions = dbConn.prepareStatement("DELETE from ils_extract_log WHERE startTime < " + earliestLogToKeep + " AND indexingProfile = '" + profileToLoad + "'").executeUpdate();
+					int numDeletions;
+					try (PreparedStatement deleteOldLogsStmt = dbConn.prepareStatement("DELETE from ils_extract_log WHERE startTime < " + earliestLogToKeep + " AND indexingProfile = '" + profileToLoad + "'")) {
+						numDeletions = deleteOldLogsStmt.executeUpdate();
+					}
 					logger.info("Deleted " + numDeletions + " old log entries");
 				} catch (SQLException e) {
 					logger.error("Error deleting old log entries", e);
@@ -242,17 +245,19 @@ public class SymphonyExportMain {
 		//Process the file
 		logEntry.addNote("Processing course reserves file " + newestFile.getAbsolutePath());
 		logEntry.saveResults();
-		try {
-			//Setup statements
-			PreparedStatement getExistingCourseReservesStmt = dbConn.prepareStatement("SELECT * FROM course_reserve", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			PreparedStatement addCourseReserveListStmt = dbConn.prepareStatement("INSERT INTO course_reserve (created, dateUpdated, courseLibrary, courseInstructor, courseNumber, courseTitle) VALUES (?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
-			PreparedStatement undeleteCourseReserveStmt = dbConn.prepareStatement("UPDATE course_reserve set deleted = 0, dateUpdated = ? where id = ?");
-			PreparedStatement getWorksForListStmt = dbConn.prepareStatement("SELECT * FROM course_reserve_entry WHERE courseReserveId = ?");
-			PreparedStatement getWorkIdForBarcodeStmt = dbConn.prepareStatement("SELECT permanent_id, full_title FROM grouped_work_record_items inner join grouped_work_records ON groupedWorkRecordId = grouped_work_records.id inner join grouped_work on grouped_work.id = groupedWorkId where itemId = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			PreparedStatement addWorkToListStmt = dbConn.prepareStatement("INSERT INTO course_reserve_entry (source, sourceId, courseReserveId, title, dateAdded) VALUES ('GroupedWork', ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
-			PreparedStatement removeWorkFromListStmt = dbConn.prepareStatement("DELETE FROM course_reserve_entry WHERE id = ?");
-			PreparedStatement updateListDateUpdatedStmt = dbConn.prepareStatement("UPDATE course_reserve SET dateUpdated = ? where id = ?");
-			PreparedStatement deleteListStmt = dbConn.prepareStatement("UPDATE course_reserve set deleted = 1, dateUpdated = ? where id = ?");
+		//Setup statements
+		try (
+					PreparedStatement getExistingCourseReservesStmt = dbConn.prepareStatement("SELECT * FROM course_reserve", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+					PreparedStatement addCourseReserveListStmt = dbConn.prepareStatement("INSERT INTO course_reserve (created, dateUpdated, courseLibrary, courseInstructor, courseNumber, courseTitle) VALUES (?, ?, ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
+					PreparedStatement undeleteCourseReserveStmt = dbConn.prepareStatement("UPDATE course_reserve set deleted = 0, dateUpdated = ? where id = ?");
+					PreparedStatement getWorksForListStmt = dbConn.prepareStatement("SELECT * FROM course_reserve_entry WHERE courseReserveId = ?");
+					PreparedStatement getWorkIdForBarcodeStmt = dbConn.prepareStatement("SELECT permanent_id, full_title FROM grouped_work_record_items inner join grouped_work_records ON groupedWorkRecordId = grouped_work_records.id inner join grouped_work on grouped_work.id = groupedWorkId where itemId = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+					PreparedStatement addWorkToListStmt = dbConn.prepareStatement("INSERT INTO course_reserve_entry (source, sourceId, courseReserveId, title, dateAdded) VALUES ('GroupedWork', ?, ?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
+					PreparedStatement removeWorkFromListStmt = dbConn.prepareStatement("DELETE FROM course_reserve_entry WHERE id = ?");
+					PreparedStatement updateListDateUpdatedStmt = dbConn.prepareStatement("UPDATE course_reserve SET dateUpdated = ? where id = ?");
+					PreparedStatement deleteListStmt = dbConn.prepareStatement("UPDATE course_reserve set deleted = 1, dateUpdated = ? where id = ?");
+					CSVReader reader = new CSVReader(new FileReader(newestFile), '|')
+				) {
 
 			ResultSet existingCourseReservesRS = getExistingCourseReservesStmt.executeQuery();
 			HashMap<String, CourseInfo> existingCourses = new HashMap<>();
@@ -276,13 +281,13 @@ public class SymphonyExportMain {
 						worksForListRS.getLong("id"),
 						worksForListRS.getString("sourceId")
 					);
-					courseInfo.existingWorks.put(existingTitle.groupedWorkPermanentId, existingTitle);
+						courseInfo.existingWorks.put(existingTitle.groupedWorkPermanentId, existingTitle);
+					}
+					worksForListRS.close();
 				}
-			}
 
 
 			@SuppressWarnings("deprecation")
-			CSVReader reader = new CSVReader(new FileReader(newestFile), '|');
 			String[] columns;
 			while ((columns = reader.readNext()) != null){
 				if (columns.length >= 6) {
@@ -336,7 +341,8 @@ public class SymphonyExportMain {
 								existingCourses.put(key, course);
 							}else{
 								logEntry.incErrors("Failed to create Course Reserve.");
-							}
+								}
+								generatedKeys.close();
 						}
 
 						if (course != null) {
@@ -366,13 +372,16 @@ public class SymphonyExportMain {
 									existingTitle.stillExists = true;
 									course.existingWorks.put(existingTitle.groupedWorkPermanentId, existingTitle);
 								}
+								generatedKeys.close();
 
 								course.isUpdated = true;
 							}
 						}
 					}
+					getWorkIdForBarcodeRS.close();
 				}
 			}
+			existingCourseReservesRS.close();
 
 			//Check each course for titles that no longer exist
 			for (CourseInfo courseInfo : existingCourses.values()){
@@ -400,7 +409,6 @@ public class SymphonyExportMain {
 			}
 
 			//Delete the file
-			reader.close();
 			if (!newestFile.delete()){
 				logEntry.incErrors("Could not delete course reserves file " + newestFile.getAbsolutePath());
 			}
@@ -413,13 +421,14 @@ public class SymphonyExportMain {
 	}
 
 	private static void processRecordsToReload(IndexingProfile indexingProfile, IlsExtractLogEntry logEntry) {
-		try {
+		try (
+			PreparedStatement getRecordsToReloadStmt = dbConn.prepareStatement("SELECT * from record_identifiers_to_reload WHERE processed = 0 and type='" + indexingProfile.getName() + "'", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			PreparedStatement markRecordToReloadAsProcessedStmt = dbConn.prepareStatement("UPDATE record_identifiers_to_reload SET processed = 1 where id = ?")
+		) {
 			MarcRecordGrouper recordGroupingProcessor = getRecordGroupingProcessor(dbConn);
 			GroupedWorkIndexer indexer = getGroupedWorkIndexer(dbConn);
 
-			PreparedStatement getRecordsToReloadStmt = dbConn.prepareStatement("SELECT * from record_identifiers_to_reload WHERE processed = 0 and type='" + indexingProfile.getName() + "'", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			PreparedStatement markRecordToReloadAsProcessedStmt = dbConn.prepareStatement("UPDATE record_identifiers_to_reload SET processed = 1 where id = ?");
-			ResultSet getRecordsToReloadRS = getRecordsToReloadStmt.executeQuery();
+			try (ResultSet getRecordsToReloadRS = getRecordsToReloadStmt.executeQuery()) {
 			int numRecordsToReloadProcessed = 0;
 			while (getRecordsToReloadRS.next()) {
 				long recordToReloadId = getRecordsToReloadRS.getLong("id");
@@ -440,7 +449,7 @@ public class SymphonyExportMain {
 			if (numRecordsToReloadProcessed > 0) {
 				logEntry.addNote("Regrouped " + numRecordsToReloadProcessed + " records marked for reprocessing");
 			}
-			getRecordsToReloadRS.close();
+			}
 		}catch (Exception e){
 			logEntry.incErrors("Error processing records to reload ", e);
 		}
@@ -471,14 +480,15 @@ public class SymphonyExportMain {
 				logEntry.addNote("Starting export of holds " + dateTimeFormatter.format(new Date()));
 				logEntry.saveResults();
 
-				//Start a transaction so we can rebuild an entire table
-				dbConn.setAutoCommit(false);
-				dbConn.prepareCall("TRUNCATE TABLE ils_hold_summary").executeUpdate();
-
-				PreparedStatement addIlsHoldSummary = dbConn.prepareStatement("INSERT INTO ils_hold_summary (ilsId, numHolds) VALUES (?, ?)");
-
-				BufferedReader csvReader = new BufferedReader(new FileReader(holdsExportFile));
-				String holdInfoLine = csvReader.readLine();
+					//Start a transaction so we can rebuild an entire table
+					dbConn.setAutoCommit(false);
+					try (
+						PreparedStatement truncateHoldsStmt = dbConn.prepareStatement("TRUNCATE TABLE ils_hold_summary");
+						PreparedStatement addIlsHoldSummary = dbConn.prepareStatement("INSERT INTO ils_hold_summary (ilsId, numHolds) VALUES (?, ?)");
+						BufferedReader csvReader = new BufferedReader(new FileReader(holdsExportFile))
+					) {
+					truncateHoldsStmt.executeUpdate();
+					String holdInfoLine = csvReader.readLine();
 				while (holdInfoLine != null) {
 					String[] holdInfoFields = holdInfoLine.split("\\|");
 					if (holdInfoFields.length == 2) {
@@ -492,8 +502,8 @@ public class SymphonyExportMain {
 				}
 				logEntry.addNote("Finished export of holds " + dateTimeFormatter.format(new Date()));
 
-				csvReader.close();
-				dbConn.setAutoCommit(true);
+					}
+					dbConn.setAutoCommit(true);
 				if (!holdsExportFile.delete()){
 					logEntry.incErrors("Could not delete holds export file");
 				}
@@ -538,14 +548,16 @@ public class SymphonyExportMain {
 				try {
 					VolumeUpdateInfo volumeUpdateInfo = new VolumeUpdateInfo();
 					logEntry.addNote("Updating Volumes, loading existing volumes from database");
-					PreparedStatement addVolumeStmt = dbConn.prepareStatement("INSERT INTO ils_volume_info (recordId, volumeId, displayLabel, relatedItems, displayOrder) VALUES (?,?,?,?, ?) ON DUPLICATE KEY update recordId = VALUES(recordId), displayLabel = VALUES(displayLabel), relatedItems = VALUES(relatedItems), displayOrder = VALUES(displayOrder)");
-					PreparedStatement deleteVolumeStmt = dbConn.prepareStatement("DELETE from ils_volume_info where recordId = ?");
+					try (
+						PreparedStatement addVolumeStmt = dbConn.prepareStatement("INSERT INTO ils_volume_info (recordId, volumeId, displayLabel, relatedItems, displayOrder) VALUES (?,?,?,?, ?) ON DUPLICATE KEY update recordId = VALUES(recordId), displayLabel = VALUES(displayLabel), relatedItems = VALUES(relatedItems), displayOrder = VALUES(displayOrder)");
+						PreparedStatement deleteVolumeStmt = dbConn.prepareStatement("DELETE from ils_volume_info where recordId = ?");
+						BufferedReader csvReader = new BufferedReader(new FileReader(volumeExportFile))
+					) {
 					HashSet<String> allRecordsWithVolumes = getAllRecordsWithVolumes(dbConn, profileToLoad);
 
 					//Load all volumes in the export
 					logEntry.addNote("Updating Volumes, loading volumes from the export");
 					logEntry.saveResults();
-					BufferedReader csvReader = new BufferedReader(new FileReader(volumeExportFile));
 					String volumeInfoLine = csvReader.readLine();
 					HashMap<String, VolumeInfo> volumesForRecord = new HashMap<>();
 					String curIlsId = null;
@@ -621,7 +633,6 @@ public class SymphonyExportMain {
 						}
 						volumeInfoLine = csvReader.readLine();
 					}
-					csvReader.close();
 					if (curIlsId != null) {
 						//Save the last volume information
 						saveVolumes(curIlsId, volumesForRecord, addVolumeStmt, volumeUpdateInfo, deleteVolumeStmt);
@@ -648,10 +659,12 @@ public class SymphonyExportMain {
 					logEntry.saveResults();
 
 					//Update the indexing profile to store the last volume time change
-					PreparedStatement updateLastVolumeExportTimeStmt = dbConn.prepareStatement("UPDATE indexing_profiles set lastVolumeExportTimestamp = ? where id = ?");
-					updateLastVolumeExportTimeStmt.setLong(1, fileTimeStamp / 1000);
-					updateLastVolumeExportTimeStmt.setLong(2, indexingProfile.getId());
-					updateLastVolumeExportTimeStmt.executeUpdate();
+					try (PreparedStatement updateLastVolumeExportTimeStmt = dbConn.prepareStatement("UPDATE indexing_profiles set lastVolumeExportTimestamp = ? where id = ?")) {
+						updateLastVolumeExportTimeStmt.setLong(1, fileTimeStamp / 1000);
+						updateLastVolumeExportTimeStmt.setLong(2, indexingProfile.getId());
+						updateLastVolumeExportTimeStmt.executeUpdate();
+					}
+					}
 				} catch (FileNotFoundException e) {
 					logEntry.incErrors("Error loading volumes", e);
 				} catch (IOException e) {
@@ -672,15 +685,14 @@ public class SymphonyExportMain {
 	}
 
 	private static HashSet<String> getAllRecordsWithVolumes(Connection dbConn, String profileToLoad) throws SQLException {
-		PreparedStatement allRecordsWithVolumesStmt = dbConn.prepareStatement("SELECT DISTINCT(recordId) from ils_volume_info where recordId like '" + profileToLoad + ":%'", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		//Get the existing records with volumes from the database, we will use this to figure out which records no longer have volumes
 		HashSet<String> allRecordsWithVolumes = new HashSet<>();
-		ResultSet allRecordsWithVolumesRS = allRecordsWithVolumesStmt.executeQuery();
-		while (allRecordsWithVolumesRS.next()){
-			allRecordsWithVolumes.add(allRecordsWithVolumesRS.getString("recordId") );
+		try (PreparedStatement allRecordsWithVolumesStmt = dbConn.prepareStatement("SELECT DISTINCT(recordId) from ils_volume_info where recordId like '" + profileToLoad + ":%'", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			 ResultSet allRecordsWithVolumesRS = allRecordsWithVolumesStmt.executeQuery()) {
+			while (allRecordsWithVolumesRS.next()){
+				allRecordsWithVolumes.add(allRecordsWithVolumesRS.getString("recordId") );
+			}
 		}
-		allRecordsWithVolumesRS.close();
-		allRecordsWithVolumesStmt.close();
 		return allRecordsWithVolumes;
 	}
 
@@ -959,7 +971,7 @@ public class SymphonyExportMain {
 			int numRecordsRead = 0;
 			String lastRecordProcessed = "";
 			try {
-				FileInputStream marcFileStream = new FileInputStream(fullExportFile);
+				try (FileInputStream marcFileStream = new FileInputStream(fullExportFile)) {
 				MarcReader catalogReader = new MarcPermissiveStreamReader(marcFileStream, true, true, indexingProfile.getMarcEncoding());
 				while (catalogReader.hasNext()) {
 					numRecordsRead++;
@@ -974,6 +986,7 @@ public class SymphonyExportMain {
 							maxIdInExport = recordNumberDigits;
 						}
 					}
+				}
 				}
 			} catch (Exception e) {
 				logEntry.incErrors("Error loading Symphony bibs on record " + numRecordsRead + " in profile " + indexingProfile.getName() + " the last record processed was " + lastRecordProcessed + " file " + fullExportFile.getAbsolutePath(), e);
@@ -1020,7 +1033,11 @@ public class SymphonyExportMain {
 			}
 			int numRecordsRead = 0;
 			try {
-				FileInputStream marcFileStream = new FileInputStream(curBibFile);
+				try (
+					FileInputStream marcFileStream = new FileInputStream(curBibFile);
+					PreparedStatement addVolumeStmt = dbConn.prepareStatement("INSERT INTO ils_volume_info (recordId, volumeId, displayLabel, relatedItems, displayOrder) VALUES (?,?,?,?, ?) ON DUPLICATE KEY update recordId = VALUES(recordId), displayLabel = VALUES(displayLabel), relatedItems = VALUES(relatedItems), displayOrder = VALUES(displayOrder)");
+					PreparedStatement deleteVolumeStmt = dbConn.prepareStatement("DELETE from ils_volume_info where recordId = ?")
+				) {
 				MarcReader catalogReader = new MarcPermissiveStreamReader(marcFileStream, true, true, indexingProfile.getMarcEncoding());
 				//Symphony handles bib records with a large number of items by breaking the MARC export into multiple records. The records are always sequential.
 				//To solve this, we need to track which id we processed last and if the record has already been processed, we will need to append items from the new
@@ -1062,10 +1079,8 @@ public class SymphonyExportMain {
 								// If volumes weren't provided in a text file, check for volumes in MARC data
 								if (!volumesInTextFile) {
 									HashMap<String, VolumeInfo> volumesForRecord = generateVolumesForRecord(curBib, recordIdentifier);
-									if (!volumesForRecord.isEmpty() || allRecordsWithVolumes.contains(recordIdentifier.toString())) {
-										PreparedStatement addVolumeStmt = dbConn.prepareStatement("INSERT INTO ils_volume_info (recordId, volumeId, displayLabel, relatedItems, displayOrder) VALUES (?,?,?,?, ?) ON DUPLICATE KEY update recordId = VALUES(recordId), displayLabel = VALUES(displayLabel), relatedItems = VALUES(relatedItems), displayOrder = VALUES(displayOrder)");
-										PreparedStatement deleteVolumeStmt = dbConn.prepareStatement("DELETE from ils_volume_info where recordId = ?");
-										saveVolumes(recordIdentifier.toString(), volumesForRecord, addVolumeStmt, volumeUpdateInfo, deleteVolumeStmt);
+					if (!volumesForRecord.isEmpty() || allRecordsWithVolumes.contains(recordIdentifier.toString())) {
+						saveVolumes(recordIdentifier.toString(), volumesForRecord, addVolumeStmt, volumeUpdateInfo, deleteVolumeStmt);
 									}
 								}
 
@@ -1121,7 +1136,7 @@ public class SymphonyExportMain {
 						indexingProfile.updateLastChangeProcessed(dbConn, logEntry);
 					}
 				}
-				marcFileStream.close();
+				}
 
 				if (hasFullExportFile){
 					indexingProfile.setLastChangeProcessed(0);
@@ -1166,20 +1181,22 @@ public class SymphonyExportMain {
 			logEntry.saveResults();
 
 			try {
-				PreparedStatement updateMarcExportStmt = dbConn.prepareStatement("UPDATE indexing_profiles set fullMarcExportRecordIdThreshold = ? where id = ?");
+				try (PreparedStatement updateMarcExportStmt = dbConn.prepareStatement("UPDATE indexing_profiles set fullMarcExportRecordIdThreshold = ? where id = ?")) {
 				updateMarcExportStmt.setLong(1, maxIdInExport);
 				updateMarcExportStmt.setLong(2, indexingProfile.getId());
 				updateMarcExportStmt.executeUpdate();
+				}
 			}catch (Exception e){
 				logEntry.incErrors("Error updating lastUpdateFromMarcExport", e);
 			}
 		}
 
 		try {
-			PreparedStatement updateMarcExportStmt = dbConn.prepareStatement("UPDATE indexing_profiles set lastUpdateFromMarcExport = ? where id = ?");
+			try (PreparedStatement updateMarcExportStmt = dbConn.prepareStatement("UPDATE indexing_profiles set lastUpdateFromMarcExport = ? where id = ?")) {
 			updateMarcExportStmt.setLong(1, reindexStartTime.getTime() / 1000);
 			updateMarcExportStmt.setLong(2, indexingProfile.getId());
 			updateMarcExportStmt.executeUpdate();
+			}
 		}catch (Exception e){
 			logEntry.incErrors("Error updating lastUpdateFromMarcExport", e);
 		}
@@ -1187,9 +1204,10 @@ public class SymphonyExportMain {
 		if (hasFullExportFile && indexingProfile.isRunFullUpdate()){
 			//Disable runFullUpdate
 			try {
-				PreparedStatement updateIndexingProfileStmt = dbConn.prepareStatement("UPDATE indexing_profiles set runFullUpdate = 0 where id = ?");
+				try (PreparedStatement updateIndexingProfileStmt = dbConn.prepareStatement("UPDATE indexing_profiles set runFullUpdate = 0 where id = ?")) {
 				updateIndexingProfileStmt.setLong(1, indexingProfile.getId());
 				updateIndexingProfileStmt.executeUpdate();
+				}
 			}catch (Exception e){
 				logEntry.incErrors("Error updating disabling runFullUpdate", e);
 			}
@@ -1229,8 +1247,8 @@ public class SymphonyExportMain {
 		File mainFile = new File(indexingProfile.getMarcPath() + "/fullexport.mrc");
 		HashSet<String> idsInMainFile = new HashSet<>();
 		if (mainFile.exists()){
-			try {
-				MarcReader reader = new MarcPermissiveStreamReader(new FileInputStream(mainFile), true, true);
+			try (FileInputStream mainFileStream = new FileInputStream(mainFile)) {
+				MarcReader reader = new MarcPermissiveStreamReader(mainFileStream, true, true);
 				int numRecordsRead = 0;
 				while (reader.hasNext()) {
 					try {
@@ -1417,15 +1435,18 @@ public class SymphonyExportMain {
 		if (!hadErrors && writeHolds){
 			try {
 				aspenConn.setAutoCommit(false);
-				aspenConn.prepareCall("DELETE FROM ils_hold_summary").executeUpdate();
+				try (PreparedStatement deleteHoldsStmt = aspenConn.prepareStatement("DELETE FROM ils_hold_summary")) {
+					deleteHoldsStmt.executeUpdate();
+				}
 				logger.info("Removed existing holds");
-				PreparedStatement updateHoldsStmt = aspenConn.prepareStatement("INSERT INTO ils_hold_summary (ilsId, numHolds) VALUES (?, ?)");
-				for (String ilsId : holdsByBib.keySet()){
-					updateHoldsStmt.setString(1, "a" + ilsId);
-					updateHoldsStmt.setInt(2, holdsByBib.get(ilsId));
-					int numUpdates = updateHoldsStmt.executeUpdate();
-					if (numUpdates != 1){
-						logger.info("Hold was not inserted " + "a" + ilsId + " " + holdsByBib.get(ilsId));
+				try (PreparedStatement updateHoldsStmt = aspenConn.prepareStatement("INSERT INTO ils_hold_summary (ilsId, numHolds) VALUES (?, ?)")) {
+					for (String ilsId : holdsByBib.keySet()){
+						updateHoldsStmt.setString(1, "a" + ilsId);
+						updateHoldsStmt.setInt(2, holdsByBib.get(ilsId));
+						int numUpdates = updateHoldsStmt.executeUpdate();
+						if (numUpdates != 1){
+							logger.info("Hold was not inserted " + "a" + ilsId + " " + holdsByBib.get(ilsId));
+						}
 					}
 				}
 				aspenConn.commit();

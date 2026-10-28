@@ -71,7 +71,7 @@ class SystemVariables extends DataObject {
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
-		if (isset(self::$_objectStructure[$context]) && self::$_objectStructure[$context] !== null) {
+		if (isset(self::$_objectStructure[$context])) {
 			return self::$_objectStructure[$context];
 		}
 
@@ -189,7 +189,7 @@ class SystemVariables extends DataObject {
 						'type' => 'enum',
 						'values' => [
 							2 => 'Version 2 (Edition information)',
-							//3 => 'Version 3 (Optimization of solr fields)'
+							3 => 'Version 3 (Optimization of solr fields)'
 						],
 						'label' => 'Grouped Work Indexing Version',
 						'description' => 'The Solr Core Version to index with.  In 26.08 and above this should be version 3 in most cases.',
@@ -201,7 +201,7 @@ class SystemVariables extends DataObject {
 						'type' => 'enum',
 						'values' => [
 							2 => 'Version 2 (Edition information)',
-							//3 => 'Version 3 (Optimization of solr fields)'
+							3 => 'Version 3 (Optimization of solr fields)'
 						],
 						'label' => 'Grouped Work Search Version',
 						'description' => 'The Solr Core Version to search with.  In 26.08 and above this should be version 3 in most cases.',

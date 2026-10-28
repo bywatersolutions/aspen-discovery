@@ -5,11 +5,10 @@ define('ROOT_DIR', __DIR__);
  * Load and register Composer Autoloader
  */
 global $composerActive;
-if (file_exists(ROOT_DIR . '/vendor/autoload.php')) {
-	$composerActive = true;
-	require_once ROOT_DIR . '/vendor/autoload.php';
-} else {
-	$composerActive = false;
+$autoloadPath = dirname(__DIR__, 2) . '/vendor/autoload.php';
+$composerActive = file_exists($autoloadPath);
+if ($composerActive) {
+	require_once $autoloadPath;
 }
 
 /**
@@ -122,12 +121,6 @@ if (IPAddress::logTimingInformation()) {
 }
 $timer->logTime("Initial configuration");
 
-try {
-	$aspenUsage->find(true);
-} catch (Exception $e) {
-	//Table has not been created yet, ignore it
-}
-
 global $userAgent;
 $userAgentString = 'Unknown';
 if (isset($_SERVER['HTTP_USER_AGENT'])) {
@@ -230,8 +223,7 @@ try {
 
 //Check to see if we should be blocking based on the IP address
 if (IPAddress::isClientIpBlocked()) {
-	$aspenUsage->blockedRequests++;
-	$aspenUsage->update();
+	$aspenUsage->incBlockedRequests();
 
 	$usageByIPAddress->incrementNumBlockedRequests();
 

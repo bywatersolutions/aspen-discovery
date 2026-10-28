@@ -29,7 +29,8 @@ class CustomFormField extends DataObject {
         12 => 'Address 2 (prefill)',
         13 => 'City (prefill)',
         14 => 'State (prefill)',
-        15 => 'Zip (prefill)'
+		15 => 'Zip (prefill)',
+		16 => 'Checkbox List'
 	];
 
 	public static $fieldTypes = [
@@ -48,12 +49,13 @@ class CustomFormField extends DataObject {
         12 => 'address2_prefill',
         13 => 'city_prefill',
         14 => 'state_prefill',
-        15 => 'zip_prefill'
+		15 => 'zip_prefill',
+		16 => 'multiSelect'
 	];
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
-		if (isset(self::$_objectStructure[$context]) && self::$_objectStructure[$context] !== null) {
+		if (isset(self::$_objectStructure[$context])) {
 			return self::$_objectStructure[$context];
 		}
 		$structure = [
@@ -98,8 +100,8 @@ class CustomFormField extends DataObject {
 			'enumValues' => [
 				'property' => 'enumValues',
 				'type' => 'textarea',
-				'label' => 'Select List Values (separate values with commas)',
-				'description' => 'A list of valid values for the select list',
+				'label' => 'Select List / Checkbox List Values (separate values with commas)',
+				'description' => 'A list of valid values for the select list or checkbox list',
 				'autoResizeTextArea' => true,
 				'required' => false,
 			],

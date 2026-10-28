@@ -14,7 +14,7 @@ class StripeSetting extends DataObject {
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
-		if (isset(self::$_objectStructure[$context]) && self::$_objectStructure[$context] !== null) {
+		if (isset(self::$_objectStructure[$context])) {
 			return self::$_objectStructure[$context];
 		}
 		$libraryList = Library::getLibraryList(!UserAccount::userHasPermission('Administer All Libraries'));
@@ -230,9 +230,7 @@ class StripeSetting extends DataObject {
 	public function submitTransaction($payment, $paymentMethodId, $transactionType): array {
 		$result = ['success' => false];
 
-		$paymentAmount = $payment->totalPaid;
-		$paymentAmount = $paymentAmount * 100;
-		$paymentAmount = (int)$paymentAmount;
+		$paymentAmount = (int)round($payment->totalPaid * 100);
 
 		$paymentIntent = $this->createPaymentIntent($paymentAmount, $paymentMethodId, $payment, $transactionType);
 		if (!empty($paymentIntent['error'])) {

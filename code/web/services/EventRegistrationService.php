@@ -52,7 +52,7 @@ class EventRegistrationService {
 
 		if ($registration->registerUser()) {
 			UserAspenEventInstanceRegistrationAttendee::saveForRegistration((int)$registration->id, $validatedCounts);
-			self::saveToUserEvents($eventInstance, $userId, $staffUserId);
+			self::saveRegistrationToUserEvents($eventInstance, $userId, $staffUserId);
 			return [
 				'success' => true,
 				'title' => translate(['text' => 'Registration Successful', 'isPublicFacing' => true]),
@@ -414,6 +414,27 @@ class EventRegistrationService {
 		$entry->insert();
 	}
 
+	public static function saveRegistrationToUserEvents(EventInstance $instance, int $userId, int|null $savedByStaffId = null, int|null $actingUserId = null): void {
+		self::saveToUserEvents($instance, $userId, $savedByStaffId);
+
+		// so the registered may manage their registration, also save the event for the acting user when registering on behalf of a linked user
+		if ($actingUserId !== null && $actingUserId !== $userId) {
+			self::saveToUserEvents($instance, $actingUserId);
+		}
+
+		// so linked accounts display all events their linked user is registered to, save the event for everyone who can view the registered user
+		require_once ROOT_DIR . '/sys/Account/User.php';
+		$user = new User();
+		$user->id = $userId;
+		if (!$user->find(true)) {
+			return;
+		}
+
+		foreach ($user->getViewerIds() as $viewerId) {
+			self::saveToUserEvents($instance, (int)$viewerId);
+		}
+	}
+
 	public static function sendCancellationNotificationEmails(array $upcomingInstances, array $affectedUsersByStatus): void {
 		if (empty($upcomingInstances) || empty($affectedUsersByStatus)) {
 			return;
@@ -543,7 +564,7 @@ class EventRegistrationService {
 		];
 	}
 
-	private static function hasPermissionForLocation(int $locationId, string $systemLevelPermission, string $locationLevelPermission, string $libraryLevelPermission): bool {
+	private static function hasPermissionForLocation(int $locationId, string $systemLevelPermission, string $libraryLevelPermission, string $locationLevelPermission): bool {
 		if (!UserAccount::userHasPermission([$systemLevelPermission, $locationLevelPermission, $libraryLevelPermission])) {
 			return false;
 		}

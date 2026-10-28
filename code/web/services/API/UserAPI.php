@@ -3080,7 +3080,7 @@ class UserAPI extends AbstractAPI {
 	}
 
 	function cancelPalaceProjectHold(): array {
-		$id = $_REQUEST['itemId'];
+		$id = $_REQUEST['itemId'] ?? $_REQUEST['recordId'];
 		$user = $this->getUserForApiCall();
 		if ($user && !($user instanceof AspenError)) {
 			require_once ROOT_DIR . '/Drivers/PalaceProjectDriver.php';
@@ -6885,6 +6885,10 @@ class UserAPI extends AbstractAPI {
 					$pickupLocation->code = $_REQUEST['pickupLocationId'];
 					if ($pickupLocation->find(true)) {
 						if ($pickupLocation->locationId != $user->pickupLocationId) {
+							$catalogDriver = $user->getCatalogDriver();
+							if ($catalogDriver->driver instanceof Polaris) {
+								$catalogDriver->updatePreferredPickupLocation($user, $pickupLocation->locationId, false);
+							}
 							$user->setPickupLocationId($pickupLocation->locationId);
 						}
 					} else {

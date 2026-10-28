@@ -223,6 +223,9 @@ class IndexingProfile extends DataObject {
 		$numExtractionThreads;
 	public /** @noinspection PhpUnused */
 		$prioritizeAvailableRecordsForTitleSelection;
+	public /** @noinspection PhpUnused */
+		$excludePublisherFromKeywordIndex;
+
 
 	/** @noinspection PhpUnused */
 	public $index896asSeries;
@@ -274,7 +277,7 @@ class IndexingProfile extends DataObject {
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
-		if (isset(self::$_objectStructure[$context]) && self::$_objectStructure[$context] !== null) {
+		if (isset(self::$_objectStructure[$context])) {
 			return self::$_objectStructure[$context];
 		}
 
@@ -830,6 +833,14 @@ class IndexingProfile extends DataObject {
 						'default' => 0,
 						'forcesReindex' => true,
 					],
+					'excludePublisherFromKeywordIndex' => [
+						'property' => 'excludePublisherFromKeywordIndex',
+						'type' => 'checkbox',
+						'label' => 'Exclude Publisher from Keyword Index',
+						'description' => 'When checked, publisher information gathered from the notes field will be excluded from the keyword index for searching.',
+						'default' => 0,
+						'forcesReindex' => true,
+					],
 					'audienceOptionsSection' => [
 						'property' => 'audienceOptionsSection',
 						'type' => 'section',
@@ -1354,7 +1365,7 @@ class IndexingProfile extends DataObject {
 						'maxLength' => 1,
 						'description' => 'Subfield for when the item was last checked in',
 						'forcesReindex' => true,
-						'relatedIls' => ['polaris','symphony']
+						'relatedIls' => ['polaris','symphony','sierra']
 					],
 					'lastCheckinFormat' => [
 						'property' => 'lastCheckinFormat',
@@ -1363,7 +1374,7 @@ class IndexingProfile extends DataObject {
 						'maxLength' => 20,
 						'description' => 'The format of the date the item was last checked in.  I.e. yyMMdd see SimpleDateFormat for Java',
 						'forcesReindex' => true,
-						'relatedIls' => ['polaris','symphony']
+						'relatedIls' => ['polaris','symphony','sierra']
 					],
 					'lastYearCheckouts' => [
 						'property' => 'lastYearCheckouts',

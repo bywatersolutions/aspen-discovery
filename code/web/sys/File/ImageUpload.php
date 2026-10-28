@@ -57,7 +57,7 @@ class ImageUpload extends DataObject {
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
-		if (isset(self::$_objectStructure[$context]) && self::$_objectStructure[$context] !== null) {
+		if (isset(self::$_objectStructure[$context])) {
 			return self::$_objectStructure[$context];
 		}
 		$allSharingOptions = [
@@ -307,8 +307,11 @@ class ImageUpload extends DataObject {
 
 	public function insert(string $context = '') : int|bool {
 		$this->calculateAspectRatio();
+		$insertResult = parent::insert();
+		//generate derivatives after inserting so the ID is set
 		$this->generateDerivatives();
-		return parent::insert();
+		$this->update();
+		return $insertResult;
 	}
 
 	public function update(string $context = '') : int|bool {

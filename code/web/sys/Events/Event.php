@@ -63,7 +63,7 @@ class Event extends DataObject {
 
 	static $_objectStructure = [];
 	static function getObjectStructure(string $context = ''): array {
-		if (isset(self::$_objectStructure[$context]) && self::$_objectStructure[$context] !== null) {
+		if (isset(self::$_objectStructure[$context])) {
 			return self::$_objectStructure[$context];
 		}
 		global $configArray;
@@ -168,7 +168,7 @@ class Event extends DataObject {
 						'type' => 'checkbox',
 						'label' => 'Display Event Branch on Thumbnail',
 						'default' => false,
-						'description' => 'Whether or not to display the event branch on the thubmnail image',
+						'description' => 'Whether or not to display the event branch on the thumbnail image',
 					],
 				],
 			],
@@ -1055,6 +1055,15 @@ class Event extends DataObject {
 				if (!$eventType->displayEventBranchOnThumbnailCustomizable) {
 					$structure['infoSection']['properties']['displayEventBranchOnThumbnail']['readOnly'] = true;
 					$this->displayEventBranchOnThumbnail = $eventType->displayEventBranchOnThumbnail;
+				}
+				if (!isset($structure['infoSection']['properties']['fieldSetFieldSection'])) {
+					$structure['infoSection']['properties']['fieldSetFieldSection'] = [
+						'property' => 'fieldSetFieldSection',
+						'type' => 'section',
+						'label' => 'Fields for this Event Type',
+						'hideInLists' => true,
+						'expandByDefault' => true,
+					];
 				}
 				$structure['infoSection']['properties']['fieldSetFieldSection']['properties'] = $eventType->getFieldSetFieldsByUse(1);
 				// Update scheduling sections

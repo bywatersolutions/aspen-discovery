@@ -65,7 +65,7 @@ class Donations_NewDonation extends Action {
 				$sdkClientSecret = $donationPaymentProcessor['sdkClientSecret'];
 				$billerId = $donationPaymentProcessor['billerId'];
 				$billerAccountId = $donationPaymentProcessor['billerAccountId'];
-				$baseUrl = $donationPaymentProcessor['baseUrl'];
+				$baseUrl = $donationPaymentProcessor['aciHost'];
 				$sdkUrl = $donationPaymentProcessor['sdkUrl'];
 
 				$interface->assign('billerId', $billerId);
@@ -93,7 +93,7 @@ class Donations_NewDonation extends Action {
 					'account_number' => $billerAccountId,
 				];
 
-				$url = $baseUrl . "/auth/v1/auth/token";
+				$url = $baseUrl . "/oauth/token";
 				$accessTokenResults = $serviceAccountAuthorization->curlPostPage($url, $postParams);
 				$accessTokenResults = json_decode($accessTokenResults, true);
 				$accessToken = "";
@@ -104,7 +104,7 @@ class Donations_NewDonation extends Action {
 				}
 				$interface->assign('accessToken', $accessToken);
 
-				$aciManifest = "https://cds.officialpayments.com/js-sdk/1.5.0/manifest.json";
+				$aciManifest = "https://cds.officialpayments.com/js-sdk/1.7.14/manifest.json";
 				$aciManifest = file_get_contents($aciManifest);
 				$aciManifest = json_decode($aciManifest, true);
 				$sriHash = "";

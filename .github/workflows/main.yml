@@ -16,7 +16,6 @@ env:
   DOCKER_PUSH: ${{ vars.DOCKER_PUSH || 'true' }}
   GHCR_PUSH: ${{ vars.GHCR_PUSH || 'true' }}
   QUAY_PUSH: ${{ vars.QUAY_PUSH || 'true' }}
-  IMAGE_PREFIX: ${{ vars.IMAGE_PREFIX }}
   PUSH_BRANCH_PATTERN: ${{ vars.PUSH_BRANCH_PATTERN }}
 
 jobs:
@@ -28,10 +27,13 @@ jobs:
       matrix:
         include:
           - image: aspen
+            image_name: ${{ vars.ASPEN_IMAGE_NAME || 'aspen' }}
             dockerfile: docker/Dockerfile
           - image: solr
+            image_name: ${{ vars.SOLR_IMAGE_NAME || 'solr' }}
             dockerfile: docker/files/solr/Dockerfile
           - image: tunnel
+            image_name: ${{ vars.TUNNEL_IMAGE_NAME || 'tunnel' }}
             dockerfile: docker/files/tunnel/Dockerfile
     steps:
       - name: Check out the repo
@@ -49,7 +51,7 @@ jobs:
         id: image_tags
         shell: bash
         env:
-          IMAGE_NAME: ${{ matrix.image }}
+          IMAGE_NAME: ${{ matrix.image_name }}
           REQUESTED_TAG: ${{ inputs.tag }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
@@ -88,7 +90,7 @@ jobs:
             echo "tags<<EOF"
             for image_tag in "${image_tags[@]}"; do
               for repository in "${repositories[@]}"; do
-                echo "$repository/$IMAGE_PREFIX$IMAGE_NAME:$image_tag"
+                echo "$repository/$IMAGE_NAME:$image_tag"
               done
             done
             echo "EOF"

@@ -2022,7 +2022,7 @@ class UserAPI extends AbstractAPI {
 						$action = $result['api']['action'] ?? null;
 						$responseMessage = strip_tags($result['api']['message']);
 						$responseMessage = trim($responseMessage);
-						$needsIllRequest = isset($hold_result['error_code']) && (($hold_result['error_code'] == 'hatErrorResponse.17286') || ($hold_result['error_code'] == 'hatErrorResponse.447'));
+						$needsIllRequest = isset($$result['error_code']) && (($$result['error_code'] == 'hatErrorResponse.17286') || ($$result['error_code'] == 'hatErrorResponse.447'));
 						return [
 							'success' => $result['success'],
 							'title' => $result['api']['title'],

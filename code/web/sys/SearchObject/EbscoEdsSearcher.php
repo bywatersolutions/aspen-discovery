@@ -672,7 +672,7 @@ BODY;
 				global $logger;
 				if (IPAddress::showDebuggingInformation()) {
 					$curlInfo = curl_getinfo($curlConnection);
-					$logger->log(print_r($curlInfo(true)), Logger::LOG_WARNING);
+					$logger->log(print_r($curlInfo, true), Logger::LOG_WARNING);
 				}
 				$this->lastSearchResults = false;
 				return new AspenError("Could not process search in EBSCO EDS");
@@ -890,7 +890,7 @@ BODY;
 							global $logger;
 							if (IPAddress::showDebuggingInformation()) {
 								$curlInfo = curl_getinfo($curlConnection);
-								$logger->log(print_r($curlInfo(true)), Logger::LOG_WARNING);
+								$logger->log(print_r($curlInfo, true), Logger::LOG_WARNING);
 							}
 						}
 					} catch (Exception $e) {

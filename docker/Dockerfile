@@ -58,6 +58,7 @@ RUN apt -y update \
 	  php-ssh2 \
 	  php-ldap \
 	  php-mysql \
+	  php-apcu \
 	&& rm -rf /var/cache/apt/archives/* \
 	&& rm -rf /var/lib/apt/lists/*
 

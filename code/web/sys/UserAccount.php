@@ -975,6 +975,7 @@ class UserAccount {
 				setcookie("cookieConsent", "", time() - 3600, "/"); //remove old cookie so new one can be generated on next page load
 				unset($_COOKIE['cookieConsent]']);
 			}
+			BotGuard::downgradeCookie();
 
 			global $interface;
 			$interface->assign('loggedIn', false);

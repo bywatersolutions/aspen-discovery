@@ -911,6 +911,9 @@ $timer->logTime('Check whether or not to include auto logout code');
 // Call Action
 // Note: ObjectEditor classes typically have the class name of DB_Object with an 's' added to the end.
 //       This distinction prevents the DB_Object from being mistakenly called as the Action class.
+// Logged-in users get the unlimited trust cookie so BotGuard never challenges or rate limits them
+BotGuard::syncLoginCookie(UserAccount::isLoggedIn());
+
 $isInvalidUrl = false;
 $requestUrl = $_SERVER['REQUEST_URI'];
 if (preg_match('/.*(DBMS_PIPE\.RECEIVE_MESSAGE|PG_SLEEP|WAITFOR|UNION%20ALL|SLEEP%28\d+%29|%7CCHR|CONVERT%28INT|SELECT%20COUNT).*/', $requestUrl)) {

@@ -72,6 +72,10 @@ $memoryWatcher = new MemoryWatcher();
 global $logger;
 $logger = new Logger();
 
+// Refuse anonymous heavy requests before the database is opened, see the [BotGuard] section of config.ini
+require_once ROOT_DIR . '/sys/BotGuard/BotGuard.php';
+BotGuard::guardRequest();
+
 //Use output buffering to allow session cookies to have different values
 // this can't be determined before session_start is called
 ob_start();

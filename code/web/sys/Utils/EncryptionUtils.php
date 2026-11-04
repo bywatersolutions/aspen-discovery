@@ -23,6 +23,17 @@ class EncryptionUtils {
 		return EncryptionUtils::doDecryption($fieldData, $key);
 	}
 
+	/**
+	 * HMAC-SHA256 of the data keyed with the site passkey, as a hex string. Returns false when the site has no passkey.
+	 */
+	public static function hmacSha256(string $data): string|false {
+		$key = EncryptionUtils::loadKey();
+		if ($key == false) {
+			return false;
+		}
+		return hash_hmac('sha256', $data, $key['key']);
+	}
+
 	private static function doDecryption($fieldData, $key) {
 		if ($key == false) {
 			if (strlen($fieldData) > 4 && substr($fieldData, 0, 4) == 'AEF~') {

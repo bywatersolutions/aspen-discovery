@@ -1,7 +1,8 @@
 package com.peakc.marmot;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
 
@@ -13,7 +14,7 @@ import java.util.Date;
 
 
 public class MergeUpdate {
-	private static Logger logger = Logger.getLogger(MergeUpdate.class);
+	private static Logger logger = LogManager.getLogger(MergeUpdate.class);
 	  /*Logger logger = LogManager.getRootLogger();*/
 	// write your code here
 
@@ -35,7 +36,7 @@ public class MergeUpdate {
 		Date currentTime = new Date();
 		File log4jFile = new File("log4j.properties");
 		if (log4jFile.exists()) {
-			PropertyConfigurator.configure(log4jFile.getAbsolutePath());
+			Configurator.reconfigure(log4jFile.toURI());
 		} else {
 			logger.info("Could not find log4j configuration " + log4jFile.toString());
 			System.exit(1);

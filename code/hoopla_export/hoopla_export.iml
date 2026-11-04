@@ -8,7 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module" module-name="java_shared_libraries" />
     <orderEntry type="library" name="ini4j-0.5.5-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="log4j-api-2.11.2" level="project" />
+    <orderEntry type="library" name="log4j-api-2.26.1" level="project" />
     <orderEntry type="library" name="commons-codec-1.12" level="project" />
     <orderEntry type="module-library">
       <library>

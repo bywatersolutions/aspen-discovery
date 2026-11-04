@@ -1,7 +1,7 @@
 package com.peakc.marmot;
 
 import au.com.bytecode.opencsv.CSVReader;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.ini4j.Ini;
 import org.marc4j.MarcPermissiveStreamReader;
 import org.marc4j.MarcReader;

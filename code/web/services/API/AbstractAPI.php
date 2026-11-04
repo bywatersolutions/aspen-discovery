@@ -324,18 +324,10 @@ abstract class AbstractAPI extends Action{
 	}
 
 	/**
-	 * Get OAuth2 client ID from token for rate limiting
-	 * This is a simplified implementation - in production you'd extract this from the validated JWT token
+	 * Get OAuth2 client ID from the validated token for rate limiting
 	 */
 	protected function getOAuth2ClientId(): string {
-		// For now, we'll use a simplified approach
-		// In practice, this would be extracted from the validated JWT token
-		$authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-
-		// Extract client information from token if needed
-		// This is a placeholder - in production you'd decode the JWT token
-		$apiName = strtolower(str_replace('API', '', get_class($this)));
-		return $apiName . '_oauth2_client';
+		return (string)(OAuth2Middleware::getAuthenticatedClientId() ?? '');
 	}
 
 	/**
